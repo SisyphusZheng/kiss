@@ -380,22 +380,15 @@ export async function renderDsd(
     if (options.throwOnRenderError) {
       throw err instanceof BoundaryRenderError ? err : new BoundaryRenderError(classifiedErr);
     }
-    const attrs = serializeAttrs(tagName, props);
-    const fallbackResult: RenderOutput = {
-      html: `<${tagName}${attrs}></${tagName}>`,
-      errors: collectedErrors,
-      metrics: {
-        tagName,
-        renderTimeMs: safeNow() - startTime,
-        templateSize: 0,
-        layer: 'dsd-static',
-        hasError: true,
-        nestingDepth,
-      },
-      hydrationHints: collectedHints,
-    };
-    callAfterRenderHook(hooks, fallbackResult);
-    return fallbackResult;
+    return bareTagFallbackOutput(
+      tagName,
+      props,
+      collectedErrors,
+      collectedHints,
+      hooks,
+      safeNow() - startTime,
+      nestingDepth,
+    );
   }
 
   const output: RenderOutput = {
@@ -454,6 +447,40 @@ function resolveComponent(
   return { tagName: resolvedName, componentClass };
 }
 
+/**
+ * Shared bare-tag fallback for the serialize/render/instantiate catch paths:
+ * the element renders as an empty shell with its serialized props so the
+ * client can still hydrate/retry, the error is already recorded, and the
+ * afterRender hook fires exactly once (single source for the shape — the
+ * four call sites used to inline near-copies).
+ */
+function bareTagFallbackOutput(
+  tagName: string,
+  props: Record<string, unknown>,
+  collectedErrors: RenderError[],
+  collectedHints: HydrationHint[],
+  hooks: RenderHooks | undefined,
+  renderTimeMs: number,
+  nestingDepth: number,
+): RenderOutput {
+  const attrs = serializeAttrs(tagName, props);
+  const result: RenderOutput = {
+    html: `<${tagName}${attrs}></${tagName}>`,
+    errors: collectedErrors,
+    metrics: {
+      tagName,
+      renderTimeMs,
+      templateSize: 0,
+      layer: 'dsd-static',
+      hasError: true,
+      nestingDepth,
+    },
+    hydrationHints: collectedHints,
+  };
+  callAfterRenderHook(hooks, result);
+  return result;
+}
+
 /** Error-fallback output when instantiation fails. */
 function instantiationFailureOutput(
   tagName: string,
@@ -469,22 +496,15 @@ function instantiationFailureOutput(
   dispatchRenderError(err, hooks);
 
   // Align with the render()-failure fallback: bare tag with serialized props.
-  const attrs = serializeAttrs(tagName, props);
-  const result: RenderOutput = {
-    html: `<${tagName}${attrs}></${tagName}>`,
-    errors: collectedErrors,
-    metrics: {
-      tagName,
-      renderTimeMs: 0,
-      templateSize: 0,
-      layer: 'dsd-static',
-      hasError: true,
-      nestingDepth,
-    },
-    hydrationHints: collectedHints,
-  };
-  callAfterRenderHook(hooks, result);
-  return result;
+  return bareTagFallbackOutput(
+    tagName,
+    props,
+    collectedErrors,
+    collectedHints,
+    hooks,
+    0,
+    nestingDepth,
+  );
 }
 
 /** Boundary behavior for one renderComponentContent call (ADR-0053 Layer 2). */
@@ -560,21 +580,15 @@ async function renderComponentContent(
       throw err instanceof BoundaryRenderError ? err : new BoundaryRenderError(classifiedErr);
     }
 
-    const attrs = serializeAttrs(tagName, props);
-    const fallbackResult: RenderOutput = {
-      html: `<${tagName}${attrs}></${tagName}>`,
-      errors: collectedErrors,
-      metrics: {
-        tagName,
-        renderTimeMs: safeNow() - startTime,
-        templateSize: 0,
-        layer: 'dsd-static',
-        hasError: true,
-        nestingDepth,
-      },
-      hydrationHints: collectedHints,
-    };
-    callAfterRenderHook(hooks, fallbackResult);
+    const fallbackResult = bareTagFallbackOutput(
+      tagName,
+      props,
+      collectedErrors,
+      collectedHints,
+      hooks,
+      safeNow() - startTime,
+      nestingDepth,
+    );
     return { content: '', hasError: true, earlyReturn: fallbackResult };
   }
 }
