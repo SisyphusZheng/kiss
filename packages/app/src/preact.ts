@@ -96,6 +96,9 @@ export function definePreactIsland<
   // #952: same dev-SSR re-define semantics as defineElement — the marked SSR
   // stub registry outlives module re-evaluation, so island edits must
   // overwrite the stale class; browser registries keep the duplicate guard.
+  // Contract: the marker name is chartered as SSR_REGISTRY_STUB_MARKER in
+  // @openelement/element internal/protocol/ssr-registry-markers.ts (#965);
+  // app cannot import element internals, so keep the literal in sync.
   const registry = typeof customElements !== 'undefined' ? customElements : undefined;
   if (
     registry &&

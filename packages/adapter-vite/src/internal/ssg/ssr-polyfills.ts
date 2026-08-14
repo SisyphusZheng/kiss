@@ -44,6 +44,9 @@ if (typeof globalThis.customElements === 'undefined') {
     // The stub persists on globalThis across vite dev module-runner
     // re-evaluations; without the marker, idempotent-define guards keep the
     // FIRST registered class forever and route edits never reach SSR output.
+    // Contract: chartered as SSR_REGISTRY_STUB_MARKER in @openelement/element
+    // internal/protocol/ssr-registry-markers.ts (#965) — keep the literal in
+    // sync; this code ships as a generated string and cannot import it.
     __openElementSsrStub: true,
     define(name, ctor, _opts) { __openCeRegistry.set(name, ctor); },
     get(name) { return __openCeRegistry.get(name); },

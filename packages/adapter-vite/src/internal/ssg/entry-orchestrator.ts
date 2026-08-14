@@ -181,6 +181,10 @@ export function renderEntry(desc: EntryDescriptor): string {
     // overwriting a fresh self-registered class with the entry's page class
     // would recurse when its render emits the same tag. The entry therefore
     // only overwrites registrations it made itself.
+    // #965: the marker/property names below are chartered constants —
+    // SSR_REGISTRY_STUB_MARKER / ENTRY_REGISTRATION_OWNERS in
+    // @openelement/element internal/protocol/ssr-registry-markers.ts; keep
+    // the generated literals in sync (generated code cannot import them).
     lines.push('const __entryDefined = customElements.__openEntryDefined ||= new Map();');
     lines.push('function __registerSsrComponent(tag, ctor) {');
     lines.push('  const current = customElements.get(tag);');

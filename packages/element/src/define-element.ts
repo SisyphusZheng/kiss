@@ -5,6 +5,7 @@
  */
 import { assertValidTagName } from './internal/core/index.ts';
 import { collectPublicProps } from './internal/core/props-utils.ts';
+import { SSR_REGISTRY_STUB_MARKER } from './internal/protocol/ssr-registry-markers.ts';
 import { effect } from './internal/signal/framework.ts';
 import { OpenElement } from './open-element.ts';
 import type { ElementDefinition } from './types.ts';
@@ -72,13 +73,14 @@ export function defineElement<Props extends Record<string, unknown> = Record<str
   }
 
   // #952: the dev SSR registry (adapter-vite's customElements stub, marked
-  // __openElementSsrStub) persists on globalThis across vite module-runner
-  // re-evaluations; re-define so route edits take effect on the next request.
+  // with SSR_REGISTRY_STUB_MARKER — internal/protocol/ssr-registry-markers.ts)
+  // persists on globalThis across vite module-runner re-evaluations;
+  // re-define so route edits take effect on the next request.
   // Real browser registries keep the guard: a duplicate define() throws.
   const registry = typeof customElements !== 'undefined' ? customElements : undefined;
   if (
     registry &&
-    ((registry as { __openElementSsrStub?: boolean }).__openElementSsrStub === true ||
+    ((registry as { [SSR_REGISTRY_STUB_MARKER]?: boolean })[SSR_REGISTRY_STUB_MARKER] === true ||
       !registry.get(tagName))
   ) {
     registry.define(tagName, OpenElementComponent);

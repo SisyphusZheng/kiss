@@ -252,7 +252,7 @@
           "reExportedNames": []
         },
         "./preact": {
-          "sha256": "8b981d9850458b4209b677274270e80b7cb9f725b3d49bb0d4a4c5638cd80405",
+          "sha256": "baf2112866d6a41f6df47546fa1d480926c4881c65302831da37a703b6afb335",
           "publicDeclarations": [
             "export interface PreactIslandOptions {",
             "export function definePreactIsland<"
