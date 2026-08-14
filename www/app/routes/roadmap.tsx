@@ -335,10 +335,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.42.0-alpha.17',
-      theme:
-        'packed-starter verification spine: interaction matrix, CSRF floor and hydration fixes',
+      theme: 'registration decoupling: definePage routes always run their page render (ADR-0128)',
       copy:
-        'The alpha.16 train closes the round-3 audit loop with a packed-starter verification spine: an e2e smoke gate on the generated starter (#934) and the client interaction matrix as permanent CI guards (#936). The enhanced form now morphs slotted light-DOM pages (#937), the CSRF floor accepts native no-JS same-origin posts under a coherent Origin policy (#938, #921), keyed <For> is exported from the package root (#941), the starter island, visuals and nav were fixed (#940, restyle), and the corsOrigin warning is emitted once per process (#925).',
+        'The alpha.17 train closes the alpha.17 architect final review. A definePage route module now registers its page class under the route-path fallback tag, so the definePage render — with its request and actionData context — always runs; the tagName export only names the content element (#960, ADR-0128). Shape-1 pages gain one wrapper element in their SSR markup (migration note in the migration guide). The review also hardened the error fallbacks (throwing-getter props can no longer crash SSR; depth-limit trips log once across all branch kinds), aligned the standalone serve.mjs MIME table, and refreshed the planning anchors, changelog coverage and guide samples. Blog e2e round-6 re-verified the published alpha.16 with zero manual wiring (#963).',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -384,10 +383,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0-alpha.16',
-      theme: '打包启动器验证骨架:交互矩阵、CSRF 底线与水合修复',
+      version: 'v0.42.0-alpha.17',
+      theme: '注册解耦:definePage 路由始终运行页面渲染(ADR-0128)',
       copy:
-        'alpha.16 列车以打包启动器验证骨架闭环 round-3 审计:生成型启动器的 e2e 冒烟门禁(#934)与客户端交互矩阵成为永久 CI 守卫(#936)。增强表单开始 morph 插槽轻 DOM 页面(#937);CSRF 底线在连贯的 Origin 策略下放行无 JS 同源原生 POST(#938、#921);键控 <For> 从包根导出(#941);启动器岛屿、视觉与导航修复(#940、重设计);corsOrigin 警告每进程仅一次(#925)。',
+        'alpha.17 列车闭环了 alpha.17 架构师终检。definePage 路由模块的页面类现在注册到路由路径派生的兜底标签,definePage 渲染——连同 request 与 actionData 上下文——必定运行;tagName 导出仅为内容元素命名(#960、ADR-0128)。shape-1 页面的 SSR 标记会多一层外壳元素(迁移说明见迁移指南)。本次评审同时加固了错误回退(带异常 getter 的 props 不再击垮 SSR;深度限制在所有分支类型上只记录一次),对齐了独立 serve.mjs 的 MIME 表,并刷新了规划锚点、CHANGELOG 覆盖与指南示例。blog e2e round-6 以零手工接线复验了已发布的 alpha.16(#963)。',
       state: 'stable',
       stamp: 'CURRENT',
     },
