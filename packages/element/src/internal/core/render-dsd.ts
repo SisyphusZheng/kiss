@@ -463,7 +463,16 @@ function bareTagFallbackOutput(
   renderTimeMs: number,
   nestingDepth: number,
 ): RenderOutput {
-  const attrs = serializeAttrs(tagName, props);
+  // The props that forced this fallback may themselves crash attribute
+  // serialization (e.g. a circular prop plus a throwing getter on the same
+  // props object: serializeAttrs enumerates Object.entries, re-invoking the
+  // getter). The fallback must never throw — drop the attributes instead.
+  let attrs = '';
+  try {
+    attrs = serializeAttrs(tagName, props);
+  } catch {
+    // Attributes are best-effort here; the error is already recorded.
+  }
   const result: RenderOutput = {
     html: `<${tagName}${attrs}></${tagName}>`,
     errors: collectedErrors,

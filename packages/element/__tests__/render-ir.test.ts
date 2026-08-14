@@ -196,6 +196,37 @@ Deno.test('SSR a throwing getter prop is skipped, not crashed on', async () => {
   assertEquals(output.html.includes('exploding'), false);
 });
 
+Deno.test('SSR fallback never throws when unserializable props carry a throwing getter', async () => {
+  class NullRender {
+    render(): null {
+      return null;
+    }
+  }
+  // The circular prop forces the serialization-failure fallback; the
+  // fallback's own serializeAttrs call then enumerates the original props
+  // and re-invokes the throwing getter — the exact escape hatch the
+  // degradation promise forbids.
+  const circular: Record<string, unknown> = { label: 'hi' };
+  circular.self = circular;
+  const props: Record<string, unknown> = { circular };
+  Object.defineProperty(props, 'exploding', {
+    enumerable: true,
+    get() {
+      throw new Error('getter boom');
+    },
+  });
+
+  const output = await renderDsd('x-circular-getter-props', {
+    componentClass: NullRender as unknown as CustomElementConstructor,
+    props,
+  });
+
+  assertEquals(output.errors.length, 1);
+  assertEquals(output.errors[0].recoverable, true);
+  assertEquals(output.metrics.hasError, true);
+  assertEquals(output.html, '<x-circular-getter-props></x-circular-getter-props>');
+});
+
 Deno.test('raw-text elements serialize text children verbatim (#932)', async () => {
   const css = '.post-body :not(pre) > code { color: #ff0; } .a & .b { color: red; }';
   const html = await renderDsdTree(jsx('style', { children: css }));
