@@ -1,11 +1,43 @@
 # ADR-0122: 0.42.0 Stable Scope Freeze — WC Light Fullstack
 
-- Status: PROPOSED (acceptance is the TP-6 stable decision; see
-  `docs/current/VERSION_PLAN.md` §TP-6)
+- Status: ACCEPTED (2026-08-14, TP-6 stable decision, #962 — maintainer
+  directive; acceptance record below)
 - Date: 2026-08-02
 - Builds on: ADR-0120 (0.42.0 WC Application Loop scope),
   ADR-0121 (action protocol hardening amendment),
   ADR-0119 (0.41.x static freeze — the model this ADR mirrors)
+
+## Acceptance record (TP-6, 2026-08-14)
+
+Entry conditions and their evidence:
+
+1. **P0 watch** — zero open P0/regression issues at decision time
+   (alpha.17 published 2026-08-14; `regression` label has never been used;
+   all 20 P0-labeled issues closed). The seven-day watch window on the
+   last alpha is closed early by maintainer directive: the watch started
+   2026-08-14 and the decision lands the same day; the residual risk is
+   accepted and the watch continues informally on the 0.42.0 line.
+2. **alpha.17 train closed** — #960 (registration decoupling, ADR-0128),
+   #961 (planning anchors), #963 (blog e2e round-6) all closed with
+   evidence; the alpha.17 line carries the final architect review.
+3. **Deferred-item disposition** — #612 accepted as deferred (0.44,
+   matches §5/§6); #613/#614/#615 → 0.43; #620 → 0.43/0.44; #623 → 0.43
+   hygiene train; #907 and #892 accepted as deferred (tooling/internal
+   error-narrative, neither touches the frozen surface). #592 (the
+   mechanical freeze guard) was implemented instead of deferred: the
+   public-interface snapshot now records re-exported names per subpath.
+4. **CI hygiene** — the last-20-run audit found only deterministic,
+   since-fixed train-period reds; the alpha.17 release gates (45/45) and
+   main CI are green at the decision commit.
+5. **Acceptance edits** — this status flip; VERSION_PLAN/ROADMAP/STATUS
+   maturity-stage updates; product-wording sweep (no "production runtime"
+   claim) verified in the same train.
+6. **Migration proof** — fresh zero-change upgrade proof: a pure-static
+   0.41.2 project rebuilt on the 0.42 line with byte-identical user-visible
+   content (build metadata and the framework island bundle excepted; the
+   pure-static `dist/server` removal of #953 is recorded in the migration
+   guide). Evidence trees: /tmp/oe-c4-upgrade/ (2026-08-14, alpha.16
+   build), re-confirmed against the 0.42.0 artifact in the release train.
 
 ## Context
 
