@@ -93,3 +93,13 @@ names the content element.
   template markup unchanged (the sanctioned shape keeps working).
 - `www`: no route changes — the site uses plain element routes, whose
   semantics are untouched.
+
+## Erratum (0.43, #971)
+
+The residual corner — a self-registered content element whose tag equals the
+route's path-derived fallback tag — still shadowed the page class under the
+#952 ownership rule (0.42.x shipped a scanner warning). From 0.43 the scanner
+fails the build with rename guidance: the colliding shape never worked
+correctly, so failing is honest signaling, not a behavior regression. This is
+a patch to this ADR's migration surface, not a change to the decoupling
+itself; ADR-0122's frozen semantics are untouched.

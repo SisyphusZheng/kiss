@@ -7,7 +7,7 @@
  *   process, even when scanRoutes() runs again with a different routesDir
  *   spelling (relative vs absolute).
  */
-import { assertEquals } from '@std/assert';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { join, relative } from 'jsr:@std/path@^1.0.0';
 import { scanRoutes } from '../src/internal/ssg/index.ts';
 
@@ -41,28 +41,13 @@ async function captureInfo(fn: () => Promise<void>): Promise<string[]> {
   return messages;
 }
 
-/** Run fn with console.warn captured; returns the captured messages. */
-async function captureWarn(fn: () => Promise<void>): Promise<string[]> {
-  const messages: string[] = [];
-  const original = console.warn;
-  console.warn = (msg?: unknown, ...args: unknown[]) => {
-    messages.push([msg, ...args].map(String).join(' '));
-  };
-  try {
-    await fn();
-  } finally {
-    console.warn = original;
-  }
-  return messages;
-}
-
-Deno.test('scanRoutes warns when a content element tag collides with the fallback registration tag', async () => {
+Deno.test('scanRoutes fails the build when a content element tag collides with the fallback tag (#971)', async () => {
   const dir = await Deno.makeTempDir({ prefix: 'oe-scan-tagname-' });
   try {
     const routesDir = join(dir, 'routes');
     await Deno.mkdir(routesDir, { recursive: true });
     // The #960 residual corner: contact.tsx → fallback 'contact-page'; a
-    // same-tag self-registered content element shadows the page class.
+    // same-tag self-registered content element would shadow the page class.
     await Deno.writeTextFile(
       join(routesDir, 'contact.tsx'),
       `import { defineElement, definePage } from '@openelement/app';
@@ -74,12 +59,13 @@ export default definePage({
 `,
     );
 
-    const warnings = await captureWarn(async () => {
-      await scanRoutes(routesDir);
-      await scanRoutes(routesDir); // second pass must not repeat the warning
-    });
-    const collisions = warnings.filter((m) => m.includes('shadows the page class'));
-    assertEquals(collisions.length, 1, 'collision must warn exactly once');
+    const err = await scanRoutes(routesDir).then(
+      () => undefined,
+      (e: unknown) => e as Error,
+    );
+    assertEquals(err?.message.includes('contact-page'), true);
+    assertStringIncludes(err?.message ?? '', 'shadow the page class');
+    assertStringIncludes(err?.message ?? '', 'Rename the content element');
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }
