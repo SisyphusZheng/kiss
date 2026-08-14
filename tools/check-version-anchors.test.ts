@@ -150,10 +150,13 @@ Deno.test('in-flight claims: the interop example may lag to the npm-published li
 });
 
 Deno.test('in-flight claims: published line bound to in-flight wording fails (#813)', () => {
-  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1] ?? '0';
+  // The current line may be a stable cut (no -alpha suffix): then the prose
+  // reference is the bare version, not an alpha.N shorthand.
+  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
+  const currentRef = currentAlpha ? `alpha.${currentAlpha}` : PACKAGE_VERSION;
   const cases = [
-    `alpha.${currentAlpha} is the in-flight source line.`,
-    `The in-flight source line is alpha.${currentAlpha}.`,
+    `${currentRef} is the in-flight source line.`,
+    `The in-flight source line is ${currentRef}.`,
     `Next alpha train: \`${PACKAGE_VERSION_TAG}\` (some theme — in flight; next is TP-9)`,
     `active train \`${PACKAGE_VERSION_TAG}\``,
   ];
