@@ -90,7 +90,12 @@ async function patchViteConfig(appDir: string): Promise<void> {
 
 async function readEventCount(page: Page): Promise<number> {
   return await page.evaluate(() => {
-    const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+    // #960: the definePage route registers under the path-derived fallback
+    // tag (third-party-wc); alpha3-wc-page is the content element inside
+    // its DSD shadow root.
+    const routePage = document
+      .querySelector('third-party-wc')
+      ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
     const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
       | HTMLElement
       | null;
@@ -103,7 +108,12 @@ async function readEventCount(page: Page): Promise<number> {
 async function interactAndVerifyEventCount(page: Page, startCount: number): Promise<void> {
   const expectCount = async (expected: number, label: string): Promise<void> => {
     await page.waitForFunction((target) => {
-      const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+      // #960: the definePage route registers under the path-derived fallback
+      // tag (third-party-wc); alpha3-wc-page is the content element inside
+      // its DSD shadow root.
+      const routePage = document
+        .querySelector('third-party-wc')
+        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
       const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
         | HTMLElement
         | null;
@@ -159,7 +169,12 @@ async function verifyBrowser(distDir: string): Promise<void> {
     );
 
     await page.waitForFunction(() => {
-      const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+      // #960: the definePage route registers under the path-derived fallback
+      // tag (third-party-wc); alpha3-wc-page is the content element inside
+      // its DSD shadow root.
+      const routePage = document
+        .querySelector('third-party-wc')
+        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
       const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
         | HTMLElement
         | null;
@@ -174,7 +189,12 @@ async function verifyBrowser(distDir: string): Promise<void> {
     });
 
     const summary = await page.evaluate(() => {
-      const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+      // #960: the definePage route registers under the path-derived fallback
+      // tag (third-party-wc); alpha3-wc-page is the content element inside
+      // its DSD shadow root.
+      const routePage = document
+        .querySelector('third-party-wc')
+        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
       const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
         | HTMLElement
         | null;

@@ -30,9 +30,12 @@ if (typeof window !== 'undefined') {
 const bump = (source: string) => {
   eventCount++;
   (window as unknown as Record<string, string[]>).__alpha3EventLog.push(source);
-  const fixture = document.querySelector('alpha3-wc-page')?.shadowRoot?.querySelector(
-    'alpha3-wc-fixture',
-  ) as HTMLElement | null;
+  // #960: the definePage route registers under the path-derived fallback tag
+  // (third-party-wc); alpha3-wc-page is the content element in its shadow.
+  const fixture = document
+    .querySelector('third-party-wc')
+    ?.shadowRoot?.querySelector('alpha3-wc-page')
+    ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
   const countEl = fixture?.shadowRoot?.querySelector('#event-count');
   if (countEl) countEl.textContent = `events:${eventCount}`;
 };
