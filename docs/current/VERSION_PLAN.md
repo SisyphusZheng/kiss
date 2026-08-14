@@ -2,13 +2,12 @@
 
 > Current source package line: `v0.42.0`\
 > Current npm registry line: `v0.42.0` (published 2026-08-14, dist-tag `alpha`)\
-> In-flight work: TP-6 (0.42.0 stable freeze decision, #962) on the
-> `v0.42.0-alpha.17` line; TP-5.9 shipped with alpha.13, and alpha.14–16
-> were remediation trains closing it\
+> In-flight work: none — TP-6 accepted ADR-0122 on 2026-08-14 (#962);
+> this release is the 0.42.0 stable cut\
 > Active release target: `v0.42.0`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
-> Current maturity stage: stable (0.41.x line); 0.42.0 planned under ADR-0120
+> Current maturity stage: stable (0.42.0, WC light fullstack, frozen under ADR-0122)
 > Plan amendment: 2026-07-28 — light-fullstack product promise, CSRF floor
 > in alpha.7 ship gate, login-via-recipe clarified (no 0.44 wait)
 
@@ -89,8 +88,8 @@ Each package lists its entry conditions (准入), execution steps, and exit
 criteria (准出). A package starts only when every entry condition holds and
 closes only when every exit criterion is evidenced in the repository.
 
-Milestones TP-0–TP-5.9 are shipped; their plans are archived in git history.
-Only the open milestone TP-6 keeps its full plan below.
+Milestones TP-0–TP-6 are shipped; their plans are archived in git history.
+TP-6 closed 2026-08-14: ADR-0122 accepted (#962), 0.42.0 stable cut.
 
 ### Shipped milestones (archive)
 

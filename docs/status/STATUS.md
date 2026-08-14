@@ -1,20 +1,24 @@
 # OpenElement Status
 
-> Updated: 2026-08-14\
+> Updated: 2026-08-15\
 > Repository package line: `v0.42.0`\
 > npm registry line: `v0.42.0` (published 2026-08-14, dist-tag `alpha`)\
 > Active release target: `v0.42.0`\
-> Next release line: `v0.42.0` (WC light fullstack)\
+> Next release line: `v0.43.0` (Universal WC SSR)\
 > Product graph: five packages\
-> Current maturity stage: stable (0.41.x); 0.42 alpha in flight
+> Current maturity stage: stable (0.42.0, WC light fullstack under ADR-0122)
 
 ## Current position
 
-OpenElement is a Web Components-native, static-first application framework,
-stable at `0.41.0` under ADR-0119: the interface freeze covers `defineElement`,
+OpenElement is a Web Components-native application framework, stable at
+`0.42.0` under ADR-0122: the 0.41.x static freeze (ADR-0119 — `defineElement`,
 `definePage`, `buildApp`, the five-package graph, the supported subpaths and
-the static/SPA semantics of `defineApp`; request-time semantics stay unfrozen
-until 0.42/0.44. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
+the static/SPA semantics of `defineApp`) is untouched, and the request-time
+Application Loop is now frozen on top of it — loader/action signatures, the
+fail/redirect algebra and PRG revalidation, the action protocol and morph
+client contract, the CSRF default, and first-mile start semantics. Framework
+session/flash, cache/ISR, streaming SSR and production runtime recovery stay
+unfrozen (0.43/0.44). Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha
@@ -75,11 +79,11 @@ the five-package responsibility table.
 
 ## 0.42 direction
 
-The `0.42.0` line is **WC light fullstack**: Application Loop (ADR-0120) plus
-first-mile ops and CSRF floor. Planned in
-[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; **TP-5.9** closed
-with alpha.13; the active line is alpha.17, post-TP-5.9 remediation toward
-**TP-6**). Protocol evidence:
+The `0.42.0` line shipped 2026-08-15 as **WC light fullstack**: the
+Application Loop (ADR-0120) frozen under ADR-0122 plus first-mile ops and
+the CSRF floor. Planned in
+[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; all shipped;
+**TP-6** closed 2026-08-14 with the ADR-0122 acceptance). Protocol evidence:
 [`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md).
 
 `0.42 = WC light fullstack`. Product promise at `0.42.0`: dynamic
@@ -103,7 +107,8 @@ recipes).
 | `0.42.0-alpha.10` | Audit round 4 + remediation trains (#646–#752); milestone #17 issue-zero |
 | `0.42.0-alpha.13` | TP-5.9: standards-as-seams train + TP-6 freeze preparation (ADR-0123)    |
 | `0.42.0-alpha.16` | Starter-first remediation (round-3 audit #915–#943)                      |
-| `0.42.0`          | WC light fullstack (Application Loop freeze)                             |
+| `0.42.0-alpha.17` | Registration decoupling (#960, ADR-0128) + architect final review        |
+| `0.42.0`          | WC light fullstack stable — Application Loop frozen (ADR-0122)           |
 | `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                     |
 | `0.44.0`          | Production runtime (session/cache/OTel/streaming)                        |
 | `1.0.0`           | Stable five-package product                                              |

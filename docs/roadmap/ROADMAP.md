@@ -17,9 +17,10 @@ Execution and release state follow the
 > freeze preparation + the standards-as-seams train); alpha.14–16 were
 > remediation trains closing TP-5.9, and alpha.17 is the last train before
 > the TP-6 freeze decision.\
-> Planned line: `0.42.0` (WC light fullstack) under ADR-0120 and the active
-> version plan in `docs/current/VERSION_PLAN.md`.\
-> Maturity stage: stable (0.41.x interface freeze under ADR-0119); the
+> Planned line: `0.43.0` (Universal WC SSR) — `0.42.0` (WC light fullstack)
+> shipped 2026-08-15 under ADR-0120 and ADR-0122.\
+> Maturity stage: stable (0.42.0 — the 0.41.x interface freeze under
+> ADR-0119 plus the request-time loop freeze under ADR-0122); the
 > abandoned beta naming is retired.
 
 ## Product direction

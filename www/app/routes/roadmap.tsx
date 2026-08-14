@@ -335,9 +335,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.42.0',
-      theme: 'registration decoupling: definePage routes always run their page render (ADR-0128)',
+      theme: 'WC light fullstack, stable: the application loop freezes (ADR-0122)',
       copy:
-        'The alpha.17 train closes the alpha.17 architect final review. A definePage route module now registers its page class under the route-path fallback tag, so the definePage render — with its request and actionData context — always runs; the tagName export only names the content element (#960, ADR-0128). Shape-1 pages gain one wrapper element in their SSR markup (migration note in the migration guide). The review also hardened the error fallbacks (throwing-getter props can no longer crash SSR; depth-limit trips log once across all branch kinds), aligned the standalone serve.mjs MIME table, and refreshed the planning anchors, changelog coverage and guide samples. Blog e2e round-6 re-verified the published alpha.16 with zero manual wiring (#963).',
+        '0.42.0 freezes the request-time application loop on top of the untouched 0.41.x static freeze: definePage loaders and actions, the fail/redirect algebra with PRG revalidation, enhanced and no-JS form loops through the morph client, the fail-closed CSRF default, and build → start first-mile semantics (ADR-0120, frozen by ADR-0122). The line also brings hydrate-named island strategies, keyed <For>, ErrorBoundary auto-capture, the sanitizeHtml allow-list, .mdx routes, i18n routing, sitemaps, the standalone serve.mjs entry, and registration decoupling (#960, ADR-0128). Pure-static and SPA 0.41.x projects upgrade with zero source changes — proven byte-level against the stable artifacts. Session/flash, cache/ISR, streaming and the production runtime stay unfrozen (0.43/0.44).',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -383,10 +383,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0-alpha.17',
-      theme: '注册解耦:definePage 路由始终运行页面渲染(ADR-0128)',
+      version: 'v0.42.0',
+      theme: 'WC 轻全栈稳定版:应用循环冻结(ADR-0122)',
       copy:
-        'alpha.17 列车闭环了 alpha.17 架构师终检。definePage 路由模块的页面类现在注册到路由路径派生的兜底标签,definePage 渲染——连同 request 与 actionData 上下文——必定运行;tagName 导出仅为内容元素命名(#960、ADR-0128)。shape-1 页面的 SSR 标记会多一层外壳元素(迁移说明见迁移指南)。本次评审同时加固了错误回退(带异常 getter 的 props 不再击垮 SSR;深度限制在所有分支类型上只记录一次),对齐了独立 serve.mjs 的 MIME 表,并刷新了规划锚点、CHANGELOG 覆盖与指南示例。blog e2e round-6 以零手工接线复验了已发布的 alpha.16(#963)。',
+        '0.42.0 在未被触动的 0.41.x 静态冻结之上冻结请求时应用循环:definePage loader 与 action、fail/redirect 代数与 PRG 再验证、经 morph 客户端的增强与无 JS 表单循环、默认失败的 CSRF 同源底线,以及 build → start 的第一步语义(ADR-0120,由 ADR-0122 冻结)。本线还带来 hydrate 命名的岛屿策略、键控 <For>、ErrorBoundary 自动捕获、sanitizeHtml 白名单、.mdx 路由、i18n 路由、sitemap、独立 serve.mjs 入口与注册解耦(#960、ADR-0128)。纯静态与 SPA 的 0.41.x 项目零源码改动即可升级——已对稳定产物做字节级证明。session/flash、缓存/ISR、流式 SSR 与生产运行时保持未冻结(0.43/0.44)。',
       state: 'stable',
       stamp: 'CURRENT',
     },

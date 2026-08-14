@@ -145,7 +145,7 @@ element only — the page class always registers under the route-path-derived
 fallback tag (0.42.0-alpha.17). Plain element routes (no definePage) are
 unaffected: their `tagName` export remains the registration tag.
 
-### 0.42 line additions (unfrozen until the 0.42.0 stable decision)
+### 0.42 line additions (frozen at 0.42.0 under ADR-0122)
 
 - `definePage({ renderIntent: { mode } })`: `'static'` (default, prerendered) / `'dynamic'` (per-request; the `'auto'` alias was removed in alpha.13, #609)
   rendering modes; `'dynamic'` routes render per request through the
