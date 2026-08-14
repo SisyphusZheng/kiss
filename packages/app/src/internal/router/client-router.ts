@@ -89,6 +89,10 @@ function resolveMode(mode: RouterMode): 'history' | 'hash' {
  * `:param*`, `*` are native); only the Hono-style `:name{regex}` catch-all
  * emitted by the SSG route scanner (#812) needs rewriting to the URLPattern
  * `:name(regex)` form.
+ *
+ * Twin: ssg-helpers.ts routePatternToURLPatternPath (adapter-vite) is a
+ * byte-identical body for the generated server matcher — keep them in sync
+ * (the escapeAttr precedent: deliberate copy, cross-referenced).
  */
 function routePathToURLPatternPath(path: string): string {
   return path

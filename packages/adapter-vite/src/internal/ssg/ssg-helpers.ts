@@ -122,6 +122,10 @@ interface RequestTimeRoutePattern {
  * matcher inside dist/server/index.js (#556): hosts get a dispatch function
  * instead of re-implementing pattern matching against the raw ':param'
  * strings in server-manifest.json.
+ *
+ * Twin: client-router.ts routePathToURLPatternPath (@openelement/app) is a
+ * byte-identical body for the SPA router — keep them in sync (the
+ * escapeAttr precedent: deliberate copy, cross-referenced).
  */
 export function routePatternToURLPatternPath(path: string): string {
   return path
