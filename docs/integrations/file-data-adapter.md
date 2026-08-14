@@ -65,7 +65,10 @@ Wired into a blog-like request-time route:
 import { definePage, useLoaderData } from '@openelement/app';
 import { createFileDataAdapter } from '../data/file-adapter.ts';
 
-interface Note { title: string; body: string }
+interface Note {
+  title: string;
+  body: string;
+}
 
 const notes = createFileDataAdapter<Note>('./data/notes');
 

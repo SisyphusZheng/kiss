@@ -307,9 +307,9 @@ export default GuestbookPage;`}</code></pre>
                 <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/file-data-adapter.md'>
                   FileDataAdapter (filesystem data)
                 </a>{' '}
-                — the ADR-0095 recipe: a read-only JSON-file adapter with the unstorage read
-                surface (getItem/keys), used from loaders; verified against a scratch app built
-                from repo source.
+                — the ADR-0095 recipe: a read-only JSON-file adapter with the unstorage read surface
+                (getItem/keys), used from loaders; verified against a scratch app built from repo
+                source.
               </>
             )}
         </p>
@@ -328,9 +328,8 @@ export default GuestbookPage;`}</code></pre>
                 <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/better-auth-guard.md'>
                   Auth guard (better-auth middleware)
                 </a>{' '}
-                — redirects anonymous users out of a protected route group (303) and passes
-                session identity through to loaders; guard mechanics verified, better-auth call
-                stubbed.
+                — redirects anonymous users out of a protected route group (303) and passes session
+                identity through to loaders; guard mechanics verified, better-auth call stubbed.
               </>
             )}
         </p>

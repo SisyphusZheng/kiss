@@ -74,12 +74,12 @@ Three mechanics worth understanding before adapting it:
 
 1. **Self-containment.** Middleware sources are inlined into the
    generated server entry via `fn.toString()`, so constants and helpers
-   must live *inside* the function body — module-scope references throw
+   must live _inside_ the function body — module-scope references throw
    `ReferenceError` at runtime. The real `auth` client cannot be closed
    over either: construct it inside the function (its setup is cheap and
    stateless) or attach it to `globalThis` at server start.
 2. **Identity pass-through uses request-header mutation.**
-   `composeFetchMiddleware` threads the *same* `Request` object through
+   `composeFetchMiddleware` threads the _same_ `Request` object through
    the chain, so a header the guard sets is visible to downstream loaders
    via `ctx.request.headers`. `delete`-then-`set` makes the header
    middleware-owned — a client-supplied `x-oe-user` cannot survive the
