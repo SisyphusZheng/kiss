@@ -404,7 +404,7 @@ export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): vo
     'metadata-boundary',
     scannerFiles,
     /exportMatch|splitOnCommas|parseValue\(raw/,
-    'route/nav metadata must use AST or structured data, not source regex parsing',
+    'scanner metadata extraction must stay regex/lightweight (deliberate: route-scanner.ts header — AST parsing was evaluated and rejected); these exact tokens are banned because they re-introduce brittle hand-rolled value parsing',
     issues,
   );
 }
