@@ -80,7 +80,10 @@ them by hand when a change touches rendering output or archived audit docs.
 Also manual-only: `test:watch`, `test:e2e:install`,
 `test:e2e:browsers:install` (CI installs Playwright browsers directly via
 `./node_modules/.bin/playwright install`), and `autoflow:dev` (local
-AutoFlow driver; CI runs `autoflow:ci`).
+AutoFlow driver; CI runs `autoflow:ci`). Note `test:e2e:browser-smoke`
+takes the browser name as a trailing argument (`deno task
+test:e2e:browser-smoke chromium`); the bare command is incomplete by
+design — the release-tier gates call it with `firefox` / `webkit`.
 
 ## Code Style
 
