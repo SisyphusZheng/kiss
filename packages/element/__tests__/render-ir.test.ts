@@ -90,6 +90,47 @@ Deno.test('SSR rejects rendering beyond the nesting-depth limit', async () => {
   );
 });
 
+Deno.test('SSR depth-limit trip is not logged once per function-component frame', async () => {
+  // Alternating function-component and registered-CE frames: the CE branch
+  // trips the depth limit, and the trip then bubbles through function
+  // frames (renderComponentBranch). That branch must skip the typed trip
+  // like the CE branch already does (0b52269c) — otherwise the identical
+  // line is logged once per frame.
+  function RecursiveFn(): unknown {
+    return jsx('x-depth-frame', {});
+  }
+  class DepthFrame {
+    render(): unknown {
+      return jsx(RecursiveFn, {});
+    }
+  }
+
+  const had = 'customElements' in globalThis;
+  const previous = globalThis.customElements;
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: { get: (name: string) => name === 'x-depth-frame' ? DepthFrame : undefined },
+  });
+  const errors: unknown[] = [];
+  const originalError = console.error;
+  console.error = (...args: unknown[]) => errors.push(args);
+  try {
+    await assertRejects(
+      () => renderDsdTree(jsx(RecursiveFn, {})),
+      Error,
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH}`,
+    );
+  } finally {
+    console.error = originalError;
+    if (had) {
+      Object.defineProperty(globalThis, 'customElements', { configurable: true, value: previous });
+    } else {
+      delete (globalThis as { customElements?: unknown }).customElements;
+    }
+  }
+  assertEquals(errors.length, 0);
+});
+
 Deno.test('SSR instantiate failure falls back to a bare tag with serialized props (#892)', async () => {
   class ThrowingElement {
     constructor() {

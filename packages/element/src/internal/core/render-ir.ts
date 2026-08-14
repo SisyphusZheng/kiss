@@ -390,7 +390,14 @@ async function renderComponentBranch(
       boundaryActive,
     );
   } catch (err) {
-    if (!isControlFlowThrow(err) && !(err instanceof BoundaryRenderError)) {
+    // Mirror renderRegisteredCeBranch: control flow needs no log,
+    // BoundaryRenderError was already reported at its origin, and a
+    // depth-limit trip bubbles through every frame — logging here would
+    // repeat the same line once per level.
+    if (
+      !isControlFlowThrow(err) && !(err instanceof BoundaryRenderError) &&
+      !isDepthLimitError(err)
+    ) {
       createLogger('render').error(
         `render failed for <${String(tag)}>:` +
           ` ${formatError(err)}`,
