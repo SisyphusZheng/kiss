@@ -823,7 +823,11 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   assertStringIncludes(code, 'c.req.header(__actionFetchHeader)');
   assertStringIncludes(
     code,
-    "{ type: 'failure', status: __actionResult.status, data: __actionResult.data }",
+    "try { JSON.stringify(__failureData); } catch { __failureData = null; }",
+  );
+  assertStringIncludes(
+    code,
+    "{ type: 'failure', status: __actionResult.status, data: __failureData }",
   );
   assertStringIncludes(code, ', __actionStatus)');
   // No action export on a route: POST is a defined 404, not a render.

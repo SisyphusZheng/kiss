@@ -371,8 +371,14 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   );
   lines.push(`    if (__isFetch) {`);
   lines.push(`      if (__isActionFailure(__actionResult)) {`);
+  // Unserializable fail() data (circular structure, BigInt, throwing
+  // getter): the native channel re-renders it fine, but the fetch channel
+  // must answer JSON — c.json would throw and the action failure would
+  // surface as a 500. Degrade the payload, keep status and body shape.
+  lines.push(`        let __failureData = __actionResult.data;`);
+  lines.push(`        try { JSON.stringify(__failureData); } catch { __failureData = null; }`);
   lines.push(
-    `        return c.json({ type: 'failure', status: __actionResult.status, data: __actionResult.data }, __actionResult.status);`,
+    `        return c.json({ type: 'failure', status: __actionResult.status, data: __failureData }, __actionResult.status);`,
   );
   lines.push(`      }`);
   // ADR-0121 section 3: HTTP 200 carrying a data message, not an HTTP

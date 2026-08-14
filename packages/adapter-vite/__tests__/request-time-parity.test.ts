@@ -210,6 +210,31 @@ Deno.test({
         }
       });
 
+      // Fetch channel with unserializable fail() data: the JSON channel
+      // must still answer the author status (payload degrades to null) —
+      // a c.json throw here would turn a 422 into a 500.
+      await t.step(
+        'POST /fail-unserializable (fetch channel) → 422 with degraded payload',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const response = await fetch(`${base}/fail-unserializable`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                'x-openelement-action': 'true',
+                origin: new URL(base).origin,
+              },
+              body: 'x=1',
+            });
+            assertEquals(response.status, 422, `${name}: unserializable fail status`);
+            const body = await response.json();
+            assertEquals(body.type, 'failure', `${name}: failure body shape`);
+            assertEquals(body.status, 422, `${name}: failure body status`);
+            assertEquals(body.data, null, `${name}: unserializable data degrades to null`);
+          }
+        },
+      );
+
       await t.step('POST /form valid → 303 + Location', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form`, formBody({ message: 'parity-check' }));
