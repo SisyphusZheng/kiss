@@ -197,9 +197,13 @@ Earlier removed product experiments and adapters remain historical only:
 - Adapter Vite owns content, static generation, deployment and build contracts.
 - Create templates and current docs may import only retained product packages.
 - Runtime-free packages (`element`, `app`, `ui`) contain no Deno or Node host API
-  in their public execution paths.
-- Build packages (`adapter-vite`, `create`) may use host APIs behind their public
-  build interfaces.
+  in their public execution paths (gated by `deno task deno-api:check`).
+- Build packages (`adapter-vite`, `create`) run on the Deno host and may use
+  host APIs behind their public build interfaces (#966: the CLI and template
+  builder use `Deno.*` directly — that is in-contract; the scaffolding entry
+  is `deno run`). What must stay host-agnostic is their _output_: generated
+  artifacts (`dist/server`, `serve.mjs`, the client entries) run on
+  Node/Deno/Bun and may use only Web/ES globals plus `node:` builtins.
 - Alpha internal packages and subpaths have no compatibility promise.
 
 The package export map, generated resolver table and the subpath inventory
