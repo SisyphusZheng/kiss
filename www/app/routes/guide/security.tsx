@@ -13,6 +13,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     outline: [
       { id: 'standing-assumption', label: 'Standing assumption', level: 3 },
       { id: 'ambient-auth', label: 'Ambient authentication', level: 3 },
+      { id: 'redirect-targets', label: 'Redirect targets', level: 3 },
       { id: 'middleware-recipe', label: 'Middleware recipe', level: 3 },
       { id: 'safe-html', label: 'Safe HTML by default', level: 3 },
     ],
@@ -30,6 +31,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'Ambient authentication',
         body:
           'Apps authenticated by ambient credentials — HTTP Basic, mTLS, or cookies set with SameSite=None — cannot rely on the Lax default: the browser attaches those credentials to cross-site requests. The built-in same-origin floor covers generated action POSTs, but such apps should validate the request origin on every state-changing API route as well.',
+      },
+      {
+        id: 'redirect-targets',
+        title: 'Redirect targets',
+        body:
+          'redirect() validates the status (3xx whitelist) but never the location — targets are author-controlled code, as in SvelteKit. An action that redirects to user-supplied input (a ?next= parameter, a stored URL) is an open redirect: validate or allowlist such targets in the action before calling redirect().',
       },
       {
         id: 'middleware-recipe',
@@ -55,6 +62,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     outline: [
       { id: 'standing-assumption', label: '基本假设', level: 3 },
       { id: 'ambient-auth', label: '隐式身份验证', level: 3 },
+      { id: 'redirect-targets', label: '重定向目标', level: 3 },
       { id: 'middleware-recipe', label: 'Middleware 配方', level: 3 },
       { id: 'safe-html', label: '默认安全 HTML', level: 3 },
     ],
@@ -72,6 +80,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: '隐式身份验证',
         body:
           '使用隐式凭据（HTTP Basic、mTLS，或 SameSite=None 的 cookie）的应用无法依赖 Lax 默认值：浏览器会在跨站请求中附带这些凭据。内置同源地板已覆盖生成的 action POST，但这类应用还应在每个会改变状态的 API 路由上校验请求来源。',
+      },
+      {
+        id: 'redirect-targets',
+        title: '重定向目标',
+        body:
+          'redirect() 只校验状态码（3xx 白名单），从不校验 location——目标被视为作者自控代码（与 SvelteKit 相同）。action 若把用户可控输入（?next= 参数、存储的 URL）直接作为重定向目标，就构成开放重定向：在 action 里先校验或白名单化目标，再调用 redirect()。',
       },
       {
         id: 'middleware-recipe',
