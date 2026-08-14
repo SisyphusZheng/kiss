@@ -77,14 +77,31 @@ Phase 2: client island entry and browser chunks
 `mode: 'spa'` skips SSG (Phase 3) entirely — no SSR HTML is rendered. The
 `index.html` contract:
 
-- If your project root has its own `index.html`, Vite emits it and the
-  adapter **preserves** it (it never overwrites an existing file). This is
-  how you attach a custom client entry.
+- The adapter's client build points `build.rollupOptions.input` at its
+  virtual build trigger, so a project-root `index.html` is **not** bundled
+  by default. To ship your own shell, override the input (the
+  `examples/deno-desktop-reader` form):
+
+  ```ts
+  // vite.config.ts — after openPipeline(...)
+  {
+    name: 'app:entry',
+    enforce: 'post',
+    config() {
+      return { build: { rollupOptions: { input: 'index.html' } } };
+    },
+  },
+  ```
+
+  With that, Vite emits your `index.html` and the adapter **preserves** it
+  (it never overwrites an existing file). This is how you attach a custom
+  client entry.
 - Otherwise the adapter writes a _fallback shell_: a bare `<div id="root">`
   plus a `console.info` placeholder script. It is a build marker so the
   output directory is servable — not a runnable app. Either way, a route
   manifest module (`route-manifest.ts`, exporting `routeManifest`) is
-  written next to it for client-side routing.
+  written next to it for client-side routing; import it from your bootstrap
+  as `../dist/route-manifest.ts`.
 
 A minimal custom entry is your own `index.html` plus a bootstrap module:
 
