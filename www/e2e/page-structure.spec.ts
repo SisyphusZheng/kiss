@@ -50,8 +50,9 @@ test.describe('Unified page structure', () => {
       const rail = page.locator('open-reading-shell[rail] open-page-rail');
       await expect(rail).toHaveCount(1);
       await expect(rail).toBeVisible();
-      await page.waitForTimeout(50);
-      expect(await rail.locator('a').count()).toBeGreaterThan(0);
+      // The rail links render async after the shell upgrades; poll instead
+      // of sleeping a fixed interval.
+      await expect(rail.locator('a').first()).toBeVisible();
     });
   }
 

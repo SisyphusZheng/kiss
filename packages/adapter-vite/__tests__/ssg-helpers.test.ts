@@ -49,6 +49,21 @@ Deno.test('renderRequestTimeServerModule mounts the entry openElementHandler (#8
   assertEquals(code.includes('app.fetch'), false);
 });
 
+Deno.test('renderStandaloneServerModule fails fast below the URLPattern floor (#969)', () => {
+  const code = renderStandaloneServerModule();
+  // The generated route table in ./index.js builds WHATWG URLPattern objects
+  // at module scope; Node.js only gained the global in v24 (node:url export
+  // in v23.8). serve.mjs must check the floor and exit with guidance before
+  // importing ./index.js — not die with a raw ReferenceError.
+  assertStringIncludes(code, "typeof globalThis.URLPattern === 'undefined'");
+  assertStringIncludes(code, "await import('node:url')");
+  assertStringIncludes(code, 'Node.js >= 24');
+  assertStringIncludes(code, "await import('./index.js')");
+  // The dynamic import is load-bearing: a static import would evaluate
+  // ./index.js (and its URLPattern constructions) before the floor check.
+  assertEquals(code.includes("from './index.js'"), false);
+});
+
 Deno.test('renderStandaloneServerModule MIME table matches static-serve.ts (#732-class drift guard)', () => {
   const code = renderStandaloneServerModule();
   // serve.mjs is self-contained and cannot import the shared table, so pin

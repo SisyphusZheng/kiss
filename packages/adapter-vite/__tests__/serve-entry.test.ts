@@ -8,7 +8,8 @@
  *   node dist/server/serve.mjs
  *
  * This test boots the generated entry (Deno here; the module uses node:
- * builtins only, so Node 18+ and Bun run the same file) against the
+ * builtins only, so Node.js >= 24 and Bun run the same file — the runtime
+ * floor is WHATWG URLPattern, #969) against the
  * request-time fixture and asserts both channels: request-time routes and
  * prerendered static files.
  *

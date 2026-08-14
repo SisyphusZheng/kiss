@@ -2,7 +2,7 @@
 
 > Updated: 2026-08-15\
 > Repository package line: `v0.42.0`\
-> npm registry line: `v0.42.0` (published 2026-08-14, dist-tag `alpha`)\
+> npm registry line: `v0.42.0` (published 2026-08-15, dist-tag `latest`)\
 > Active release target: `v0.42.0`\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Product graph: five packages\

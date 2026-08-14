@@ -160,8 +160,9 @@ function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string 
  * pure-static output trees stay byte-identical. The module mounts the
  * prerendering SSR bundle (the same Hono app, with loaders/actions) on the
  * public `nitro-mount` seam; Nitro Node/Workers builds bundle it as the
- * server entry, and plain Node can run it directly with adapter-vite
- * installed.
+ * server entry, and plain Node (>= 24 — the route table below builds
+ * WHATWG URLPattern objects at module scope, #969) can run it directly
+ * with adapter-vite installed.
  *
  * The named `matchRequestTimeRoute` export (#556) is a self-contained
  * pathname matcher generated from the route table, so hosts dispatch
@@ -245,7 +246,13 @@ export default async function openElementRequestTimeServer(event) {
  * Self-contained by contract: dist/ is a portable artifact, so the module
  * imports only node: builtins plus ./index.js (which itself resolves
  * @openelement/adapter-vite/nitro-mount from the project's dependencies).
- * Cross-runtime (#622): node:http/node:fs run on Node 18+, Deno and Bun.
+ * Cross-runtime (#622): node:http/node:fs run on Node, Deno and Bun.
+ * Runtime floor (#969): the generated matcher in ./index.js constructs
+ * WHATWG URLPattern objects at module scope, so the floor is Node.js >= 24
+ * (first release with the URLPattern global; 23.8+ works via the node:url
+ * export, adopted as a fallback), Deno and Bun. Older Node has no
+ * URLPattern anywhere — serve.mjs fails fast with guidance instead of a
+ * raw ReferenceError.
  *
  * Request semantics intentionally mirror cli/start.ts: request-time route
  * match (or any mutating method) dispatches to the server entry, otherwise
@@ -259,6 +266,9 @@ export function renderStandaloneServerModule(): string {
 // loader/action routes to the generated server entry (./index.js).
 // Do not edit; regenerated per build.
 //
+// Runtime floor (#969): Node.js >= 24 (WHATWG URLPattern global; Node
+// 23.8+ also works via the node:url URLPattern export), Deno, or Bun.
+//
 // Usage:
 //   node dist/server/serve.mjs
 //   OPEN_ELEMENT_PORT=8080 OPEN_ELEMENT_HOST=127.0.0.1 node dist/server/serve.mjs
@@ -267,7 +277,33 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
-import openElementServer, { matchRequestTimeRoute } from './index.js';
+
+// Runtime floor (#969): ./index.js builds WHATWG URLPattern objects at
+// module scope. Node.js gained the URLPattern global in v24 (v23.8 exposes
+// it on node:url); Node <= 23.7 has no URLPattern anywhere, and a faithful
+// WHATWG shim is far too large to inline. Fail fast with guidance instead
+// of a raw ReferenceError.
+if (typeof globalThis.URLPattern === 'undefined') {
+  try {
+    const nodeUrl = await import('node:url');
+    if (typeof nodeUrl.URLPattern === 'function') {
+      globalThis.URLPattern = nodeUrl.URLPattern;
+    }
+  } catch {
+    // Older Node without a node:url URLPattern export; handled below.
+  }
+}
+if (typeof globalThis.URLPattern === 'undefined') {
+  console.error(
+    '[openElement serve] This build requires a runtime with WHATWG URLPattern: ' +
+      'Node.js >= 24, Deno, or Bun. Detected Node.js ' + process.version + '.',
+  );
+  process.exit(1);
+}
+
+// Imported dynamically so the URLPattern floor check above runs before the
+// generated route table in ./index.js constructs its patterns.
+const { default: openElementServer, matchRequestTimeRoute } = await import('./index.js');
 
 const distDir = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const rawPort = process.env.OPEN_ELEMENT_PORT || process.env.PORT || '4173';

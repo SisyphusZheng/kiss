@@ -215,6 +215,14 @@ export async function ssgRender(
       renderStandaloneServerModule(),
       'utf-8',
     );
+    // #969: index.js/entry.js are ESM .js files, and Node.js has no
+    // module-syntax detection before v20.19/v22.12 — without this marker
+    // `node dist/server/index.js` dies with a misleading SyntaxError.
+    writeFileSync(
+      join(serverDir, 'package.json'),
+      '{ "type": "module" }\n',
+      'utf-8',
+    );
     log.info(
       `Request-time server -> ${join(serverDir, 'index.js')} ` +
         `(${requestTimeRoutes.length} route(s): ${

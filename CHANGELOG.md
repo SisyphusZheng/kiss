@@ -18,7 +18,8 @@ evidence.
 
 ## 0.42.0-alpha.17
 
-(Skeleton — release tooling finalizes this entry at the alpha.17 cut.)
+Registration-decoupling train (#960, ADR-0128) plus the architect final
+review's hardening and documentation set.
 
 - **Breaking (SSR markup, ADR-0128)**: route modules whose default export is
   `definePage(...)` now register the page class under the route-path-derived

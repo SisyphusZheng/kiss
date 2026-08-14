@@ -39,6 +39,93 @@ import { clearChildren } from './dom-utils.ts';
 const scopeLog = createLogger('hydration');
 
 /**
+ * Stable diagnostic code for SSR/hydration mismatches (#631), in the same
+ * taxonomy style as the `OPEN_ELEMENT_RENDER_*` render codes. Kept as a
+ * module-local constant: the client hydration path cannot reach the SSR
+ * `RenderHooks.onError` channel (hooks are renderDsd options), so the
+ * diagnostic stays logger-based with the code in the message and the
+ * structured detail as a second logger argument.
+ */
+export const HYDRATION_MISMATCH_CODE = 'OPEN_ELEMENT_HYDRATION_MISMATCH';
+
+/** Why the SSR shadow root diverged from the VNode-derived expectations. */
+export type HydrationMismatchReason = 'marker-count' | 'branch-count' | 'branch-token';
+
+/**
+ * Structured detail for a hydration mismatch, attached to the warning as a
+ * second logger argument so devtools/telemetry can consume it without
+ * parsing the message. Counts/tokens are exactly what the detection point
+ * knows: the `data-eid` marker count the client VNode implies vs the SSR
+ * DOM, and the expected vs actual `oe-branch` token sequence.
+ */
+export interface HydrationMismatchDetail {
+  reason: HydrationMismatchReason;
+  /** Lowercased tag of the shadow host whose hydration degraded. */
+  hostTag: string;
+  expectedMarkers: number;
+  actualMarkers: number;
+  expectedBranches: string[];
+  actualBranches: string[];
+  /** Index of the first diverging branch token (reason 'branch-token' only). */
+  divergedAt?: number;
+}
+
+// Mirrors the Vite half of the shared dev-mode signal (#743,
+// packages/app/src/internal/dev-mode.ts): element is runtime-free, so it can
+// only read the compile-time `import.meta.env.DEV` constant, never DENO_ENV.
+interface ImportMetaWithEnv extends ImportMeta {
+  env?: { DEV?: boolean };
+}
+
+function isDevBuild(): boolean {
+  return (import.meta as ImportMetaWithEnv).env?.DEV === true;
+}
+
+/**
+ * Format the mismatch warning. Development (Vite `import.meta.env.DEV`)
+ * gets the full structured detail — counts, both token sequences, and the
+ * divergence index — while production gets a one-line coded summary. The
+ * detail object is always passed to the logger as a second argument.
+ * Exported for tests; not part of the package public facade.
+ */
+export function formatHydrationMismatchMessage(
+  detail: HydrationMismatchDetail,
+  dev: boolean,
+): string {
+  if (!dev) {
+    return `[${HYDRATION_MISMATCH_CODE}] SSR/hydration mismatch (${detail.reason}) on ` +
+      `<${detail.hostTag}>; falling back to client-side render for this shadow root.`;
+  }
+  const lines = [
+    `[${HYDRATION_MISMATCH_CODE}] SSR/hydration mismatch on <${detail.hostTag}>: ` +
+    'the SSR shadow root diverged from the client VNode.',
+  ];
+  if (detail.reason === 'marker-count') {
+    lines.push(
+      `  data-eid event markers: expected ${detail.expectedMarkers} (client VNode), ` +
+        `found ${detail.actualMarkers} (SSR DOM).`,
+    );
+  } else if (detail.reason === 'branch-count') {
+    lines.push(
+      `  oe-branch tokens: expected ${detail.expectedBranches.length} (client VNode), ` +
+        `found ${detail.actualBranches.length} (SSR DOM).`,
+    );
+  } else {
+    const at = detail.divergedAt ?? 0;
+    lines.push(
+      `  oe-branch token diverges at index ${at}: expected ` +
+        `"${detail.expectedBranches[at]}", found "${detail.actualBranches[at]}".`,
+    );
+  }
+  if (detail.reason !== 'marker-count') {
+    lines.push(`  expected tokens: [${detail.expectedBranches.join(', ')}]`);
+    lines.push(`  actual tokens:   [${detail.actualBranches.join(', ')}]`);
+  }
+  lines.push('Falling back to client-side render for this shadow root.');
+  return lines.join('\n');
+}
+
+/**
  * Elements whose shadow-root (or light-DOM) bindings are owned by the
  * element's own HydrationScope — set by OpenElement after a successful DSD
  * hydration or CSR render. client-runtime reads this to avoid stacking a
@@ -184,15 +271,16 @@ export class HydrationScope {
       const expectedBranches: string[] = [];
       const listTargets: ListTarget[] = [];
       const eventBindings = collectEventBindings(vnode, expectedBranches, listTargets);
-      if (!this.#matchesSsrDom(shadowRoot, eventBindings, expectedBranches)) {
+      const detail = this.#detectSsrMismatch(shadowRoot, eventBindings, expectedBranches);
+      if (detail) {
         // The SSR DOM cannot be trusted to line up with the VNode-derived
         // bindings (eid count drift or Show/For branch flip between SSR and
         // hydration). Binding anyway would attach handlers to the wrong
-        // elements, so degrade this scope to a client-side re-render.
-        scopeLog.warn(
-          'SSR/hydration mismatch (event markers or Show/For branch state); ' +
-            'falling back to client-side render for this shadow root.',
-        );
+        // elements, so degrade this scope to a client-side re-render. The
+        // warning carries the stable code and (as a second argument) the
+        // structured detail; the message text carries the full detail in dev
+        // builds and a one-line coded summary in production (#631).
+        scopeLog.warn(formatHydrationMismatchMessage(detail, isDevBuild()), detail);
         this.#renderClientSide(shadowRoot, vnode, lifecycle);
         this.#scheduleLayoutFix(shadowRoot);
         return;

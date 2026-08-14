@@ -7,11 +7,12 @@ Elements are the durable application contract; JSX and Basic Element are the
 authoring layer; Declarative Shadow DOM is the default server representation;
 interactive regions upgrade selectively.
 
-Source package line: `0.42.0` (`v0.42.0`) — the in-flight
-five-package source line under ADR-0119's scoped interface freeze; the
-abandoned beta naming is not an active line.
-npm registry line: `v0.42.0` — the published five-package release.
-The registry line is allowed to lag the source line by one alpha.
+Source package line: `0.42.0` (`v0.42.0`) — the current
+five-package source line; the request-time Application Loop froze under
+ADR-0122 on top of ADR-0119's untouched static freeze.
+npm registry line: `v0.42.0` — the published five-package release
+(dist-tag `latest`). During alpha trains the registry line may lag the
+source line by one alpha; at stable cuts they are equal.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Deno](https://img.shields.io/badge/Deno-2.8%2B-000000)](https://deno.com/)
@@ -55,9 +56,10 @@ external adoption. It is not presented as an already-achieved market claim.
 
 ## Current release state
 
-The five-package convergence is published as stable `0.41.0`. npm beta.1
-through beta.3 remain withdrawn partial artifacts and are not compatibility
-baselines. The third audit sweep completed in alpha.19 (see
+The five-package convergence is published as stable `0.42.0` (WC light
+fullstack, frozen under ADR-0122 on top of the untouched ADR-0119 static
+freeze). npm beta.1 through beta.3 remain withdrawn partial artifacts and
+are not compatibility baselines. The third audit sweep completed in alpha.19 (see
 [ADR-0118](./docs/adr/ADR-0118-third-audit-round-alpha19-cleanup-sweep.md)),
 and the #390 pilot was retired by maintainer decision after zero recruitment
 (see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
