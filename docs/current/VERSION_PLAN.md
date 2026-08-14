@@ -1,9 +1,10 @@
 # v0.42.0 — WC Application Loop (light fullstack) release plan
 
 > Current source package line: `v0.42.0-alpha.16`\
-> Current npm registry line: `v0.42.0-alpha.16` (published 2026-08-02, dist-tag `alpha`)\
-> In-flight work: TP-5.9 (TP-6 stable freeze preparation + ADR-0123
-> standards-as-seams train) on the `v0.42.0-alpha.13` line\
+> Current npm registry line: `v0.42.0-alpha.16` (published 2026-08-14, dist-tag `alpha`)\
+> In-flight work: TP-6 (0.42.0 stable freeze decision, #962) on the
+> `v0.42.0-alpha.17` line; TP-5.9 shipped with alpha.13, and alpha.14–16
+> were remediation trains closing it\
 > Active release target: `v0.42.0-alpha.16`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
@@ -93,19 +94,21 @@ Only the open milestone TP-6 keeps its full plan below.
 
 ### Shipped milestones (archive)
 
-| Milestone                                                   | Release                                             | Status    |
-| ----------------------------------------------------------- | --------------------------------------------------- | --------- |
-| TP-0 — Release tooling self-repair                          | `0.41.2` patch line                                 | shipped   |
-| TP-1 — 0.42 governance landing                              | —                                                   | shipped   |
-| TP-2 — request-time rendering foundation                    | `0.42.0-alpha.1`                                    | shipped   |
-| TP-3 — form/action loop                                     | `0.42.0-alpha.2`                                    | shipped   |
-| TP-4 — revalidation continuity                              | `0.42.0-alpha.3`                                    | shipped   |
-| TP-5 — hardening, recipes and starter                       | `0.42.0-alpha.4`                                    | shipped   |
-| TP-5.5 — audit round 1 remediation                          | `0.42.0-alpha.5`                                    | shipped   |
-| TP-5.6 — audit round 2 remediation (morph client)           | `0.42.0-alpha.6`                                    | shipped   |
-| TP-5.7 — light-fullstack floor + audit round 3              | `0.42.0-alpha.9` (alpha.8 skipped, never published) | shipped   |
-| TP-5.8 — code hygiene train                                 | commit `1041431f` (#619–#623)                       | shipped   |
-| TP-5.9 — TP-6 freeze preparation + standards-as-seams train | `0.42.0-alpha.13`                                   | in flight |
+| Milestone                                                      | Release                                             | Status  |
+| -------------------------------------------------------------- | --------------------------------------------------- | ------- |
+| TP-0 — Release tooling self-repair                             | `0.41.2` patch line                                 | shipped |
+| TP-1 — 0.42 governance landing                                 | —                                                   | shipped |
+| TP-2 — request-time rendering foundation                       | `0.42.0-alpha.1`                                    | shipped |
+| TP-3 — form/action loop                                        | `0.42.0-alpha.2`                                    | shipped |
+| TP-4 — revalidation continuity                                 | `0.42.0-alpha.3`                                    | shipped |
+| TP-5 — hardening, recipes and starter                          | `0.42.0-alpha.4`                                    | shipped |
+| TP-5.5 — audit round 1 remediation                             | `0.42.0-alpha.5`                                    | shipped |
+| TP-5.6 — audit round 2 remediation (morph client)              | `0.42.0-alpha.6`                                    | shipped |
+| TP-5.7 — light-fullstack floor + audit round 3                 | `0.42.0-alpha.9` (alpha.8 skipped, never published) | shipped |
+| TP-5.8 — code hygiene train                                    | commit `1041431f` (#619–#623)                       | shipped |
+| TP-5.9 — TP-6 freeze preparation + standards-as-seams train    | `0.42.0-alpha.13`                                   | shipped |
+| alpha.14–15 — remediation trains closing TP-5.9                | `0.42.0-alpha.15`                                   | shipped |
+| alpha.16 — starter-first remediation (round-3 audit #915–#943) | `0.42.0-alpha.16`                                   | shipped |
 
 ### TP-6 — `0.42.0` stable decision (freeze light fullstack)
 

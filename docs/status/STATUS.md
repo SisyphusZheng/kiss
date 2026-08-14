@@ -1,8 +1,8 @@
 # OpenElement Status
 
-> Updated: 2026-08-04\
+> Updated: 2026-08-14\
 > Repository package line: `v0.42.0-alpha.16`\
-> npm registry line: `v0.42.0-alpha.16` (published 2026-08-04, dist-tag `alpha`)\
+> npm registry line: `v0.42.0-alpha.16` (published 2026-08-14, dist-tag `alpha`)\
 > Active release target: `v0.42.0-alpha.16`\
 > Next release line: `v0.42.0` (WC light fullstack)\
 > Product graph: five packages\
@@ -17,7 +17,11 @@ the static/SPA semantics of `defineApp`; request-time semantics stay unfrozen
 until 0.42/0.44. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
-tooling and hygiene set with no frozen-surface change.
+tooling and hygiene set with no frozen-surface change. On the 0.42 alpha
+line, alpha.13 shipped TP-5.9 (standards-as-seams + TP-6 freeze preparation);
+alpha.14–16 were remediation trains closing it, adding ErrorBoundary
+auto-capture, keyed-For matched hydration, the CSRF policy matrix and the
+standalone `serve.mjs` entry.
 
 Custom Elements are the application component contract; JSX and Basic Element
 are authoring modes; Declarative Shadow DOM is the default server output;
@@ -56,10 +60,12 @@ the five-package responsibility table.
 2. Current-document version drift keeps reappearing at gate edges; alpha.18
    package B makes the anchor gates reject stale claims.
 3. WC SSR compatibility still needs broader adopter evidence.
-4. Request-time loop is implemented through alpha.9; two hygiene trains
+4. Request-time loop is implemented through alpha.16; two hygiene trains
    landed before the 0.42.0 stable freeze: TP-5.8 (#619–#623 — route-scanner
    correctness, ADR-0095 DataAdapter drift, collectPublicProps dedup, start
    CLI runtime, logger tags) and the alpha.9 cleanup train (#632–#644).
+   TP-5.9 (alpha.13, standards-as-seams) followed, and alpha.14–16 were
+   remediation trains closing it.
 5. Framework session and cache remain unfrozen until 0.44; login apps use
    recipes (better-auth) and must not wait on framework session APIs.
 6. UI remains optional until v0.46 records its stable scope.
@@ -71,8 +77,8 @@ the five-package responsibility table.
 
 The `0.42.0` line is **WC light fullstack**: Application Loop (ADR-0120) plus
 first-mile ops and CSRF floor. Planned in
-[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; **TP-5.7** closed
-with alpha.9; the active line is alpha.10, post-TP-5.7 remediation toward
+[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; **TP-5.9** closed
+with alpha.13; the active line is alpha.17, post-TP-5.9 remediation toward
 **TP-6**). Protocol evidence:
 [`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md).
 
@@ -95,6 +101,8 @@ recipes).
 | `0.42.0-alpha.8`  | Version hole: TP-5.7 cut failed npm publish; carried into alpha.9        |
 | `0.42.0-alpha.9`  | TP-5.7: light-fullstack floor + audit round 3 + hygiene #619–#623        |
 | `0.42.0-alpha.10` | Audit round 4 + remediation trains (#646–#752); milestone #17 issue-zero |
+| `0.42.0-alpha.13` | TP-5.9: standards-as-seams train + TP-6 freeze preparation (ADR-0123)    |
+| `0.42.0-alpha.16` | Starter-first remediation (round-3 audit #915–#943)                      |
 | `0.42.0`          | WC light fullstack (Application Loop freeze)                             |
 | `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                     |
 | `0.44.0`          | Production runtime (session/cache/OTel/streaming)                        |
