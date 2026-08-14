@@ -4,7 +4,7 @@ import { StyleSheet } from '@openelement/element';
 
 // Names the content element below. definePage routes always register under
 // the route-path tag; this export never drives page registration (#960).
-export const tagName = 'freshness-page';
+export const tagName = 'freshness-view';
 
 const styles = new StyleSheet();
 styles.replaceSync(`
@@ -42,6 +42,6 @@ export default definePage({
     revalidate: 300,
   },
   render() {
-    return <freshness-page />;
+    return <freshness-view />;
   },
 });
