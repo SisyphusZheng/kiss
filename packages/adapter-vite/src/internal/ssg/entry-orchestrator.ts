@@ -8,7 +8,7 @@
  *
  * Pure function: routes + options -> Hono entry virtual module code.
  *
- * openElement Architecture (v0.5.0):
+ * Architecture notes:
  * - API routes use Hono standard app.route() (not app.all + fetch transform)
  * - Island upgrade is handled by the client entry (built by Vite in Phase 2).
  *   No inline script in SSG HTML; the client entry is a Vite-built module
@@ -18,19 +18,13 @@
  *   (imported at runtime - single source of truth, no duplicate HTML logic)
  * - DSD output must remain plain HTML, without Lit SSR marker comments.
  *
- * H-16 KNOWN ISSUE: Circular dependency between adapter-vite and the content
- * package: adapter-vite generates code that imports content utilities, while
- * the content package imports @openelement/adapter-vite/build-context.
- * Shared contracts now live in @openelement/element and adapter internals,
- * so consumer import maps can be checked.
- *
  * Thin orchestrator: delegates code generation to focused sub-modules:
  *   - entry-codegen.ts         — entry code string generation (#901)
  *   - entry-render-runtime.ts  — runtime helper function code generation
  *   - entry-render-ssg.ts      — SSG re-export & routeInfo/renderRoute/getStaticPaths
  *
- * v0.41.0-alpha.1: The intermediate EntryDescriptor data model was collapsed
- * into this file. Consumers build a descriptor via `buildEntryDescriptor()`
+ * v0.41.0-alpha.1: Consumers build a descriptor via `buildEntryDescriptor()`
+ * (entry-descriptor.ts; the EntryDescriptor type lives in protocol/ssg.ts)
  * and pass it directly to `renderEntry()`.
  */
 
