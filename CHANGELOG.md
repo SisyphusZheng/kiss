@@ -16,6 +16,37 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0
+
+**WC light fullstack, stable.** The stable cut of the 0.42 alpha line — the
+request-time Application Loop (ADR-0120) frozen on top of the untouched
+0.41.x static freeze (ADR-0119), with freeze scope and non-goals in ADR-0122
+(accepted 2026-08-14, TP-6). See the per-alpha entries below for the full
+train history; `docs/release/v0.42.0.md` is the authoritative note and
+`docs/release/v0.42.0-migration.md` the upgrade guide.
+
+- **Frozen scope (ADR-0122 §1–§4)**: the loop contract (loader/action
+  signatures, `fail()`/`redirect()` algebra + HTTP encodings, PRG
+  revalidation, no-JS baseline), the action protocol
+  (`x-openelement-action`, morph client contract, channel symmetry), the
+  fail-closed CSRF same-origin default, and first-mile start semantics.
+  Breaking changes to these require an amendment ADR.
+- **Breaking changes since 0.41.x**: `IslandOptions.strategy` renamed to
+  `hydrate` with no alias (ADR-0127); shape-1 SSR markup gains one
+  fallback-tag wrapper element (#960, ADR-0128); head-injection tightening —
+  `<base>` / `<meta http-equiv>` / raw `<script>` rejected in `headExtras`
+  (#931); unfrozen alpha exports removed (`i18nStaticPaths`, `switchLocale`,
+  `AppIslandOptions`, `OPEN_PROPS_TOKEN_CSS`, the `OpenElementRouteNode`
+  re-export); pure-static builds no longer emit `dist/server/` (#953);
+  minimum Deno version is 2.8 (the generated `dist/server` requires Node ≥
+  20.19 or Node 24 — the stale Node 18+ claim is tracked as #969).
+- **Upgrade**: pure-static and SPA projects need zero source changes — bump
+  the five `@openelement/*` specifiers to `0.42.0`, refresh the lockfile,
+  rebuild (byte-level upgrade proof in the release note).
+- **Not frozen / not claimed**: session/flash, cache/ISR (`revalidate` stays
+  inert forward-compat data), streaming SSR, performance SLOs, third-party
+  WC SSR corpus (0.43), production runtime recovery (0.44).
+
 ## 0.42.0-alpha.17
 
 Registration-decoupling train (#960, ADR-0128) plus the architect final
@@ -108,6 +139,122 @@ headline gaps from the round-3 audit close, with e2e gates pinning each fix.
   before the style blocklist check; event-binding disposers register under
   signal lifecycles; keyed `For` rewinds its insertion cursor on duplicate-key
   displacement.
+
+## 0.42.0-alpha.15
+
+Backlog-zero train: built-in HTML sanitization and keyed reconciliation
+land in the element runtime, alongside a wide simplification sweep.
+
+- **element runtime**: built-in allow-list HTML sanitizer `sanitizeHtml`
+  (#894); keyed `<For each key>` reconciliation via an optional `key` prop
+  (ADR-0124, #890), with displaced entries disposed on duplicate keys
+  (#911); `isSafeUrl` decodes `&colon;` and `_blank` links get `rel=opener`
+  neutralized (#911); guarded `RenderHooks` throw semantics documented
+  (#911); the DSD layout-fix flush is chunked across frames (#896); SSR/CSR
+  prop collection unified and the `OpenElement` base class split into
+  collaborators (#903, #904, #906, #900).
+- **Correctness**: SPA router gains a URLPattern fallback for Firefox
+  (#897); framework throws converge on `OpenElementError` (#898, #899).
+- **Docs truth**: code-claim registry with a claims gate wired into
+  `docs:truth` and the AutoFlow gates (#893, #911).
+- **Hygiene**: simplification sweep across tools/packages/www (dead exports,
+  `release.ts` split, Web/ES/Deno std API convergence, unused import-map
+  entries dropped); e2e made network-independent via `host-resolver-rules`.
+
+## 0.42.0-alpha.14
+
+Simplification and consumer-packaging train: the packed-package consumer
+path is unblocked and dead surface is swept repo-wide.
+
+- **Consumer packaging**: packed-package consumers of jsr dependencies
+  unblocked and the consumer smoke fixed (#886, #887); client runtimes are
+  bundled via virtual modules instead of `toString()` (#868); jsonc parsing
+  delegated to `@std/jsonc` (#870).
+- **Release tooling**: no-skip version continuity and pre-seeded release
+  note survival (#869, #855); docs-truth five-in-one registry and consumer
+  qualify tiers (#870).
+- **Hygiene**: simplify-scan deletion rounds swept dead files, dead exports
+  and dead flags (#879–#884); architecture anti-rot quirks ledger (#871).
+
+## 0.42.0-alpha.13
+
+Standards-as-seams train + TP-6 freeze preparation (16 issues: #603–#610,
+#856–#860, #863–#867; ADR-0123).
+
+- **Morph robustness (the alpha.7 debt, all of it)**: the enhance/island
+  client is a real tested module instead of a 400-line string template
+  (#610); focus, scroll and form-control state survive enhanced updates
+  (#603); nested DSD templates instantiate recursively (#604); `open:ready`
+  fires for every strategy bucket (#605); island scheduling has a single
+  owner (#606).
+- **Route standards**: all route matching is WHATWG URLPattern — the SPA
+  client router and the generated server matcher share one semantics (#856);
+  `renderIntent.mode` is honestly `'static' | 'dynamic'` with the `'auto'`
+  alias removed (#609).
+- **Server seams**: a WinterCG-shaped fetch middleware contract runs
+  identically in dev, `start`, fixtures and Nitro (#858); nitro-mount is a
+  near pass-through on Nitro v3's native `Request` (#857); `cli/preview`
+  merged into `cli/start --mode=preview` (#859).
+- **Protocol**: fetch-channel error responses are RFC 9457
+  `application/problem+json`, including the CSRF 403 (#863).
+- **Components**: `open-input` becomes a real native-form citizen
+  (ElementInternals pilot, #864); `open-dropdown` moves to the Popover API
+  with CSS anchor positioning (#865).
+- **Site search**: full-text, ranked, bilingual via Pagefind (#867).
+- **TP-6 preparation**: migration note, zero-cost upgrade proof and ETag
+  revalidation design note (#866).
+
+## 0.42.0-alpha.12
+
+Round-6 full-spectrum audit remediation train: all 112 findings from the
+2026-08-02 round-6 audit (issues #810–#852) are fixed; the report lives at
+`docs/audit/2026-08-02-round6-audit.md`.
+
+- **Correctness**: a guard-vetoed `redirect()` from a post-action loader
+  re-run no longer wipes page data — the action path mirrors the #802
+  navigation guard (#810); the SPA client router matches Hono-style
+  `:param{.+}` catch-all patterns (#812); malformed percent-encoded URLs are
+  a defined 400 instead of a hung request (#823).
+- **CSRF floor proven**: the generated action POST same-origin floor has
+  real deny/allow e2e coverage, with `OPEN_ELEMENT_DISABLE_CSRF=1` as the
+  documented opt-out (#811).
+- **Honest claims**: ISR labelled forward-compat/inert wherever it appears
+  (#840, #842, #843); the security guide documents the built-in CSRF floor
+  (#815); the starter `headerNav` config actually renders (#829).
+- **Gates that gate**: `verify-package-configs` performs a real version
+  check (#824); `stripComments` is string-literal aware (#826); mojibake and
+  stale-claim pattern lists single-sourced (#827, #838); the five-package
+  roster derived from one constant (#828).
+- **Hygiene**: 23 dead SVG icons deleted (#831); the dead blue/teal/cyan
+  token palette no longer ships in every page (#832); `data-ssr-props`
+  single-sourced (additive `DATA_SSR_PROPS` export, #836); dead exports and
+  config swept across all five packages (#833, #834, #845–#852).
+
+## 0.42.0-alpha.11
+
+Round-5 full-spectrum audit remediation train: all 78 findings from the
+2026-08-01 round-5 audit (issues #730–#809) are fixed; the report lives at
+`docs/audit/2026-08-01-round5-audit.md`.
+
+- **Security**: `validateSafeUrl` tab/newline bypass closed (module-script
+  `data:` XSS, #761); desktop examples bind loopback only — the reader's
+  LAN-reachable arbitrary file read and remote kill are gone (#777);
+  Mastodon example no longer caches API errors as data (#775).
+- **Correctness**: a guard-vetoed redirect during navigation keeps the
+  current page's loader data (#802); `useLoaderData<T>()` honestly types
+  `T | undefined` (#763); theme broadcast no longer clobbers host-owned
+  `data-theme` (#773); disconnect→reconnect no longer resets non-reflected
+  prop state (#772); JSX callback `ref` is consumed (#756); `open-button`
+  anchor-mode disabled sync works both ways (#757); `open-input`/
+  `open-badge` observe dynamic attribute changes (#769, #770); blog locale
+  fallback direction fixed (#759); three empty-shell site-ui components
+  registered (#758); page-rail scroll-spy active state applies (#779).
+- **Honesty over surface**: the homepage flagship example is real compilable
+  API (#762); dead options, dead config keys and misleading types removed
+  across element/app/adapter-vite (#764–#768, #771).
+- **Repo hygiene**: `.githooks` executable again so local gates cannot be
+  silently skipped (#760); duplicated tools helpers single-sourced; ~40 dead
+  exports / dead files swept.
 
 ## 0.42.0-alpha.10
 
@@ -539,6 +686,19 @@ headline gaps from the round-3 audit close, with e2e gates pinning each fix.
 - Moves UI tokens to a CSS source of truth with generated-output drift checks,
   and makes Create template generation asynchronous, deterministic, and bound
   to the five-package same-version release invariant.
+
+## 0.41.0-alpha.12
+
+Audit-remediation foundation release: closes the 13 high-severity findings
+from the `0.41.0-alpha12` full code audit (issues #424–#428). No in-repo
+release note was written at release time; the retrospective gap note is
+`docs/release/v0.41.0-alpha.12.md`.
+
+- Fixes core runtime issues, including the `signal-context` infinite loop
+  and `ErrorBoundary` retry.
+- Hardens SSG/build: command-injection closure, dynamic-route encoding, and
+  pure-Node `process.cwd()` compatibility.
+- Repairs contract-checker correctness and backfills release-tooling tests.
 
 ## 0.41.0-alpha.11
 
