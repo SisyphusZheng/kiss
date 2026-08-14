@@ -374,18 +374,46 @@ export class HydrationScope {
    * `<!--oe-branch:...-->` token sequence must match exactly. Any drift means
    * runtime signal values changed between SSR and hydration (or the SSR HTML
    * was transformed), in which case position-based binding would be wrong.
+   *
+   * Returns null on a match; on divergence returns the structured detail used
+   * for the #631 diagnostic (checks run cheapest-first: marker count, branch
+   * count, then token equality).
    */
-  #matchesSsrDom(
+  #detectSsrMismatch(
     shadowRoot: ShadowRoot,
     eventBindings: Map<string, EventBindingRecord[]>,
     expectedBranches: string[],
-  ): boolean {
-    const markerCount = shadowRoot.querySelectorAll(`[${DATA_EID}]`).length;
-    if (markerCount !== eventBindings.size) return false;
+  ): HydrationMismatchDetail | null {
+    const hostTag = (shadowRoot.host as Element | undefined)?.tagName?.toLowerCase() ??
+      '(unknown host)';
+    const actualMarkers = shadowRoot.querySelectorAll(`[${DATA_EID}]`).length;
+    if (actualMarkers !== eventBindings.size) {
+      return {
+        reason: 'marker-count',
+        hostTag,
+        expectedMarkers: eventBindings.size,
+        actualMarkers,
+        expectedBranches,
+        actualBranches: [],
+      };
+    }
 
-    const domBranches = collectDomBranchMarkers(shadowRoot);
-    if (domBranches.length !== expectedBranches.length) return false;
-    return domBranches.every((token, index) => token === expectedBranches[index]);
+    const actualBranches = collectDomBranchMarkers(shadowRoot);
+    const base = {
+      hostTag,
+      expectedMarkers: eventBindings.size,
+      actualMarkers,
+      expectedBranches,
+      actualBranches,
+    };
+    if (actualBranches.length !== expectedBranches.length) {
+      return { reason: 'branch-count', ...base };
+    }
+    const divergedAt = expectedBranches.findIndex((token, i) => actualBranches[i] !== token);
+    if (divergedAt !== -1) {
+      return { reason: 'branch-token', ...base, divergedAt };
+    }
+    return null;
   }
 
   /** Degrade to a full client-side render when SSR DOM alignment is broken. */

@@ -1466,8 +1466,35 @@ Deno.test('DSD hydration degrades to client render when a Show branch flips afte
   }
   customElements.define(tagName, ShowFlipElement);
 
-  const el = createHydratedElement(tagName, ssrHtml);
+  // #631: the mismatch diagnostic carries the stable code and structured detail.
+  const warns: unknown[][] = [];
+  const origWarn = console.warn;
+  console.warn = (...args: unknown[]) => warns.push(args);
+  let el: HTMLElement | undefined;
+  try {
+    el = createHydratedElement(tagName, ssrHtml);
+  } finally {
+    console.warn = origWarn;
+  }
+  assertExists(el);
   const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  assertEquals(warns.length, 1);
+  const [message, detail] = warns[0] as [string, {
+    reason: string;
+    hostTag: string;
+    expectedBranches: string[];
+    actualBranches: string[];
+    divergedAt: number;
+  }];
+  assertStringIncludes(message, 'OPEN_ELEMENT_HYDRATION_MISMATCH');
+  assertStringIncludes(message, 'branch-token');
+  assertStringIncludes(message, tagName);
+  assertEquals(detail.reason, 'branch-token');
+  assertEquals(detail.hostTag, tagName);
+  assertEquals(detail.expectedBranches, ['oe-branch:show:0']);
+  assertEquals(detail.actualBranches, ['oe-branch:show:1']);
+  assertEquals(detail.divergedAt, 0);
 
   // The scope must not bind the 'no' handler onto the SSR 'yes' button; it
   // degrades to a client-side render of the current branch instead.
@@ -1506,8 +1533,30 @@ Deno.test('DSD hydration degrades to client render when data-eid marker count di
   }
   customElements.define(tagName, EidDriftElement);
 
-  const el = createHydratedElement(tagName, ssrHtml);
+  // #631: the mismatch diagnostic reports expected vs actual marker counts.
+  const warns: unknown[][] = [];
+  const origWarn = console.warn;
+  console.warn = (...args: unknown[]) => warns.push(args);
+  let el: HTMLElement | undefined;
+  try {
+    el = createHydratedElement(tagName, ssrHtml);
+  } finally {
+    console.warn = origWarn;
+  }
+  assertExists(el);
   const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  assertEquals(warns.length, 1);
+  const [message, detail] = warns[0] as [string, {
+    reason: string;
+    expectedMarkers: number;
+    actualMarkers: number;
+  }];
+  assertStringIncludes(message, 'OPEN_ELEMENT_HYDRATION_MISMATCH');
+  assertStringIncludes(message, 'marker-count');
+  assertEquals(detail.reason, 'marker-count');
+  assertEquals(detail.expectedMarkers, 1);
+  assertEquals(detail.actualMarkers, 2);
 
   // One binding vs two SSR markers: degrade re-renders from the client vnode.
   const buttons = root.querySelectorAll('button');
