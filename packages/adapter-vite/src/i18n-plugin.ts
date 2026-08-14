@@ -1,4 +1,3 @@
-// deno-api-free:ignore
 /**
  * @openelement/adapter-vite/i18n-plugin - Node-only Vite plugin for i18n
  *

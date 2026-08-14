@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys
 /**
- * alpha.3 smoke: verify mature third-party Web Components can be consumed
- * directly inside an openElement app.
+ * Third-party WC smoke: verify mature third-party Web Components can be
+ * consumed directly inside an openElement app.
  */
 
 import { dirname, fromFileUrl, join } from '@std/path';

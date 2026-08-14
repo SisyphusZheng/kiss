@@ -14,7 +14,7 @@
  * - _middleware.ts: exports a Hono middleware function applied before the route
  * - Files starting with _ are not route handlers but are loaded by the framework
  *
- * ─── SSR Import Discovery Audit (Step1) ─────────────────────
+ * ─── SSR import discovery ─────────────────────────────────────
  *
  * This file discovers islands but does NOT import them (static scan only):
  *
@@ -37,9 +37,6 @@
  * 4. Nested custom elements (from the VNode tree):
  *    - NOT handled in this file
  *    - See: `packages/element/src/internal/core/render-ir.ts` and `renderDsdTree()`
- *
- * Audit completed: 2026-05-17
- * Auditor: AI agent (openElement v0.17.4 SOP compliance check)
  *
  * ─── v0.41.0-alpha.1: AST removed ────────────────────────────
  *
@@ -116,7 +113,7 @@ function readRouteTagName(source: string): string | undefined {
  * Convert a route file path to a URL path pattern.
  * e.g., 'index.ts' -> '/', 'about.ts' -> '/about', 'posts/[id].ts' -> '/posts/:id'
  *
- * v0.6': Uses URLPattern-compatible syntax where possible.
+ * v0.6: Uses URLPattern-compatible syntax where possible.
  * URLPattern is the WHATWG standard for URL matching (section7.2).
  * Pattern :param is compatible with both Hono and URLPattern.
  */
