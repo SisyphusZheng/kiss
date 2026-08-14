@@ -191,13 +191,19 @@ export function buildEntryDescriptor(
     .map((r) => {
       const isDynamic = r.path.includes(':');
       const paramNames = isDynamic ? [...r.path.matchAll(/:([^/]+)/g)].map((m) => m[1]) : [];
+      const fallbackTagName = fileToTagName(r.filePath);
       return {
         kind: 'page' as const,
         path: r.path,
         varName: `$${r.varName}`,
         filePath: r.filePath,
-        defaultTagName: fileToTagName(r.filePath),
-        tagName: r.tagName || fileToTagName(r.filePath),
+        defaultTagName: fallbackTagName,
+        // #960 (registration decoupling, Option 2): a definePage route always
+        // registers its page class under the path-derived fallback tag, so the
+        // definePage render always runs — its tagName export only names a
+        // content element and never drives registration. Plain element routes
+        // keep the exported tagName as their registration tag.
+        tagName: r.definePage === true ? fallbackTagName : (r.tagName || fallbackTagName),
         importPath: `/${routesDir}/${r.filePath}`,
         isDynamic,
         paramNames,

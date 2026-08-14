@@ -3,6 +3,8 @@ import { defineElement, definePage, notFound } from '@openelement/app';
 import { StyleSheet } from '@openelement/element';
 import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 
+// Names the content element below. definePage routes always register under
+// the route-path tag; this export never drives page registration (#960).
 export const tagName = 'blog-post-page';
 
 /**

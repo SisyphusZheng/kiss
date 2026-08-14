@@ -89,6 +89,15 @@ export interface RouteEntry {
   type: 'page' | 'api' | 'island' | 'special';
   varName: string;
   tagName?: string;
+  /**
+   * True when the route module's default export is a definePage() definition
+   * (0.42.0-alpha.17, #960 — registration decoupling). The generated entry
+   * registers the page class under the path-derived fallback tag and IGNORES
+   * the tagName export for registration: on a definePage route the export
+   * only names a content element. Plain element routes keep tagName as their
+   * registration tag.
+   */
+  definePage?: boolean;
   /** Source text captured during scanning when includeSource is enabled. */
   source?: string;
   /**

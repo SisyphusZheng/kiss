@@ -348,3 +348,68 @@ Deno.test('buildEntryDescriptor: no middleware.use leaves fetchMiddleware absent
   const desc = buildEntryDescriptor(sampleRoutes);
   assertEquals(desc.fetchMiddleware, undefined);
 });
+
+// #960: registration decoupling — definePage routes ignore the tagName export
+
+Deno.test('buildEntryDescriptor: definePage route registers under the fallback tag (#960)', () => {
+  const routes: RouteEntry[] = [
+    {
+      path: '/',
+      filePath: 'index.tsx',
+      type: 'page',
+      varName: 'pageIndex',
+      tagName: 'home-page',
+      definePage: true,
+    },
+  ];
+  const desc = buildEntryDescriptor(routes);
+
+  assertEquals(desc.pageRoutes[0].defaultTagName, 'index-page');
+  assertEquals(
+    desc.pageRoutes[0].tagName,
+    'index-page',
+    'definePage route ignores the tagName export for registration',
+  );
+});
+
+Deno.test('buildEntryDescriptor: plain element route keeps its tagName export (#960)', () => {
+  const routes: RouteEntry[] = [
+    { path: '/', filePath: 'index.tsx', type: 'page', varName: 'pageIndex', tagName: 'home-page' },
+  ];
+  const desc = buildEntryDescriptor(routes);
+
+  assertEquals(desc.pageRoutes[0].tagName, 'home-page');
+  assertEquals(desc.pageRoutes[0].defaultTagName, 'index-page');
+});
+
+Deno.test('renderEntry: definePage route registers and renders under the fallback tag (#960)', () => {
+  const routes: RouteEntry[] = [
+    {
+      path: '/',
+      filePath: 'index.tsx',
+      type: 'page',
+      varName: 'pageIndex',
+      tagName: 'home-page',
+      definePage: true,
+    },
+  ];
+  const code = renderEntry(buildEntryDescriptor(routes));
+
+  // Registration and the page handler's jsx root both use the fallback tag —
+  // the exported content-element tag never appears in the registration call,
+  // so a module-self-registered content element can no longer shadow the
+  // definePage render (the issue's original failure mode).
+  assertStringIncludes(code, '__registerSsrComponent("index-page"');
+  assertEquals(code.includes('__registerSsrComponent("home-page"'), false);
+  assertStringIncludes(code, 'let __tag = "index-page"');
+});
+
+Deno.test('renderEntry: plain element route still registers under its tagName export', () => {
+  const routes: RouteEntry[] = [
+    { path: '/', filePath: 'index.tsx', type: 'page', varName: 'pageIndex', tagName: 'home-page' },
+  ];
+  const code = renderEntry(buildEntryDescriptor(routes));
+
+  assertStringIncludes(code, '__registerSsrComponent("home-page"');
+  assertStringIncludes(code, 'let __tag = "home-page"');
+});

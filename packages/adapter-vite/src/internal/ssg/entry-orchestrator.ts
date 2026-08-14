@@ -171,11 +171,16 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('');
     // #952: entry-side registration ownership tracking. A route module can
     // self-register a DIFFERENT class for its tag via defineElement at module
-    // top level (the starter pattern: defineElement('home-page', …) plus a
-    // definePage default export whose render() returns <home-page/>). On dev
-    // re-evaluation that fresh self-registered class must win; overwriting it
-    // with the page class would recurse (its render emits the same tag). The
-    // entry therefore only overwrites registrations it made itself.
+    // top level. Since #960 (registration decoupling) a definePage route's
+    // page class is registered under the path-derived fallback tag, so the
+    // shape-1 pattern (defineElement('home-page', …) content element plus a
+    // definePage render returning <home-page/>) no longer collides with the
+    // entry's registration at all. The ownership guard still covers what is
+    // left: plain element routes self-registering their own default export
+    // under the exported tagName, and dev re-evaluation of those modules —
+    // overwriting a fresh self-registered class with the entry's page class
+    // would recurse when its render emits the same tag. The entry therefore
+    // only overwrites registrations it made itself.
     lines.push('const __entryDefined = customElements.__openEntryDefined ||= new Map();');
     lines.push('function __registerSsrComponent(tag, ctor) {');
     lines.push('  const current = customElements.get(tag);');

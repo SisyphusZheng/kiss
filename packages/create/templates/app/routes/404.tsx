@@ -2,6 +2,8 @@
 import { defineElement, definePage } from '@openelement/app';
 import { StyleSheet } from '@openelement/element';
 
+// Names the content element below. definePage routes always register under
+// the route-path tag; this export never drives page registration (#960).
 export const tagName = 'not-found-page';
 
 const styles = new StyleSheet();

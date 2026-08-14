@@ -89,11 +89,131 @@ async function sourceTreeHasEnhancedForms(
 const log = createLogger('scanner');
 
 /**
- * definePage-style routes never need a `tagName` export — the generated
- * server entry registers their default export itself (entry-orchestrator.ts)
- * with a fallback name — so a missing tagName on them is not noteworthy.
+ * #960 (registration decoupling, Option 2): a route whose default export is
+ * definePage() always registers under the path-derived fallback tag; its
+ * `tagName` export only names a content element and is ignored for
+ * registration. Detection must not trip on `definePage(` occurrences inside
+ * strings — guide pages embed full route samples in template literals
+ * (www/app/routes/guide/*.tsx) — so the regex runs against source with
+ * string/template contents masked (maskSourceStrings).
  */
 const DEFINE_PAGE_RE = /\bdefinePage\s*\(/;
+
+/**
+ * Mask string and template-literal contents (replaced with spaces, newlines
+ * preserved) so code samples embedded in route sources never trip static
+ * source detection. Quoted strings only mask within a single line (JS
+ * strings cannot span raw newlines), so an apostrophe in JSX text bails out
+ * unmasked; template literals mask to the closing backtick while ${…}
+ * expressions are scanned as code (nested templates/strings recurse).
+ */
+function maskSourceStrings(source: string): string {
+  const out = source.split('');
+  const len = source.length;
+
+  const blank = (from: number, to: number): void => {
+    for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
+  };
+
+  // Quoted string starting at i. Returns the index past the closing quote,
+  // or i + 1 when the quote never closes on the line (not a string — e.g.
+  // an apostrophe in JSX text).
+  const scanString = (i: number, quote: string): number => {
+    let j = i + 1;
+    while (j < len) {
+      const c = source[j];
+      if (c === '\\') {
+        j += 2;
+        continue;
+      }
+      if (c === '\n') return i + 1;
+      if (c === quote) {
+        blank(i, j + 1);
+        return j + 1;
+      }
+      j++;
+    }
+    return i + 1;
+  };
+
+  // Template literal starting at i (backtick). Raw text is masked; ${…}
+  // expression contents are scanned as code so nested samples are masked too.
+  const scanTemplate = (i: number): number => {
+    let segStart = i;
+    let j = i + 1;
+    while (j < len) {
+      const c = source[j];
+      if (c === '\\') {
+        j += 2;
+        continue;
+      }
+      if (c === '`') {
+        blank(segStart, j + 1);
+        return j + 1;
+      }
+      if (c === '$' && source[j + 1] === '{') {
+        blank(segStart, j + 2);
+        const exprEnd = scanCode(j + 2);
+        blank(exprEnd, Math.min(exprEnd + 1, len));
+        segStart = exprEnd + 1;
+        j = exprEnd + 1;
+        continue;
+      }
+      j++;
+    }
+    blank(segStart, len);
+    return len;
+  };
+
+  // Code starting at i; returns the index of the first unmatched '}' (or
+  // len). Strings and templates found along the way are masked.
+  const scanCode = (i: number): number => {
+    let j = i;
+    let depth = 0;
+    while (j < len) {
+      const c = source[j];
+      if (c === "'" || c === '"') {
+        j = scanString(j, c);
+        continue;
+      }
+      if (c === '`') {
+        j = scanTemplate(j);
+        continue;
+      }
+      if (c === '{') depth++;
+      else if (c === '}') {
+        if (depth === 0) return j;
+        depth--;
+      }
+      j++;
+    }
+    return j;
+  };
+
+  scanCode(0);
+  return out.join('');
+}
+
+/** Escape a tag name for interpolation into a RegExp source. */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * #960: a sanctioned shape-1 module USES its tagName export — it registers
+ * the content element with defineElement(tagName, …) (or a string literal)
+ * and/or the definePage render returns <tag/>. Those stay silent. Only a
+ * definePage route whose tagName export is never used at all gets the
+ * migration note. Usage is checked against the RAW source: a match inside
+ * an embedded code sample merely suppresses the note (the safe direction).
+ */
+function routeUsesTagName(source: string, tagName: string): boolean {
+  if (/\bdefineElement\s*\(\s*tagName\b/.test(source)) return true;
+  if (new RegExp(`\\bdefineElement\\s*\\(\\s*['"\`]${escapeRegExp(tagName)}['"\`]`).test(source)) {
+    return true;
+  }
+  return new RegExp(`</?${escapeRegExp(tagName)}(?=[\\s/>])`).test(source);
+}
 
 /**
  * Missing-tagName notes fire at most once per file per process. scanRoutes()
@@ -102,6 +222,12 @@ const DEFINE_PAGE_RE = /\bdefinePage\s*\(/;
  * single note.
  */
 const notedMissingTagName = new Set<string>();
+
+/**
+ * #960: the ignored-tagName migration note also fires at most once per file
+ * per process (same multi-pass routesDir spellings as above).
+ */
+const notedIgnoredTagName = new Set<string>();
 
 /** Read a static route tagName export from source text. */
 function readRouteTagName(source: string): string | undefined {
@@ -258,6 +384,7 @@ export async function scanRoutes(
           : undefined;
         let tagName: string | undefined;
         let source: string | undefined;
+        let isDefinePage = false;
         if (routeType === 'page') {
           // Regex-based scanning reads `export const tagName` without executing the module.
           source = await safeReadFile(fullPath);
@@ -265,11 +392,12 @@ export async function scanRoutes(
             log.debug(`Unable to read route module: ${fullPath}`);
           } else {
             tagName = readRouteTagName(source);
+            // #960: masked so definePage( inside embedded code samples (guide
+            // pages) never flags a plain element route as a definePage route.
+            isDefinePage = DEFINE_PAGE_RE.test(maskSourceStrings(source));
             // .mdx routes never carry a tagName export either — the entry
             // wraps their function component itself (#954), like definePage.
-            if (
-              tagName === undefined && !DEFINE_PAGE_RE.test(source) && !fullPath.endsWith('.mdx')
-            ) {
+            if (tagName === undefined && !isDefinePage && !fullPath.endsWith('.mdx')) {
               // tagName not found is normal — not all page routes define one.
               // Dedupe by resolved path: multiple scan passes spell the same
               // routesDir differently (relative vs absolute).
@@ -277,6 +405,25 @@ export async function scanRoutes(
               if (!notedMissingTagName.has(resolvedPath)) {
                 notedMissingTagName.add(resolvedPath);
                 log.debug(`No tagName export found in route module: ${resolvedPath}`);
+              }
+            }
+            // #960: migration-period signal. On a definePage route the
+            // tagName export no longer drives SSR registration (the page
+            // registers under the path-derived fallback tag); it only names
+            // a content element. Sanctioned shape-1 modules USE the tag
+            // (defineElement + <tag/> in the render) and stay silent — an
+            // orphaned export gets a one-time note.
+            if (isDefinePage && tagName !== undefined && !routeUsesTagName(source, tagName)) {
+              const resolvedPath = resolve(fullPath);
+              if (!notedIgnoredTagName.has(resolvedPath)) {
+                notedIgnoredTagName.add(resolvedPath);
+                log.info(
+                  `Route module ${resolvedPath} exports tagName '${tagName}' but never uses it; ` +
+                    `the export is ignored for registration on definePage routes (#960) — ` +
+                    `the page registers under the path-derived tag '${
+                      fileToTagName(relativePath)
+                    }'.`,
+                );
               }
             }
           }
@@ -287,6 +434,7 @@ export async function scanRoutes(
           type: routeType,
           varName: pathToVarName(routePath),
           tagName,
+          ...(isDefinePage ? { definePage: true } : {}),
           // #569: page sources carrying data-open-enhance require the client
           // enhancement layer even when the app has zero islands. The match
           // requires attribute shape (= or >) so prose mentioning the

@@ -408,7 +408,7 @@ test.describe('morph continuity hardening (ADR-0121, 0.42.0-alpha.5)', () => {
   test('open:action-failure is cancelable and skips the default morph (#546)', async ({ page }) => {
     await page.goto('/form');
     await page.evaluate(() => {
-      const form = document.querySelector('page-form')!.shadowRoot!.querySelector('form')!;
+      const form = document.querySelector('form-page')!.shadowRoot!.querySelector('form')!;
       form.addEventListener('open:action-failure', (event) => {
         (window as unknown as { __failureStatus: number }).__failureStatus =
           (event as CustomEvent).detail.status;
@@ -656,7 +656,7 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     expect(active).toEqual({ id: 'message', tag: 'TEXTAREA' });
     // The text selection (caret at end of 'draft') was restored too.
     const caret = await page.evaluate(() => {
-      const el = document.querySelector('page-form')!.shadowRoot!.querySelector(
+      const el = document.querySelector('form-page')!.shadowRoot!.querySelector(
         '#message',
       ) as HTMLTextAreaElement;
       return el.selectionStart;
@@ -684,7 +684,7 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     });
     await page.goto('/form');
     await page.evaluate(() => {
-      const form = document.querySelector('page-form')!.shadowRoot!.querySelector('form')!;
+      const form = document.querySelector('form-page')!.shadowRoot!.querySelector('form')!;
       form.insertAdjacentHTML(
         'afterbegin',
         '<input type="checkbox" id="agree" name="agree"><input id="server-set" name="server-set" type="text" value="from-server-v1">',
@@ -697,7 +697,7 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     // Wait for the morph to land (server-set follows the server: untouched).
     await expect(page.locator('#server-set')).toHaveValue('from-server-v2');
     const state = await page.evaluate(() => {
-      const root = document.querySelector('page-form')!.shadowRoot!;
+      const root = document.querySelector('form-page')!.shadowRoot!;
       const agree = root.querySelector('#agree') as HTMLInputElement;
       const message = root.querySelector('#message') as HTMLInputElement;
       const serverSet = root.querySelector('#server-set') as HTMLInputElement;
@@ -736,7 +736,7 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     await page.locator('live-counter #increment').click();
     await expect(page.locator('live-counter #count')).toHaveText('1');
     await page.evaluate(() => {
-      const main = document.querySelector('page-form')!.shadowRoot!.querySelector('main')!;
+      const main = document.querySelector('form-page')!.shadowRoot!.querySelector('main')!;
       main.insertAdjacentHTML('afterbegin', '<style>main{min-height:5000px}</style>');
       globalThis.scrollTo(0, 800);
     });
@@ -744,7 +744,7 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     // requestSubmit, not click: any pointer/keyboard interaction auto-scrolls
     // the submit button (top of the page) into view and ruins the setup.
     await page.evaluate(() => {
-      const form = document.querySelector('page-form')!.shadowRoot!.querySelector('form')!;
+      const form = document.querySelector('form-page')!.shadowRoot!.querySelector('form')!;
       form.requestSubmit();
     });
     await expect(page.locator('#morph-landed')).toBeAttached();
@@ -773,7 +773,7 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     await page.click('#submit');
     await expect(page.locator('#outer-marker')).toHaveText('outer');
     const innerState = await page.evaluate(() => {
-      const outer = document.querySelector('page-form')!.shadowRoot!.querySelector('nested-host')!;
+      const outer = document.querySelector('form-page')!.shadowRoot!.querySelector('nested-host')!;
       const inner = outer.shadowRoot!.querySelector('live-counter')!;
       return {
         outerShadow: !!outer.shadowRoot,

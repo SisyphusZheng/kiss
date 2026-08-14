@@ -26,6 +26,21 @@ async function captureDebug(fn: () => Promise<void>): Promise<string[]> {
   return messages;
 }
 
+/** Run fn with console.info captured; returns the captured messages. */
+async function captureInfo(fn: () => Promise<void>): Promise<string[]> {
+  const messages: string[] = [];
+  const original = console.info;
+  console.info = (msg?: unknown, ...args: unknown[]) => {
+    messages.push([msg, ...args].map(String).join(' '));
+  };
+  try {
+    await fn();
+  } finally {
+    console.info = original;
+  }
+  return messages;
+}
+
 Deno.test('scanRoutes stays silent for definePage routes without tagName', async () => {
   const dir = await Deno.makeTempDir({ prefix: 'oe-scan-tagname-' });
   try {
@@ -97,6 +112,151 @@ Deno.test('scanRoutes notes a plain route without tagName once across path spell
     });
     const notes = messages.filter((m) => m.includes('No tagName export'));
     assertEquals(notes.length, 1, 'same file must be noted exactly once');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+// ─── #960: registration decoupling (definePage flag + ignored-tagName note) ──
+
+Deno.test('scanRoutes flags shape-1 definePage routes and stays silent (sanctioned)', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    // Mirrors the create-template index.tsx: the tagName export names the
+    // content element, which the module self-registers AND renders.
+    await Deno.writeTextFile(
+      join(routesDir, 'index.tsx'),
+      `import { defineElement, definePage } from '@openelement/app';
+
+export const tagName = 'home-page';
+
+defineElement(tagName, {
+  render() {
+    return <p>content</p>;
+  },
+});
+
+export default definePage({
+  render() {
+    return <home-page />;
+  },
+});
+`,
+    );
+
+    const messages = await captureInfo(async () => {
+      const entries = await scanRoutes(routesDir);
+      assertEquals(entries.length, 1);
+      assertEquals(entries[0].definePage, true, 'definePage route must carry the flag');
+      assertEquals(entries[0].tagName, 'home-page', 'the export stays readable for content naming');
+    });
+    const notes = messages.filter((m) => m.includes('ignored for registration'));
+    assertEquals(notes, [], 'sanctioned shape-1 modules must not trigger the migration note');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('scanRoutes notes an orphaned tagName export on a definePage route once', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    // The export is never used: no defineElement call, no JSX usage.
+    await Deno.writeTextFile(
+      join(routesDir, 'orphan.tsx'),
+      `import { definePage } from '@openelement/app';
+
+export const tagName = 'orphan-page';
+
+export default definePage({
+  render() {
+    return <main>orphan</main>;
+  },
+});
+`,
+    );
+
+    const relRoutesDir = relative(Deno.cwd(), routesDir);
+    const messages = await captureInfo(async () => {
+      const entries = await scanRoutes(routesDir);
+      assertEquals(entries[0].definePage, true);
+      await scanRoutes(relRoutesDir); // relative spelling — same files
+    });
+    const notes = messages.filter((m) => m.includes('ignored for registration'));
+    assertEquals(notes.length, 1, 'orphaned tagName export must be noted exactly once');
+    assertEquals(notes[0].includes("'orphan-page'"), true, 'note names the orphaned tag');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('scanRoutes does not flag plain element routes embedding definePage samples', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    // Mirrors www/app/routes/guide/*.tsx: a plain element route (tagName +
+    // defineCustomElement) whose prose embeds a definePage( code sample in a
+    // template literal. The sample must NOT flag the route as definePage.
+    await Deno.writeTextFile(
+      join(routesDir, 'guide.tsx'),
+      "import { defineCustomElement } from '@openelement/element';\n" +
+        '\n' +
+        'class GuidePage extends HTMLElement {}\n' +
+        '\n' +
+        "const sample = `import { definePage } from '@openelement/app';\n" +
+        'export default definePage({\n' +
+        '  render() { return <main>sample</main>; },\n' +
+        '});`;\n' +
+        "const prose = 'definePage({ error }) is the page-level error renderer';\n" +
+        'void sample;\n' +
+        'void prose;\n' +
+        '\n' +
+        "export const tagName = 'guide-sample-page';\n" +
+        'defineCustomElement(tagName, GuidePage);\n' +
+        'export default GuidePage;\n',
+    );
+
+    const messages = await captureInfo(async () => {
+      const entries = await scanRoutes(routesDir);
+      assertEquals(entries.length, 1);
+      assertEquals(
+        entries[0].definePage,
+        undefined,
+        'definePage( inside strings must not flag a plain element route',
+      );
+      assertEquals(entries[0].tagName, 'guide-sample-page');
+    });
+    const notes = messages.filter((m) => m.includes('ignored for registration'));
+    assertEquals(notes, [], 'plain element routes never get the migration note');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('scanRoutes leaves plain element routes with tagName unflagged', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    await Deno.writeTextFile(
+      join(routesDir, 'plain.tsx'),
+      `export const tagName = 'plain-page';
+
+export default class PlainPage {
+  render() {
+    return null;
+  }
+}
+`,
+    );
+
+    const entries = await scanRoutes(routesDir);
+    assertEquals(entries[0].definePage, undefined);
+    assertEquals(entries[0].tagName, 'plain-page');
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }

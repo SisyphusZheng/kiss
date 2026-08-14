@@ -239,6 +239,37 @@ Deno.test({
         }
       });
 
+      // #960 regression: a route module exporting tagName + a same-tag
+      // self-registered content element + a definePage default export must
+      // run the definePage render (previously the content element won the
+      // registration and the page render — with its request context — was
+      // silently bypassed).
+      await t.step(
+        'GET /decoupled → definePage render runs, wrapping the content element',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const response = await fetch(`${base}/decoupled?marker=from-request`);
+            assertEquals(response.status, 200, `${name}: GET /decoupled status`);
+            const body = await response.text();
+            assertStringIncludes(
+              body,
+              'decoupled-page-render',
+              `${name}: definePage render output present`,
+            );
+            assertStringIncludes(
+              body,
+              'content element: from-request',
+              `${name}: request context reached the page render`,
+            );
+            assertStringIncludes(
+              body,
+              '<decoupled-page',
+              `${name}: page registers under the path-derived fallback tag`,
+            );
+          }
+        },
+      );
+
       await t.step('PUT /form → 405 + no-store', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form`, { method: 'PUT', body: 'x=1' });
