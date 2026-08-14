@@ -18,7 +18,7 @@ evidence.
 
 ## 0.42.0-alpha.16
 
-Starter-first remediation train (issues #915–#943, final wave): the remaining
+Starter-first remediation train (issues #915–#959): the remaining
 headline gaps from the round-3 audit close, with e2e gates pinning each fix.
 
 - **Island runtime**: `hydrate: 'only'` islands now bind events and signals
@@ -79,6 +79,17 @@ headline gaps from the round-3 audit close, with e2e gates pinning each fix.
   process (#925).
 - **Docs**: minimum Deno version declared and the markdown post-title H1
   rule documented (#928, #935).
+- **Further fixes in this train**: unserializable island props degrade like
+  a `render()` failure instead of crashing SSR; the depth-limit error is
+  logged once, not once per bubbled frame; the standalone `serve.mjs`
+  validates `PORT`/`OPEN_ELEMENT_PORT`; the dev island client entry matches
+  URLs with query strings; the missing-`tagName` scanner note is silenced
+  for definePage routes; the SSR instantiate-failure fallback now preserves
+  attributes like the render-failure fallback (#892 partial); `target="_blank"`
+  case variants get a forced `noopener`; CSS escapes/comments are folded
+  before the style blocklist check; event-binding disposers register under
+  signal lifecycles; keyed `For` rewinds its insertion cursor on duplicate-key
+  displacement.
 
 ## 0.42.0-alpha.10
 
