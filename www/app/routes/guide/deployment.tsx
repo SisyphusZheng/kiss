@@ -35,7 +35,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'request-time-server',
         title: 'Request-time server',
         body:
-          "When any route declares renderIntent: { mode: 'dynamic' }, the build also emits dist/server/index.js — a Nitro-mountable handler over the same SSR bundle — plus server-manifest.json listing the request-time routes. Pure-static builds emit neither (0.42 line, unfrozen).",
+          "When any route declares renderIntent: { mode: 'dynamic' }, the build also emits dist/server/index.js — a Nitro-mountable handler over the same SSR bundle — plus server-manifest.json listing the request-time routes, and dist/server/serve.mjs, a standalone production entry (node dist/server/serve.mjs; Node 18+, Deno, Bun) that serves the static tree and dispatches request-time routes without the CLI. Pure-static builds emit none of these (0.42 line, unfrozen).",
       },
       {
         id: 'nitro-presets',
@@ -86,7 +86,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'request-time-server',
         title: '请求时服务器',
         body:
-          "当任何路由声明 renderIntent: { mode: 'dynamic' } 时,构建还会产出 dist/server/index.js——挂在同一个 SSR bundle 上、可由 Nitro 挂载的处理器——以及列出请求时路由的 server-manifest.json。纯静态构建两者都不产出(0.42 版本线,未冻结)。",
+          "当任何路由声明 renderIntent: { mode: 'dynamic' } 时,构建还会产出 dist/server/index.js——挂在同一个 SSR bundle 上、可由 Nitro 挂载的处理器——以及列出请求时路由的 server-manifest.json,以及独立生产入口 dist/server/serve.mjs(node dist/server/serve.mjs;支持 Node 18+、Deno、Bun),无需 CLI 即可伺服静态树并分派请求时路由。纯静态构建三者都不产出(0.42 版本线,未冻结)。",
       },
       {
         id: 'nitro-presets',
