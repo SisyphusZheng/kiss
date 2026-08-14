@@ -96,8 +96,6 @@ export class GuideErrorHandlingPage extends GuidePage {
   useActionData,
 } from '@openelement/app';
 
-export const tagName = 'page-post';
-
 interface PostActionData {
   error?: string;
   title?: string;
@@ -138,7 +136,6 @@ const PostPage = definePage({
   },
 });
 
-customElements.define(tagName, PostPage);
 export default PostPage;`}</code></pre>
         </open-code-block>
         <p>{t.recipeNote}</p>

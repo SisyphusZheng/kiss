@@ -155,8 +155,6 @@ export class GuideRoutingAndDataPage extends GuidePage {
   useLoaderData,
 } from '@openelement/app';
 
-export const tagName = 'page-guestbook';
-
 interface GuestbookData {
   entries: string[];
 }
@@ -210,7 +208,6 @@ const GuestbookPage = definePage({
   },
 });
 
-customElements.define(tagName, GuestbookPage);
 export default GuestbookPage;`}</code></pre>
         </open-code-block>
         <h3>{zh ? '集成配方' : 'Integration recipes'}</h3>
