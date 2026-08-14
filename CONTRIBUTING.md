@@ -77,6 +77,10 @@ A few root tasks are manual tools that no CI job or other task invokes:
 `test:visual-smoke` / `test:visual-baselines` (opt-in browser visual checks
 via `tools/visual-smoke.ts` and `www/e2e/visual-baselines.spec.ts`). Run
 them by hand when a change touches rendering output or archived audit docs.
+Also manual-only: `test:watch`, `test:e2e:install`,
+`test:e2e:browsers:install` (CI installs Playwright browsers directly via
+`./node_modules/.bin/playwright install`), and `autoflow:dev` (local
+AutoFlow driver; CI runs `autoflow:ci`).
 
 ## Code Style
 
