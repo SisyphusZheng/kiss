@@ -265,7 +265,11 @@ export async function scanRoutes(
             log.debug(`Unable to read route module: ${fullPath}`);
           } else {
             tagName = readRouteTagName(source);
-            if (tagName === undefined && !DEFINE_PAGE_RE.test(source)) {
+            // .mdx routes never carry a tagName export either — the entry
+            // wraps their function component itself (#954), like definePage.
+            if (
+              tagName === undefined && !DEFINE_PAGE_RE.test(source) && !fullPath.endsWith('.mdx')
+            ) {
               // tagName not found is normal — not all page routes define one.
               // Dedupe by resolved path: multiple scan passes spell the same
               // routesDir differently (relative vs absolute).
