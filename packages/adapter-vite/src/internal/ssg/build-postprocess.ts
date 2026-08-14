@@ -17,7 +17,7 @@ import { generateIslandManifests, writeIslandManifests } from './island-manifest
 import { resolveIslandHydrate } from './island-scanner.ts';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
-const log = createLogger('postprocess');
+const log = createLogger('build-postprocess');
 
 /** Narrow view of OpenElementBuildContext used by the SSG post-processor. */
 export interface BuildContextView {

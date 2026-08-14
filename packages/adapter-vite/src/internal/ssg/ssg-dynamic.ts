@@ -27,7 +27,7 @@ import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
 import { resolveDynamicRoutePath } from './ssg-helpers.ts';
 
-const log = createLogger('ssg');
+const log = createLogger('ssg-dynamic');
 
 type RouteInfoItem = RouteInfoEntry;
 

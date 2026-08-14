@@ -92,7 +92,9 @@ design — the release-tier gates call it with `firefox` / `webkit`.
 - Prefer structured APIs and AST/manifest boundaries over source regex.
 - Keep one renderer pipeline and one metadata source of truth.
 - Use `createLogger()` for logging where package code already has logger
-  access.
+  access. One tag per module, named after the module
+  (`createLogger('ssg-render')` in ssg-render.ts) — never a shared bucket
+  like `'core'` (#623).
 - Reference ADR numbers when comments explain architectural decisions.
 - Relative imports carry explicit `.ts`/`.tsx` extensions throughout the
   repository (`no-sloppy-imports` stays disabled in the root `deno.json`, but

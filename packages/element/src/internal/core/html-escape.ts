@@ -13,7 +13,7 @@
 import { createLogger, createWarnScope, warnOnce } from './logger.ts';
 import type { WarnScope } from './logger.ts';
 
-const log = createLogger('core');
+const log = createLogger('html-escape');
 
 import type { SafeHtml, UnsafeHtml } from '../protocol/framework.ts';
 export type { SafeHtml, UnsafeHtml };

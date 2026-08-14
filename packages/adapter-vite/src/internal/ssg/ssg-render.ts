@@ -34,7 +34,7 @@ import {
 import { formatJson } from '@openelement/element/build-utils';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
-const log = createLogger('ssg');
+const log = createLogger('ssg-render');
 
 /**
  * Minimal Hono app surface consumed by hono/ssg toSSG():
