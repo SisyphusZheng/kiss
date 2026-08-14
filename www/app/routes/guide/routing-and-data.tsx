@@ -272,6 +272,68 @@ export default GuestbookPage;`}</code></pre>
               </>
             )}
         </p>
+        <p class='full-guide'>
+          {zh
+            ? (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/rate-limit.md'>
+                  Rate limit（限流中间件）
+                </a>——middleware.use 上的固定窗口每 IP 限流，作用于 action POST，超限返回 429
+                problem+json；已对仓库源码构建的 scratch 应用验证。
+              </>
+            )
+            : (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/rate-limit.md'>
+                  Rate limit (fetch middleware)
+                </a>{' '}
+                — fixed-window per-IP limiting on middleware.use, scoped to action POSTs, 429
+                problem+json over the limit; verified against a scratch app built from repo source.
+              </>
+            )}
+        </p>
+        <p class='full-guide'>
+          {zh
+            ? (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/file-data-adapter.md'>
+                  FileDataAdapter（文件数据适配器）
+                </a>——ADR-0095 的 recipe 落地：unstorage 读面（getItem/keys）的只读 JSON
+                文件适配器，在 loader 中使用；已对仓库源码构建的 scratch 应用验证。
+              </>
+            )
+            : (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/file-data-adapter.md'>
+                  FileDataAdapter (filesystem data)
+                </a>{' '}
+                — the ADR-0095 recipe: a read-only JSON-file adapter with the unstorage read
+                surface (getItem/keys), used from loaders; verified against a scratch app built
+                from repo source.
+              </>
+            )}
+        </p>
+        <p class='full-guide'>
+          {zh
+            ? (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/better-auth-guard.md'>
+                  Auth guard（better-auth 守卫中间件）
+                </a>——把匿名用户 303 重定向出受保护路由组，并把会话身份透传给 loader；
+                守卫机制已验证，better-auth 调用以 stub 代替。
+              </>
+            )
+            : (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/better-auth-guard.md'>
+                  Auth guard (better-auth middleware)
+                </a>{' '}
+                — redirects anonymous users out of a protected route group (303) and passes
+                session identity through to loaders; guard mechanics verified, better-auth call
+                stubbed.
+              </>
+            )}
+        </p>
       </>
     );
   }

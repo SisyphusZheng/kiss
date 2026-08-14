@@ -28,3 +28,7 @@ export async function loader({ request }: LoaderContext) {
 
 Sessions remain a 0.44 framework topic; until then the cookie/session
 wiring is entirely better-auth's, which is the point of the recipe.
+
+For guarding a whole route group (redirect anonymous users before
+routing, pass session identity to loaders), see the
+[auth-guard middleware template](./better-auth-guard.md).
