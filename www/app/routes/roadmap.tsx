@@ -334,7 +334,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0-alpha.17',
+      version: 'v0.42.0',
       theme: 'registration decoupling: definePage routes always run their page render (ADR-0128)',
       copy:
         'The alpha.17 train closes the alpha.17 architect final review. A definePage route module now registers its page class under the route-path fallback tag, so the definePage render — with its request and actionData context — always runs; the tagName export only names the content element (#960, ADR-0128). Shape-1 pages gain one wrapper element in their SSR markup (migration note in the migration guide). The review also hardened the error fallbacks (throwing-getter props can no longer crash SSR; depth-limit trips log once across all branch kinds), aligned the standalone serve.mjs MIME table, and refreshed the planning anchors, changelog coverage and guide samples. Blog e2e round-6 re-verified the published alpha.16 with zero manual wiring (#963).',
@@ -636,7 +636,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.17' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
