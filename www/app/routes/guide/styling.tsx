@@ -114,7 +114,7 @@ export class GuideStylingPage extends GuidePage {
         </h3>
         <open-code-block>
           <pre><code>{`/* app/styles.css — linked in the document head */
-.card { border: 1px solid #ccc; }  /* never matches page content */`}</code></pre>
+.card { border: 1px solid silver; }  /* never matches page content */`}</code></pre>
         </open-code-block>
         <h3>{zh ? 'Scoped StyleSheet（生效）' : 'A scoped StyleSheet (applies)'}</h3>
         <open-code-block>
