@@ -229,6 +229,12 @@ const notedMissingTagName = new Set<string>();
  */
 const notedIgnoredTagName = new Set<string>();
 
+/**
+ * Fallback-tag collision warnings (content element tag === the route's
+ * path-derived registration tag) fire at most once per file per process.
+ */
+const notedTagCollision = new Set<string>();
+
 /** Read a static route tagName export from source text. */
 function readRouteTagName(source: string): string | undefined {
   const match = source.match(/export\s+const\s+tagName\s*=\s*(["'`])([^"'`]+)\1/);
@@ -423,6 +429,27 @@ export async function scanRoutes(
                     `the page registers under the path-derived tag '${
                       fileToTagName(relativePath)
                     }'.`,
+                );
+              }
+            }
+            // #960 residual corner: a content element whose tag EQUALS the
+            // path-derived fallback tag still shadows the page class (the
+            // #952 ownership rule protects self-registrations), so the
+            // definePage render stays bypassed. Loud warning — rename the
+            // content element (e.g. contact.tsx → contact-form-view).
+            if (
+              isDefinePage && tagName !== undefined && tagName === fileToTagName(relativePath) &&
+              routeUsesTagName(source, tagName)
+            ) {
+              const resolvedPath = resolve(fullPath);
+              if (!notedTagCollision.has(resolvedPath)) {
+                notedTagCollision.add(resolvedPath);
+                log.warn(
+                  `Route module ${resolvedPath} self-registers content element '${tagName}', ` +
+                    `which equals the route's fallback registration tag — the content element ` +
+                    `shadows the page class (#952 rule) and the definePage render is bypassed ` +
+                    `(request/actionData context will not reach the page). Rename the content ` +
+                    `element to a distinct tag.`,
                 );
               }
             }
