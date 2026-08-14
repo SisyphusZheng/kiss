@@ -17,6 +17,25 @@ hydration.
 | You want runtime-free islands after hydration.      | You need React-like hooks / ecosystem.         |
 | You want the smallest possible client bundle.       | Team velocity favors Preact JSX patterns.      |
 
+## Setup
+
+Add the Preact packages to your project `deno.json` with **explicit subpath
+entries** (not the `"preact/": "npm:preact@…/"` prefix form — Deno's resolver
+cannot join npm: prefixes in standalone projects, #970):
+
+```jsonc
+{
+  "imports": {
+    "preact": "npm:preact@^10.28.0",
+    "preact/hooks": "npm:preact@^10.28.0/hooks",
+    "preact/jsx-runtime": "npm:preact@^10.28.0/jsx-runtime",
+    "@preact/signals": "npm:@preact/signals@^2.9.0"
+  }
+}
+```
+
+Add further subpaths (`preact/debug`, …) the same way when you import them.
+
 ## Public API
 
 ```ts
