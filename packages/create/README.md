@@ -2,7 +2,7 @@
 
 Project scaffolding CLI for openElement applications.
 
-> 0.42 alpha surface (v0.42.0-alpha.15, unfrozen; ADR-0122 freeze proposed):
+> 0.42 alpha surface (v0.42.0-alpha.16, unfrozen; ADR-0122 freeze proposed):
 > Framework product entry. This package is part of the
 > first-run Framework story alongside `@openelement/app` and
 > `@openelement/adapter-vite`.

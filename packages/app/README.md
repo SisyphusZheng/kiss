@@ -2,7 +2,7 @@
 
 JSX-first application authoring API for openElement.
 
-> 0.42 alpha surface (v0.42.0-alpha.15, unfrozen; ADR-0122 freeze proposed):
+> 0.42 alpha surface (v0.42.0-alpha.16, unfrozen; ADR-0122 freeze proposed):
 > Framework product. Use this package for first-run pages,
 > layouts, islands, route metadata, and the Vite facade.
 
