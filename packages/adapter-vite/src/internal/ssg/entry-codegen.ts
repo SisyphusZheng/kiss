@@ -893,7 +893,7 @@ function islandImportFactory(
   })) customElements.define(${quoteGeneratedJavaScriptValue(tagName)}, Ctor); return mod; })`;
 }
 
-export interface GenerateClientEntryOptions {
+interface GenerateClientEntryOptions {
   /**
    * True when any page route carries data-open-enhance (#569): emit the form
    * enhancement layer even with zero islands, so enhanced forms are not

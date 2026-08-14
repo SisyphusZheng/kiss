@@ -38,7 +38,7 @@ interface OpenElementLikeConstructor {
 }
 
 /** Structural view of an error-boundary host (avoids an ErrorBoundary import). */
-export interface ErrorBoundaryHostLike {
+interface ErrorBoundaryHostLike {
   catchError(error: Error, source?: unknown): void;
 }
 

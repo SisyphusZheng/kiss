@@ -8,7 +8,7 @@ interface ScrollRestoreDeps {
   win: Window & typeof globalThis;
 }
 
-export interface ScrollPosition {
+interface ScrollPosition {
   x: number;
   y: number;
 }

@@ -61,7 +61,7 @@ export interface ListTarget {
  * A parsed `<For>` region in the SSR DOM: the branch comment anchor plus the
  * per-item boundary marker comments, in order (see collectListGroups).
  */
-export interface ListDomGroup {
+interface ListDomGroup {
   branchOrdinal: number;
   anchor: Comment;
   /** One node range per item, in order (nested group markers live inside their item's range). */

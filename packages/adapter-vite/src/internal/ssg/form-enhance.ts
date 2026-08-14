@@ -26,7 +26,7 @@ interface FormEnhanceDeps {
   islands: IslandLifecycle;
 }
 
-export interface FormEnhance {
+interface FormEnhance {
   /**
    * Attach the submit interceptor to every current shadow root. Idempotent;
    * runs at ready time, after every morph (new hosts may appear), and after

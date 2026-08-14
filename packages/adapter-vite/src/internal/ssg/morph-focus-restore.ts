@@ -8,7 +8,7 @@ interface FocusRestoreDeps {
   doc: Document;
 }
 
-export interface FocusSnapshot {
+interface FocusSnapshot {
   el: Element;
   id: string;
   selStart: number;
