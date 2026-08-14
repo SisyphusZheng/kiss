@@ -146,6 +146,10 @@ async function interactAndVerifyEventCount(page: Page, startCount: number): Prom
   // Material switch change.
   await page.locator('md-switch#md-switch').click();
   await expectCount(startCount + 5, 'Material switch change');
+
+  // Bare-native badge click.
+  await page.locator('alpha3-native-badge#native-badge').click();
+  await expectCount(startCount + 6, 'Native badge click');
 }
 
 async function verifyBrowser(distDir: string): Promise<void> {
@@ -161,6 +165,7 @@ async function verifyBrowser(distDir: string): Promise<void> {
       customElements.get('alpha3-lit-host') &&
       customElements.get('alpha3-wc-fixture') &&
       customElements.get('alpha3-open-child') &&
+      customElements.get('alpha3-native-badge') &&
       customElements.get('sl-button') &&
       customElements.get('sl-switch') &&
       customElements.get('md-filled-button') &&
@@ -221,6 +226,8 @@ async function verifyBrowser(distDir: string): Promise<void> {
         materialReady: !!root.querySelector('md-filled-button') &&
           !!root.querySelector('md-outlined-text-field') &&
           !!root.querySelector('md-switch'),
+        nativeBadgeShadow: !!(root.querySelector('alpha3-native-badge') as HTMLElement)
+          ?.shadowRoot?.querySelector('slot'),
       };
     });
 
@@ -231,6 +238,7 @@ async function verifyBrowser(distDir: string): Promise<void> {
     }
     if (!summary.shoelaceReady) throw new Error('Shoelace components were not present');
     if (!summary.materialReady) throw new Error('Material Web components were not present');
+    if (!summary.nativeBadgeShadow) throw new Error('Native badge shadow root did not render');
 
     // Interaction event propagation checks for #221.
     await interactAndVerifyEventCount(page, summary.eventCount);
@@ -252,6 +260,8 @@ async function verifySsrHtml(appDir: string): Promise<void> {
       '<md-filled-button',
       '<md-outlined-text-field',
       '<md-switch',
+      '<alpha3-native-badge',
+      'Native badge light child',
       'slot="label"',
       'data-eid=',
     ]
@@ -262,31 +272,41 @@ async function verifySsrHtml(appDir: string): Promise<void> {
   }
 }
 
+/**
+ * Create a temp app from packages/create, patch it to consume the third-party
+ * WC fixture, copy the fixture sources in, and build it. Returns the app dir.
+ * Shared by the smoke (browser + SSR checks) and the SSR corpus script.
+ */
+export async function prepareFixtureApp(tmpRoot: string): Promise<string> {
+  await run(
+    ['run', '-A', join(repoRoot, 'packages', 'create', 'src', 'cli.ts'), PROJECT_NAME],
+    tmpRoot,
+  );
+  const appDir = join(tmpRoot, PROJECT_NAME);
+  await patchDenoJson(appDir);
+  await patchViteConfig(appDir);
+
+  const fixtureDir = join(dirname(fromFileUrl(import.meta.url)), 'third-party-wc-smoke');
+  for (
+    const src of [
+      'app/routes/third-party-wc.tsx',
+      'app/islands/alpha3-wc-fixture.tsx',
+      'app/client/alpha3-wc-client.ts',
+    ]
+  ) {
+    Deno.mkdirSync(dirname(join(appDir, src)), { recursive: true });
+    Deno.copyFileSync(join(fixtureDir, src), join(appDir, src));
+  }
+
+  await run(['task', 'build'], appDir);
+  return appDir;
+}
+
 async function main(): Promise<void> {
   const tmpRoot = await Deno.makeTempDir({ prefix: 'openelement-third-party-wc-' });
   const keep = Deno.env.get('OPEN_ELEMENT_KEEP_THIRD_PARTY_WC_SMOKE') === '1';
   try {
-    await run(
-      ['run', '-A', join(repoRoot, 'packages', 'create', 'src', 'cli.ts'), PROJECT_NAME],
-      tmpRoot,
-    );
-    const appDir = join(tmpRoot, PROJECT_NAME);
-    await patchDenoJson(appDir);
-    await patchViteConfig(appDir);
-
-    const fixtureDir = join(dirname(fromFileUrl(import.meta.url)), 'third-party-wc-smoke');
-    for (
-      const src of [
-        'app/routes/third-party-wc.tsx',
-        'app/islands/alpha3-wc-fixture.tsx',
-        'app/client/alpha3-wc-client.ts',
-      ]
-    ) {
-      Deno.mkdirSync(dirname(join(appDir, src)), { recursive: true });
-      Deno.copyFileSync(join(fixtureDir, src), join(appDir, src));
-    }
-
-    await run(['task', 'build'], appDir);
+    const appDir = await prepareFixtureApp(tmpRoot);
     await verifySsrHtml(appDir);
     await verifyBrowser(join(appDir, 'dist'));
     console.log('third-party Web Components smoke passed');

@@ -79,6 +79,12 @@ export default defineIsland(tagName, {
           <h2>Bidirectional</h2>
           <alpha3-lit-host></alpha3-lit-host>
         </section>
+        <section id='native-section'>
+          <h2>Bare native</h2>
+          <alpha3-native-badge id='native-badge' onClick={() => bump('native-badge')}>
+            Native badge light child
+          </alpha3-native-badge>
+        </section>
       </>
     );
   },

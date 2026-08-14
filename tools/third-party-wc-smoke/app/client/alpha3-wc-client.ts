@@ -51,5 +51,19 @@ class Alpha3LitHost extends LitElement {
   }
 }
 
+// Bare-native custom element: vanilla HTMLElement with its own shadow root,
+// no library. Corpus baseline for the "no framework" third-party WC kind.
+class Alpha3NativeBadge extends HTMLElement {
+  constructor() {
+    super();
+    const root = this.attachShadow({ mode: 'open' });
+    const style = document.createElement('style');
+    style.textContent =
+      ':host{display:inline-block;padding:0.25rem 0.75rem;border:1px solid #8250df;border-radius:999px;}';
+    root.append(style, document.createElement('slot'));
+  }
+}
+
 customElements.define('alpha3-lit-counter', Alpha3LitCounter);
 customElements.define('alpha3-lit-host', Alpha3LitHost);
+customElements.define('alpha3-native-badge', Alpha3NativeBadge);

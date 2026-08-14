@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-14T21:25:04.560Z",
+  "source": "tools/third-party-wc-corpus.ts",
+  "note": "Pins observed SSR form + admission per third-party WC kind; known forms, not correctness claims.",
+  "entries": [
+    {
+      "tag": "alpha3-wc-fixture",
+      "library": "@openelement/app",
+      "admission": {
+        "renderPath": "ssr+client",
+        "reason": "openElement.ssr is true"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [],
+        "dsdTemplate": true,
+        "dataEid": false
+      }
+    },
+    {
+      "tag": "alpha3-lit-counter",
+      "library": "lit",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [
+          "Lit slot label"
+        ],
+        "dsdTemplate": false,
+        "dataEid": true
+      }
+    },
+    {
+      "tag": "alpha3-lit-host",
+      "library": "lit",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [],
+        "dsdTemplate": false,
+        "dataEid": false
+      }
+    },
+    {
+      "tag": "sl-button",
+      "library": "@shoelace-style/shoelace",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [
+          "Shoelace Button"
+        ],
+        "dsdTemplate": false,
+        "dataEid": true
+      }
+    },
+    {
+      "tag": "sl-switch",
+      "library": "@shoelace-style/shoelace",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [
+          "Shoelace Switch"
+        ],
+        "dsdTemplate": false,
+        "dataEid": true
+      }
+    },
+    {
+      "tag": "sl-dialog",
+      "library": "@shoelace-style/shoelace",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [
+          "Dialog content"
+        ],
+        "dsdTemplate": false,
+        "dataEid": false
+      }
+    },
+    {
+      "tag": "md-filled-button",
+      "library": "@material/web",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [
+          "Material Button"
+        ],
+        "dsdTemplate": false,
+        "dataEid": true
+      }
+    },
+    {
+      "tag": "md-outlined-text-field",
+      "library": "@material/web",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [],
+        "dsdTemplate": false,
+        "dataEid": false
+      }
+    },
+    {
+      "tag": "md-switch",
+      "library": "@material/web",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [],
+        "dsdTemplate": false,
+        "dataEid": true
+      }
+    },
+    {
+      "tag": "alpha3-native-badge",
+      "library": "bare-native",
+      "admission": {
+        "renderPath": "unscanned",
+        "reason": "tag never enters the island scan"
+      },
+      "ssrForm": {
+        "tagPresent": true,
+        "lightDomChildren": [
+          "Native badge light child"
+        ],
+        "dsdTemplate": false,
+        "dataEid": true
+      }
+    }
+  ]
+}

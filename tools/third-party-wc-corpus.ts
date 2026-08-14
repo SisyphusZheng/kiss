@@ -1,0 +1,278 @@
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys
+/**
+ * Third-party WC SSR corpus (0.43 'Universal WC SSR', alpha.1 foundation):
+ * pin the SSR output FORM and SSR admission classification of each consumed
+ * third-party Web Component kind as a known, machine-readable record.
+ *
+ * For every corpus entry this asserts:
+ * - tag presence in the SSG HTML,
+ * - authored light-DOM children surviving verbatim,
+ * - presence/absence of a DSD `<template shadowrootmode>` per component kind,
+ * - the data-eid event-binding attribute (present for handler-bearing tags),
+ * - the admission decision the build's ssrAdmissionPlan assigned
+ *   ('unscanned' when the tag never enters the island scan).
+ *
+ * The point is pinning each library's observed behavior as a known form, not
+ * asserting one specific form is 'correct'.
+ *
+ * Writes the record to docs/evidence/third-party-wc-ssr-corpus.json (same
+ * in-repo convention as tools/run-dogfood-evidence.ts) and mirrors it to
+ * stdout.
+ */
+
+import { dirname, join } from '@std/path';
+
+import { formatJson } from '@openelement/element/build-utils';
+import { prepareFixtureApp } from './third-party-wc-smoke.ts';
+const RECORD_PATH = join('docs', 'evidence', 'third-party-wc-ssr-corpus.json');
+
+interface SsrAdmissionDecision {
+  tagName: string;
+  modulePath: string;
+  source: string;
+  renderPath: string;
+  reason: string;
+}
+
+interface SsrAdmissionPlan {
+  renderableTags: string[];
+  clientOnlyTags: string[];
+  rejectedTags: string[];
+  reasons: Record<string, string>;
+  decisions: SsrAdmissionDecision[];
+}
+
+interface CorpusExpectation {
+  /** Authored light-DOM children that must survive SSR verbatim. */
+  lightDomChildren: string[];
+  /** Whether SSR emits a DSD shadow template directly inside the tag. */
+  dsdTemplate: boolean;
+  /** Whether the tag carries a data-eid event-binding attribute. */
+  dataEid: boolean;
+  /** Expected admission renderPath, or 'unscanned' when not in the plan. */
+  admission: string;
+}
+
+interface CorpusEntry {
+  tag: string;
+  library: string;
+  expect: CorpusExpectation;
+}
+
+const CORPUS: CorpusEntry[] = [
+  // openElement control: a local island with ssr+dsd — the only fixture tag
+  // the admission plan should classify at all.
+  {
+    tag: 'alpha3-wc-fixture',
+    library: '@openelement/app',
+    expect: {
+      lightDomChildren: [],
+      dsdTemplate: true,
+      dataEid: false,
+      admission: 'ssr+client',
+    },
+  },
+  {
+    tag: 'alpha3-lit-counter',
+    library: 'lit',
+    expect: {
+      lightDomChildren: ['Lit slot label'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'alpha3-lit-host',
+    library: 'lit',
+    expect: {
+      lightDomChildren: [],
+      dsdTemplate: false,
+      dataEid: false,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'sl-button',
+    library: '@shoelace-style/shoelace',
+    expect: {
+      lightDomChildren: ['Shoelace Button'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'sl-switch',
+    library: '@shoelace-style/shoelace',
+    expect: {
+      lightDomChildren: ['Shoelace Switch'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'sl-dialog',
+    library: '@shoelace-style/shoelace',
+    expect: {
+      lightDomChildren: ['Dialog content'],
+      dsdTemplate: false,
+      dataEid: false,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'md-filled-button',
+    library: '@material/web',
+    expect: {
+      lightDomChildren: ['Material Button'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'md-outlined-text-field',
+    library: '@material/web',
+    expect: {
+      lightDomChildren: [],
+      dsdTemplate: false,
+      dataEid: false,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'md-switch',
+    library: '@material/web',
+    expect: {
+      lightDomChildren: [],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'unscanned',
+    },
+  },
+  {
+    tag: 'alpha3-native-badge',
+    library: 'bare-native',
+    expect: {
+      lightDomChildren: ['Native badge light child'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'unscanned',
+    },
+  },
+];
+
+/** Extract the generated `var ssrAdmissionPlan = {...}` object literal. */
+export function extractSsrAdmissionPlan(entryJs: string): SsrAdmissionPlan {
+  const marker = 'var ssrAdmissionPlan = ';
+  const start = entryJs.indexOf(marker);
+  if (start === -1) throw new Error('ssrAdmissionPlan not found in server entry');
+  let i = start + marker.length;
+  if (entryJs[i] !== '{') throw new Error('ssrAdmissionPlan is not an object literal');
+  let depth = 0;
+  const begin = i;
+  for (; i < entryJs.length; i++) {
+    if (entryJs[i] === '{') depth++;
+    else if (entryJs[i] === '}') {
+      depth--;
+      if (depth === 0) break;
+    }
+  }
+  if (depth !== 0) throw new Error('ssrAdmissionPlan object literal is unbalanced');
+  return JSON.parse(entryJs.slice(begin, i + 1)) as SsrAdmissionPlan;
+}
+
+interface SsrFormObservation {
+  tagPresent: boolean;
+  lightDomChildren: string[];
+  dsdTemplate: boolean;
+  dataEid: boolean;
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function observeSsrForm(html: string, entry: CorpusEntry): SsrFormObservation {
+  const openTag = new RegExp(`<${escapeRegExp(entry.tag)}(\\s[^>]*)?>`);
+  const match = openTag.exec(html);
+  const tagPresent = match !== null;
+  const dsdTemplate = tagPresent &&
+    new RegExp(`<${escapeRegExp(entry.tag)}(\\s[^>]*)?>\\s*<template shadowrootmode`).test(html);
+  const dataEid = tagPresent && /\bdata-eid=/.test(match![0]);
+  const lightDomChildren = entry.expect.lightDomChildren.filter((child) => html.includes(child));
+  return { tagPresent, lightDomChildren, dsdTemplate, dataEid };
+}
+
+async function main(): Promise<void> {
+  const tmpRoot = await Deno.makeTempDir({ prefix: 'openelement-third-party-wc-corpus-' });
+  const keep = Deno.env.get('OPEN_ELEMENT_KEEP_THIRD_PARTY_WC_SMOKE') === '1';
+  try {
+    const appDir = await prepareFixtureApp(tmpRoot);
+    const html = await Deno.readTextFile(join(appDir, 'dist', 'third-party-wc', 'index.html'));
+    const entryJs = await Deno.readTextFile(join(appDir, 'dist', 'server', 'entry.js'));
+    const plan = extractSsrAdmissionPlan(entryJs);
+    const decisionByTag = new Map(plan.decisions.map((d) => [d.tagName, d]));
+
+    const failures: string[] = [];
+    const entries = CORPUS.map((entry) => {
+      const form = observeSsrForm(html, entry);
+      const decision = decisionByTag.get(entry.tag);
+      const admission = decision
+        ? { renderPath: decision.renderPath, reason: decision.reason }
+        : { renderPath: 'unscanned', reason: 'tag never enters the island scan' };
+
+      const e = entry.expect;
+      if (!form.tagPresent) failures.push(`${entry.tag}: tag missing from SSR HTML`);
+      if (form.lightDomChildren.length !== e.lightDomChildren.length) {
+        failures.push(
+          `${entry.tag}: light-DOM children ${JSON.stringify(form.lightDomChildren)} != expected ${
+            JSON.stringify(e.lightDomChildren)
+          }`,
+        );
+      }
+      if (form.dsdTemplate !== e.dsdTemplate) {
+        failures.push(`${entry.tag}: dsdTemplate=${form.dsdTemplate}, expected ${e.dsdTemplate}`);
+      }
+      if (form.dataEid !== e.dataEid) {
+        failures.push(`${entry.tag}: dataEid=${form.dataEid}, expected ${e.dataEid}`);
+      }
+      if (admission.renderPath !== e.admission) {
+        failures.push(
+          `${entry.tag}: admission=${admission.renderPath} (${admission.reason}), expected ${e.admission}`,
+        );
+      }
+
+      return { tag: entry.tag, library: entry.library, admission, ssrForm: form };
+    });
+
+    if (failures.length > 0) {
+      throw new Error(`SSR corpus mismatches:\n- ${failures.join('\n- ')}`);
+    }
+
+    const record = {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      source: 'tools/third-party-wc-corpus.ts',
+      note:
+        'Pins observed SSR form + admission per third-party WC kind; known forms, not correctness claims.',
+      entries,
+    };
+    await Deno.mkdir(dirname(RECORD_PATH), { recursive: true });
+    await Deno.writeTextFile(RECORD_PATH, formatJson(record));
+    console.log(JSON.stringify(record, null, 2));
+    console.log(`third-party WC SSR corpus passed; record written to ${RECORD_PATH}`);
+  } finally {
+    if (keep) {
+      console.log(`Keeping third-party WC corpus project at ${tmpRoot}`);
+    } else {
+      await Deno.remove(tmpRoot, { recursive: true });
+    }
+  }
+}
+
+if (import.meta.main) {
+  await main();
+}
