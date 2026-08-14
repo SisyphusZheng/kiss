@@ -439,13 +439,13 @@ const content = {
     heroLede:
       'OpenElement roadmap labels describe the public product surface, tied to package truth, docs truth and CI evidence rather than a wish list.',
     currentLabel: 'current',
-    publishedMeta: 'published → alpha line',
+    publishedMeta: 'published → stable line',
     readChangelog: 'Read changelog',
     architecture: 'Architecture',
-    freezeBadge: 'ADR-0122 freeze proposed',
-    nowTitle: '0.41.x is stable under the ADR-0119 freeze; the 0.42 track ships as alpha.',
+    freezeBadge: 'ADR-0122 freeze accepted',
+    nowTitle: '0.42.0 is stable under the ADR-0122 freeze; 0.41.x stays frozen under ADR-0119.',
     nowCopy: (version: string) =>
-      `${version} is the published alpha line on the 0.42 track — request-time surfaces included, not yet frozen. 0.42.0 stable awaits TP-6 with the ADR-0122 freeze proposal filed; the #390 pilot requirement was retired by maintainer decision.`,
+      `${version} is the published stable line on the 0.42 track — the request-time surfaces froze at 0.42.0 (ADR-0122, accepted at TP-6); the #390 pilot requirement was retired by maintainer decision.`,
     releaseLineIndex: '01 / release line',
     releaseLineTitle: 'From shipped evidence to v1.0 freeze.',
     releaseLineCopy:
@@ -520,13 +520,13 @@ const content = {
     heroLede:
       'OpenElement 的 roadmap 标签描述的是公开产品面，锚定包真相、文档真相与 CI 证据，而不是愿望清单。',
     currentLabel: '当前',
-    publishedMeta: '已发布 → alpha 线',
+    publishedMeta: '已发布 → 稳定线',
     readChangelog: '阅读更新日志',
     architecture: '架构',
-    freezeBadge: 'ADR-0122 冻结提案已提交',
-    nowTitle: '0.41.x 在 ADR-0119 冻结下保持稳定；0.42 轨道以 alpha 形式发布。',
+    freezeBadge: 'ADR-0122 冻结已接受',
+    nowTitle: '0.42.0 在 ADR-0122 冻结下发布；0.41.x 静态冻结（ADR-0119）未被触动。',
     nowCopy: (version: string) =>
-      `${version} 是 0.42 轨道上已发布的 alpha 线——包含请求时能力面，尚未冻结。0.42.0 stable 等待 TP-6，ADR-0122 冻结提案已提交；#390 试点要求已由维护者决定撤销。`,
+      `${version} 是 0.42 轨道上已发布的稳定线——请求时能力面已在 0.42.0 冻结（ADR-0122,于 TP-6 接受）；#390 试点要求已由维护者决定撤销。`,
     releaseLineIndex: '01 / 发布线',
     releaseLineTitle: '从已交付证据，到 v1.0 冻结。',
     releaseLineCopy: '这条线刻意收窄：只有经得起文档、包导出与构建验证检验的表述，才会留在这里。',

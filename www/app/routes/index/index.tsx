@@ -208,7 +208,7 @@ const content = {
     specOutput: 'Server output',
     begin: 'Begin.',
     beginNote:
-      "@alpha pins the 0.42 alpha line; --minimum-dependency-age 0 bypasses Deno's default ~24h minimumDependencyAge, which refuses same-day publishes.",
+      "The default dist-tag is the stable 0.42.0 line; --minimum-dependency-age 0 bypasses Deno's default ~24h minimumDependencyAge, which refuses same-day publishes.",
     facts: 'Facts behind the feeling',
     continueComposition: 'Continue the composition.',
     referenceCopy:
@@ -227,7 +227,7 @@ const content = {
     specOutput: '服务端输出',
     begin: '开始。',
     beginNote:
-      '@alpha 锁定 0.42 alpha 线；--minimum-dependency-age 0 绕过 Deno 默认约 24h 的 minimumDependencyAge——默认会拒绝当天发布的包。',
+      '默认 dist-tag 即 0.42.0 稳定线；--minimum-dependency-age 0 绕过 Deno 默认约 24h 的 minimumDependencyAge——默认会拒绝当天发布的包。',
     facts: '感觉背后的事实',
     continueComposition: '继续这场组合。',
     referenceCopy: '每一个场景都立足于公开产品面、架构与发布真相——不是装饰性的虚构。',
@@ -261,8 +261,8 @@ export class HomePage extends OpenElement {
           <div class='spec-strip'>
             <div class='spec-cell'>
               <small>{t.specVersion}</small>
-              <strong>{PUBLISHED_PACKAGE_VERSION} — alpha line</strong>
-              <small>0.42.0 freeze proposed (ADR-0122)</small>
+              <strong>{PUBLISHED_PACKAGE_VERSION} — stable line</strong>
+              <small>application loop frozen (ADR-0122)</small>
             </div>
             <div class='spec-cell'>
               <small>{t.specGraph}</small>
@@ -403,7 +403,7 @@ export const Counter = defineElement('open-counter', {
           <h2>{t.begin}</h2>
           <div class='command'>
             <code>$</code>
-            <span>deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app</span>
+            <span>deno run -A --minimum-dependency-age 0 npm:@openelement/create my-app</span>
           </div>
           <p class='command-note'>{t.beginNote}</p>
           <div class='actions'>

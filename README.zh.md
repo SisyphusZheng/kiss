@@ -49,7 +49,7 @@ official build path = Vite + Nitro
 不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
 #390 试点在零招募后由 maintainer 决策退役（ADR-0119）。
 
-`0.42 = WC 轻量全栈（WC light fullstack）`。`0.42.0` alpha 线交付 request-time
+`0.42 = WC 轻量全栈（WC light fullstack）`。`0.42.0` 稳定线交付 request-time
 Application Loop：动态 loader/action 路由、no-JS + 增强表单、`build → start`、
 fail-closed 静态预渲染，以及生成 action POST 上的默认同源 CSRF 检查。登录应用通过
 better-auth recipe（基于 Web 标准 `Request` 头）获得支持。
@@ -64,13 +64,12 @@ better-auth recipe（基于 Web 标准 `Request` 头）获得支持。
 ## 开始使用
 
 ```sh
-deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app
+deno run -A --minimum-dependency-age 0 npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```
 
-`@alpha` dist-tag 锁定当前 0.42 alpha 线（不带 tag 的 `npm:@openelement/create`
-解析到 0.41.x stable 线）；`--minimum-dependency-age 0` 是必须的，因为 Deno 默认的
+默认 dist-tag 即 0.42 稳定线；`--minimum-dependency-age 0` 是必须的，因为 Deno 默认的
 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。
 
 生成项目提供 `dev`、`check`、`test`、`build`、`start` 和 `preview`。

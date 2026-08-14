@@ -62,7 +62,7 @@ baselines. The third audit sweep completed in alpha.19 (see
 and the #390 pilot was retired by maintainer decision after zero recruitment
 (see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
 
-`0.42 = WC light fullstack`. The `0.42.0` alpha line ships the request-time
+`0.42 = WC light fullstack`. The `0.42.0` stable line ships the request-time
 Application Loop: dynamic loader/action routes, no-JS + enhanced forms,
 `build → start`, fail-closed static prerender and a default same-origin CSRF
 check on generated action POSTs. Login apps are supported via the better-auth
@@ -80,13 +80,12 @@ production runtime and external-adoption evidence are complete.
 ## Start
 
 ```sh
-deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app
+deno run -A --minimum-dependency-age 0 npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```
 
-The `@alpha` dist-tag pins the current 0.42 alpha line (untagged
-`npm:@openelement/create` resolves to the 0.41.x stable line), and
+The default dist-tag is the stable 0.42 line, and
 `--minimum-dependency-age 0` is needed because Deno's default
 minimumDependencyAge (~24h) refuses packages published within the last day.
 

@@ -18,13 +18,13 @@ const content: Record<'en' | 'zh', GuideContent> = {
     next: { href: '/guide/core-concepts', label: 'Core Concepts' },
     subtitleBefore: 'The current source line is',
     subtitleAfter:
-      'The published npm line is the same 0.42 alpha track (dist-tag alpha; latest remains 0.41.x); 0.41.x stable already shipped under the ADR-0119 freeze, and the 0.42.0 freeze proposal is ADR-0122 (PROPOSED).',
+      'The published npm line is the stable 0.42 line (dist-tag latest); it ships under the ADR-0122 freeze on top of the untouched ADR-0119 static freeze.',
     cards: [
       {
         id: 'install',
         title: 'Install',
         body:
-          "Three commands to a running app: deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app, then cd my-app, then deno task dev. The @alpha dist-tag pins the 0.42 alpha line, and --minimum-dependency-age 0 is needed because Deno's default minimumDependencyAge (~24h) refuses packages published within the last day. Deno 2.8+ is required — the generated starter writes the minimumDependencyAge config key, which older Deno versions do not understand.",
+          "Three commands to a running app: deno run -A --minimum-dependency-age 0 npm:@openelement/create my-app, then cd my-app, then deno task dev. The default dist-tag is the stable 0.42 line, and --minimum-dependency-age 0 is needed because Deno's default minimumDependencyAge (~24h) refuses packages published within the last day. Deno 2.8+ is required — the generated starter writes the minimumDependencyAge config key, which older Deno versions do not understand.",
       },
       {
         id: 'explore',
@@ -51,13 +51,13 @@ const content: Record<'en' | 'zh', GuideContent> = {
     next: { href: '/guide/core-concepts', label: '核心概念' },
     subtitleBefore: '当前源码线为',
     subtitleAfter:
-      'npm 发布线同属 0.42 alpha 轨（dist-tag 为 alpha；latest 仍是 0.41.x）；0.41.x stable 已在 ADR-0119 冻结下发布，0.42.0 冻结提案为 ADR-0122（PROPOSED）。',
+      'npm 发布线为 0.42 稳定线（dist-tag latest）——在未被触动的 ADR-0119 静态冻结之上，按 ADR-0122 冻结交付。',
     cards: [
       {
         id: 'install',
         title: '安装',
         body:
-          '三条命令跑起应用：deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app，然后 cd my-app，再 deno task dev。@alpha dist-tag 锁定 0.42 alpha 线；--minimum-dependency-age 0 是必须的，因为 Deno 默认的 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。需要 Deno 2.8+——生成的 starter 会写入 minimumDependencyAge 配置键，更旧的 Deno 版本不认识该键。',
+          '三条命令跑起应用：deno run -A --minimum-dependency-age 0 npm:@openelement/create my-app，然后 cd my-app，再 deno task dev。默认 dist-tag 即 0.42 稳定线；--minimum-dependency-age 0 是必须的，因为 Deno 默认的 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。需要 Deno 2.8+——生成的 starter 会写入 minimumDependencyAge 配置键，更旧的 Deno 版本不认识该键。',
       },
       {
         id: 'explore',
