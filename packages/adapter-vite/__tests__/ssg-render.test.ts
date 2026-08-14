@@ -408,7 +408,12 @@ Deno.test('ssgRender - request-time routes skip prerender and emit server artifa
   // #959: the standalone server entry is emitted alongside the request-time
   // entry so the build output runs without the CLI or Nitro wiring.
   const serveEntry = await Deno.readTextFile(`${outDir}/server/serve.mjs`);
-  assert(serveEntry.includes("from './index.js'"), 'serve.mjs must mount the generated entry');
+  // Dynamic import is load-bearing (#969): the URLPattern floor check must run
+  // before ./index.js builds its route patterns.
+  assert(
+    serveEntry.includes("await import('./index.js')"),
+    'serve.mjs must mount the generated entry',
+  );
   assert(serveEntry.includes("from 'node:http'"), 'serve.mjs must be runtime-self-contained');
 
   await Deno.remove(outDir, { recursive: true }).catch(() => {});

@@ -22,6 +22,7 @@ import { join } from '@std/path';
 
 const fixtureDir = join(import.meta.dirname!, '../__fixtures__/request-time');
 const serveEntryPath = join(fixtureDir, 'dist/server/serve.mjs');
+const serverDir = join(fixtureDir, 'dist/server');
 
 /** The fixture dist is gitignored — build it on demand (same pattern as
  *  request-time-parity.test.ts). */
@@ -38,6 +39,20 @@ async function ensureFixtureBuilt(): Promise<void> {
     if (!build.success) throw new Error('fixture build failed');
   }
 }
+
+Deno.test({
+  name: 'standalone serve.mjs: dist/server is marked as ESM for Node (#969)',
+  fn: async () => {
+    await ensureFixtureBuilt();
+    // index.js/entry.js are ESM .js files; Node.js has no module-syntax
+    // detection before v20.19/v22.12, so the directory needs an explicit
+    // marker or Node dies with a misleading SyntaxError.
+    const marker = JSON.parse(
+      await Deno.readTextFile(join(serverDir, 'package.json')),
+    );
+    assertEquals(marker.type, 'module');
+  },
+});
 
 Deno.test({
   name: 'standalone serve.mjs: dynamic + static channels over HTTP (#959)',

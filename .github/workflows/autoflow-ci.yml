@@ -43,3 +43,64 @@ jobs:
         run: ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
       - name: AutoFlow3 CI gate
         run: deno task autoflow:ci
+
+  # Issue #628 (first slice): the generated dist/server artifact must boot
+  # under plain Node, not just under the Deno CLI (#969). The runtime floor
+  # is Node.js >= 24 (WHATWG URLPattern global), so the matrix asserts real
+  # serving on 24 and the clean early error on 20.
+  node-serve-smoke:
+    name: dist/server Node smoke (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '24']
+    steps:
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: ./.github/actions/setup-deno-workspace
+      # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Build the request-time fixture
+        run: deno task fixture:request-time:build
+      - name: Shim @openelement/adapter-vite/nitro-mount for Node resolution
+        # The workspace publishes to JSR, so plain Node cannot resolve the
+        # bare specifier the generated index.js imports. Materialize the
+        # exact nitro-mount an npm consumer would get, transpiled from the
+        # real source (type-only imports drop out). The shim lives under
+        # dist/node_modules: on Node's resolution path from
+        # dist/server/index.js, but invisible to the fixture's own Vite
+        # config resolution (which walks up from the fixture root).
+        run: |
+          shim=packages/adapter-vite/__fixtures__/request-time/dist/node_modules/@openelement/adapter-vite
+          mkdir -p "$shim"
+          ./node_modules/.bin/esbuild packages/adapter-vite/src/nitro-mount.ts \
+            --format=esm --outfile="$shim/nitro-mount.js"
+          printf '{ "name": "@openelement/adapter-vite", "version": "0.0.0-smoke", "type": "module", "exports": { "./nitro-mount": "./nitro-mount.js" } }\n' \
+            > "$shim/package.json"
+      - name: Boot dist/server/serve.mjs under Node ${{ matrix.node }}
+        working-directory: packages/adapter-vite/__fixtures__/request-time
+        run: |
+          set -u
+          if [ "${{ matrix.node }}" = "24" ]; then
+            OPEN_ELEMENT_PORT=4891 OPEN_ELEMENT_HOST=127.0.0.1 node dist/server/serve.mjs &
+            server_pid=$!
+            trap 'kill $server_pid 2>/dev/null || true' EXIT
+            for i in $(seq 1 50); do
+              curl -sf -o /dev/null http://127.0.0.1:4891/ && break
+              sleep 0.2
+            done
+            curl -sf http://127.0.0.1:4891/ | grep -q 'request-time fixture home'
+            curl -sf http://127.0.0.1:4891/live | grep -q 'request-time live'
+          else
+            # Below the URLPattern floor (#969): serve.mjs must fail fast
+            # with guidance, not a SyntaxError/ReferenceError.
+            if node dist/server/serve.mjs > serve-error.log 2>&1; then
+              echo 'expected a clean early exit below the runtime floor'
+              exit 1
+            fi
+            grep -q 'requires a runtime with WHATWG URLPattern' serve-error.log
+          fi
