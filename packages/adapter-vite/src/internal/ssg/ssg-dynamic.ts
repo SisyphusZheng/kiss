@@ -106,7 +106,11 @@ async function writeRenderedPage(
 
   const renderOpts: Record<string, unknown> = {
     params,
-    title: options.html?.title,
+    // #968: do NOT pass the global html.title here — the generated
+    // renderRoute falls back `title || page.head?.title || document.title`,
+    // so a forced global title would short-circuit the route's own
+    // head.title on prerendered dynamic routes. Omitting it restores the
+    // request-time precedence (route head wins, then the global).
     headExtras: options.headExtras,
   };
   if (locale) {

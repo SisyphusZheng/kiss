@@ -78,6 +78,31 @@ Deno.test('expandI18nLocales skips the default locale output', async () => {
 
 // ─── alpha.18 R2-H3: 500 contract wiring (dynamic routes) ──────
 
+Deno.test('expandDynamicRoutes - renderRoute receives no forced global title (#968)', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    let seenOptions: Record<string, unknown> | undefined;
+    await expandDynamicRoutes(
+      [blogRoute],
+      (_path, options) => {
+        seenOptions = options as Record<string, unknown>;
+        return Promise.resolve(okOutput());
+      },
+      () => Promise.resolve([{ slug: 'a' }]),
+      // A global html.title must NOT be forwarded as `title`: the generated
+      // renderRoute falls back `title || page.head?.title || document.title`,
+      // so a forced global would shadow the route's own head.title.
+      { root, outDir: 'dist', html: { title: 'Global Title' } },
+      root,
+      'dist',
+    );
+    assertEquals(seenOptions !== undefined, true);
+    assertEquals(seenOptions!.title, undefined);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
 Deno.test('expandDynamicRoutes - defined 500 output fails the build by default and writes nothing', async () => {
   const root = await Deno.makeTempDir();
   try {
