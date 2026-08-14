@@ -14,7 +14,7 @@
  * (see below).
  *
  * v0.36.0: Added retry mechanism and degraded rendering fallback.
- * v0.42.0-alpha.17 (#919): Automatic capture/bubbling (static isErrorBoundary,
+ * v0.42.0-alpha.16 (#919): Automatic capture/bubbling (static isErrorBoundary,
  * SSR boundary scope, CSR ancestor bubbling, retry re-renders the captured
  * source).
  *
