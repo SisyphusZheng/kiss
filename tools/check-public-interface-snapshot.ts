@@ -4,6 +4,25 @@ import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
 const SNAPSHOT = 'docs/release/public-interface-snapshot.json';
 
+/**
+ * Named re-exports (`export { A, B as C } from '…'`, possibly multi-line)
+ * are the dominant export form of the entry files but were invisible to the
+ * snapshot as names — per-name add/remove drift only moved the sha256,
+ * unreadably (#592). Capture the exported names (the alias after `as`, when
+ * present) sorted, so the freeze guard is mechanical for re-exports too.
+ */
+function reExportedNames(text: string): string[] {
+  const names: string[] = [];
+  for (const match of text.matchAll(/export\s*(?:type\s*)?\{([^}]*)\}\s*from\s*['"]/gs)) {
+    for (const part of match[1].split(',')) {
+      const cleaned = part.trim().replace(/^type\s+/, '');
+      if (!cleaned) continue;
+      names.push((cleaned.split(/\s+as\s+/).pop() ?? cleaned).trim());
+    }
+  }
+  return names.sort();
+}
+
 async function sha256Hex(text: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return new Uint8Array(digest).toHex();
@@ -25,6 +44,7 @@ const snapshot = {
         return [path, {
           sha256: await sha256Hex(text),
           publicDeclarations,
+          reExportedNames: reExportedNames(text),
         }] as const;
       }),
     );

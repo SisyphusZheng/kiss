@@ -30,21 +30,139 @@
             "export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';",
             "export type {",
             "export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';"
+          ],
+          "reExportedNames": [
+            "ACTION_FETCH_HEADER",
+            "Action",
+            "ActionContext",
+            "ActionResult",
+            "AppShellConfig",
+            "CacheEntry",
+            "ClientRuntimeOptions",
+            "CompatibilityClassification",
+            "CompatibilityTier",
+            "ComponentLayer",
+            "Context",
+            "DATA_SSR_PROPS",
+            "ERROR_PREFIX",
+            "ElementDefinition",
+            "ErrorBoundary",
+            "ErrorTelemetryHook",
+            "For",
+            "Fragment",
+            "FrameworkOptions",
+            "HYDRATION_STRATEGIES",
+            "HydrationStrategy",
+            "IslandOptions",
+            "IsrCacheEntry",
+            "IsrCacheResult",
+            "IsrManifestEntry",
+            "Loader",
+            "LoaderContext",
+            "LocalePath",
+            "Middleware",
+            "OpenElement",
+            "OpenElementAttribute",
+            "OpenElementBlogOptions",
+            "OpenElementBuildContextLike",
+            "OpenElementCssPart",
+            "OpenElementDeclaration",
+            "OpenElementError",
+            "OpenElementEvent",
+            "OpenElementHeaderNavLink",
+            "OpenElementI18nContextOptions",
+            "OpenElementNavSection",
+            "OpenElementPackageManifest",
+            "OpenElementRouteKind",
+            "OpenElementRouteNode",
+            "OpenElementSlot",
+            "PROBLEM_JSON_MEDIA_TYPE",
+            "ProblemDetails",
+            "PropDecl",
+            "PropDeclFull",
+            "PropDeclShorthand",
+            "PropType",
+            "PropsFrom",
+            "RenderError",
+            "RenderOutput",
+            "RouteEntry",
+            "Signal",
+            "SpaAction",
+            "SpaActionContext",
+            "SpaLoader",
+            "SpaLoaderContext",
+            "SpecialFileType",
+            "SsrAdmissionDecision",
+            "StyleSheet",
+            "StyleSheetLike",
+            "VNode",
+            "assertValidTagName",
+            "bindSsrProps",
+            "collectPublicProps",
+            "computed",
+            "consumeContext",
+            "createContext",
+            "createLogger",
+            "defineCustomElement",
+            "defineElement",
+            "defineIsland",
+            "disposeOpenElement",
+            "effect",
+            "ensurePreHydrationClickCapture",
+            "escapeAttr",
+            "escapeHtml",
+            "formatError",
+            "getSsrProps",
+            "hydrateOpenElement",
+            "isVNode",
+            "isValidTagName",
+            "jsx",
+            "jsxDEV",
+            "jsxs",
+            "provideContext",
+            "renderDsd",
+            "renderDsdTree",
+            "reportError",
+            "setErrorTelemetryHook",
+            "signal",
+            "trustedHtml",
+            "wrapInDocument"
           ]
         },
         "./build-utils": {
           "sha256": "9b69174f14bac84f567c3ab3e2ed6a9e65bb373099da1bf114cbbcfed165802c",
           "publicDeclarations": [
             "export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';"
+          ],
+          "reExportedNames": [
+            "OpenElementRequestHandler",
+            "RuntimeContext",
+            "SsrRenderError",
+            "composeFetchMiddleware",
+            "createIsrCacheKey",
+            "createRuntimeAdapter",
+            "formatJson",
+            "normalizeSeparators",
+            "pathToTagName",
+            "transformIslandSource"
           ]
         },
         "./jsx-dev-runtime": {
           "sha256": "62b06bb0437e576795732e75e9e4006d7464328a28f217ad3db183b906d5505a",
-          "publicDeclarations": []
+          "publicDeclarations": [],
+          "reExportedNames": [
+            "Fragment",
+            "jsxDEV"
+          ]
         },
         "./jsx-runtime": {
           "sha256": "3b4f1cda9ec619e5ec89b3fcecdba9b1ee4412cc4ff53122e68bea9f3aee3abb",
-          "publicDeclarations": []
+          "publicDeclarations": [],
+          "reExportedNames": [
+            "Fragment",
+            "jsx",
+            "jsxs"
+          ]
         },
         "./sanitize": {
           "sha256": "e8d93e36882380bcee071edaa8743c7e043b3ff33c400bd4087714963af5912a",
@@ -52,7 +170,8 @@
             "export interface SanitizeOptions {",
             "export function isSafeUrl(",
             "export function sanitizeHtml(input: string, options: SanitizeOptions = {}): string {"
-          ]
+          ],
+          "reExportedNames": []
         }
       }
     },
@@ -73,6 +192,41 @@
             "export type { ElementDefinition } from '@openelement/element';",
             "export type { SpaAppInstance } from './spa.ts';",
             "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';"
+          ],
+          "reExportedNames": [
+            "ACTION_FETCH_HEADER",
+            "Action",
+            "ActionContext",
+            "ActionResult",
+            "CreateRequestContextOptions",
+            "ElementDefinition",
+            "Loader",
+            "LoaderContext",
+            "OpenElementActionFailure",
+            "OpenElementNotFound",
+            "OpenElementRedirect",
+            "OpenElementRequestContext",
+            "PROBLEM_JSON_MEDIA_TYPE",
+            "ProblemDetails",
+            "SpaAction",
+            "SpaActionContext",
+            "SpaAppInstance",
+            "SpaLoader",
+            "SpaLoaderContext",
+            "createRequestContext",
+            "defineApp",
+            "defineElement",
+            "defineIsland",
+            "defineIslandConfig",
+            "definePage",
+            "fail",
+            "isActionFailure",
+            "isOpenElementNotFound",
+            "isOpenElementRedirect",
+            "notFound",
+            "redirect",
+            "useActionData",
+            "useLoaderData"
           ]
         },
         "./i18n": {
@@ -80,6 +234,12 @@
           "publicDeclarations": [
             "export type { OpenElementI18nOptions } from './i18n-runtime.ts';",
             "export type { LocalePath } from './internal/router/i18n.ts';"
+          ],
+          "reExportedNames": [
+            "LocalePath",
+            "OpenElementI18nOptions",
+            "loadI18nData",
+            "normalizeLocalePath"
           ]
         },
         "./model": {
@@ -88,21 +248,24 @@
             "export interface OpenElementRequestContext<",
             "export interface CreateRequestContextOptions<",
             "export function createRequestContext<"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./preact": {
           "sha256": "8b981d9850458b4209b677274270e80b7cb9f725b3d49bb0d4a4c5638cd80405",
           "publicDeclarations": [
             "export interface PreactIslandOptions {",
             "export function definePreactIsland<"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./spa": {
           "sha256": "177847ec114b48693cfb5ba979700fc1fe0b4de77b31afef1e5057be72af3bae",
           "publicDeclarations": [
             "export interface SpaAppInstance {",
             "export function defineApp(options: SpaAppOptions): SpaAppInstance {"
-          ]
+          ],
+          "reExportedNames": []
         }
       }
     },
@@ -126,17 +289,45 @@
             "export type { SpeculationRulesOptions, SsgBehaviorOptions } from './internal/protocol/ssg.ts';",
             "export type { HeadExtrasResult } from './head-injection.ts';",
             "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';"
+          ],
+          "reExportedNames": [
+            "ArtifactInfo",
+            "BuildManifest",
+            "HeadExtrasResult",
+            "OpenElementBuildContext",
+            "OpenElementOptions",
+            "OpenMdxPluginOptions",
+            "SpeculationRulesOptions",
+            "SsgBehaviorOptions",
+            "buildHeadExtras",
+            "buildIslandChunkMap",
+            "buildSpeculationRulesJson",
+            "extractCustomElementTags",
+            "generateIslandManifests",
+            "generateSitemap",
+            "injectClientScript",
+            "injectCspMeta",
+            "injectSpeculationRules",
+            "injectViewTransitionMeta",
+            "mdxPlugin",
+            "openElement",
+            "printBuildManifest",
+            "scanClientBuild",
+            "scanSSGOutput",
+            "writeIslandManifests"
           ]
         },
         "./cli/build": {
           "sha256": "19b817d8d114f0b107b7708675754de3fdc12c76c85c4dd3333814b6643894bd",
-          "publicDeclarations": []
+          "publicDeclarations": [],
+          "reExportedNames": []
         },
         "./cli/start": {
           "sha256": "7e1af051f221f48a97cedcc7cc61b1d6a6634ada97fad0209fc7e8186c552cc3",
           "publicDeclarations": [
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./nitro-mount": {
           "sha256": "0ed56d2df8d75bab95dca1cf821332111eea18b1923cfae4f41e9f813d5f45ae",
@@ -144,12 +335,17 @@
             "export interface NitroRequestEvent<",
             "export interface OpenElementNitroMountOptions<",
             "export function createOpenElementNitroHandler<"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./sitemap": {
           "sha256": "2c24151329624e9adde127f4762580ff3ac75fff4a66818fc83d7100d91a9135",
           "publicDeclarations": [
             "export type { SitemapOptions } from './internal/content/types.ts';"
+          ],
+          "reExportedNames": [
+            "SitemapOptions",
+            "generateSitemap"
           ]
         }
       }
@@ -174,91 +370,119 @@
       "declarations": {
         ".": {
           "sha256": "e17ed6e0d54f8f79645cfc61e072a16f4d69c7f937d13f75be9c3578de6d988f",
-          "publicDeclarations": []
+          "publicDeclarations": [],
+          "reExportedNames": [
+            "OpenBadge",
+            "OpenButton",
+            "OpenCallout",
+            "OpenCard",
+            "OpenCodeBlock",
+            "OpenDialog",
+            "OpenDropdown",
+            "OpenInput",
+            "OpenTabs",
+            "OpenThemeToggle",
+            "manifest",
+            "openPropsRootSheet",
+            "openPropsTokenSheet",
+            "registerOpenUi"
+          ]
         },
         "./open-badge": {
           "sha256": "34b873d311ebc159d13aa53a747f8bedb6da926bfba341ae00f80d3c78135e16",
           "publicDeclarations": [
             "export const tagName = 'open-badge';",
             "export class OpenBadge extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-button": {
           "sha256": "1942835e5cb518ed339f089655232f59e1e20e7dd0033fc3b7169d60967ed565",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-callout": {
           "sha256": "bd8a7f8708e8ed829cb4fa9e9ec9e9da32c33cc799a5f290718cb61ffeffadb8",
           "publicDeclarations": [
             "export const tagName = 'open-callout';",
             "export class OpenCallout extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-card": {
           "sha256": "5dd8b920e67794ee607954802e0d208ae9d677527bd9c5282d30c3385deb0824",
           "publicDeclarations": [
             "export const tagName = 'open-card';",
             "export class OpenCard extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-code-block": {
           "sha256": "2224a14c37727c12c5265d567738aa0b615bc33adb6c14e4c80d4d3c87ffeca7",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-dialog": {
           "sha256": "883e8329222a70fe1a515707a7a86a93a0b79587eb56b23f4e59e439690f0b70",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-dropdown": {
           "sha256": "6d9bca5f0b20cc4c1e1f9f2e08da1cb4ba50b5f6126220de47df157c3d7610a1",
           "publicDeclarations": [
             "export const tagName = 'open-dropdown';",
             "export class OpenDropdown extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-input": {
           "sha256": "62f244829015a5abac45ff678f48b6b4a6404d734e1ae55a542d398547d0d07a",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-props-tokens": {
           "sha256": "39fce2d77e32faaff1d27c04fbe8e6d7ac10bc3c3bfe4ea1f66184dd4211f468",
           "publicDeclarations": [
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
             "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-props-tokens.js": {
           "sha256": "39fce2d77e32faaff1d27c04fbe8e6d7ac10bc3c3bfe4ea1f66184dd4211f468",
           "publicDeclarations": [
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
             "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-tabs": {
           "sha256": "906b85ae68a997f6ed6ec7943204b5aed3a8d75f12ac7255a8fd05288fb9bdc0",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         },
         "./open-theme-toggle": {
           "sha256": "b4502df1394fd0fd335f7cfe86c2e6e6c664b57831946eae43bcf48a15655d54",
           "publicDeclarations": [
             "export const tagName = 'open-theme-toggle';",
             "export class OpenThemeToggle extends OpenElement {"
-          ]
+          ],
+          "reExportedNames": []
         }
       }
     },
@@ -270,7 +494,8 @@
       "declarations": {
         ".": {
           "sha256": "f409a7e2e8052e58e4d3f606eae87d6e21467def8674b13b51994e61f5178b7f",
-          "publicDeclarations": []
+          "publicDeclarations": [],
+          "reExportedNames": []
         }
       }
     }
