@@ -64,6 +64,16 @@ Deno.test('renderStandaloneServerModule fails fast below the URLPattern floor (#
   assertEquals(code.includes("from './index.js'"), false);
 });
 
+Deno.test('renderRequestTimeServerModule carries the URLPattern floor guard (#969)', () => {
+  const code = renderRequestTimeServerModule([{ path: '/live', paramNames: [] }]);
+  // index.js builds its route table at module scope; direct
+  // `node dist/server/index.js` on Node < 24 must fail with guidance (or
+  // polyfill via node:url on 23.8+), not a raw ReferenceError.
+  assertStringIncludes(code, "typeof globalThis.URLPattern === 'undefined'");
+  assertStringIncludes(code, "await import('node:url')");
+  assertStringIncludes(code, 'requires a runtime with WHATWG URLPattern');
+});
+
 Deno.test('renderStandaloneServerModule MIME table matches static-serve.ts (#732-class drift guard)', () => {
   const code = renderStandaloneServerModule();
   // serve.mjs is self-contained and cannot import the shared table, so pin
