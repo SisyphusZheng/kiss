@@ -16,6 +16,23 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.17
+
+(Skeleton — release tooling finalizes this entry at the alpha.17 cut.)
+
+- **Breaking (SSR markup, ADR-0128)**: route modules whose default export is
+  `definePage(...)` now register the page class under the route-path-derived
+  fallback tag (`app/routes/index.tsx` → `index-page`); the
+  `export const tagName` on a definePage route is ignored for registration
+  and only names a content element (#960). Shape-1 pages (starter pattern)
+  gain the fallback-tag page element as an outer DSD wrapper around the
+  content element; hydration markers and morph behavior are unchanged, but
+  user CSS targeting the old root tag must target the new fallback tag or
+  the content element. Plain element routes (no definePage) keep their
+  `tagName` export as the registration tag. Fixes the silent loss of the
+  definePage render when a module self-registered a content element under
+  the same tag. Migration: `docs/release/v0.42.0-migration.md`.
+
 ## 0.42.0-alpha.16
 
 Starter-first remediation train (issues #915–#959): the remaining

@@ -138,6 +138,13 @@ matching the app-side `defineIslandConfig({ hydrate })` name; the old name
 was deleted with no alias. Migration: rename the option at each
 `defineIsland()` call site (`strategy` → `hydrate`).
 
+Frozen wording narrowed on the alpha line (ADR-0128, #960): "`tagName` route
+elements" now means two distinct things by route kind. On a route whose
+default export is `definePage(...)`, the `tagName` export names the content
+element only — the page class always registers under the route-path-derived
+fallback tag (0.42.0-alpha.17). Plain element routes (no definePage) are
+unaffected: their `tagName` export remains the registration tag.
+
 ### 0.42 line additions (unfrozen until the 0.42.0 stable decision)
 
 - `definePage({ renderIntent: { mode } })`: `'static'` (default, prerendered) / `'dynamic'` (per-request; the `'auto'` alias was removed in alpha.13, #609)

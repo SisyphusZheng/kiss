@@ -26,7 +26,8 @@ const content: Record<'en' | 'zh', GuideContent> = {
       {
         id: 'file-routes',
         title: 'File routes',
-        body: 'Routes should be discoverable from the repository tree.',
+        body:
+          'Routes should be discoverable from the repository tree. A definePage route supports two authoring shapes (#960): shape 1 exports tagName to name a content element registered with defineElement(tagName, …) and the page render returns that tag; shape 2 omits the export and the page render owns the markup directly. In both shapes the page itself always registers under the route-path tag (app/routes/index.tsx becomes index-page) — on a definePage route the tagName export names the content element only and never drives page registration.',
       },
       {
         id: 'metadata',
@@ -90,7 +91,8 @@ const content: Record<'en' | 'zh', GuideContent> = {
       {
         id: 'file-routes',
         title: '文件路由',
-        body: 'Routes 应当能从仓库目录树中被发现。',
+        body:
+          'Routes 应当能从仓库目录树中被发现。definePage 路由有两种合法写法（#960）：形状一导出 tagName 为内容元素命名，用 defineElement(tagName, …) 注册该元素，页面 render 返回该标签；形状二不导出 tagName，页面 render 直接拥有标记。两种写法中，页面本身始终注册在路由路径派生的标签下（app/routes/index.tsx 对应 index-page）——definePage 路由上的 tagName 导出只为内容元素命名，不参与页面注册。',
       },
       {
         id: 'metadata',
