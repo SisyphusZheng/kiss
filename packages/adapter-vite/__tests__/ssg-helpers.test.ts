@@ -1,10 +1,12 @@
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import {
   renderRequestTimeServerModule,
+  renderStandaloneServerModule,
   resolveDynamicRoutePath,
   routePatternToURLPatternPath,
 } from '../src/internal/ssg/ssg-helpers.ts';
 import { parseRouteFilePath } from '../src/internal/ssg/route-scanner.ts';
+import { contentTypeFor } from '../src/internal/static-serve.ts';
 
 Deno.test('resolveDynamicRoutePath encodes # ? & % and spaces', () => {
   const path = resolveDynamicRoutePath('/blog/:slug', ['slug'], {
@@ -45,4 +47,30 @@ Deno.test('renderRequestTimeServerModule mounts the entry openElementHandler (#8
   assertStringIncludes(code, "import { openElementHandler } from './entry.js';");
   assertStringIncludes(code, 'handler: openElementHandler,');
   assertEquals(code.includes('app.fetch'), false);
+});
+
+Deno.test('renderStandaloneServerModule MIME table matches static-serve.ts (#732-class drift guard)', () => {
+  const code = renderStandaloneServerModule();
+  // serve.mjs is self-contained and cannot import the shared table, so pin
+  // every value instead — a drift here once served CSS without a charset.
+  for (
+    const ext of [
+      '.html',
+      '.js',
+      '.mjs',
+      '.css',
+      '.json',
+      '.svg',
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.webp',
+      '.ico',
+      '.xml',
+      '.woff2',
+      '.txt',
+    ]
+  ) {
+    assertStringIncludes(code, `'${ext}': '${contentTypeFor(`x${ext}`)}'`);
+  }
 });

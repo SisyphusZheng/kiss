@@ -277,11 +277,14 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 }
 const hostname = process.env.OPEN_ELEMENT_HOST || '0.0.0.0';
 
+// Keep this table in parity with internal/static-serve.ts (pinned by
+// __tests__/ssg-helpers.test.ts) — serve.mjs is self-contained, so it
+// cannot import the shared table, but the values must match.
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css',
+  '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
