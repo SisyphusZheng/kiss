@@ -84,6 +84,29 @@ if (writeErrors.length > 0) {
   Deno.exit(1);
 }
 
+// pagefind copies its UI bundle through a child process; writeFiles can
+// resolve while pagefind-component-ui.js is still being written (observed as
+// a 0-byte file racing the static-output-freeze gate). Wait for it to land.
+const uiBundle = join(outputPath, 'pagefind-component-ui.js');
+for (let attempt = 0; attempt < 100; attempt++) {
+  try {
+    if ((await Deno.stat(uiBundle)).size > 0) break;
+  } catch {
+    // not there yet
+  }
+  await new Promise((resolve) => setTimeout(resolve, 100));
+}
+try {
+  const size = (await Deno.stat(uiBundle)).size;
+  if (size === 0) {
+    console.error('Pagefind: UI bundle copy did not complete');
+    Deno.exit(1);
+  }
+} catch {
+  console.error('Pagefind: UI bundle was never emitted');
+  Deno.exit(1);
+}
+
 console.log(`Pagefind: indexed ${page_count} page(s) -> ${outputPath}`);
 await index.deleteIndex();
 await close();
