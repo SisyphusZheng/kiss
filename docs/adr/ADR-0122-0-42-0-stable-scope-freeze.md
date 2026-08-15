@@ -114,3 +114,11 @@ reactivity. Freezing must protect these properties, not just the API list.
 - The onion property in §Context becomes a reviewable invariant: new
   page-level update mechanisms must remain component-model-agnostic (DOM /
   id keyed), or the change requires an amendment.
+
+### Conformity fixes recorded against the frozen contract (0.43 alpha line)
+
+- 6e324887 — fetch action channel degraded to `data: null` on
+  unserializable `fail()` payloads instead of throwing a 500: restores the
+  §2 two-channel symmetry as written.
+- 7a30f1b8 — empty 200/422 HTML action responses navigate instead of
+  morphing: restores §2 / MORPH_CONTRACT.md step 3 as written.
