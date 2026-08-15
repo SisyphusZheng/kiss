@@ -371,3 +371,11 @@ Deno.test('extractManualNoteSections: pre-seeded prose without an evidence heade
   // An empty title-only note yields no manual content.
   assertEquals(extractManualNoteSections('# v9.9.9\n'), '');
 });
+
+Deno.test('extractManualNoteSections: a seed without any title line keeps all prose', () => {
+  // Defensive: a pre-seeded note missing its '# <tag>' title must not lose
+  // its prose to the evidence rewrite (alpha.17 release incident).
+  const manual = extractManualNoteSections('## Highlights\n\n- curated\n');
+  assert(manual.includes('## Highlights'));
+  assert(manual.includes('- curated'));
+});

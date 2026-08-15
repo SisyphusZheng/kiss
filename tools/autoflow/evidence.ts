@@ -192,7 +192,13 @@ const EVIDENCE_HEADER_MARKER = 'AutoFlow3 patch release evidence:';
 export function extractManualNoteSections(noteText: string): string {
   const lines = noteText.split('\n');
   const titleIndex = lines.findIndex((line) => line.startsWith('# '));
-  if (titleIndex === -1) return '';
+  if (titleIndex === -1) {
+    // A seed without a '# <tag>' title line at all: treat the whole file as
+    // manual prose rather than silently discarding it (hit in the alpha.17
+    // release — the curated note lost its title in editing and the evidence
+    // rewrite dropped every section).
+    return noteText.trim();
+  }
   const headerIndex = lines.findIndex((line) => line.startsWith(EVIDENCE_HEADER_MARKER));
   if (headerIndex === -1) {
     return lines.slice(titleIndex + 1).join('\n').trim();
