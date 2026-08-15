@@ -85,6 +85,11 @@ takes the browser name as a trailing argument (`deno task
 test:e2e:browser-smoke chromium`); the bare command is incomplete by
 design — the release-tier gates call it with `firefox` / `webkit`.
 
+E2e specs may pin user-visible copy verbatim (hero strings, the install
+command) as smoke coverage (#978): editing page copy means updating the
+spec in the same change, and `www/e2e/` must be grepped for the old string
+before any wording sweep ships.
+
 ## Code Style
 
 - TypeScript with Deno.
