@@ -181,3 +181,39 @@ sed -n '26,60p' tools/autoflow/policy.ts; sed -n '30,50p' .github/workflows/auto
 ```
 
 已做过的交叉验证（无需重做）：npm registry 实况（latest 0.41.2 / alpha 0.42.0-alpha.9）；manifest 重生成 diff 零差异；ui 65 测试全过；create/version.ts 与五包 deno.json 当前全部 = 0.42.0-alpha.10。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：110；漂移：26。
+
+### 漂移 / 无法核验的引用
+
+- `framework.ts:16` — ambiguous path (3 candidates: packages/adapter-vite/src/internal/protocol/framework.ts, packages/element/src/internal/protocol/framework.ts, packages/element/src/internal/signal/framework.ts)
+- `entry-renderer.ts:101-103` — file not found (moved, deleted, or abbreviated path unresolved)
+- `internal/ssg/entry-renderer.ts:108-110` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/app/src/hono.ts:36` — file not found (moved, deleted, or abbreviated path unresolved)
+- `hono.ts:53` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:414` — file not found (moved, deleted, or abbreviated path unresolved)
+- `element/island.ts:277-306` — ambiguous path (2 candidates: packages/element/src/internal/core/island.ts, packages/element/src/internal/protocol/island.ts)
+- `open-element.ts:4` — line out of range (file now has 3 lines)
+- `adapter-vite/index.ts:41-50` — ambiguous path (7 candidates: packages/ui/src/index.ts, packages/app/src/index.ts, packages/adapter-vite/src/internal/ssg/index.ts, packages/adapter-vite/src/index.ts, packages/element/src/internal/core/index.ts, packages/element/src/internal/signal/index.ts, packages/element/src/index.ts)
+- `adapter-vite/content/blog/blog-data.ts:81-83` — line out of range (file now has 82 lines)
+- `adapter-vite/ssg-render.ts:121-128` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `build.ts:154-157` — ambiguous path (2 candidates: packages/adapter-vite/src/cli/build.ts, packages/adapter-vite/src/build.ts)
+- `i18n-runtime.ts:84-85` — line out of range (file now has 32 lines)
+- `packages/element/src/internal/core/registry.ts:27-244` — file not found (moved, deleted, or abbreviated path unresolved)
+- `index.ts:186-191` — ambiguous path (7 candidates: packages/ui/src/index.ts, packages/app/src/index.ts, packages/adapter-vite/src/internal/ssg/index.ts, packages/adapter-vite/src/index.ts, packages/element/src/internal/core/index.ts, packages/element/src/internal/signal/index.ts, packages/element/src/index.ts)
+- `core.ts:8` — file not found (moved, deleted, or abbreviated path unresolved)
+- `index.ts:39` — ambiguous path (7 candidates: packages/ui/src/index.ts, packages/app/src/index.ts, packages/adapter-vite/src/internal/ssg/index.ts, packages/adapter-vite/src/index.ts, packages/element/src/internal/core/index.ts, packages/element/src/internal/signal/index.ts, packages/element/src/index.ts)
+- `packages/element/src/island.ts:52-54` — ambiguous path (2 candidates: packages/element/src/internal/core/island.ts, packages/element/src/internal/protocol/island.ts)
+- `packages/element/src/errors.ts:125-141` — ambiguous path (2 candidates: packages/element/src/internal/core/errors.ts, packages/element/src/internal/protocol/errors.ts)
+- `packages/element/src/html-escape.ts:193-221` — line out of range (file now has 185 lines)
+- `packages/ui/src/open-badge.tsx:82-88` — line out of range (file now has 86 lines)
+- `postprocess.ts:51-68` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/build-postprocess.ts, packages/adapter-vite/src/internal/ssg/postprocess.ts)
+- `route-type-generator.ts:22-33` — file not found (moved, deleted, or abbreviated path unresolved)
+- `hono.ts:36` — file not found (moved, deleted, or abbreviated path unresolved)
+- `app/i18n.ts:18-19` — ambiguous path (2 candidates: packages/app/src/i18n.ts, packages/app/src/internal/router/i18n.ts)
+- `create/version.ts:2` — ambiguous path (2 candidates: packages/create/src/version.ts, www/app/data/version.ts)

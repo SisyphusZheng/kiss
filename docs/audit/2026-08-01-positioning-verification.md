@@ -55,3 +55,15 @@
 - **与既有记忆一致**：工作记忆记 alpha.9 是 0.42 线首个发布到 npm 的版本、alpha.10 里程碑 issue 已关闭但未确认发布——与本次"无 alpha.10 发布记录"的离线发现完全一致。
 
 > 建议：可将该审计报告作为 alpha.11 的修复清单基线；尤其先把 🔴-2 一行修复与版本叙事诚实化并入下一轮 release 流，堵住"首启即炸"和"文档说谎"两个对外最伤的点。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：21；漂移：2。
+
+### 漂移 / 无法核验的引用
+
+- `internal/ssg/entry-renderer.ts:108-110` — file not found (moved, deleted, or abbreviated path unresolved)
+- `app/src/hono.ts:36` — file not found (moved, deleted, or abbreviated path unresolved)

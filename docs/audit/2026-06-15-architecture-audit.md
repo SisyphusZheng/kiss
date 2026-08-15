@@ -394,3 +394,21 @@ openElement 是一个**架构意图清晰、工程纪律优秀、但产品完成
 ---
 
 _报告由 Kimi Code CLI 自动生成，基于 2026-06-15 对项目代码库、文档及运行门禁的只读审计。_
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：13；漂移：8。
+
+### 漂移 / 无法核验的引用
+
+- `packages/element/src/open-element.ts:669-672` — line out of range (file now has 603 lines)
+- `packages/ssg/src/entry-descriptor.ts:504` — file not found at resolved path
+- `packages/create/cli.ts:47` — ambiguous path (2 candidates: packages/create/src/cli.ts, tools/autoflow/cli.ts)
+- `packages/ssg/src/entry-generators.ts:25-36` — file not found at resolved path
+- `packages/signal/src/engine.ts:12-15` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/router/src/client-router.ts:275` — ambiguous path (2 candidates: packages/app/src/internal/router/client-router.ts, examples/lib/client-router.ts)
+- `packages/ssg/src/entry-render-helpers.ts:138` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/ssg/src/postprocess.ts:170-174` — file not found at resolved path

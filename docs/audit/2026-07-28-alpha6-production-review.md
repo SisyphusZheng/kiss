@@ -227,3 +227,26 @@
 **4. 对记分卡的影响**:★★★☆ 维持不变，但依据更新——可复现性这一项从"待验证"变为"**已验证**"(35 门禁真实执行、973 单测全绿、fixture 三引擎 28 秒全过，这套门禁体系不是表演）；不升星的原因也维持原判：interface snapshot 弱（#592 OPEN)、证据 JSON 自证、critical-path 以测试标题为证据、第三方 WC smoke 不在 CI、www 站 Firefox/WebKit 只有 26 用例覆盖（"三引擎验证"对 www 站只能算有限成立）。
 
 至此全部 10 路审查 + 主审复核 + 门禁复现均已闭环，报告中不再有待补项。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：41；漂移：13。
+
+### 漂移 / 无法核验的引用
+
+- `postprocess.ts:198-204` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/build-postprocess.ts, packages/adapter-vite/src/internal/ssg/postprocess.ts)
+- `jsx-runtime.ts:20-22` — ambiguous path (2 candidates: packages/element/src/internal/core/jsx-runtime.ts, packages/element/src/jsx-runtime.ts)
+- `ssg-render.ts:84-98` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `framework.ts:18-26` — ambiguous path (3 candidates: packages/adapter-vite/src/internal/protocol/framework.ts, packages/element/src/internal/protocol/framework.ts, packages/element/src/internal/signal/framework.ts)
+- `signals-core.d.ts:24` — file not found (moved, deleted, or abbreviated path unresolved)
+- `island.ts:153` — ambiguous path (2 candidates: packages/element/src/internal/core/island.ts, packages/element/src/internal/protocol/island.ts)
+- `entry-render-helpers.ts:206-460` — file not found (moved, deleted, or abbreviated path unresolved)
+- `ssg-render.ts:146-149` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `island.ts:267-290` — ambiguous path (2 candidates: packages/element/src/internal/core/island.ts, packages/element/src/internal/protocol/island.ts)
+- `data.ts:30-35` — ambiguous path (5 candidates: packages/app/src/internal/page-host-data.ts, packages/adapter-vite/src/internal/content/blog/blog-data.ts, packages/element/src/internal/protocol/data.ts, www/app/data/_generated-blog-data.ts, www/app/data/_generated-i18n-data.ts)
+- `entry-render-helpers.ts:156-302` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:484` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:168` — file not found (moved, deleted, or abbreviated path unresolved)

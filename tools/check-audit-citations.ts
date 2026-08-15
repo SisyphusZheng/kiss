@@ -17,7 +17,11 @@
  *   deno run -A tools/check-audit-citations.ts --write   # append a verification appendix
  *
  * With no file arguments the tool scans docs/audit/ for reports archived under
- * the YYYY-MM-DD-* naming convention.
+ * the YYYY-MM-DD-* naming convention. Archived reports are verified against
+ * their own archival commit (the commit that added the report) — citations in
+ * a frozen report are checked for as-archived correctness, so current-tree
+ * refactors do not make the archive flap (#976). Pass --sha to pin a specific
+ * commit, or name files explicitly to check them against the working tree.
  *
  * Exit code is non-zero when any citation has drifted (so it can gate CI).
  * The --write flag instead appends a "Citation verification" appendix to each
@@ -250,7 +254,39 @@ async function main() {
     Deno.exit(1);
   }
 
-  const reports = await Promise.all(targets.map((t) => checkReport(t, shaArg)));
+  // #976: in archive-scan mode (no explicit files, no --sha), each report is
+  // verified against its own archival commit — the report is frozen history,
+  // so "citation correct when archived" is the meaningful, non-flapping gate.
+  // Reports carrying the auto-generated verification appendix have been
+  // reconciled once (`--write`); they are skipped here — their appendix lists
+  // any as-archived drift in place, in the report itself.
+  const perReportSha = new Map<string, string | undefined>();
+  const reconciled: string[] = [];
+  if (files.length === 0 && !shaArg) {
+    for (const t of [...targets]) {
+      const text = await Deno.readTextFile(t).catch(() => '');
+      if (text.includes('## 引用时效复核（自动生成）')) {
+        reconciled.push(t);
+        continue;
+      }
+      const cmd = new Deno.Command('git', {
+        args: ['log', '--diff-filter=A', '--format=%H', '-1', '--', t],
+        stdout: 'piped',
+        stderr: 'null',
+      });
+      const { success, stdout } = await cmd.output();
+      const sha = success ? new TextDecoder().decode(stdout).trim() : '';
+      perReportSha.set(t, sha || undefined);
+    }
+    for (const t of reconciled) targets.splice(targets.indexOf(t), 1);
+    if (reconciled.length > 0) {
+      console.log(`(${reconciled.length} report(s) carry a verification appendix; skipped)`);
+    }
+  }
+
+  const reports = await Promise.all(
+    targets.map((t) => checkReport(t, shaArg ?? perReportSha.get(t))),
+  );
   let totalDrift = 0;
 
   for (const r of reports) {

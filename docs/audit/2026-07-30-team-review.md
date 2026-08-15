@@ -85,3 +85,14 @@
 ---
 
 _本记录由团队主理人汇总，三方独立结论为 source of truth；未修改任何源码。_
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：8；漂移：1。
+
+### 漂移 / 无法核验的引用
+
+- `client-router.ts:17` — ambiguous path (2 candidates: packages/app/src/internal/router/client-router.ts, examples/lib/client-router.ts)

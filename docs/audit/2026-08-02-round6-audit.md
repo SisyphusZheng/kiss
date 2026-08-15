@@ -431,3 +431,64 @@
   - #785 修复残留：www/e2e/helpers.ts:60 的 expect re-export 仍无引用（4be858c8 删了其余但留下这一个）。
   - props 过滤×2、i18n 三跳 re-export、element 内部 barrel、request context 双份契约、#723 SignalEngine、as any 双门禁、third-party-wc-smoke TS18046、current 四文档无门禁：按约定未重报，本轮未见恶化。
 - **上轮已修（本轮复核确认）**：#731/#743/#760/#761/#763/#769/#770/#771/#775/#777/#781/#784/#785（除上述残留）/#786/#789/#790/#791/#792/#797/#800/#802（导航路径；action 路径为本轮新发现的修复遗漏）/#804/#805（部分，mojibake 仍有私拷贝）/#809；round5 报告中的 #753/#754/#755 三个 tools/CI issue 现已关闭，复核确认修复到位（autoflow-ci.yml:46-48 注释与 policy.ts 一致）。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：253；漂移：51。
+
+### 漂移 / 无法核验的引用
+
+- `packages/element/src/internal/core/context.ts:29-49` — file not found (moved, deleted, or abbreviated path unresolved)
+- `routes/index.tsx:9` — ambiguous path (6 candidates: packages/adapter-vite/**fixtures**/request-time/app/routes/index.tsx, packages/adapter-vite/**fixtures**/static-only/app/routes/index.tsx, packages/create/templates/app/routes/index.tsx, examples/open-element-in-fresh/routes/index.tsx, examples/deno-desktop-reader/routes/index.tsx, examples/deno-desktop-mastodon/routes/index.tsx)
+- `isr.ts:1-2` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `entry-renderer.ts:1` — file not found (moved, deleted, or abbreviated path unresolved)
+- `comparison.tsx:2` — ambiguous path (2 candidates: www/app/routes/guide/comparison.tsx, www/app/routes/architecture/comparison.tsx)
+- `html-escape.ts:184` — line out of range (file now has 183 lines)
+- `client-router.ts:394` — ambiguous path (2 candidates: packages/app/src/internal/router/client-router.ts, examples/lib/client-router.ts)
+- `open-page-rail.tsx:125` — ambiguous path (2 candidates: www/app/islands/open-page-rail.tsx, www/app/site-ui/open-page-rail.tsx)
+- `src/index.ts:43-45` — ambiguous path (4 candidates: packages/ui/src/index.ts, packages/app/src/index.ts, packages/adapter-vite/src/index.ts, packages/element/src/index.ts)
+- `plugin.ts:122-124` — ambiguous path (6 candidates: packages/adapter-vite/src/npm-specifier-plugin.ts, packages/adapter-vite/src/plugin.ts, packages/adapter-vite/src/internal/content/sitemap/plugin.ts, packages/adapter-vite/src/internal/content/blog/plugin.ts, packages/adapter-vite/src/internal/content/nav/plugin.ts, packages/adapter-vite/src/i18n-plugin.ts)
+- `routes/settings.tsx:267` — ambiguous path (2 candidates: examples/deno-desktop-reader/routes/settings.tsx, examples/deno-desktop-mastodon/routes/settings.tsx)
+- `main.ts:82` — ambiguous path (3 candidates: examples/open-element-in-fresh/main.ts, examples/deno-desktop-reader/main.ts, examples/deno-desktop-mastodon/main.ts)
+- `tools/check-text-integrity.ts:33-39` — file not found (moved, deleted, or abbreviated path unresolved)
+- `tools/check-package-graph.ts:260-305` — line out of range (file now has 279 lines)
+- `check-www-current-truth.ts:122` — file not found (moved, deleted, or abbreviated path unresolved)
+- `check-www-current-truth.ts:44` — file not found (moved, deleted, or abbreviated path unresolved)
+- `verify-npm-release.ts:35` — file not found (moved, deleted, or abbreviated path unresolved)
+- `www/design/handoff/migration-guide.md:11-13` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/adapter-vite/src/internal/ssg/entry-render-helpers.ts:132-454` — file not found (moved, deleted, or abbreviated path unresolved)
+- `vite.config.ts:51` — ambiguous path (7 candidates: packages/adapter-vite/**fixtures**/request-time/vite.config.ts, packages/adapter-vite/**fixtures**/static-only/vite.config.ts, packages/create/templates/vite.config.ts, www/vite.config.ts, examples/open-element-in-fresh/vite.config.ts, examples/deno-desktop-reader/vite.config.ts, examples/deno-desktop-mastodon/vite.config.ts)
+- `tools/check-www-current-truth.ts:135` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/adapter-vite/src/internal/content/core.ts:1-29` — file not found (moved, deleted, or abbreviated path unresolved)
+- `src/index.ts:101` — ambiguous path (4 candidates: packages/ui/src/index.ts, packages/app/src/index.ts, packages/adapter-vite/src/index.ts, packages/element/src/index.ts)
+- `www/app/components/page-styles.ts:366-367` — line out of range (file now has 364 lines)
+- `plugin.ts:49` — ambiguous path (6 candidates: packages/adapter-vite/src/npm-specifier-plugin.ts, packages/adapter-vite/src/plugin.ts, packages/adapter-vite/src/internal/content/sitemap/plugin.ts, packages/adapter-vite/src/internal/content/blog/plugin.ts, packages/adapter-vite/src/internal/content/nav/plugin.ts, packages/adapter-vite/src/i18n-plugin.ts)
+- `entry-render-helpers.ts:43-45` — file not found (moved, deleted, or abbreviated path unresolved)
+- `island-manifest.ts:173` — line out of range (file now has 172 lines)
+- `ssg-render.ts:314-317` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `island.ts:66` — ambiguous path (2 candidates: packages/element/src/internal/core/island.ts, packages/element/src/internal/protocol/island.ts)
+- `examples/deno-desktop-mastodon/router.ts:1-32` — line out of range (file now has 9 lines)
+- `deno-desktop-reader/router.ts:1-34` — line out of range (file now has 9 lines)
+- `mastodon.tsx:50-122` — line out of range (file now has 74 lines)
+- `reader.tsx:1146-1227` — line out of range (file now has 1214 lines)
+- `tools/check-www-current-truth.ts:47` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/element/src/internal/core/isr-runtime.ts:45-164` — file not found (moved, deleted, or abbreviated path unresolved)
+- `isr.ts:34-123` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `src/index.ts:132` — ambiguous path (4 candidates: packages/ui/src/index.ts, packages/app/src/index.ts, packages/adapter-vite/src/index.ts, packages/element/src/index.ts)
+- `isr.ts:4-12` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `packages/element/src/internal/signal/index.ts:27-30` — line out of range (file now has 26 lines)
+- `examples/deno-desktop-mastodon/router.ts:14` — line out of range (file now has 9 lines)
+- `deno-desktop-reader/router.ts:15` — line out of range (file now has 9 lines)
+- `www/e2e/helpers.ts:60` — line out of range (file now has 56 lines)
+- `packages/adapter-vite/src/internal/ssg/entry-render-helpers.ts:227-245` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:188-192` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:194-325` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:364-451` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:196-200` — file not found (moved, deleted, or abbreviated path unresolved)
+- `ssg-render.ts:84-95` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `ssg-render.ts:218-233` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `isr-runtime.ts:62-68` — file not found (moved, deleted, or abbreviated path unresolved)
+- `ssg-render.ts:177-179` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)

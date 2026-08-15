@@ -181,3 +181,27 @@ openElement 是 MIT 开源框架，无直接商业模式（无 SaaS/Hub/marketpl
 - 市场定位：README/README.zh 产品教义、beta.1 plan workstream D、ROADMAP 版本阶梯、竞品定位基于 WC 生态常识。
 - 前置报告：`v0.41.0-alpha.7-to-beta.1-audit.md`（gate 审计）、`deep-code-review.md`（深度代码审视）。
 - 未修改任何代码；所有建议给出文件:行号与预期效果，未执行。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：15；漂移：14。
+
+### 漂移 / 无法核验的引用
+
+- `render-dsd.ts:120` — file not found at resolved path
+- `event-hydration.ts:89` — file not found at resolved path
+- `jsx-render-dom.ts:346` — file not found at resolved path
+- `entry-renderer.ts:208` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-runtime.ts:81` — file not found at resolved path
+- `isr.ts:52-72` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `packages/create/cli.ts:15` — ambiguous path (2 candidates: packages/create/src/cli.ts, tools/autoflow/cli.ts)
+- `binding-activation.test.ts:312-402` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-renderer.ts:160-167` — file not found (moved, deleted, or abbreviated path unresolved)
+- `event-hydration.ts:93-95` — file not found at resolved path
+- `binding-activation.ts:411-413` — file not found at resolved path
+- `isr.ts:49` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `security.ts:43` — file not found at resolved path
+- `cli.ts:134-139` — ambiguous path (2 candidates: packages/create/src/cli.ts, tools/autoflow/cli.ts)

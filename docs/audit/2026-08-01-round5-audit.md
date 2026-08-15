@@ -231,3 +231,20 @@
 - **上轮已修（本轮核实，含证据）**：collectPublicProps 单实现（#621）、tag 校验统一、SPA 吞 redirect（#731）、sitemap 失败降级（🟡-A，现有 sitemapFailure 选项）、openPipeline i18n 死选项（已删字段）、registry.ts 死模块、PropValidationError、start.ts/fixture 漂移（#732）、JSONC×2（#708）、walk×4（#710）、路由转换×3、ui 双重转义（#726）、manifest slots/cssParts（#744）、跨实例 ID（#745）、ui 空 catch（#747）、guide 页同构（#749）、dev-mode 双信号（#743）、#728/#729/#737 文档门禁均已落地。**#622（cli start 跨运行时）代码层面已修复。**
 - **上轮已报未修（本轮确认仍在）**：props 过滤×2（render-ir vs jsx-render-dom，且已漂移出 SSR/CSR 校验分叉新证据）；i18n 三跳 re-export；element 三套重叠 barrel；request context 双份契约（🟡-F 根处置未做）；#753/#754/#755 三个 tools/CI issue 仍在（#755 且 autoflow-ci.yml:46-48 注释与 policy.ts 事实相反）；#723/#623 记债项如旧。
 - **本轮新发现**：7 条 high + 40 条 medium + 31 条 low，均为本轮首次报告。最优先：`.githooks` 执行位（一行修复堵住门禁漏洞）、www 三个未注册组件与 blog locale（现网可见的正确性损失）、`validateSafeUrl` 绕过（安全防线）、ROADMAP 同步（收盘流程漏项）。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：140；漂移：7。
+
+### 漂移 / 无法核验的引用
+
+- `packages/element/src/internal/core/isr-runtime.ts:19` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/adapter-vite/src/internal/ssg/entry-renderer.ts:16-20` — file not found (moved, deleted, or abbreviated path unresolved)
+- `cli/preview.ts:30-35` — file not found (moved, deleted, or abbreviated path unresolved)
+- `examples/deno-desktop-reader/app/export.ts:3-41` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-renderer.ts:269-287` — file not found (moved, deleted, or abbreviated path unresolved)
+- `check-www-current-truth.ts:66` — file not found (moved, deleted, or abbreviated path unresolved)
+- `check-text-integrity.ts:27-28` — file not found (moved, deleted, or abbreviated path unresolved)

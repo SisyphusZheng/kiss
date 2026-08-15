@@ -335,3 +335,12 @@ Stable `v0.41.0` is eligible only when:
 7. Run external pilot #390 on the beta candidate.
 8. Publish `0.41.0-beta.4`, validate post-publish truth, then decide whether
    stable `v0.41.0` is a version-only cut.
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：0；漂移：0。
+
+全部引用均能在基线中解析，无行号漂移。

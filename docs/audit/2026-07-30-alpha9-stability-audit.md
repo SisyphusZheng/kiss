@@ -263,3 +263,25 @@ successfulReleaseRun = run 30550568968（PR CI run，非 publish run）← 指�
 ---
 
 _报告结束。本次审计为只读，未修改任何文件。_
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：51；漂移：12。
+
+### 漂移 / 无法核验的引用
+
+- `island.ts:87` — ambiguous path (2 candidates: packages/element/src/internal/core/island.ts, packages/element/src/internal/protocol/island.ts)
+- `client-router.ts:128` — ambiguous path (2 candidates: packages/app/src/internal/router/client-router.ts, examples/lib/client-router.ts)
+- `ssg-render.ts:132` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `entry-render-helpers.ts:131-454` — file not found (moved, deleted, or abbreviated path unresolved)
+- `isr.ts:64-118` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `packages/ui/src/open-button.tsx:268-292` — line out of range (file now has 291 lines)
+- `packages/element/src/internal/core/errors.ts:176` — line out of range (file now has 163 lines)
+- `ssg-render.ts:345` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `plugin.ts:141` — ambiguous path (6 candidates: packages/adapter-vite/src/npm-specifier-plugin.ts, packages/adapter-vite/src/plugin.ts, packages/adapter-vite/src/internal/content/sitemap/plugin.ts, packages/adapter-vite/src/internal/content/blog/plugin.ts, packages/adapter-vite/src/internal/content/nav/plugin.ts, packages/adapter-vite/src/i18n-plugin.ts)
+- `packages/adapter-vite/src/internal/ssg/entry-render-helpers.ts:131-454` — file not found (moved, deleted, or abbreviated path unresolved)
+- `packages/element/src/internal/core/isr-runtime.ts:53-156` — file not found (moved, deleted, or abbreviated path unresolved)
+- `isr-runtime.ts:118-130` — file not found (moved, deleted, or abbreviated path unresolved)

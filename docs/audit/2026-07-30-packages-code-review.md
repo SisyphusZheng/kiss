@@ -67,3 +67,12 @@ HTML escaping); ADR-referenced comments throughout.
 - npm publish consumer resolution of all subpath exports.
 - Whether adapter-vite SSG rendering serializes requests (relevant to the
   residual H-1 risk only).
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：10；漂移：0。
+
+全部引用均能在基线中解析，无行号漂移。

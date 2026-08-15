@@ -163,3 +163,20 @@ OpenElement 作为前端框架已具备**生产可信的工程底座**，但距"
 ---
 
 _本报告由软件开发团队（主理人齐活林 / 架构师高见远 / QA 严过关）协作产出，所有结论基于代码事实与抽样源码核对，未修改任何源文件。_
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：24；漂移：7。
+
+### 漂移 / 无法核验的引用
+
+- `entry-render-helpers.ts:223-245` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:229` — file not found (moved, deleted, or abbreviated path unresolved)
+- `data.ts:10` — ambiguous path (5 candidates: packages/app/src/internal/page-host-data.ts, packages/adapter-vite/src/internal/content/blog/blog-data.ts, packages/element/src/internal/protocol/data.ts, www/app/data/_generated-blog-data.ts, www/app/data/_generated-i18n-data.ts)
+- `isr.ts:5-12` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `errors.ts:154` — ambiguous path (2 candidates: packages/element/src/internal/core/errors.ts, packages/element/src/internal/protocol/errors.ts)
+- `ssg-render.ts:343-347` — ambiguous path (2 candidates: packages/adapter-vite/src/internal/ssg/ssg-render.ts, packages/adapter-vite/src/cli/ssg-render.ts)
+- `entry-render-helpers.ts:184` — file not found (moved, deleted, or abbreviated path unresolved)

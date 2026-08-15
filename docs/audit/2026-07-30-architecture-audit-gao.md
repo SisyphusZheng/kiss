@@ -156,3 +156,22 @@ OpenElement 是一个**架构扎实、文档卓越的现代前端框架**（WC +
 1. **清偿 SPA 导航 UI-shell 债务**（`open-layout.tsx:1230`）—— 将 `currentPath`/`navItems` 改为 signal，以差异更新替代"销毁重建整个 shadow DOM + 手动重绑事件"，消除与 signal 架构的根本冲突。
 2. **统一主题传播机制** —— 废弃全局 `CustomEvent` + 手动 `_propagateTheme()` 递归，收敛到单一 `Context` 驱动；并让示例站 token 对齐 `packages/ui` 的 Open Props、删除 `!important` 兜底，消除跨模块样式失同步。
 3. **补齐扩展能力与契约落地** —— 实现并默认接入外部 KV 的 ISR 适配器（解决水平/边缘扩展冷缓存击穿），并随框架发布 `MemoryDataAdapter` 基线与至少一个数据后端 recipe，关闭 ADR-0095/0038 的文档-代码漂移；同时补充限流中间件与可选 auth/校验样板，降低使用者误用面。
+
+---
+
+## 引用时效复核（自动生成）
+
+> 本附录由 `tools/check-audit-citations.ts` 生成。基线：当前工作树。
+> 引用总数：27；漂移：9。
+
+### 漂移 / 无法核验的引用
+
+- `packages/element/src/internal/core/data-adapter.ts:28` — file not found (moved, deleted, or abbreviated path unresolved)
+- `isr.ts:64` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `isr.ts:5-12` — ambiguous path (2 candidates: packages/element/src/internal/core/isr.ts, packages/element/src/internal/protocol/isr.ts)
+- `data.ts:30-68` — ambiguous path (5 candidates: packages/app/src/internal/page-host-data.ts, packages/adapter-vite/src/internal/content/blog/blog-data.ts, packages/element/src/internal/protocol/data.ts, www/app/data/_generated-blog-data.ts, www/app/data/_generated-i18n-data.ts)
+- `hono.ts:36` — file not found (moved, deleted, or abbreviated path unresolved)
+- `model.ts:31` — ambiguous path (2 candidates: packages/app/src/model.ts, packages/element/src/internal/protocol/app-model.ts)
+- `data.ts:10` — ambiguous path (5 candidates: packages/app/src/internal/page-host-data.ts, packages/adapter-vite/src/internal/content/blog/blog-data.ts, packages/element/src/internal/protocol/data.ts, www/app/data/_generated-blog-data.ts, www/app/data/_generated-i18n-data.ts)
+- `entry-render-helpers.ts:223-245` — file not found (moved, deleted, or abbreviated path unresolved)
+- `entry-render-helpers.ts:229` — file not found (moved, deleted, or abbreviated path unresolved)
