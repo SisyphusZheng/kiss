@@ -1,10 +1,10 @@
 # v0.42.0 — WC Application Loop (light fullstack) release plan
 
-> Current source package line: `v0.42.0`\
-> Current npm registry line: `v0.42.0` (published 2026-08-15, dist-tag `latest`)\
+> Current source package line: `v0.43.0-alpha.1`\
+> Current npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `latest`)\
 > In-flight work: none — TP-6 accepted ADR-0122 on 2026-08-14 (#962);
 > this release is the 0.42.0 stable cut\
-> Active release target: `v0.42.0`\
+> Active release target: `v0.43.0-alpha.1`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Current maturity stage: stable (0.42.0, WC light fullstack, frozen under ADR-0122)

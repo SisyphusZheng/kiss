@@ -334,7 +334,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0',
+      version: 'v0.43.0-alpha.1',
       theme: 'WC light fullstack, stable: the application loop freezes (ADR-0122)',
       copy:
         '0.42.0 freezes the request-time application loop on top of the untouched 0.41.x static freeze: definePage loaders and actions, the fail/redirect algebra with PRG revalidation, enhanced and no-JS form loops through the morph client, the fail-closed CSRF default, and build → start first-mile semantics (ADR-0120, frozen by ADR-0122). The line also brings hydrate-named island strategies, keyed <For>, ErrorBoundary auto-capture, the sanitizeHtml allow-list, .mdx routes, i18n routing, sitemaps, the standalone serve.mjs entry, and registration decoupling (#960, ADR-0128). Pure-static and SPA 0.41.x projects upgrade with zero source changes — proven byte-level against the stable artifacts. Session/flash, cache/ISR, streaming and the production runtime stay unfrozen (0.43/0.44).',
@@ -636,7 +636,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.43.0-alpha.1' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>

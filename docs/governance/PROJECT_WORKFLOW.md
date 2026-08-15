@@ -11,8 +11,8 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: source package line `v0.42.0`,
-npm registry line `v0.42.0` (published); in-flight TP-5.9 work
+Current execution anchor: source package line `v0.43.0-alpha.1`,
+npm registry line `v0.43.0-alpha.1` (published); in-flight TP-5.9 work
 (TP-6 stable freeze preparation) runs on that line, and `0.42.0` WC light
 fullstack planning continues under ADR-0120 and
 `docs/current/VERSION_PLAN.md`.
