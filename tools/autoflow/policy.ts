@@ -104,6 +104,19 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^docs\//, /^deno\.json$/],
   },
   {
+    // ADR-0122 Consequences (#972): frozen semantics may only change with an
+    // amendment ADR reference. No trigger gating needed — a docs/adr/-only
+    // change is the amendment path itself and passes by design.
+    name: 'freeze:semantics:check',
+    command: ['deno', 'task', 'freeze:semantics:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\/(app|element)\/src\//,
+      /^packages\/adapter-vite\/src\/(internal\/ssg|cli)\//,
+      /^tools\/check-frozen-semantics\.ts$/,
+    ],
+  },
+  {
     name: 'docs:check-public',
     command: ['deno', 'task', 'docs:check-public'],
     tiers: ['ci', 'release'],

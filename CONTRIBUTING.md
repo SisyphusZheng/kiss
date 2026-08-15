@@ -72,6 +72,13 @@ deno task build
 For release work, also run the release gates listed in
 `docs/status/STATUS.md`.
 
+Changes to frozen semantics (the ADR-0122 §1–§4 files listed in
+`tools/check-frozen-semantics.ts`, e.g. `packages/app/src/authoring.ts` or the
+`morph-*`/`form-enhance`/`entry-codegen` action-protocol files) must reference
+an amendment ADR — either commit the ADR under `docs/adr/` in the same change,
+or cite an `ADR-NNNN` token in the commit message or PR body. The
+`freeze:semantics:check` gate (AutoFlow ci/release tiers) fails otherwise.
+
 A few root tasks are manual tools that no CI job or other task invokes:
 `audit:citations:check` (re-scan archived audit report citations) and
 `test:visual-smoke` / `test:visual-baselines` (opt-in browser visual checks
