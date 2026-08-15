@@ -1,6 +1,5 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-14T21:25:04.560Z",
   "source": "tools/third-party-wc-corpus.ts",
   "note": "Pins observed SSR form + admission per third-party WC kind; known forms, not correctness claims.",
   "entries": [
