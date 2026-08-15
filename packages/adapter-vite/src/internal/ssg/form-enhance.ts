@@ -148,9 +148,10 @@ export function createFormEnhance(deps: FormEnhanceDeps): FormEnhance {
       }
       // #552: only 200/422 HTML responses morph; anything else (500, empty,
       // non-HTML) navigates so the real page shows instead of morphing an
-      // error page into place.
+      // error page into place. #974: an empty 200 text/html body would morph
+      // the live page to blank — an empty body navigates too.
       const morphable = (result.status === 200 || result.status === 422) &&
-        result.type.indexOf('text/html') !== -1;
+        result.type.indexOf('text/html') !== -1 && result.html.trim() !== '';
       if (morphable) {
         // ADR-0121 §11 (#546): cancelable failure hook before the default morph.
         if (result.status === 422) {

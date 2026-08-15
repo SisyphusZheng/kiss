@@ -89,8 +89,11 @@ interface FetchCall {
   init: { method: string; body: unknown; headers: Record<string, string> };
 }
 
-function makeHarness(options: { responseStatus?: number; responseType?: string } = {}) {
+function makeHarness(
+  options: { responseStatus?: number; responseType?: string; responseHtml?: string } = {},
+) {
   const fetches: FetchCall[] = [];
+  const navigations: string[] = [];
   const win = {
     location: {
       href: 'https://fixture.local/form',
@@ -98,7 +101,9 @@ function makeHarness(options: { responseStatus?: number; responseType?: string }
       pathname: '/form',
       search: '',
       hash: '',
-      assign: () => {},
+      assign: (href: string) => {
+        navigations.push(href);
+      },
       reload: () => {},
     },
     history: { pushState: () => {} },
@@ -128,7 +133,7 @@ function makeHarness(options: { responseStatus?: number; responseType?: string }
     fetch: (url: string, init: FetchCall['init']) => {
       fetches.push({ url, init });
       return Promise.resolve({
-        text: () => Promise.resolve('<html></html>'),
+        text: () => Promise.resolve(options.responseHtml ?? '<html></html>'),
         url,
         status: options.responseStatus ?? 500,
         headers: { get: () => options.responseType ?? 'text/plain' },
@@ -150,7 +155,7 @@ function makeHarness(options: { responseStatus?: number; responseType?: string }
     const event = submitEvent(form, submitter);
     for (const listener of listeners) listener(event);
   };
-  return { client, fetches, win, fireSubmit };
+  return { client, fetches, win, fireSubmit, navigations };
 }
 
 function submitEvent(
@@ -239,7 +244,26 @@ Deno.test('GET forms and non-enhanced forms are never intercepted', () => {
   assertEquals(fetches.length, 0);
 });
 
-Deno.test('#564: a second submit while one is in flight is ignored', async () => {
+Deno.test('#974: an empty 200 text/html response navigates instead of morphing to blank', async () => {
+  const { fireSubmit, navigations } = makeHarness({
+    responseStatus: 200,
+    responseType: 'text/html',
+    responseHtml: '   ',
+  });
+  const form = new FakeFormElement();
+  form.setAttribute('method', 'post');
+  form.setAttribute('data-open-enhance', '');
+  form.setAttribute('action', '/form');
+  fireSubmit(form);
+  // Let the fetch + morph decision chain settle.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  // An empty body must take the navigation path; morphing it would blank
+  // the live page (the fake DOMParser throws if a morph were attempted).
+  assertEquals(navigations.length, 1);
+  assertEquals(navigations[0], 'https://fixture.local/form');
+});
+
+Deno.test('#564: a second submit while one in flight is ignored', async () => {
   const { fetches, fireSubmit } = makeHarness({ responseStatus: 500 });
   const form = new FakeFormElement();
   form.setAttribute('method', 'post');
