@@ -1,0 +1,24 @@
+{
+  "version": "0.43.0-alpha.1",
+  "tasks": {
+    "build": "deno run --config ../../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../../packages/adapter-vite/src/cli/build.ts",
+    "nitro:build": "OPEN_ELEMENT_NITRO_PRESET=cloudflare_module deno run --config ../../deno.json --node-modules-dir=auto -A npm:nitro@3.0.0 build",
+    "start": "deno run -A ../../packages/adapter-vite/src/cli/start.ts",
+    "check": "deno check app/routes/index.tsx app/routes/notes.tsx app/routes/login.tsx app/shell.tsx lib/supabase-server.ts"
+  },
+  "imports": {
+    "@openelement/ui": "../../packages/ui/src/index.ts",
+    "@openelement/element": "../../packages/element/src/index.ts",
+    "@openelement/element/jsx-runtime": "../../packages/element/src/jsx-runtime.ts",
+    "@openelement/element/": "../../packages/element/src/",
+    "@openelement/app": "../../packages/app/src/index.ts",
+    "@openelement/adapter-vite": "../../packages/adapter-vite/src/index.ts",
+    "vite": "npm:vite@8.0.16"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@openelement/element",
+    "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
+  },
+  "exclude": ["node_modules", "dist", ".output-node", ".output-workers", ".nitro"]
+}

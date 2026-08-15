@@ -208,6 +208,14 @@ function writeResponse(response: Response, res: ServerResponse): void {
   pump().catch(() => res.end());
 }
 
+// Loader `env` contract is Record<string, string>; process.env may carry
+// undefined values, which are filtered out (never forwarded).
+const processEnv: Record<string, string> = {};
+for (const key of Object.keys(process.env)) {
+  const value = process.env[key];
+  if (value !== undefined) processEnv[key] = value;
+}
+
 async function handleRequest(
   request: Request,
   serverMod: RequestTimeServerModule | null,
@@ -233,8 +241,10 @@ async function handleRequest(
     if (match || isMutating) {
       try {
         // #857: the generated server entry takes the Nitro v3 event shape —
-        // `{ req }` wrapping the standard Request.
-        return await serverMod.default({ req: request });
+        // `{ req }` wrapping the standard Request. Worker env reaches
+        // loaders through `env`; in the local start server that is the
+        // process env (mirrors the request-time fixture server, #981).
+        return await serverMod.default({ req: request, env: processEnv });
       } catch (err) {
         console.error('[openElement start] request-time handler error:', err);
         return new Response('Internal Server Error', { status: 500 });
@@ -247,7 +257,7 @@ async function handleRequest(
 
   if (serverMod?.default) {
     try {
-      return await serverMod.default({ req: request });
+      return await serverMod.default({ req: request, env: processEnv });
     } catch (err) {
       console.error('[openElement start] request-time handler error:', err);
       return new Response('Internal Server Error', { status: 500 });
