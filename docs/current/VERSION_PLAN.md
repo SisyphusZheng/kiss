@@ -63,8 +63,7 @@ OTel tracing (#625) = 0.44 (production runtime), not 0.43
 - The line continues the five-package convergence per
   [ADR-0114](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md);
   the Nitro mount path stays `@openelement/adapter-vite/nitro-mount`.
-- Release evidence requires the three-browser fixture gates — Chromium,
-  Firefox and WebKit — per train.
+- Release evidence requires the three-browser fixture gates (Chromium, Firefox and WebKit) per train.
 
 ## Entry / exit
 
