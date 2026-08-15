@@ -122,7 +122,7 @@ export function failureMessage(result: GateResult): string {
     'Frozen paths changed:',
     ...lines,
     '',
-    'Rule (ADR-0122 Consequences): any PR touching frozen semantics must',
+    'Rule (ADR-0122 Consequences): a PR touching frozen semantics must',
     'reference an amendment ADR. To comply, do one of:',
     '  1. author/commit an amendment ADR under docs/adr/ in this change, or',
     '  2. cite the amendment ADR (an `ADR-NNNN` token) in the commit message',
