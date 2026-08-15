@@ -5,7 +5,7 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Source package line: `v0.43.0-alpha.1`.\
-> npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `latest` — see Current release state).\
+> npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `alpha` — see Current release state).\
 > Active execution target: `v0.43.0-alpha.1`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.7 closed the light-fullstack floor (morph

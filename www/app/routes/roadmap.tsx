@@ -335,9 +335,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.43.0-alpha.1',
-      theme: 'WC light fullstack, stable: the application loop freezes (ADR-0122)',
+      theme: 'foundation train: hydration diagnostics, honest runtimes, WC SSR corpus',
       copy:
-        '0.42.0 freezes the request-time application loop on top of the untouched 0.41.x static freeze: definePage loaders and actions, the fail/redirect algebra with PRG revalidation, enhanced and no-JS form loops through the morph client, the fail-closed CSRF default, and build → start first-mile semantics (ADR-0120, frozen by ADR-0122). The line also brings hydrate-named island strategies, keyed <For>, ErrorBoundary auto-capture, the sanitizeHtml allow-list, .mdx routes, i18n routing, sitemaps, the standalone serve.mjs entry, and registration decoupling (#960, ADR-0128). Pure-static and SPA 0.41.x projects upgrade with zero source changes — proven byte-level against the stable artifacts. Session/flash, cache/ISR, streaming and the production runtime stay unfrozen (0.43/0.44).',
+        "The 0.43 line opens on top of the frozen 0.42.0 (ADR-0122) with a foundation train plus a full post-freeze health check. Hydration mismatches now carry structured diagnostics (OPEN_ELEMENT_HYDRATION_MISMATCH: reason, marker counts, branch-token sequences, divergence index — detailed in dev, coded in prod, #631); dist/server boots honestly across runtimes with a clean Node 24+ floor (#969); a content-element/fallback-tag collision now fails the build instead of silently bypassing the page render (#971); the third-party WC SSR corpus pins each library kind's SSR form as machine-readable evidence (#979 groundwork); and verified recipes land for rate limiting, file-backed data and auth guards (#627/#629/#630).",
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -383,10 +383,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0',
-      theme: 'WC 轻全栈稳定版:应用循环冻结(ADR-0122)',
+      version: 'v0.43.0-alpha.1',
+      theme: '地基列车:水合诊断、诚实的运行时、WC SSR 语料库',
       copy:
-        '0.42.0 在未被触动的 0.41.x 静态冻结之上冻结请求时应用循环:definePage loader 与 action、fail/redirect 代数与 PRG 再验证、经 morph 客户端的增强与无 JS 表单循环、默认失败的 CSRF 同源底线,以及 build → start 的第一步语义(ADR-0120,由 ADR-0122 冻结)。本线还带来 hydrate 命名的岛屿策略、键控 <For>、ErrorBoundary 自动捕获、sanitizeHtml 白名单、.mdx 路由、i18n 路由、sitemap、独立 serve.mjs 入口与注册解耦(#960、ADR-0128)。纯静态与 SPA 的 0.41.x 项目零源码改动即可升级——已对稳定产物做字节级证明。session/flash、缓存/ISR、流式 SSR 与生产运行时保持未冻结(0.43/0.44)。',
+        '0.43 线在冻结的 0.42.0(ADR-0122)之上以地基列车开场,并完成冻结后的首次全项目健康检查。水合不匹配现在携带结构化诊断(OPEN_ELEMENT_HYDRATION_MISMATCH:原因、标记计数、分支 token 序列与分歧索引——dev 详细、prod 一行,#631);dist/server 跨运行时诚实启动,Node 24+ 为明确地板(#969);内容元素与兜底标签的碰撞现在使构建失败,而不是静默旁路页面渲染(#971);第三方 WC SSR 语料库把各库形态的 SSR 输出钉为机器可读证据(#979 的地基);rate-limit、文件数据与认证守卫三份配方均已对真实构建验证(#627/#629/#630)。',
       state: 'stable',
       stamp: 'CURRENT',
     },
