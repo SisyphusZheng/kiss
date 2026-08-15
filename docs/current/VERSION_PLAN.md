@@ -20,7 +20,11 @@ task-package record lives in git history (03a6611d).
 (native/Lit/FAST/Stencil) become first-class in the SSR pipeline —
 discovered, classified by machine-readable compatibility evidence, and
 admitted to SSR per their proven form — plus the developer diagnostics and
-production recipes the 0.42 freeze deferred. The frozen 0.42 contracts
+production recipes the 0.42 freeze deferred. It also qualifies the
+**OpenElement × Supabase × Cloudflare** fullstack delivery path (epic
+#981) as a composition: no provider packages, no framework-owned
+auth/database abstractions — recipes, a reference application, and
+qualification evidence. The frozen 0.42 contracts
 (ADR-0119 static surface; ADR-0122 loop contract, action protocol, CSRF
 default, first-mile start) stay untouched: any change to them requires an
 amendment ADR.
@@ -29,6 +33,10 @@ amendment ADR.
 OpenElement = Web Components-native fullstack application framework
 0.43 scope = foreign-tag discovery → CEM/admission classification →
   per-form SSR admission + hydration diagnostics + recipes
+  + the OpenElement × Supabase × Cloudflare delivery path (epic #981:
+  composition only — no provider packages, no framework-owned
+  auth/database abstractions; recipes + reference app + qualification
+  evidence)
 0.43 does NOT ship = framework session/flash, cache/ISR, performance SLOs,
   production runtime recovery, auth packages (all 0.44)
 streaming SSR (#626) = candidate, mid/late line, only with its own design
@@ -37,24 +45,54 @@ OTel tracing (#625) = 0.44 (production runtime), not 0.43
 
 ## Train map
 
-- **alpha.1 (this release) — foundation + post-freeze health check**:
+Two interleaved tracks: the Universal WC SSR track (admission) and the
+Supabase × Cloudflare fullstack delivery path (epic #981, composition
+only). The fullstack spike jumps the queue because it is the epic's only
+go/no-go point.
+
+- **alpha.1 (shipped) — foundation + post-freeze health check**:
   hydration-mismatch structured diagnostics (#631); honest cross-runtime
   dist/server floor with CI smoke (#969/#628 first slice); registration
   collision hard failure (#971, landed early from the alpha.2 schedule);
   third-party WC SSR corpus + machine-readable record (#979 groundwork);
   verified recipes (#627/#629/#630); governance debt (#965/#966/#967/#623/
   #968/#970/#964); freeze-guard verification.
-- **alpha.2 — admission visibility (#979 anchor)**: the scan discovers
-  JSX-consumed foreign tags, classifies them (CEM machinery activated for
-  npm: packages; unknown tags recorded explicitly client-only), and the
-  SSR admission plan honestly records every consumed tag. Classification
-  and visibility only — no per-tag SSR behavior change yet. Carry-in
-  candidates: #972 (amendment-ADR gate), #973/#974/#975, #976–#978
-  hygiene, #907 remainder.
-- **alpha.3+ — per-form SSR admission**: SSR strategies per compatibility
-  tier on top of alpha.2's visibility; #613/#614/#615 mid-line; streaming
-  SSR candidate review (#626); #620 MemoryDataAdapter paired with the #629
-  recipe.
+- **alpha.2 (on main) — admission visibility (#979 anchor)**: the scan
+  discovers JSX-consumed foreign tags, classifies them (CEM machinery
+  activated for npm: packages; unknown tags recorded explicitly
+  client-only), and the SSR admission plan honestly records every consumed
+  tag. Classification and visibility only — no per-tag SSR behavior
+  change. Carry-ins landed: #972 (amendment-ADR gate), #975 (depth-limit
+  paths), #973/#974 (422-morph note + empty-body guard), #976–#978
+  hygiene, #907 first extraction.
+- **alpha.3 — fullstack-path risk spike (#981 first slice)**: the one
+  go/no-go seam — cookie session write-back (Set-Cookie from an action)
+  through the Nitro `cloudflare_module` bridge plus the CSRF floor's
+  `c.env` read on the Workers runtime, proven on a real worker runtime;
+  the Supabase local emulator joins CI (supabase CLI + Docker on ubuntu
+  runners). If the seam fails, the epic re-scopes before any recipe work.
+- **alpha.4 — reference-app skeleton (#983 first)**: sign-in/sign-out/
+  callback, one RLS-protected resource, a no-JS + enhanced form — green
+  against the local emulator. The recipe is extracted from the working
+  app, not written in the abstract.
+- **alpha.5 — recipe + PR-safe qualification gates (#982, #984 tier 1)**:
+  the Supabase recipe under docs/integrations/; fixture-level gates for
+  the secret boundary (no service-role material in browser bundles),
+  protected-route SSR + progressive action behavior, and generated-Worker
+  cache-policy assertions; Realtime island + Storage authorization join
+  the skeleton. Admission track resumes here: per-form SSR admission
+  design on top of alpha.2's visibility.
+- **alpha.6 — emulator matrix + positioning (#984 tier 2, #985)**: the
+  full emulator evidence matrix; only then the positioning copy, which
+  must cite the evidence that exists. #985 stays honest about what tier-3
+  (real deployment smoke) did or did not run.
+- **#984 tier 3 (real Cloudflare deploy smoke)** requires maintainer-
+  provided credentials/accounts; without them it ships as a documented
+  runbook, honestly labeled, and does not block the line.
+- **Later in the line**: #613/#614/#615 mid-line; streaming SSR candidate
+  review (#626) only with its own design; #620 MemoryDataAdapter paired
+  with the #629 recipe; #907 remaining extraction axes; #980 examples
+  cleanup.
 
 ## References and gates
 
