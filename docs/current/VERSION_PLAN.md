@@ -56,6 +56,16 @@ OTel tracing (#625) = 0.44 (production runtime), not 0.43
   SSR candidate review (#626); #620 MemoryDataAdapter paired with the #629
   recipe.
 
+## References and gates
+
+- Current package surface: [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) —
+  the five-package graph (element, app, adapter-vite, ui, create).
+- The line continues the five-package convergence per
+  [ADR-0114](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md);
+  the Nitro mount path stays `@openelement/adapter-vite/nitro-mount`.
+- Release evidence requires the three-browser fixture gates — Chromium,
+  Firefox and WebKit — per train.
+
 ## Entry / exit
 
 Entry (met at alpha.1): 0.42.0 published and green; freeze statement (no
