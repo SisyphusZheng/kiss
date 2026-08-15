@@ -65,8 +65,15 @@ export function createOpenElementNitroHandler<
 ): (event: NitroRequestEvent<Env>) => Promise<Response> {
   return async (event: NitroRequestEvent<Env>): Promise<Response> => {
     const request = event.req;
+    // Nitro v3 (h3 v2) delivers the Cloudflare Workers bindings on
+    // `req.runtime.cloudflare.env`; the h3 event itself has no `env` field,
+    // so `event.env` is undefined in real deployments (spike evidence, #981).
+    // Prefer the runtime channel, then an explicit event.env, then the mount
+    // options.
+    const runtimeEnv = (request as Request & { runtime?: { cloudflare?: { env?: Env } } })
+      .runtime?.cloudflare?.env;
     const context: RuntimeContext<Env> = {
-      env: event.env ?? options.env,
+      env: runtimeEnv ?? event.env ?? options.env,
       platform: event.platform ?? options.platform,
       params: event.context?.params,
     };

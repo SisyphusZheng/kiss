@@ -106,6 +106,44 @@ Deno.test('nitro mount: exposes h3 v2 context.params through runtime and request
   }]);
 });
 
+Deno.test('nitro mount: extracts the Cloudflare Workers env from req.runtime.cloudflare.env', async () => {
+  // Nitro v3 (h3 v2) delivers worker bindings on req.runtime.cloudflare.env;
+  // the h3 event has no env field, so the mount must read the runtime channel
+  // (spike evidence, #981).
+  const handler = createOpenElementNitroHandler({
+    handler: (_request, context) => new Response(JSON.stringify({ env: context?.env })),
+    env: { name: 'option-env' },
+  });
+
+  const req = new Request('https://worker.test/form') as Request & {
+    runtime?: { cloudflare?: { env?: unknown } };
+  };
+  req.runtime = { cloudflare: { env: { OPEN_ELEMENT_DISABLE_CSRF: '1' } } };
+
+  const response = await handler({ req: req as Request });
+
+  assertEquals(await response.json(), { env: { OPEN_ELEMENT_DISABLE_CSRF: '1' } });
+});
+
+Deno.test('nitro mount: runtime cloudflare env wins over event.env and mount options', async () => {
+  const handler = createOpenElementNitroHandler({
+    handler: (_request, context) => new Response(JSON.stringify({ env: context?.env })),
+    env: { name: 'option-env' },
+  });
+
+  const req = new Request('https://worker.test/form') as Request & {
+    runtime?: { cloudflare?: { env?: unknown } };
+  };
+  req.runtime = { cloudflare: { env: { source: 'runtime' } } };
+
+  const response = await handler({
+    req: req as Request,
+    env: { name: 'event-env' },
+  });
+
+  assertEquals(await response.json(), { env: { source: 'runtime' } });
+});
+
 // Shape-parity contract (#657): nitro-mount.ts intentionally does NOT reuse
 // createRequestContext as a value import. Generated Nitro server output bundles
 // nitro-mount.ts directly (see createNitroRequestContext's comment), and the
