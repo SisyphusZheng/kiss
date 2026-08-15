@@ -25,6 +25,8 @@ packages/adapter-vite/__fixtures__/nitro-proof/.output-*/
 packages/adapter-vite/__fixtures__/nitro-proof/.wrangler/
 packages/adapter-vite/__fixtures__/nitro-proof/.nitro/
 packages/adapter-vite/__fixtures__/nitro-proof/node_modules/
+packages/adapter-vite/__fixtures__/request-time/.output-*/
+packages/adapter-vite/__fixtures__/request-time/.nitro/
 www/app/data/_generated-blog-data.ts
 .openElement/
 www/.openElement/
