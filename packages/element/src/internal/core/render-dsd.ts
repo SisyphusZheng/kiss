@@ -49,6 +49,46 @@ import { DATA_SSR_PROPS } from '../protocol/hydration-markers.ts';
 const log = createLogger('render-dsd');
 export const MAX_SSR_NESTING_DEPTH = 50;
 
+// ─── Depth-Trip Render Path (#975) ─────────────────────────────
+
+/**
+ * Render-path tracking for the depth-trip message activates only this close
+ * to the limit, so the success path carries zero path-tracking overhead.
+ * Segments recorded above this depth are honestly marked with a leading '…'.
+ */
+export const RENDER_PATH_TRACK_MIN_DEPTH = MAX_SSR_NESTING_DEPTH - 12;
+
+/** Bounded window: at most this many path segments are retained. */
+const RENDER_PATH_WINDOW = 16;
+
+/**
+ * Append one segment to the bounded render-path window. Returns a new array
+ * (path tracking is only active near the depth limit, so the copy cost is
+ * bounded and rare); when the window is full the oldest segments drop behind
+ * a leading '…' truncation marker.
+ */
+export function appendRenderPathSegment(
+  path: readonly string[],
+  segment: string,
+): string[] {
+  if (path.length < RENDER_PATH_WINDOW) return [...path, segment];
+  return ['…', ...path.slice(-(RENDER_PATH_WINDOW - 2)), segment];
+}
+
+/**
+ * `(path: … > blog-list > for-item[key=42] > x-d60)` suffix for the
+ * depth-trip message, or '' when no path was tracked. The tripping tag is
+ * always the last segment.
+ */
+function formatDepthPathSuffix(
+  path: readonly string[] | undefined,
+  tagName: string,
+): string {
+  if (!path || path.length === 0) return '';
+  const segments = path[path.length - 1] === tagName ? path : [...path, tagName];
+  return ` (path: ${segments.join(' > ')})`;
+}
+
 // ─── Error Classification ──────────────────────────────────────
 // RenderPhase and RenderErrorCode are imported from ../protocol/render.ts.
 
@@ -247,6 +287,14 @@ export interface RenderDsdOptions {
    * degrading to the bare-tag fallback, so the nearest boundary captures them.
    */
   throwOnRenderError?: boolean;
+  /**
+   * #975 (internal): bounded window of ancestor path segments (CE host tags
+   * and `<For>` item segments) tracked by render-ir once the nesting depth
+   * approaches the limit; appended to the SSR_NESTING_DEPTH_EXCEEDED message
+   * so the trip point is diagnosable in recursive/keyed-For trees. Tracked
+   * lazily — undefined on the ordinary success path.
+   */
+  renderPath?: readonly string[];
 }
 
 export async function renderDsd(
@@ -262,7 +310,9 @@ export async function renderDsd(
   const nestingDepth = options.nestingDepth ?? 0;
   if (nestingDepth > MAX_SSR_NESTING_DEPTH) {
     throw new OpenElementError(
-      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${tagName}>`,
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${tagName}>${
+        formatDepthPathSuffix(options.renderPath, tagName)
+      }`,
       {
         code: 'SSR_NESTING_DEPTH_EXCEEDED',
         phase: 'ssr',
@@ -329,6 +379,7 @@ export async function renderDsd(
       isBoundary,
       boundaryError: options.boundaryError,
       throwOnRenderError: options.throwOnRenderError,
+      renderPath: options.renderPath,
     },
   );
   if (outcome.earlyReturn) return outcome.earlyReturn;
@@ -524,6 +575,8 @@ interface BoundaryScope {
   boundaryError?: unknown;
   /** An ancestor boundary scope is active: bubble failures instead of bare-tagging. */
   throwOnRenderError?: boolean;
+  /** #975: bounded ancestor path window for the depth-trip message. */
+  renderPath?: readonly string[];
 }
 
 /** render() dispatch + DSD tree serialization + render-failure fallback. */
@@ -561,7 +614,13 @@ async function renderComponentContent(
       // Captured fallback content renders with an inactive scope: a failing
       // component inside the fallback degrades in place instead of looping.
       return {
-        content: await renderDsdTree(result, undefined, nestingDepth, subtreeScope),
+        content: await renderDsdTree(
+          result,
+          undefined,
+          nestingDepth,
+          subtreeScope,
+          boundary.renderPath,
+        ),
         hasError: captured,
       };
     }
@@ -581,7 +640,7 @@ async function renderComponentContent(
     // An error boundary captures its own render failure and substitutes its
     // fallback — exactly once; a failing fallback bubbles outward / degrades.
     if (boundary.isBoundary && !captured) {
-      const fallback = await tryBoundaryFallback(instance, err, nestingDepth);
+      const fallback = await tryBoundaryFallback(instance, err, nestingDepth, boundary.renderPath);
       if (fallback) return fallback;
     }
 
@@ -662,13 +721,14 @@ async function tryBoundaryFallback(
   instance: DsdComponent,
   err: unknown,
   nestingDepth: number,
+  renderPath?: readonly string[],
 ): Promise<{ content: string; hasError: boolean } | null> {
   try {
     const result = callBoundaryFallback(instance, err);
     if (result == null) return { content: '', hasError: true };
     if (isVNode(result)) {
       return {
-        content: await renderDsdTree(result, undefined, nestingDepth, false),
+        content: await renderDsdTree(result, undefined, nestingDepth, false, renderPath),
         hasError: true,
       };
     }

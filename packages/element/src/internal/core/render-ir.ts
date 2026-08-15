@@ -13,6 +13,7 @@ import {
   forBranchMarker,
   forEndMarker,
   forItemBoundaryMarker,
+  forItemKey,
   serializeEventMarkers,
   showBranchMarker,
 } from './event-marker.ts';
@@ -23,9 +24,11 @@ import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
 import type { DsdComponentConstructor } from '../protocol/render.ts';
 import {
+  appendRenderPathSegment,
   BoundaryRenderError,
   isControlFlowThrow,
   isDepthLimitError,
+  RENDER_PATH_TRACK_MIN_DEPTH,
   renderDsd,
 } from './render-dsd.ts';
 import { createLogger } from './logger.ts';
@@ -229,13 +232,22 @@ ${node.light.map(serializeRenderNode).join('')}</${node.tag}>`;
  * @param boundaryActive ADR-0053 Layer 2: an ancestor error-boundary scope is
  * active — registered custom elements below this node throw on render failure
  * instead of bare-tagging, so the nearest boundary can capture the error.
+ * @param renderPath #975: bounded ancestor path window for the depth-trip
+ * message. Lazily activated near the depth limit (RENDER_PATH_TRACK_MIN_DEPTH)
+ * so the ordinary success path stays allocation-free; the '…' seed marks
+ * untracked ancestors above the activation point.
  */
 export async function renderToNode(
   node: unknown,
   eventContext: EventMarkerContext = createEventMarkerContext(),
   nestingDepth = 0,
   boundaryActive = false,
+  renderPath?: readonly string[],
 ): Promise<RenderNode> {
+  // #975: lazy activation — below the tracking depth no array exists at all;
+  // at/above it the window starts with an honest '…' for untracked ancestors.
+  const trackedPath = renderPath ??
+    (nestingDepth >= RENDER_PATH_TRACK_MIN_DEPTH ? ['…'] : undefined);
   if (node == null || typeof node === 'boolean') return fragmentNode([]);
   if (typeof node === 'string' || typeof node === 'number') return textNode(node);
   if (isSignalLike(node)) {
@@ -244,6 +256,7 @@ export async function renderToNode(
       eventContext,
       nestingDepth,
       boundaryActive,
+      trackedPath,
     );
   }
   if (!isVNode(node)) return textNode(String(node));
@@ -254,7 +267,9 @@ export async function renderToNode(
   if (isFragment(tag)) {
     const parts: RenderNode[] = [];
     for (const child of children) {
-      parts.push(await renderToNode(child, eventContext, nestingDepth, boundaryActive));
+      parts.push(
+        await renderToNode(child, eventContext, nestingDepth, boundaryActive, trackedPath),
+      );
     }
     return fragmentNode(parts);
   }
@@ -266,12 +281,26 @@ export async function renderToNode(
 
   // Show
   if (isShowTag(tag)) {
-    return await renderShowBranch(props, children, eventContext, nestingDepth, boundaryActive);
+    return await renderShowBranch(
+      props,
+      children,
+      eventContext,
+      nestingDepth,
+      boundaryActive,
+      trackedPath,
+    );
   }
 
   // For
   if (isForTag(tag)) {
-    return await renderForBranch(props, children, eventContext, nestingDepth, boundaryActive);
+    return await renderForBranch(
+      props,
+      children,
+      eventContext,
+      nestingDepth,
+      boundaryActive,
+      trackedPath,
+    );
   }
 
   // Component function/class
@@ -283,6 +312,7 @@ export async function renderToNode(
       eventContext,
       nestingDepth,
       boundaryActive,
+      trackedPath,
     );
   }
 
@@ -303,6 +333,7 @@ export async function renderToNode(
       nestingDepth,
       boundaryActive,
       ceCtor,
+      trackedPath,
     );
   }
 
@@ -313,6 +344,7 @@ export async function renderToNode(
     eventContext,
     nestingDepth,
     boundaryActive,
+    trackedPath,
   );
 
   return {
@@ -336,12 +368,13 @@ async function renderShowBranch(
   eventContext: EventMarkerContext,
   nestingDepth: number,
   boundaryActive: boolean,
+  renderPath: readonly string[] | undefined,
 ): Promise<RenderNode> {
   const whenVal = unwrapSignalLike(props?.when);
   const target = whenVal ? children[0] : children[1];
   const branch = branchCommentNode(showBranchMarker(Boolean(whenVal)));
   const rendered = target
-    ? await renderToNode(target, eventContext, nestingDepth, boundaryActive)
+    ? await renderToNode(target, eventContext, nestingDepth, boundaryActive, renderPath)
     : null;
   return fragmentNode(rendered ? [branch, rendered] : [branch]);
 }
@@ -353,6 +386,7 @@ async function renderForBranch(
   eventContext: EventMarkerContext,
   nestingDepth: number,
   boundaryActive: boolean,
+  renderPath: readonly string[] | undefined,
 ): Promise<RenderNode> {
   const items = unwrapSignalLike(props?.each) as unknown[];
   const renderFn = children[0] as RenderFn;
@@ -365,12 +399,30 @@ async function renderForBranch(
     // Per-item boundary marker (protocol: oe-for-item:N) so matched hydration
     // can seed a keyed list binding over the existing SSR DOM (#917).
     parts.push(branchCommentNode(forItemBoundaryMarker(index)));
+    // #975: while the depth-trip path window is active, distinguish the
+    // per-item subtree by the item's stable key (same id/key fields the
+    // branch token signs), falling back to the item ordinal.
+    const itemPath = renderPath
+      ? appendRenderPathSegment(renderPath, forItemPathSegment(items[index], index))
+      : renderPath;
     parts.push(
-      await renderToNode(renderFn(items[index], index), eventContext, nestingDepth, boundaryActive),
+      await renderToNode(
+        renderFn(items[index], index),
+        eventContext,
+        nestingDepth,
+        boundaryActive,
+        itemPath,
+      ),
     );
   }
   parts.push(branchCommentNode(forEndMarker()));
   return fragmentNode(parts);
+}
+
+/** #975 path segment for one `<For>` item: keyed when identifiable, else ordinal. */
+function forItemPathSegment(item: unknown, index: number): string {
+  const key = forItemKey(item);
+  return key !== undefined ? `for-item[key=${String(key)}]` : `for-item[index=${index}]`;
 }
 
 /** Component class/function: invoke, then render the returned node. */
@@ -381,6 +433,7 @@ async function renderComponentBranch(
   eventContext: EventMarkerContext,
   nestingDepth: number,
   boundaryActive: boolean,
+  renderPath: readonly string[] | undefined,
 ): Promise<RenderNode> {
   try {
     return await renderToNode(
@@ -388,6 +441,7 @@ async function renderComponentBranch(
       eventContext,
       nestingDepth,
       boundaryActive,
+      renderPath,
     );
   } catch (err) {
     // Mirror renderRegisteredCeBranch: control flow needs no log,
@@ -414,6 +468,7 @@ async function renderElementChildren(
   eventContext: EventMarkerContext,
   nestingDepth: number,
   boundaryActive: boolean,
+  renderPath: readonly string[] | undefined,
 ): Promise<RenderNode[]> {
   const childNodes: RenderNode[] = [];
 
@@ -424,7 +479,9 @@ async function renderElementChildren(
     childNodes.push(textNode(unwrapSignalLike(props.textContent)));
   } else {
     for (const child of children) {
-      childNodes.push(await renderToNode(child, eventContext, nestingDepth, boundaryActive));
+      childNodes.push(
+        await renderToNode(child, eventContext, nestingDepth, boundaryActive, renderPath),
+      );
     }
   }
 
@@ -456,13 +513,25 @@ async function renderRegisteredCeBranch(
   nestingDepth: number,
   boundaryActive: boolean,
   componentClass: CustomElementConstructor,
+  renderPath: readonly string[] | undefined,
 ): Promise<RenderNode> {
   const isBoundary = (componentClass as DsdComponentConstructor).isErrorBoundary === true;
+
+  // #975: this host consumes one depth level — while the path window is
+  // active, its tag becomes the latest segment for the subtree below it.
+  const hostPath = renderPath ? appendRenderPathSegment(renderPath, tagName) : renderPath;
 
   let childNodes: RenderNode[];
   if (isBoundary) {
     try {
-      childNodes = await renderElementChildren(props, children, eventContext, nestingDepth, true);
+      childNodes = await renderElementChildren(
+        props,
+        children,
+        eventContext,
+        nestingDepth,
+        true,
+        hostPath,
+      );
     } catch (err) {
       if (isControlFlowThrow(err) || isDepthLimitError(err)) throw err;
       const captured = await renderDsd(tagName, {
@@ -471,6 +540,7 @@ async function renderRegisteredCeBranch(
         nestingDepth: nestingDepth + 1,
         boundaryError: err,
         throwOnRenderError: boundaryActive,
+        renderPath: hostPath,
       });
       return trustedHtmlNode(captured.html);
     }
@@ -481,6 +551,7 @@ async function renderRegisteredCeBranch(
       eventContext,
       nestingDepth,
       boundaryActive,
+      hostPath,
     );
   }
 
@@ -493,6 +564,7 @@ async function renderRegisteredCeBranch(
       nestingDepth: nestingDepth + 1,
       hostEventAttrs,
       throwOnRenderError: boundaryActive,
+      renderPath: hostPath,
     });
     return trustedHtmlNode(dsdResult.html);
   } catch (err) {
@@ -521,8 +593,11 @@ export async function renderDsdTree(
   eventContext: EventMarkerContext = createEventMarkerContext(),
   nestingDepth = 0,
   boundaryActive = false,
+  renderPath?: readonly string[],
 ): Promise<string> {
-  return serializeRenderNode(await renderToNode(node, eventContext, nestingDepth, boundaryActive));
+  return serializeRenderNode(
+    await renderToNode(node, eventContext, nestingDepth, boundaryActive, renderPath),
+  );
 }
 
 // ─── Helpers ────────────────────────────────────────────────────

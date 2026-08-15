@@ -1,8 +1,13 @@
 import { assertEquals, assertRejects, assertStringIncludes } from '@std/assert';
 import { jsx } from '../src/jsx-runtime.ts';
+import { FOR_TAG } from '../src/internal/core/jsx-runtime.ts';
 import { renderDsdTree, serializeAttrs } from '../src/internal/core/render-ir.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';
-import { MAX_SSR_NESTING_DEPTH, renderDsd } from '../src/internal/core/render-dsd.ts';
+import {
+  isDepthLimitError,
+  MAX_SSR_NESTING_DEPTH,
+  renderDsd,
+} from '../src/internal/core/render-dsd.ts';
 
 Deno.test('render IR propagates component failures to the application boundary', async () => {
   function BrokenComponent(): never {
@@ -129,6 +134,127 @@ Deno.test('SSR depth-limit trip is not logged once per function-component frame'
     }
   }
   assertEquals(errors.length, 0);
+});
+
+Deno.test('SSR depth-trip message carries the ancestor path with the tripping tag last (#975)', async () => {
+  class DepthPathFrame {
+    render(): unknown {
+      return jsx('x-depth-path-frame', {});
+    }
+  }
+
+  const had = 'customElements' in globalThis;
+  const previous = globalThis.customElements;
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: { get: (name: string) => name === 'x-depth-path-frame' ? DepthPathFrame : undefined },
+  });
+  try {
+    const err = await assertRejects(
+      () => renderDsdTree(jsx('x-depth-path-frame', {})),
+      Error,
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <x-depth-path-frame>`,
+    );
+    // Typed trip is unchanged: same code, same isDepthLimitError classification.
+    assertEquals(isDepthLimitError(err), true);
+    // The path window activates near the limit, so untracked ancestors above
+    // the activation point are honestly marked with the '…' seed.
+    assertStringIncludes(err.message, '(path: … > ');
+    // The tripping tag is the last path segment.
+    assertEquals(err.message.endsWith('> x-depth-path-frame)'), true);
+  } finally {
+    if (had) {
+      Object.defineProperty(globalThis, 'customElements', { configurable: true, value: previous });
+    } else {
+      delete (globalThis as { customElements?: unknown }).customElements;
+    }
+  }
+});
+
+Deno.test('SSR depth-trip path shows the For item key when the render path knows it (#975)', async () => {
+  class ForDepthFrame {
+    render(): unknown {
+      return {
+        tag: FOR_TAG,
+        props: { each: [{ key: 42 }] },
+        children: [() => jsx('x-for-depth-frame', {})],
+      };
+    }
+  }
+
+  const had = 'customElements' in globalThis;
+  const previous = globalThis.customElements;
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: { get: (name: string) => name === 'x-for-depth-frame' ? ForDepthFrame : undefined },
+  });
+  try {
+    const err = await assertRejects(
+      () => renderDsdTree(jsx('x-for-depth-frame', {})),
+      Error,
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH}`,
+    );
+    assertStringIncludes(err.message, 'for-item[key=42]');
+    assertEquals(err.message.endsWith('> x-for-depth-frame)'), true);
+  } finally {
+    if (had) {
+      Object.defineProperty(globalThis, 'customElements', { configurable: true, value: previous });
+    } else {
+      delete (globalThis as { customElements?: unknown }).customElements;
+    }
+  }
+});
+
+Deno.test('SSR depth-trip path falls back to the For item ordinal without a stable key (#975)', async () => {
+  class ForOrdinalFrame {
+    render(): unknown {
+      return {
+        tag: FOR_TAG,
+        props: { each: [{}] },
+        children: [() => jsx('x-for-ordinal-frame', {})],
+      };
+    }
+  }
+
+  const had = 'customElements' in globalThis;
+  const previous = globalThis.customElements;
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: { get: (name: string) => name === 'x-for-ordinal-frame' ? ForOrdinalFrame : undefined },
+  });
+  try {
+    const err = await assertRejects(
+      () => renderDsdTree(jsx('x-for-ordinal-frame', {})),
+      Error,
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH}`,
+    );
+    assertStringIncludes(err.message, 'for-item[index=0]');
+  } finally {
+    if (had) {
+      Object.defineProperty(globalThis, 'customElements', { configurable: true, value: previous });
+    } else {
+      delete (globalThis as { customElements?: unknown }).customElements;
+    }
+  }
+});
+
+Deno.test('SSR depth-trip message has no path suffix when no path was tracked (#975)', async () => {
+  class DirectFrame {
+    render() {
+      return jsx('direct-frame', {});
+    }
+  }
+
+  const err = await assertRejects(
+    () =>
+      renderDsd('direct-frame', {
+        componentClass: DirectFrame as unknown as CustomElementConstructor,
+        nestingDepth: MAX_SSR_NESTING_DEPTH + 1,
+      }),
+    Error,
+    `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <direct-frame>`,
+  );
+  assertEquals(err.message.includes('(path:'), false);
 });
 
 Deno.test('SSR instantiate failure falls back to a bare tag with serialized props (#892)', async () => {

@@ -119,11 +119,11 @@ export function forEndMarker(): string {
  * Lightweight per-item identity for For branch markers. Primitives (and
  * symbols/bigints) sign as a length-prefixed string value so separator
  * characters inside a value cannot smuggle extra segments into the joined
- * signature; objects sign by a stable primitive `id`/`key` field when
- * present, otherwise by type + index. The fallback cannot distinguish a
- * same-shape object replacement at the same index — an accepted limitation
- * that avoids JSON.stringify on arbitrary (potentially large or circular)
- * objects.
+ * signature; objects sign by a stable primitive `id`/`key` field (see
+ * forItemKey) when present, otherwise by type + index. The fallback cannot
+ * distinguish a same-shape object replacement at the same index — an
+ * accepted limitation that avoids JSON.stringify on arbitrary (potentially
+ * large or circular) objects.
  */
 function forItemSignature(item: unknown, index: number): string {
   if (item === null) return 'null';
@@ -133,16 +133,25 @@ function forItemSignature(item: unknown, index: number): string {
     return `${t}:${s.length}:${s}`;
   }
   if (t === 'undefined') return 'undefined';
-  const record = item as Record<string, unknown>;
-  const id = record.id;
-  const key = record.key;
-  const stable = (typeof id === 'string' || typeof id === 'number')
-    ? id
-    : (typeof key === 'string' || typeof key === 'number')
-    ? key
-    : undefined;
+  const stable = forItemKey(item);
   if (stable !== undefined) return `key:${String(stable)}`;
   return `${t}#${index}`;
+}
+
+/**
+ * Stable key of a `<For>` item: a primitive `id`/`key` field when present,
+ * else undefined. Shared by forItemSignature (branch tokens) and the #975
+ * depth-trip path window (`for-item[key=…]` segments), so both read item
+ * identity from exactly the same fields.
+ */
+export function forItemKey(item: unknown): string | number | undefined {
+  if (item === null || typeof item !== 'object') return undefined;
+  const record = item as Record<string, unknown>;
+  const id = record.id;
+  if (typeof id === 'string' || typeof id === 'number') return id;
+  const key = record.key;
+  if (typeof key === 'string' || typeof key === 'number') return key;
+  return undefined;
 }
 
 /** djb2 string hash in base36 — cheap and deterministic across engines. */
