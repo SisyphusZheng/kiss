@@ -1,12 +1,12 @@
 // Register a minimal open-element custom element inline to prove
 // Fresh ↔ custom-element interop without bundling @openelement/ui.
 //
-// TODO(#852): the deno pack JSX transpilation gap is fixed (packed
+// TODO(#980): the deno pack JSX transpilation gap is fixed (packed
 // @openelement/ui .js output contains jsx() calls), so these stubs can be
 // replaced with `import "@openelement/ui"`; they remain to keep the example
 // dependency-light.
 //
-// TODO(#852): stub ignores variant/size/disabled attributes. The real
+// TODO(#980): stub ignores variant/size/disabled attributes. The real
 // open-button renders different styles per variant; the stub renders
 // a plain button regardless. Full component behavior after ui import.
 
@@ -18,9 +18,9 @@ function defineOpenButton() {
       this.attachShadow({ mode: 'open' });
     }
     connectedCallback() {
-      // TODO(#852): guard against re-render on disconnect/reconnect
+      // TODO(#980): guard against re-render on disconnect/reconnect
       if (this.shadowRoot!.childElementCount > 0) return;
-      // TODO(#852): minimal render; real component via @openelement/ui
+      // TODO(#980): minimal render; real component via @openelement/ui
       this.shadowRoot!.innerHTML = `
         <button part="control">
           <slot></slot>

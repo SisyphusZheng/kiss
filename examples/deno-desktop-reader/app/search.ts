@@ -69,7 +69,7 @@ export function search(
       const start = Math.max(0, pos - 40);
       const end = Math.min(lowerText.length, pos + query.length + 40);
       const snippet = text.substring(start, end).trim();
-      // TODO(#852): rough page estimate — 3000 chars per page
+      // TODO(#980): rough page estimate — 3000 chars per page
       const page = Math.floor(pos / 3000) + 1;
       results.push({
         bookId,
