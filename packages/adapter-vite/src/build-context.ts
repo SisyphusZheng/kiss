@@ -69,6 +69,12 @@ class Phase1Meta {
   /** v0.18.0: CEM-derived compatibility classifications from the classifier. */
   cemClassifications: CompatibilityClassification[] = [];
 
+  /**
+   * #979 (0.43.0-alpha.2): foreign custom-element tags discovered in
+   * page/island JSX (visibility-only admission entries; no behavior change).
+   */
+  foreignTags: string[] = [];
+
   /** SPA mode active (skips SSR entry generation + SSG rendering) */
   isSpa?: boolean;
 

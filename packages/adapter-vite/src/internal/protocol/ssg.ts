@@ -177,6 +177,14 @@ export interface SsrAdmissionPlan {
   reasons: Record<string, string>;
   decisions: SsrAdmissionDecision[];
   cemClassifications?: CompatibilityClassification[];
+  /**
+   * #979 (0.43.0-alpha.2): foreign custom-element tags discovered in page /
+   * island JSX that are neither local islands, package-manifest islands, nor
+   * openElement-authored elements. Visibility only — each tag also carries a
+   * source:'foreign' decision (renderPath 'client-only') and the SSR/behavior
+   * is unchanged (opaque passthrough).
+   */
+  foreignTags?: string[];
 }
 
 export interface RendererDecl {

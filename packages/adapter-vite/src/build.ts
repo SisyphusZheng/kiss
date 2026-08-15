@@ -208,6 +208,7 @@ export function buildPlugin(
           islandMeta: ctx.phase1.islandMeta,
           packageManifests: ctx.phase1.packageManifests,
           cemClassifications: ctx.phase1.cemClassifications,
+          foreignTags: ctx.phase1.foreignTags,
           dynamicRouteFailure: options.ssg?.dynamicRouteFailure,
           sitemapFailure: options.ssg?.sitemapFailure,
         }, ctx);

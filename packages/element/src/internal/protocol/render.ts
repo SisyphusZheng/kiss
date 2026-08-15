@@ -104,8 +104,17 @@ export interface DsdComponent {
 
 export interface SsrAdmissionDecision {
   tagName: string;
+  /**
+   * Module path of the island declaration. Empty for 'foreign' decisions:
+   * a foreign tag is consumed in JSX but declares no module the build owns.
+   */
   modulePath: string;
-  source: 'local' | 'package' | 'nested';
+  /**
+   * 'foreign' (#979, 0.43.0-alpha.2): a third-party WC tag discovered by the
+   * foreign-tag scanner in page/island JSX — recorded for visibility only;
+   * SSR still treats it as an opaque passthrough (renderPath 'client-only').
+   */
+  source: 'local' | 'package' | 'nested' | 'foreign';
   renderPath: 'ssr+client' | 'client-only' | 'rejected';
   reason: string;
 }

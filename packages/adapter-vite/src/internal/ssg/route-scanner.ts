@@ -106,8 +106,11 @@ const DEFINE_PAGE_RE = /\bdefinePage\s*\(/;
  * strings cannot span raw newlines), so an apostrophe in JSX text bails out
  * unmasked; template literals mask to the closing backtick while ${…}
  * expressions are scanned as code (nested templates/strings recurse).
+ *
+ * Exported for the foreign-tag scanner (#979): JSX usage extraction must apply
+ * the exact same masking so embedded samples never register as consumed tags.
  */
-function maskSourceStrings(source: string): string {
+export function maskSourceStrings(source: string): string {
   const out = source.split('');
   const len = source.length;
 

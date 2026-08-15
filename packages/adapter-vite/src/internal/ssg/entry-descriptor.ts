@@ -75,6 +75,12 @@ export function buildEntryDescriptor(
     packageManifests?: OpenElementPackageManifest[];
     /** CEM-derived compatibility classifications (from compatibility classifier) */
     cemClassifications?: CompatibilityClassification[];
+    /**
+     * #979 (0.43.0-alpha.2): foreign custom-element tags discovered by
+     * scanForeignTags() in page/island JSX. Recorded in the admission plan as
+     * explicit client-only entries (visibility only — no SSR behavior change).
+     */
+    foreignTags?: string[];
     /** @security Injected as raw HTML without sanitization */
     headExtras?: string;
     allowHeadExtrasScripts?: boolean;
@@ -265,7 +271,11 @@ export function buildEntryDescriptor(
 
   const islands: IslandDecl[] = [...localIslands, ...packageIslandDecls];
   const cemClassifications = options.cemClassifications || [];
-  const ssrAdmissionPlan = buildSsrAdmissionPlan(islands, cemClassifications);
+  const ssrAdmissionPlan = buildSsrAdmissionPlan(
+    islands,
+    cemClassifications,
+    options.foreignTags || [],
+  );
 
   // --- Document ---
   const document: DocumentConfig = {
@@ -305,6 +315,7 @@ export function buildEntryDescriptor(
 export function buildSsrAdmissionPlan(
   islands: IslandDecl[],
   cemClassifications: CompatibilityClassification[] = [],
+  foreignTags: string[] = [],
 ): SsrAdmissionPlan {
   const renderableTags: string[] = [];
   const mergedClientOnlyTags: string[] = [];
@@ -407,6 +418,34 @@ export function buildSsrAdmissionPlan(
     });
   }
 
+  // #979 (0.43.0-alpha.2): record foreign custom-element tags discovered in
+  // page/island JSX. Visibility only — the tags stay out of
+  // renderableTags/clientOnlyTags/rejectedTags so SSR rendering and hydration
+  // behavior are byte-identical to the pre-#979 plan; each tag gets an honest
+  // source:'foreign' client-only decision instead of being absent ('unscanned'
+  // in the alpha.1 corpus). A foreign tag that collides with an island
+  // declaration keeps the island decision.
+  const recordedForeignTags: string[] = [];
+  for (const tagName of foreignTags) {
+    if (seen.has(tagName)) continue;
+    seen.add(tagName);
+
+    const cemClassification = cemMap.get(tagName);
+    const reason = cemClassification
+      ? `CEM ${cemClassification.tier}: ${cemClassification.reason}`
+      : 'unscanned-foreign-tag';
+
+    recordedForeignTags.push(tagName);
+    reasons[tagName] = reason;
+    decisions.push({
+      tagName,
+      modulePath: '',
+      source: 'foreign',
+      renderPath: 'client-only',
+      reason,
+    });
+  }
+
   return {
     renderableTags,
     clientOnlyTags: mergedClientOnlyTags,
@@ -414,5 +453,6 @@ export function buildSsrAdmissionPlan(
     reasons,
     decisions,
     cemClassifications,
+    ...(recordedForeignTags.length > 0 ? { foreignTags: recordedForeignTags } : {}),
   };
 }

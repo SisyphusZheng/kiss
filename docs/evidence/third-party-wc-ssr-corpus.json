@@ -21,8 +21,8 @@
       "tag": "alpha3-lit-counter",
       "library": "lit",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -37,8 +37,8 @@
       "tag": "alpha3-lit-host",
       "library": "lit",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -51,8 +51,8 @@
       "tag": "sl-button",
       "library": "@shoelace-style/shoelace",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -67,8 +67,8 @@
       "tag": "sl-switch",
       "library": "@shoelace-style/shoelace",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -83,8 +83,8 @@
       "tag": "sl-dialog",
       "library": "@shoelace-style/shoelace",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -99,8 +99,8 @@
       "tag": "md-filled-button",
       "library": "@material/web",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -115,8 +115,8 @@
       "tag": "md-outlined-text-field",
       "library": "@material/web",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -129,8 +129,8 @@
       "tag": "md-switch",
       "library": "@material/web",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,
@@ -143,8 +143,8 @@
       "tag": "alpha3-native-badge",
       "library": "bare-native",
       "admission": {
-        "renderPath": "unscanned",
-        "reason": "tag never enters the island scan"
+        "renderPath": "client-only",
+        "reason": "unscanned-foreign-tag"
       },
       "ssrForm": {
         "tagPresent": true,

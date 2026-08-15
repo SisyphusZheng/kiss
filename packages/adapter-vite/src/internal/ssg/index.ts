@@ -77,6 +77,14 @@ export {
 
 export { classifyCemManifest, parseCem } from './cem-compat.ts';
 
+export {
+  collectDefinedTags,
+  collectUsedTags,
+  discoverForeignTags,
+  scanForeignTags,
+} from './foreign-tag-scanner.ts';
+export type { ScanForeignTagsOptions } from './foreign-tag-scanner.ts';
+
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-descriptor.ts';
 
 export { renderEntry } from './entry-orchestrator.ts';

@@ -80,6 +80,8 @@ interface BuildSSGOptions {
   packageManifests?: OpenElementPackageManifest[];
   /** CEM-derived compatibility classifications from Phase 1 auto-detection. */
   cemClassifications?: CompatibilityClassification[];
+  /** #979: foreign WC tags discovered in page/island JSX (Phase 1). */
+  foreignTags?: string[];
   /** @security Injected as raw HTML without sanitization */
   headExtras?: string;
   allowHeadExtrasScripts?: boolean;
@@ -126,6 +128,8 @@ interface SsgEntryDescriptorInputs {
   islandMeta: Record<string, Partial<IslandDecl>>;
   packageManifests: OpenElementPackageManifest[];
   cemClassifications: CompatibilityClassification[];
+  /** #979: foreign WC tags from the Phase 1 scan (defaults to none). */
+  foreignTags?: string[];
   /** @security Injected as raw HTML without sanitization */
   headExtras?: string;
   allowHeadExtrasScripts?: boolean;
@@ -163,6 +167,7 @@ export function buildSsgEntryDescriptor(
     islandMeta: inputs.islandMeta,
     packageManifests: inputs.packageManifests,
     cemClassifications: inputs.cemClassifications,
+    foreignTags: inputs.foreignTags || [],
     headExtras: inputs.headExtras,
     allowHeadExtrasScripts: inputs.allowHeadExtrasScripts,
     html: inputs.html,
@@ -251,6 +256,9 @@ async function buildSSG(
     islandMeta: ssgIslandMeta,
     packageManifests,
     cemClassifications: options.cemClassifications || ctx.phase1.cemClassifications || [],
+    // #979: foreign tags come from the same Phase 1 scan so the SSG plan
+    // matches the dev/SSR plan (single descriptor instantiation, alpha.17 B1).
+    foreignTags: options.foreignTags || ctx.phase1.foreignTags || [],
     headExtras: options.headExtras,
     allowHeadExtrasScripts: options.allowHeadExtrasScripts,
     html: options.html,

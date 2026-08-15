@@ -40,6 +40,7 @@ import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts'
 import {
   detectAndClassifyCemPackages,
   fileToTagName,
+  scanForeignTags,
   scanIslandMeta,
   scanIslands,
   scanPackageManifests,
@@ -179,6 +180,7 @@ export function createOpenPlugin(
       islandMeta: ctx.phase1.islandMeta,
       packageManifests,
       cemClassifications: ctx.phase1.cemClassifications,
+      foreignTags: ctx.phase1.foreignTags,
       headExtras: resolvedOptions.headExtras,
       allowHeadExtrasScripts,
       html: resolvedOptions.html,
@@ -326,6 +328,50 @@ export function createOpenPlugin(
             `CEM auto-detection failed (non-fatal): ${formatError(err)}`,
           );
           ctx.phase1.cemClassifications = [];
+        }
+
+        // #979 (0.43.0-alpha.2): foreign-tag discovery. Scan page route and
+        // island sources for custom-element tags that are neither local
+        // islands, package-manifest islands, nor openElement-authored
+        // elements, so the admission plan records them explicitly
+        // (client-only, visibility only) instead of never seeing them.
+        try {
+          const knownTags = new Set<string>(ctx.phase1.islandTagNames);
+          for (const pkg of ctx.phase1.packageManifests) {
+            for (const decl of pkg.declarations) knownTags.add(decl.tagName);
+          }
+          const pageRoutes = routes.filter((r) => r.type === 'page' && !r.special);
+          for (const route of pageRoutes) {
+            knownTags.add(fileToTagName(route.filePath));
+            if (route.tagName) knownTags.add(route.tagName);
+          }
+          const shellConfigs = [
+            resolvedOptions.appShell,
+            ...Object.values(resolvedOptions.layouts ?? {}),
+          ];
+          for (const shell of shellConfigs) {
+            if (shell && typeof shell === 'object' && shell.tagName) {
+              knownTags.add(shell.tagName);
+            }
+          }
+          ctx.phase1.foreignTags = await scanForeignTags({
+            routesDir: join(process.cwd(), resolvedOptions.routesDir || DEFAULT_ROUTES_DIR),
+            islandsDir: islandsRoot,
+            routeFiles: pageRoutes.map((r) => r.filePath),
+            islandFiles,
+            knownTags,
+          });
+          if (ctx.phase1.foreignTags.length > 0) {
+            log.info(
+              `Foreign WC tags consumed in JSX: ${ctx.phase1.foreignTags.join(', ')}`,
+            );
+          }
+        } catch (err) {
+          // Foreign-tag discovery is best-effort - never fail the build
+          log.debug(
+            `Foreign-tag scan failed (non-fatal): ${formatError(err)}`,
+          );
+          ctx.phase1.foreignTags = [];
         }
 
         // Single descriptor instantiation: the emitted entry code and the

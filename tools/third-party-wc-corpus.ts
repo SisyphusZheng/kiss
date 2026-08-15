@@ -10,7 +10,9 @@
  * - presence/absence of a DSD `<template shadowrootmode>` per component kind,
  * - the data-eid event-binding attribute (present for handler-bearing tags),
  * - the admission decision the build's ssrAdmissionPlan assigned
- *   ('unscanned' when the tag never enters the island scan).
+ *   ('unscanned' when the tag never enters the scan; #979/0.43.0-alpha.2
+ *   records consumed foreign tags as explicit source:'foreign' client-only
+ *   decisions, so corpus tags now classify as 'client-only').
  *
  * The point is pinning each library's observed behavior as a known form, not
  * asserting one specific form is 'correct'.
@@ -79,7 +81,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: ['Lit slot label'],
       dsdTemplate: false,
       dataEid: true,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -89,7 +91,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: [],
       dsdTemplate: false,
       dataEid: false,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -99,7 +101,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: ['Shoelace Button'],
       dsdTemplate: false,
       dataEid: true,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -109,7 +111,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: ['Shoelace Switch'],
       dsdTemplate: false,
       dataEid: true,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -119,7 +121,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: ['Dialog content'],
       dsdTemplate: false,
       dataEid: false,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -129,7 +131,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: ['Material Button'],
       dsdTemplate: false,
       dataEid: true,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -139,7 +141,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: [],
       dsdTemplate: false,
       dataEid: false,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -149,7 +151,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: [],
       dsdTemplate: false,
       dataEid: true,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
   {
@@ -159,7 +161,7 @@ const CORPUS: CorpusEntry[] = [
       lightDomChildren: ['Native badge light child'],
       dsdTemplate: false,
       dataEid: true,
-      admission: 'unscanned',
+      admission: 'client-only',
     },
   },
 ];
