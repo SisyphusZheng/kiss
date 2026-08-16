@@ -49,6 +49,7 @@ packages/*/*.tgz
 **/.dev.vars
 **/.dev.vars.*
 **/.wrangler/
+**/.wrangler-async.generated.json
 **/supabase/.temp/
 !.env.example
 !.env.sample
