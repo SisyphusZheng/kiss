@@ -18,7 +18,8 @@ application layer.
 - [x] /upload: no-JS multipart upload/list/delete in the private
       `notes-attachments` bucket; unpredictable object ids, MIME/size guards,
       60-second signed downloads, Storage RLS, and atomic Postgres quota
-      reservation/release reject anonymous, cross-user, and quota-race access
+      reservation/release reject anonymous, cross-user, and quota-race access;
+      objects are immutable after INSERT (no UPDATE/upsert policy)
 - [x] application-owned Cloudflare module entry composes Nitro `fetch` with
       Queue scan and Cron reconciliation handlers; unscanned objects stay
       hidden, duplicate verdicts are idempotent, and lifecycle events are audited

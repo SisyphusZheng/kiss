@@ -210,6 +210,9 @@ jobs:
 
           # 4b. Exercise database RLS directly with user B's JWT: attempts to
           # update/delete A's known row must affect zero rows.
+          token_a=$(curl -sf -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$A_EMAIL\",\"password\":\"$A_PASSWORD\"}" | jq -er '.access_token')
           token_b=$(curl -sf -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
             -H "apikey: $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' \
             -d "{\"email\":\"$B_EMAIL\",\"password\":\"$B_PASSWORD\"}" | jq -er '.access_token')
@@ -230,20 +233,91 @@ jobs:
           [ "$(echo "$anonymous_rows" | jq 'length')" = "0" ]
           record anonymous-direct-rest-denied pass
 
-          # 4d. Storage action is owner-scoped and collision-safe.
+          # 4d. The application upload is insert-only and enters the scan
+          # lifecycle. It must not be downloadable before a clean verdict.
           printf 'smoke attachment' > .smoke/attachment.txt
           code=$(curl -s -o /dev/null -w '%{http_code}' -b .smoke/jar-a \
             -X POST "$BASE/upload?/upload" -F 'file=@.smoke/attachment.txt;type=text/plain')
           [ "$code" = "303" ]
-          curl -s -b .smoke/jar-a "$BASE/upload" | grep -q 'attachment.txt'
-          duplicate=$(curl -s -o .smoke/duplicate.html -w '%{http_code}' -b .smoke/jar-a \
-            -X POST "$BASE/upload?/upload" -F 'file=@.smoke/attachment.txt;type=text/plain')
-          [ "$duplicate" = "422" ]
           if curl -s -b .smoke/jar-b "$BASE/upload" | grep -q 'attachment.txt'; then
             record user-b-storage-isolated fail
             exit 1
           fi
-          record storage-owner-and-collision-boundary pass
+          if curl -s -b .smoke/jar-a "$BASE/upload" | grep -q 'attachment.txt'; then
+            record pending-scan-download-denied fail
+            exit 1
+          fi
+          record storage-app-upload-pending-scan pass
+
+          # 4e. Exercise each storage.objects policy operation through the
+          # supported Storage API. The product surface is exactly
+          # SELECT/INSERT/DELETE; UPDATE/upsert is deliberately absent.
+          STORAGE_POLICY_KEY="$A_ID/policy-$RUN_ID.txt"
+          echo "STORAGE_POLICY_KEY=$STORAGE_POLICY_KEY" >> .smoke/smoke.env
+          anonymous_insert=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H 'Content-Type: text/plain' \
+            --data-binary 'anonymous write')
+          [[ ! "$anonymous_insert" =~ ^2 ]]
+          owner_insert=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a" \
+            -H 'Content-Type: text/plain' -H 'x-upsert: false' \
+            --data-binary 'immutable owner object')
+          [[ "$owner_insert" =~ ^2 ]]
+          owner_select=$(curl -s -o .smoke/storage-owner.txt -w '%{http_code}' \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
+          [[ "$owner_select" =~ ^2 ]]
+          grep -Fxq 'immutable owner object' .smoke/storage-owner.txt
+          cross_select=$(curl -s -o /dev/null -w '%{http_code}' \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_b")
+          [[ ! "$cross_select" =~ ^2 ]]
+          owner_update=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a" \
+            -H 'Content-Type: text/plain' -H 'x-upsert: true' \
+            --data-binary 'forbidden overwrite')
+          [[ ! "$owner_update" =~ ^2 ]]
+          anonymous_update=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H 'Content-Type: text/plain' \
+            -H 'x-upsert: true' --data-binary 'anonymous overwrite')
+          [[ ! "$anonymous_update" =~ ^2 ]]
+          cross_update=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_b" \
+            -H 'Content-Type: text/plain' -H 'x-upsert: true' \
+            --data-binary 'cross-user overwrite')
+          [[ ! "$cross_update" =~ ^2 ]]
+          after_updates=$(curl -s -o .smoke/storage-after-updates.txt -w '%{http_code}' \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
+          [[ "$after_updates" =~ ^2 ]]
+          grep -Fxq 'immutable owner object' .smoke/storage-after-updates.txt
+          cross_delete=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_b" \
+            -H 'Content-Type: application/json' \
+            -d "{\"prefixes\":[\"$STORAGE_POLICY_KEY\"]}")
+          [[ ! "$cross_delete" =~ ^5 ]]
+          still_present=$(curl -s -o .smoke/storage-after-cross-delete.txt -w '%{http_code}' \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
+          [[ "$still_present" =~ ^2 ]]
+          grep -Fxq 'immutable owner object' .smoke/storage-after-cross-delete.txt
+          owner_delete=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a" \
+            -H 'Content-Type: application/json' \
+            -d "{\"prefixes\":[\"$STORAGE_POLICY_KEY\"]}")
+          [[ "$owner_delete" =~ ^2 ]]
+          after_delete=$(curl -s -o /dev/null -w '%{http_code}' \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
+          [[ ! "$after_delete" =~ ^2 ]]
+          record storage-policy-select-insert-update-delete pass
 
           # 5. Logout clears the session: the next /notes read is denied again.
           # The action entry parses a form body unconditionally, so the POST
@@ -287,6 +361,24 @@ jobs:
           fi
           source .smoke/smoke.env
           status=0
+          keys=$(curl -sf \
+            "$SUPABASE_URL/rest/v1/attachment_reservations?select=object_key&user_id=in.($A_ID,$B_ID)" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            | jq '[.[].object_key]' || echo '[]')
+          if [ -n "${STORAGE_POLICY_KEY:-}" ]; then
+            keys=$(echo "$keys" | jq --arg key "$STORAGE_POLICY_KEY" '. + [$key] | unique')
+          fi
+          if [ "$(echo "$keys" | jq 'length')" -gt 0 ]; then
+            storage_code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+              "$SUPABASE_URL/storage/v1/object/notes-attachments" \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H 'Content-Type: application/json' \
+              -d "$(jq -cn --argjson prefixes "$keys" '{prefixes:$prefixes}')")
+            echo "DELETE smoke storage objects -> $storage_code"
+            [[ "$storage_code" =~ ^2 ]] || status=1
+          fi
           for id in "${A_ID:-}" "${B_ID:-}"; do
             [ -n "$id" ] || continue
             code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \

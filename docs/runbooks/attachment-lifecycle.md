@@ -35,6 +35,9 @@ only the pre-migration deployment path.
 ## State and delivery contract
 
 1. The request path atomically reserves quota and uploads an unpredictable key.
+   Attachment objects are insert-only: authenticated owners have SELECT,
+   INSERT, and DELETE policies, but no UPDATE policy. Replacement must create a
+   new key and lifecycle record; never enable `x-upsert` for this bucket.
 2. Finalization changes `reserved` to `pending_scan`; only `clean` rows are
    listed or receive a signed URL.
 3. The request attempts to enqueue `attachment.scan`. Failure does not expose
