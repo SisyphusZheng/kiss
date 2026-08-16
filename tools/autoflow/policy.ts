@@ -145,6 +145,17 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    name: 'fullstack:migrations-check',
+    command: ['deno', 'task', 'fullstack:migrations-check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^examples\/supabase-cloudflare-starter\/supabase\//,
+      /^\.github\/workflows\/supabase-project-smoke\.yml$/,
+      /^tools\/check-supabase-migrations(?:\.test)?\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-strategy',
     command: ['deno', 'task', 'docs:check-strategy'],
     tiers: ['ci', 'release'],

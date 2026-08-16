@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "migrations": [
+    {
+      "file": "20260816000000_notes.sql",
+      "sha256": "91fa553610b7e8dfbe6737a7db5726d8c0b582bfeb2b0f87267c1b4f0ee0fdbb"
+    },
+    {
+      "file": "20260816000001_notes_attachments_storage.sql",
+      "sha256": "311f791e51d13f5f584539701cc3c3226b2fa4f2876e993ae88d8495e3f0c706"
+    },
+    {
+      "file": "20260816000002_notes_realtime.sql",
+      "sha256": "45f1cc65896942347f313af9ea6e3b7e1a74444596a72d26c8ea5059d1904e82"
+    },
+    {
+      "file": "20260817000000_admin_audit.sql",
+      "sha256": "ced3d14b1d6ea406acff11bcfecfaebd7be0a0c577ce7d72ea2e91f1bd57e065"
+    }
+  ]
+}
