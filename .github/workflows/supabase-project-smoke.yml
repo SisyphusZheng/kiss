@@ -36,6 +36,9 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/setup-deno-workspace
 
+      - name: Install Chromium for the real browser journey
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
       - name: Create two throwaway test users (Auth admin API)
         run: |
           set -euo pipefail
@@ -198,6 +201,18 @@ jobs:
           after=$(curl -s -b .smoke/jar-a "$BASE/notes")
           echo "$after" | grep -q "Sign-in is required"
           record logout-clears-session pass
+
+      - name: Run the Chromium auth, write, Realtime, recovery, and logout journey
+        run: |
+          set -euo pipefail
+          source .smoke/smoke.env
+          SMOKE_BASE_URL=http://127.0.0.1:4173 \
+          SMOKE_USER_EMAIL="$A_EMAIL" \
+          SMOKE_USER_PASSWORD="$A_PASSWORD" \
+          SMOKE_USER_ID="$A_ID" \
+          SMOKE_RUN_ID="$RUN_ID" \
+          SMOKE_RESULTS_FILE="$GITHUB_WORKSPACE/.smoke/results.jsonl" \
+            deno run -A tools/smoke-supabase-browser.ts
 
       - name: Delete the throwaway test users (Auth admin API)
         # Cleanup guarantee: runs even when the matrix above fails, so the
