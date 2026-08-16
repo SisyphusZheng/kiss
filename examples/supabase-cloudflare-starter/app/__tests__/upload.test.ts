@@ -32,7 +32,7 @@ const USER = { id: 'user-123', email: 'tester@example.com' };
 
 function stubClient(overrides: {
   user?: { id: string; email?: string } | null;
-  listData?: { name: string }[] | null;
+  listData?: { object_key: string; display_name: string }[] | null;
   listError?: { message: string } | null;
   uploadError?: { message: string } | null;
   removeError?: { message: string } | null;
@@ -58,7 +58,6 @@ function stubClient(overrides: {
       from: (bucket: string) => {
         assertEquals(bucket, BUCKET);
         return {
-          list: () => Promise.resolve({ data: listData, error: listError }),
           upload: (path: string, file: File) => {
             onUpload?.(path, file);
             return Promise.resolve({ error: uploadError });
@@ -77,14 +76,17 @@ function stubClient(overrides: {
     },
     rpc: (name: string, args: Record<string, unknown>) => {
       onRpc?.(name, args);
-      return Promise.resolve({ error: rpcErrors[name] ?? null });
+      return Promise.resolve({
+        data: name === 'list_downloadable_attachments' ? listData : undefined,
+        error: name === 'list_downloadable_attachments' ? listError : rpcErrors[name] ?? null,
+      });
     },
   });
 }
 
 const ctx = () => ({
   request: new Request('http://localhost/upload'),
-  env: {},
+  env: {} as Record<string, unknown>,
   responseHeaders: new Headers(),
 });
 
@@ -112,15 +114,15 @@ Deno.test('loader renders the denied branch for anonymous requests', async () =>
 
 Deno.test('loader lists the owner folder for signed-in requests', async () => {
   const loader = createUploadLoader(
-    stubClient({ listData: [{ name: 'a.txt' }] }),
+    stubClient({ listData: [{ object_key: 'user-123/uuid-a.txt', display_name: 'a.txt' }] }),
   );
   assertEquals(await loader(ctx()), {
     denied: false,
     email: USER.email,
     files: [{
       name: 'a.txt',
-      key: 'user-123/a.txt',
-      downloadUrl: 'https://storage.test/user-123/a.txt?expires=60',
+      key: 'user-123/uuid-a.txt',
+      downloadUrl: 'https://storage.test/user-123/uuid-a.txt?expires=60',
     }],
   });
 });
@@ -177,6 +179,24 @@ Deno.test('action uploads under the owner key and redirects (PRG)', async () => 
   assert(isOpenElementRedirect(error));
   assert(uploadedPath.startsWith('user-123/'));
   assert(uploadedPath.endsWith('-hello.txt'));
+});
+
+Deno.test('successful upload enqueues the pending scan message', async () => {
+  const queued: unknown[] = [];
+  const action = createUploadAction(stubClient({}));
+  const formData = new FormData();
+  formData.set('file', new File(['hello'], 'hello.txt', { type: 'text/plain' }));
+  const requestContext = ctx();
+  requestContext.env.ATTACHMENT_SCAN_QUEUE = {
+    send: (message: unknown) => {
+      queued.push(message);
+      return Promise.resolve();
+    },
+  };
+  const error = await assertRejects(() => action({ ...requestContext, formData }));
+  assert(isOpenElementRedirect(error));
+  assertEquals(queued.length, 1);
+  assertEquals((queued[0] as { type: string }).type, 'attachment.scan');
 });
 
 Deno.test('action surfaces storage errors as 422', async () => {

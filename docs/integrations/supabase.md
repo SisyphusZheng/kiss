@@ -394,6 +394,16 @@ export function createUploadAction(
       await supabase.rpc('release_attachment', { reservation_id: reservationId });
       return fail(500, { error: 'upload could not be finalized' });
     }
+    const queue = ctx.env.ATTACHMENT_SCAN_QUEUE as
+      | { send(message: Record<string, string>): Promise<void> }
+      | undefined;
+    if (queue) {
+      try {
+        await queue.send({ type: 'attachment.scan', reservationId, objectKey: key });
+      } catch {
+        // The row stays pending_scan; scheduled reconciliation re-enqueues it.
+      }
+    }
     throw redirect('/upload');
   };
 }

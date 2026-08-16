@@ -49,7 +49,7 @@ interface UploadActionData {
 
 interface RequestContext {
   request: Request;
-  env: Record<string, string>;
+  env: Record<string, unknown>;
   responseHeaders: Headers;
 }
 
@@ -62,12 +62,6 @@ export interface UploadSupabaseClient {
   };
   storage: {
     from(bucket: string): {
-      list(
-        path: string,
-        options?: { limit?: number },
-      ): Promise<
-        { data: { name: string }[] | null; error: { message: string } | null }
-      >;
       upload(
         path: string,
         file: File,
@@ -83,11 +77,11 @@ export interface UploadSupabaseClient {
   rpc(
     name: string,
     args: Record<string, unknown>,
-  ): PromiseLike<{ error: { message: string } | null }>;
+  ): PromiseLike<{ data?: unknown; error: { message: string } | null }>;
 }
 
 export type UploadClientFactory = (
-  env: Record<string, string>,
+  env: Record<string, unknown>,
   request: Request,
   responseHeaders: Headers,
 ) => UploadSupabaseClient;
@@ -114,18 +108,16 @@ export function createUploadLoader(
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { denied: true };
-    const { data, error } = await supabase.storage.from(BUCKET).list(user.id, {
-      limit: 100,
-    });
+    const { data, error } = await supabase.rpc('list_downloadable_attachments', {});
     if (error) {
       return { denied: false, email: user.email, error: error.message };
     }
-    const files = await Promise.all((data ?? []).map(async (file) => {
-      const key = `${user.id}/${file.name}`;
-      const signed = await supabase.storage.from(BUCKET).createSignedUrl(key, 60);
+    const rows = (data ?? []) as { object_key: string; display_name: string }[];
+    const files = await Promise.all(rows.map(async (file) => {
+      const signed = await supabase.storage.from(BUCKET).createSignedUrl(file.object_key, 60);
       return {
-        key,
-        name: file.name.replace(/^[0-9a-f-]{36}-/, ''),
+        key: file.object_key,
+        name: file.display_name,
         downloadUrl: signed.error ? '' : signed.data?.signedUrl ?? '',
       };
     }));
@@ -184,6 +176,16 @@ export function createUploadAction(
       await supabase.storage.from(BUCKET).remove([key]);
       await supabase.rpc('release_attachment', { reservation_id: reservationId });
       return fail(500, { error: 'upload could not be finalized' });
+    }
+    const queue = ctx.env.ATTACHMENT_SCAN_QUEUE as
+      | { send(message: Record<string, string>): Promise<void> }
+      | undefined;
+    if (queue) {
+      try {
+        await queue.send({ type: 'attachment.scan', reservationId, objectKey: key });
+      } catch {
+        // The row stays pending_scan; scheduled reconciliation re-enqueues it.
+      }
     }
     throw redirect('/upload');
   };

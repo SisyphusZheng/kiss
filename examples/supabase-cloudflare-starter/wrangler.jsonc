@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "openelement-ref-starter",
-  "main": ".output-workers/server/index.mjs",
+  "main": "cloudflare-entry.ts",
   "compatibility_date": "2026-08-16",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".output-workers/public" },
