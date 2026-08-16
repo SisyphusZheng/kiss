@@ -11,6 +11,7 @@
  */
 import { definePage, redirect, useLoaderData } from '@openelement/app';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
+import '../islands/notes-live.tsx';
 
 export const tagName = 'page-notes';
 
@@ -25,6 +26,11 @@ interface NotesData {
   email?: string;
   notes?: NoteRow[];
   error?: string;
+  /** Public realtime wiring for the notes-live island (anon key is public
+   * by design; events are hard-filtered to the owner's user_id). The
+   * access token is the user's own short-lived JWT — Realtime scopes
+   * postgres_changes by RLS, so the anon role alone would receive nothing. */
+  live?: { url: string; anonKey: string; userId: string; accessToken: string };
 }
 
 export async function loader(ctx: {
@@ -32,7 +38,11 @@ export async function loader(ctx: {
   env: Record<string, string>;
   responseHeaders: Headers;
 }): Promise<NotesData> {
-  const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
+  const supabase = createServerSupabase(
+    ctx.env,
+    ctx.request,
+    ctx.responseHeaders,
+  );
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { denied: true };
   const { data: notes, error } = await supabase
@@ -40,7 +50,18 @@ export async function loader(ctx: {
     .select('id, body, created_at')
     .order('created_at', { ascending: false });
   if (error) return { denied: false, email: user.email, error: error.message };
-  return { denied: false, email: user.email, notes: notes ?? [] };
+  const { data: { session } } = await supabase.auth.getSession();
+  return {
+    denied: false,
+    email: user.email,
+    notes: notes ?? [],
+    live: {
+      url: ctx.env.SUPABASE_URL ?? '',
+      anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
+      userId: user.id,
+      accessToken: session?.access_token ?? '',
+    },
+  };
 }
 
 export const actions = {
@@ -49,7 +70,11 @@ export const actions = {
     request: Request;
     responseHeaders: Headers;
   }): Promise<never> {
-    const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
+    const supabase = createServerSupabase(
+      ctx.env,
+      ctx.request,
+      ctx.responseHeaders,
+    );
     await supabase.auth.signOut();
     throw redirect('/login');
   },
@@ -65,7 +90,9 @@ const NotesPage = definePage<NotesData>({
         <main>
           <h1>Notes</h1>
           <section id='denied'>
-            <p>Sign-in is required to read notes. RLS rejects anonymous access server-side.</p>
+            <p>
+              Sign-in is required to read notes. RLS rejects anonymous access server-side.
+            </p>
             <p>
               <a href='/login'>Go to sign-in</a>
             </p>
@@ -81,9 +108,23 @@ const NotesPage = definePage<NotesData>({
         <ul id='notes'>
           {(data.notes ?? []).map((note) => <li key={note.id}>{note.body}</li>)}
         </ul>
+        {data.live
+          ? (
+            <notes-live
+              data-url={data.live.url}
+              data-key={data.live.anonKey}
+              data-user-id={data.live.userId}
+              data-access-token={data.live.accessToken}
+            >
+            </notes-live>
+          )
+          : null}
         <form method='post' action='/notes?/logout'>
           <button type='submit'>Sign out</button>
         </form>
+        <p>
+          <a href='/upload'>Upload a file</a>
+        </p>
       </main>
     );
   },
