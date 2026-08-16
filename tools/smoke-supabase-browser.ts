@@ -18,6 +18,7 @@ const email = required('SMOKE_USER_EMAIL');
 const password = required('SMOKE_USER_PASSWORD');
 const userId = required('SMOKE_USER_ID');
 const supabaseUrl = required('SUPABASE_URL');
+const anonKey = required('SUPABASE_ANON_KEY');
 const serviceRoleKey = required('SUPABASE_SERVICE_ROLE_KEY');
 const runId = required('SMOKE_RUN_ID');
 const resultsFile = required('SMOKE_RESULTS_FILE');
@@ -82,10 +83,18 @@ try {
     body: JSON.stringify({ user_id: userId, title: 'realtime smoke', body: realtimeMarker }),
   });
   if (!inserted.ok) throw new Error(`Realtime seed failed with HTTP ${inserted.status}`);
-  await live.locator('#live-events').getByText(realtimeMarker, { exact: true }).waitFor({
-    state: 'visible',
-    timeout: 20_000,
-  });
+  try {
+    await live.locator('#live-events').getByText(realtimeMarker, { exact: true }).waitFor({
+      state: 'visible',
+      timeout: 20_000,
+    });
+  } catch (error) {
+    throw new Error(
+      'Realtime subscribed but the owner INSERT was not delivered; verify the committed ' +
+        'supabase_realtime publication migration is applied to the target project.',
+      { cause: error },
+    );
+  }
   await record('browser-realtime-insert-delivered');
 
   await context.setOffline(true);
@@ -99,13 +108,37 @@ try {
   });
   await record('browser-realtime-offline-online-recovery');
 
-  await Promise.all([
-    page.waitForURL(`${baseUrl}/login`),
-    page.getByRole('button', { name: 'Sign out' }).click(),
-  ]);
+  await page.goto(`${baseUrl}/admin`);
+  await page.getByRole('heading', { name: 'Admin', exact: true }).waitFor({ state: 'visible' });
+  await record('browser-app-metadata-admin-guard');
+
+  await page.goto(`${baseUrl}/notes`);
+  const accessToken = await page.locator('notes-live').getAttribute('data-access-token');
+  if (!accessToken) throw new Error('Authenticated page did not expose a Realtime access token');
+  const demoted = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+    method: 'PUT',
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ app_metadata: { role: 'member' } }),
+  });
+  if (!demoted.ok) throw new Error(`Role demotion failed with HTTP ${demoted.status}`);
+  const deniedAdmin = await page.goto(`${baseUrl}/admin`);
+  if (deniedAdmin?.status() !== 404) {
+    throw new Error(`Demoted admin request returned HTTP ${deniedAdmin?.status() ?? 'none'}`);
+  }
+  await record('browser-role-change-invalidates-server-guard');
+
+  const revoked = await fetch(`${supabaseUrl}/auth/v1/logout?scope=global`, {
+    method: 'POST',
+    headers: { apikey: anonKey, authorization: `Bearer ${accessToken}` },
+  });
+  if (!revoked.ok) throw new Error(`Global session revocation failed with HTTP ${revoked.status}`);
   await page.goto(`${baseUrl}/notes`);
   await page.getByText('Sign-in is required').waitFor({ state: 'visible' });
-  await record('browser-logout-clears-session');
+  await record('browser-global-revocation-denies-session');
 
   if (pageErrors.length > 0) {
     throw new Error(`Browser page errors: ${pageErrors.join('; ')}`);

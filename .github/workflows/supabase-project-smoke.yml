@@ -206,6 +206,11 @@ jobs:
         run: |
           set -euo pipefail
           source .smoke/smoke.env
+          curl -sf -X PUT "$SUPABASE_URL/auth/v1/admin/users/$A_ID" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"app_metadata":{"role":"admin"}}' > /dev/null
           SMOKE_BASE_URL=http://127.0.0.1:4173 \
           SMOKE_USER_EMAIL="$A_EMAIL" \
           SMOKE_USER_PASSWORD="$A_PASSWORD" \
