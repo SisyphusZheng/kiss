@@ -15,8 +15,22 @@ only `fetch` implementation. The entry composes application-owned `queue` and
 - Service binding `ATTACHMENT_SCANNER` whose `POST /scan` response is exactly
   `{ "verdict": "clean" }` or `{ "verdict": "quarantined" }`.
 - A Cron Trigger for reconciliation. Five-minute cadence is the reference
-  setting; provider resources are intentionally not named in committed config
-  until provisioned by the deployment environment.
+  setting.
+
+The safe base `wrangler.jsonc` intentionally contains no live Queue or Cron
+resources while database migrations are pending. Once `migration_mode=apply`
+is green, dispatch `Fullstack deploy smoke (real providers)` with
+`async_mode=provision`. That mode:
+
+1. renders `.wrangler-async.generated.json` from the single base config;
+2. idempotently creates `openelement-attachment-scan` and its `-dlq`;
+3. stores `SUPABASE_SERVICE_ROLE_KEY` as an encrypted Worker secret;
+4. deploys with a three-retry, 30-second-delay consumer, DLQ, and five-minute Cron;
+5. records the selected mode in the redacted Tier 3 artifact.
+
+Do not commit a second hand-maintained Wrangler config. Do not run base mode
+after async provisioning: base mode intentionally removes async bindings and is
+only the pre-migration deployment path.
 
 ## State and delivery contract
 

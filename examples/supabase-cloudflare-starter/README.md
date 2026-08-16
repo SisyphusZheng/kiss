@@ -22,6 +22,8 @@ application layer.
 - [x] application-owned Cloudflare module entry composes Nitro `fetch` with
       Queue scan and Cron reconciliation handlers; unscanned objects stay
       hidden, duplicate verdicts are idempotent, and lifecycle events are audited
+- [x] Tier 3 deployment can render a generated bounded Queue/DLQ/Cron overlay
+      from the one safe Wrangler source; no duplicate provider config is maintained
 - [x] notes-live island: Supabase Realtime INSERT subscription in the browser,
       RLS-scoped via the user's short-lived access token + a hard `user_id`
       filter, with bounded/deduplicated state, reconnect recovery, token refresh,

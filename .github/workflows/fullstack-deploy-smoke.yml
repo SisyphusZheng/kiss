@@ -6,6 +6,24 @@ name: Fullstack deploy smoke (real providers)
 
 on:
   workflow_dispatch:
+    inputs:
+      async_mode:
+        description: 'Keep the safe base deployment, or provision Queue/DLQ/Cron after Supabase migrations are current'
+        required: true
+        default: base
+        type: choice
+        options:
+          - base
+          - provision
+      scanner_service:
+        description: 'Existing private scanner Worker name used by the provision mode service binding'
+        required: true
+        default: openelement-attachment-scanner
+        type: string
+
+concurrency:
+  group: fullstack-real-cloudflare
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -26,6 +44,43 @@ jobs:
           deno task build
           deno task nitro:build
 
+      - name: Render and provision bounded async resources
+        if: inputs.async_mode == 'provision'
+        working-directory: examples/supabase-cloudflare-starter
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SCANNER_SERVICE: ${{ inputs.scanner_service }}
+        run: |
+          set -euo pipefail
+          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] || { echo "SUPABASE_SERVICE_ROLE_KEY is not configured" >&2; exit 1; }
+          [ -n "$SCANNER_SERVICE" ] || { echo "scanner_service is required" >&2; exit 1; }
+          deno run --allow-read --allow-write ../../tools/render-cloudflare-async-config.ts \
+            wrangler.jsonc .wrangler-async.generated.json "$SCANNER_SERVICE"
+          queues=$(deno run -A npm:wrangler@4.123.0 queues list --json)
+          for queue in openelement-attachment-scan openelement-attachment-scan-dlq; do
+            if echo "$queues" | jq -e --arg name "$queue" '.[] | select(.queue_name == $name)' >/dev/null; then
+              echo "$queue already exists"
+            else
+              deno run -A npm:wrangler@4.123.0 queues create "$queue"
+            fi
+          done
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | \
+            deno run -A npm:wrangler@4.123.0 secret put SUPABASE_SERVICE_ROLE_KEY \
+              --config .wrangler-async.generated.json
+
+      - name: Select deployment config
+        working-directory: examples/supabase-cloudflare-starter
+        env:
+          ASYNC_MODE: ${{ inputs.async_mode }}
+        run: |
+          if [ "$ASYNC_MODE" = "provision" ]; then
+            echo "WRANGLER_CONFIG=.wrangler-async.generated.json" >> "$GITHUB_ENV"
+          else
+            echo "WRANGLER_CONFIG=wrangler.jsonc" >> "$GITHUB_ENV"
+          fi
+
       - name: Deploy to Cloudflare Workers
         working-directory: examples/supabase-cloudflare-starter
         env:
@@ -34,7 +89,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: >-
-          deno run -A npm:wrangler@latest deploy --config wrangler.jsonc
+          deno run -A npm:wrangler@4.123.0 deploy --config "$WRANGLER_CONFIG"
           --var "SUPABASE_URL:$SUPABASE_URL" "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY"
 
       - name: Smoke the live worker
@@ -53,6 +108,18 @@ jobs:
           csrf=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$WORKER_URL/login" -H 'Origin: https://evil.example.com' -H 'Content-Type: application/x-www-form-urlencoded' -d 'x=1')
           echo "cross-origin POST /login -> $csrf"; [ "$csrf" = "403" ]
 
+      - name: Verify provisioned Queue and DLQ
+        if: inputs.async_mode == 'provision'
+        working-directory: examples/supabase-cloudflare-starter
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan >/dev/null
+          deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
+          echo "Queue + DLQ provider lookup -> OK"
+
       - name: Write the smoke report
         if: always()
         env:
@@ -62,6 +129,8 @@ jobs:
             echo "{"
             echo "  \"version\": \"$(git rev-parse --short HEAD)\","
             echo "  \"workerUrl\": \"$WORKER_URL\","
+            echo "  \"asyncMode\": \"${{ inputs.async_mode }}\","
+            echo "  \"asyncResourcesVerified\": ${{ inputs.async_mode == 'provision' }},"
             echo "  \"jobStatus\": \"${{ job.status }}\","
             echo "  \"note\": \"tier-3 deploy smoke; redacted — no credentials in this report\""
             echo "}"

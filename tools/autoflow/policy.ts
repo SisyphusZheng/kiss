@@ -156,6 +156,17 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    name: 'fullstack:cloudflare-config-check',
+    command: ['deno', 'task', 'fullstack:cloudflare-config-check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^examples\/supabase-cloudflare-starter\/(?:wrangler\.jsonc|cloudflare-entry\.ts|lib\/cloudflare-)/,
+      /^\.github\/workflows\/fullstack-deploy-smoke\.yml$/,
+      /^tools\/render-cloudflare-async-config(?:\.test)?\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-strategy',
     command: ['deno', 'task', 'docs:check-strategy'],
     tiers: ['ci', 'release'],
