@@ -1,0 +1,198 @@
+name: Supabase project smoke (real project)
+
+# #984 tier 2: qualifies the Supabase × Cloudflare reference starter against
+# the REAL Supabase project (maintainer-provided repo secrets). Per the
+# maintainer realignment, the real project is the primary fullstack evidence:
+# it proves real Auth admin/API behavior, session cookies, and RLS scoping —
+# things the local emulator can only approximate. The emulator path is
+# therefore the PR-safe FALLBACK, not the primary evidence: PRs are covered
+# by tier-1 (tools/check-fullstack-boundary.ts, `deno task
+# fullstack:boundary-check`, wired into the autoflow ci/release tiers), which
+# gates the built output without any credentials.
+#
+# Manual + weekly only: never runs on push/PR. Requires secrets SUPABASE_URL,
+# SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 06:00 UTC
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  project-smoke:
+    name: Qualify the reference starter against the real Supabase project
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: ./.github/actions/setup-deno-workspace
+
+      - name: Create two throwaway test users (Auth admin API)
+        run: |
+          set -euo pipefail
+          mkdir -p .smoke
+          RUN_ID="${{ github.run_id }}-${{ github.run_attempt }}"
+          MARKER="oe-smoke-note-${RUN_ID}"
+          {
+            echo "RUN_ID=$RUN_ID"
+            echo "MARKER=$MARKER"
+          } > .smoke/smoke.env
+          for u in a b; do
+            email="oe-smoke-${RUN_ID}-${u}@example.com"
+            password="oe-Smoke1!-${RUN_ID}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
+            response=$(curl -sf -X POST "$SUPABASE_URL/auth/v1/admin/users" \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"email\":\"$email\",\"password\":\"$password\",\"email_confirm\":true}")
+            id=$(echo "$response" | jq -r '.id')
+            [ "$id" != "null" ] && [ -n "$id" ]
+            U=$(echo "$u" | tr '[:lower:]' '[:upper:]')
+            {
+              echo "${U}_ID=$id"
+              echo "${U}_EMAIL=$email"
+              echo "${U}_PASSWORD=$password"
+            } >> .smoke/smoke.env
+            echo "created throwaway user $u (id redacted from logs)"
+          done
+
+      - name: Seed one private note for user A (service role, bypasses RLS by design)
+        run: |
+          set -euo pipefail
+          source .smoke/smoke.env
+          curl -sf -o /dev/null -X POST "$SUPABASE_URL/rest/v1/notes" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"user_id\":\"$A_ID\",\"title\":\"smoke\",\"body\":\"$MARKER\"}"
+          echo "seeded note with run-unique marker"
+
+      - name: Build and start the reference starter
+        working-directory: examples/supabase-cloudflare-starter
+        run: |
+          set -euo pipefail
+          deno task build
+          OPEN_ELEMENT_PORT=4173 nohup deno task start > "$GITHUB_WORKSPACE/.smoke/server.log" 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:4173/; then break; fi
+            sleep 1
+          done
+          curl -sf -o /dev/null http://127.0.0.1:4173/
+          echo "reference starter is serving on :4173"
+
+      - name: Curl the auth/RLS matrix against the running starter
+        run: |
+          set -euo pipefail
+          source .smoke/smoke.env
+          BASE=http://127.0.0.1:4173
+          record() { echo "{\"check\":\"$1\",\"result\":\"$2\"}" >> .smoke/results.jsonl; }
+
+          # 1. Anonymous /notes renders the denied branch (RLS floor underneath).
+          anon=$(curl -s "$BASE/notes")
+          echo "$anon" | grep -q "Sign-in is required"
+          record anonymous-notes-denied pass
+          # The denied page must never be publicly cacheable.
+          curl -s -D - -o /dev/null "$BASE/notes" \
+            | grep -i '^cache-control:' | grep -qiE 'no-store|private'
+          record anonymous-notes-not-publicly-cacheable pass
+
+          # 2. Login user A: PRG 303 + session cookie.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -c .smoke/jar-a \
+            -X POST "$BASE/login" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode "email=$A_EMAIL" \
+            --data-urlencode "password=$A_PASSWORD")
+          [ "$code" = "303" ]
+          grep -q "auth-token" .smoke/jar-a
+          record login-user-a-303-cookie pass
+
+          # 3. User A sees their own seeded row, signed in as themselves.
+          page_a=$(curl -s -b .smoke/jar-a "$BASE/notes")
+          echo "$page_a" | grep -q "$MARKER"
+          echo "$page_a" | grep -q "signed-in:$A_EMAIL"
+          record user-a-sees-own-row pass
+
+          # 4. User B sees none of A's rows (cross-user RLS).
+          code=$(curl -s -o /dev/null -w '%{http_code}' -c .smoke/jar-b \
+            -X POST "$BASE/login" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode "email=$B_EMAIL" \
+            --data-urlencode "password=$B_PASSWORD")
+          [ "$code" = "303" ]
+          page_b=$(curl -s -b .smoke/jar-b "$BASE/notes")
+          if echo "$page_b" | grep -q "$MARKER"; then
+            record user-b-isolated-from-a fail
+            echo "RLS BREACH: user B can see user A's row" >&2
+            exit 1
+          fi
+          record user-b-isolated-from-a pass
+
+          # 5. Logout clears the session: the next /notes read is denied again.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -b .smoke/jar-a -c .smoke/jar-a \
+            -X POST "$BASE/notes?/logout")
+          [ "$code" = "303" ]
+          after=$(curl -s -b .smoke/jar-a "$BASE/notes")
+          echo "$after" | grep -q "Sign-in is required"
+          record logout-clears-session pass
+
+      - name: Delete the throwaway test users (Auth admin API)
+        # Cleanup guarantee: runs even when the matrix above fails, so the
+        # real project never accumulates smoke users. The seeded note is
+        # removed by the notes table's ON DELETE CASCADE.
+        if: always()
+        run: |
+          if [ ! -f .smoke/smoke.env ]; then
+            echo "no smoke users were created; nothing to clean up"
+            exit 0
+          fi
+          source .smoke/smoke.env
+          status=0
+          for id in "${A_ID:-}" "${B_ID:-}"; do
+            [ -n "$id" ] || continue
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+              "$SUPABASE_URL/auth/v1/admin/users/$id" \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+            echo "DELETE admin user -> $code"
+            [ "$code" = "200" ] || status=1
+          done
+          exit $status
+
+      - name: Write the redacted smoke report
+        if: always()
+        run: |
+          matrix='[]'
+          if [ -f .smoke/results.jsonl ]; then
+            matrix=$(jq -s '.' .smoke/results.jsonl)
+          fi
+          jq -n \
+            --arg version "$(git rev-parse --short HEAD)" \
+            --arg runId "${{ github.run_id }}" \
+            --arg status "${{ job.status }}" \
+            --argjson matrix "$matrix" \
+            '{
+              version: $version,
+              runId: $runId,
+              jobStatus: $status,
+              matrix: $matrix,
+              note: "tier-2 real-project qualification; redacted — no credentials, emails, or user ids in this report"
+            }' > supabase-project-smoke.json
+
+      - name: Archive the smoke report
+        if: always()
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: supabase-project-smoke
+          path: supabase-project-smoke.json
+          if-no-files-found: error
