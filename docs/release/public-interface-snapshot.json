@@ -323,7 +323,7 @@
           "reExportedNames": []
         },
         "./cli/start": {
-          "sha256": "5ddc76c82e489a8405255bcb2acc36f62cd6239bccd4d7b7785b34ebb1f8c2d2",
+          "sha256": "ededc546076ff13322fe1a9416763a4dd490ac79838c0b12d6bfb0ffe64f8cdb",
           "publicDeclarations": [
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
           ],

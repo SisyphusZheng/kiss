@@ -24,6 +24,11 @@
  *   node packages/adapter-vite/src/cli/start.ts   (Node with --experimental-strip-types or tsx)
  *   deno run -A npm:@openelement/adapter-vite/cli/start [--mode=start|preview] [-- vite preview args]
  *   OPEN_ELEMENT_PORT=4173 deno task start
+ *
+ * Env: OPEN_ELEMENT_PORT / PORT, OPEN_ELEMENT_HOST, and
+ * OPEN_ELEMENT_TRUST_PROXY=1 to honour X-Forwarded-Proto/Host when a trusted
+ * reverse proxy terminates TLS (internal/node-bridge.ts; forwarded headers
+ * are never trusted by default).
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -37,6 +42,7 @@ import {
   type RequestTimeServerModule,
   tryStatic,
 } from '../internal/static-serve.ts';
+import { nodeRequestToWeb, writeWebResponse } from '../internal/node-bridge.ts';
 
 const root = process.cwd();
 const distDir = join(root, DEFAULT_OUT_DIR);
@@ -143,10 +149,11 @@ async function runStart(): Promise<void> {
     );
   }
 
+  const trustProxy = process.env.OPEN_ELEMENT_TRUST_PROXY === '1';
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    const request = toWebRequest(req, hostname, port);
+    const request = nodeRequestToWeb(req, { host: hostname, port, trustProxy });
     const response = await handleRequest(request, serverMod);
-    writeResponse(response, res);
+    writeWebResponse(response, res);
   });
 
   server.listen(port, hostname, () => {
@@ -157,56 +164,10 @@ async function runStart(): Promise<void> {
 }
 
 // ─── Cross-runtime HTTP helpers (#622) ─────────────────────────────
-
-function toWebRequest(req: IncomingMessage, host: string, port: number): Request {
-  const protocol = 'http';
-  const url = new URL(
-    req.url || '/',
-    `${protocol}://${host === '0.0.0.0' ? 'localhost' : host}:${port}`,
-  );
-  const headers = new Headers();
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (value) headers.set(key, Array.isArray(value) ? value.join(', ') : value);
-  }
-  const method = req.method || 'GET';
-  const hasBody = method !== 'GET' && method !== 'HEAD';
-  return new Request(url.href, {
-    method,
-    headers,
-    body: hasBody
-      ? new ReadableStream({
-        start(controller) {
-          req.on('data', (chunk) => controller.enqueue(new Uint8Array(chunk)));
-          req.on('end', () => controller.close());
-          req.on('error', (err) => controller.error(err));
-        },
-      })
-      : undefined,
-    // @ts-expect-error Node 18 requires this for non-GET body
-    duplex: hasBody ? 'half' : undefined,
-  });
-}
-
-function writeResponse(response: Response, res: ServerResponse): void {
-  res.statusCode = response.status;
-  response.headers.forEach((value, key) => res.setHeader(key, value));
-  if (!response.body) {
-    res.end();
-    return;
-  }
-  const reader = response.body.getReader();
-  const pump = async () => {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        res.end();
-        break;
-      }
-      res.write(value);
-    }
-  };
-  pump().catch(() => res.end());
-}
+// The node:http ↔ Fetch bridge (URL construction from validated Host /
+// opted-in X-Forwarded-*, multi Set-Cookie preservation) lives in
+// internal/node-bridge.ts — single source, also embedded verbatim into the
+// generated dist/server/serve.mjs (renderStandaloneServerModule).
 
 // Loader `env` contract is Record<string, string>; process.env may carry
 // undefined values, which are filtered out (never forwarded).

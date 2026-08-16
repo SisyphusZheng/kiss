@@ -9,6 +9,7 @@ import type { IsrManifestEntry } from '../protocol/framework.ts';
 import type { RouteInfoEntry } from '../protocol/ssg.ts';
 import { createIsrCacheKey } from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../html-files.ts';
+import { NODE_BRIDGE_EMBEDDED_FUNCTIONS } from '../node-bridge.ts';
 
 // ─── Path / URL helpers ────────────────────────────────────────
 
@@ -260,6 +261,31 @@ export default async function openElementRequestTimeServer(event) {
 }
 
 /**
+ * Verbatim JS source of the shared node:http ↔ Fetch bridge
+ * (internal/node-bridge.ts), embedded into the generated serve.mjs below —
+ * the start.ts/serve.mjs twin is single-sourced, not copied (superseding the
+ * MIME table's parity-test precedent: a template literal can carry function
+ * source directly, so there is nothing left to drift). The Deno build host
+ * strips type annotations from Function.toString(); if a host ever returns
+ * annotated source the generated artifact would be broken JS, so fail the
+ * build loudly instead of emitting it.
+ */
+function embedNodeBridgeSource(): string {
+  return NODE_BRIDGE_EMBEDDED_FUNCTIONS.map((fn) => {
+    const source = fn.toString();
+    try {
+      new Function(source);
+    } catch {
+      throw new Error(
+        `[openElement build] node-bridge embed: ${fn.name}.toString() did not return ` +
+          'plain JS (type annotations intact?) — run the build under Deno.',
+      );
+    }
+    return source;
+  }).join('\n\n');
+}
+
+/**
  * Source of the generated `dist/server/serve.mjs` (#959): a standalone
  * production server entry, so the build output runs without the CLI and
  * without a hand-written Nitro bootstrap. Emitted alongside index.js, i.e.
@@ -279,7 +305,11 @@ export default async function openElementRequestTimeServer(event) {
  *
  * Request semantics intentionally mirror cli/start.ts: request-time route
  * match (or any mutating method) dispatches to the server entry, otherwise
- * static files win, with the server entry as the final fallback.
+ * static files win, with the server entry as the final fallback. The
+ * node:http ↔ Fetch bridge itself is not mirrored but embedded verbatim from
+ * internal/node-bridge.ts (see embedNodeBridgeSource), so URL construction
+ * (validated Host, opted-in X-Forwarded-*) and the multi Set-Cookie
+ * preservation cannot drift between the two servers.
  */
 export function renderStandaloneServerModule(): string {
   // Regexes use [x] character classes instead of \\x escapes so this
@@ -295,6 +325,9 @@ export function renderStandaloneServerModule(): string {
 // Usage:
 //   node dist/server/serve.mjs
 //   OPEN_ELEMENT_PORT=8080 OPEN_ELEMENT_HOST=127.0.0.1 node dist/server/serve.mjs
+//   OPEN_ELEMENT_TRUST_PROXY=1 node dist/server/serve.mjs   (behind a trusted
+//   reverse proxy: honor X-Forwarded-Proto/Host for the request URL — never
+//   trusted by default)
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
@@ -414,48 +447,20 @@ async function handleRequest(request) {
   return callServer(request);
 }
 
+// ── node:http <-> Fetch bridge ──────────────────────────────────────
+// Embedded verbatim from src/internal/node-bridge.ts (single source;
+// serve.mjs is self-contained and cannot import it). Covers: request URL
+// from the validated Host header (or X-Forwarded-Proto/Host when
+// OPEN_ELEMENT_TRUST_PROXY=1), header conversion, and multi Set-Cookie
+// preservation on the way out.
+${embedNodeBridgeSource()}
+
+const trustProxy = process.env.OPEN_ELEMENT_TRUST_PROXY === '1';
+
 const server = createServer((req, res) => {
-  const host = hostname === '0.0.0.0' ? 'localhost' : hostname;
-  const url = new URL(req.url || '/', 'http://' + host + ':' + port);
-  const headers = new Headers();
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (value) headers.set(key, Array.isArray(value) ? value.join(', ') : value);
-  }
-  const method = req.method || 'GET';
-  const hasBody = method !== 'GET' && method !== 'HEAD';
-  const request = new Request(url.href, {
-    method,
-    headers,
-    body: hasBody
-      ? new ReadableStream({
-        start(controller) {
-          req.on('data', (chunk) => controller.enqueue(new Uint8Array(chunk)));
-          req.on('end', () => controller.close());
-          req.on('error', (err) => controller.error(err));
-        },
-      })
-      : undefined,
-    // Node 18 requires this for a non-GET body; ignored elsewhere.
-    duplex: hasBody ? 'half' : undefined,
-  });
+  const request = nodeRequestToWeb(req, { host: hostname, port, trustProxy });
   handleRequest(request).then((response) => {
-    res.statusCode = response.status;
-    response.headers.forEach((value, key) => res.setHeader(key, value));
-    if (!response.body) {
-      res.end();
-      return;
-    }
-    const reader = response.body.getReader();
-    const pump = () =>
-      reader.read().then(({ done, value }) => {
-        if (done) {
-          res.end();
-          return;
-        }
-        res.write(value);
-        return pump();
-      });
-    pump().catch(() => res.end());
+    writeWebResponse(response, res);
   }).catch((err) => {
     console.error('[openElement serve] fatal handler error:', err);
     res.statusCode = 500;
