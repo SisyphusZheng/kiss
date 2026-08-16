@@ -22,6 +22,9 @@ const THIRD_PARTY_IMPORTS = {
   '@shoelace-style/shoelace/': 'npm:@shoelace-style/shoelace@2.20.1/',
   '@material/web': 'npm:@material/web@2.4.1',
   '@material/web/': 'npm:@material/web@2.4.1/',
+  '@microsoft/fast-element': 'npm:@microsoft/fast-element@3.0.2',
+  '@ionic/core': 'npm:@ionic/core@8.8.18',
+  '@ionic/core/': 'npm:@ionic/core@8.8.18/',
 };
 
 async function run(
@@ -150,28 +153,70 @@ async function interactAndVerifyEventCount(page: Page, startCount: number): Prom
   // Bare-native badge click.
   await page.locator('alpha3-native-badge#native-badge').click();
   await expectCount(startCount + 6, 'Native badge click');
+
+  await page.locator('alpha3-fast-counter').locator('#fast-button').click();
+  await expectCount(startCount + 7, 'FAST counter event');
+
+  await page.locator('ion-button#ionic-button').click();
+  await expectCount(startCount + 8, 'Stencil/Ionic click');
 }
 
-async function verifyBrowser(distDir: string): Promise<void> {
+export interface BrowserCapabilityEvidence {
+  registered: boolean;
+  upgraded: boolean;
+  shadowRoot: boolean;
+  slotContent: boolean | null;
+  attributeProperty: boolean | null;
+  eventObserved: boolean | null;
+  hydrationSafe: boolean;
+}
+
+export async function verifyBrowser(
+  distDir: string,
+): Promise<Record<string, BrowserCapabilityEvidence>> {
   const { chromium } = await import('npm:playwright@1.59.1');
   const server = serveStatic(distDir);
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
+    const browserErrors: string[] = [];
+    page.on('pageerror', (error) => browserErrors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') browserErrors.push(message.text());
+    });
     await page.goto(`${server.origin}/third-party-wc/`);
 
-    await page.waitForFunction(() =>
-      customElements.get('alpha3-lit-counter') &&
-      customElements.get('alpha3-lit-host') &&
-      customElements.get('alpha3-wc-fixture') &&
-      customElements.get('alpha3-open-child') &&
-      customElements.get('alpha3-native-badge') &&
-      customElements.get('sl-button') &&
-      customElements.get('sl-switch') &&
-      customElements.get('md-filled-button') &&
-      customElements.get('md-outlined-text-field') &&
-      customElements.get('md-switch')
-    );
+    const expectedTags = [
+      'alpha3-lit-counter',
+      'alpha3-lit-host',
+      'alpha3-wc-fixture',
+      'alpha3-open-child',
+      'alpha3-native-badge',
+      'sl-button',
+      'sl-switch',
+      'md-filled-button',
+      'md-outlined-text-field',
+      'md-switch',
+      'alpha3-fast-counter',
+      'ion-button',
+    ];
+    try {
+      await page.waitForFunction(
+        (tags) => tags.every((tag) => customElements.get(tag)),
+        expectedTags,
+        { timeout: 10_000 },
+      );
+    } catch {
+      const missing = await page.evaluate(
+        (tags) => tags.filter((tag) => !customElements.get(tag)),
+        expectedTags,
+      );
+      throw new Error(
+        `custom-element registration failed; missing=${missing.join(',')}; browserErrors=${
+          browserErrors.join(' | ')
+        }`,
+      );
+    }
 
     await page.waitForFunction(() => {
       // #960: the definePage route registers under the path-derived fallback
@@ -190,7 +235,9 @@ async function verifyBrowser(distDir: string): Promise<void> {
         shadowRoot?: ShadowRoot;
       };
       return !!lit?.shadowRoot?.querySelector('#lit-button') &&
-        !!litHost?.shadowRoot?.querySelector('alpha3-open-child');
+        !!litHost?.shadowRoot?.querySelector('alpha3-open-child') &&
+        !!fixture?.shadowRoot?.querySelector('alpha3-fast-counter')?.shadowRoot &&
+        !!fixture?.shadowRoot?.querySelector('ion-button')?.shadowRoot;
     });
 
     const summary = await page.evaluate(() => {
@@ -228,6 +275,9 @@ async function verifyBrowser(distDir: string): Promise<void> {
           !!root.querySelector('md-switch'),
         nativeBadgeShadow: !!(root.querySelector('alpha3-native-badge') as HTMLElement)
           ?.shadowRoot?.querySelector('slot'),
+        fastReady: !!(root.querySelector('alpha3-fast-counter') as HTMLElement)
+          ?.shadowRoot?.querySelector('#fast-button'),
+        ionicReady: !!(root.querySelector('ion-button') as HTMLElement)?.shadowRoot,
       };
     });
 
@@ -239,9 +289,114 @@ async function verifyBrowser(distDir: string): Promise<void> {
     if (!summary.shoelaceReady) throw new Error('Shoelace components were not present');
     if (!summary.materialReady) throw new Error('Material Web components were not present');
     if (!summary.nativeBadgeShadow) throw new Error('Native badge shadow root did not render');
+    if (!summary.fastReady) throw new Error('FAST fixture did not upgrade');
+    if (!summary.ionicReady) throw new Error('Stencil/Ionic fixture did not upgrade');
 
     // Interaction event propagation checks for #221.
     await interactAndVerifyEventCount(page, summary.eventCount);
+    const evidence = await page.evaluate(() => {
+      const routePage = document
+        .querySelector('third-party-wc')
+        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
+      const root = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture')?.shadowRoot;
+      if (!root) throw new Error('fixture root unavailable for capability evidence');
+      const eventLog = (window as Window & { __alpha3EventLog?: string[] }).__alpha3EventLog ?? [];
+      const probe = (
+        tag: string,
+        options: { slot?: string; attributeProperty?: boolean; event?: string } = {},
+      ) => {
+        const element = root.querySelector(tag) as HTMLElement | null;
+        return {
+          registered: !!customElements.get(tag.split(/[.#]/)[0]),
+          upgraded: !!element && element.constructor !== HTMLElement,
+          shadowRoot: !!element?.shadowRoot,
+          slotContent: options.slot ? element?.textContent?.includes(options.slot) === true : null,
+          attributeProperty: options.attributeProperty ?? null,
+          eventObserved: options.event ? eventLog.includes(options.event) : null,
+          hydrationSafe: true,
+        };
+      };
+      const fast = root.querySelector('alpha3-fast-counter') as HTMLElement & { count?: number };
+      const ionic = root.querySelector('ion-button') as HTMLElement & { disabled?: boolean };
+      const lit = root.querySelector('alpha3-lit-counter') as HTMLElement & { label?: string };
+      const slButton = root.querySelector('sl-button') as HTMLElement & { variant?: string };
+      const slSwitch = root.querySelector('sl-switch') as HTMLElement & { checked?: boolean };
+      const slDialog = root.querySelector('sl-dialog') as HTMLElement & { label?: string };
+      const mdButton = root.querySelector('md-filled-button') as HTMLElement & {
+        disabled?: boolean;
+      };
+      const mdField = root.querySelector('md-outlined-text-field') as HTMLElement & {
+        value?: string;
+      };
+      const mdSwitch = root.querySelector('md-switch') as HTMLElement & { selected?: boolean };
+      fast.setAttribute('data-probe', 'fast');
+      ionic.disabled = true;
+      mdButton.disabled = true;
+      const evidence = {
+        'alpha3-wc-fixture': {
+          registered: !!customElements.get('alpha3-wc-fixture'),
+          upgraded: root.host.constructor !== HTMLElement,
+          shadowRoot: true,
+          slotContent: null,
+          attributeProperty: null,
+          eventObserved: null,
+          hydrationSafe: true,
+        },
+        'alpha3-lit-counter': probe('alpha3-lit-counter', {
+          slot: 'Lit slot label',
+          attributeProperty: lit.label === 'Lit counter',
+          event: 'lit-count',
+        }),
+        'alpha3-lit-host': probe('alpha3-lit-host'),
+        'sl-button': probe('sl-button', {
+          slot: 'Shoelace Button',
+          attributeProperty: slButton.variant === 'primary',
+          event: 'sl-button',
+        }),
+        'sl-switch': probe('sl-switch', {
+          slot: 'Shoelace Switch',
+          attributeProperty: typeof slSwitch.checked === 'boolean',
+          event: 'sl-switch',
+        }),
+        'sl-dialog': probe('sl-dialog', {
+          slot: 'Dialog content',
+          attributeProperty: slDialog.label === 'Shoelace Dialog',
+        }),
+        'md-filled-button': probe('md-filled-button', {
+          slot: 'Material Button',
+          attributeProperty: mdButton.disabled === true,
+          event: 'md-button',
+        }),
+        'md-outlined-text-field': probe('md-outlined-text-field', {
+          attributeProperty: mdField.value === 'alpha3',
+        }),
+        'md-switch': probe('md-switch', {
+          attributeProperty: typeof mdSwitch.selected === 'boolean',
+          event: 'md-switch',
+        }),
+        'alpha3-native-badge': probe('alpha3-native-badge', {
+          slot: 'Native badge light child',
+          event: 'native-badge',
+        }),
+        'alpha3-fast-counter': probe('alpha3-fast-counter', {
+          slot: 'FAST slot label',
+          attributeProperty: fast.getAttribute('data-probe') === 'fast' && fast.count === 1,
+          event: 'fast-count',
+        }),
+        'ion-button': probe('ion-button', {
+          slot: 'Ionic Stencil Button',
+          attributeProperty: ionic.disabled === true,
+          event: 'ionic-button',
+        }),
+      };
+      ionic.disabled = false;
+      mdButton.disabled = false;
+      return evidence;
+    });
+    if (browserErrors.length > 0) {
+      throw new Error(`browser/hydration errors: ${browserErrors.join(' | ')}`);
+    }
+    return evidence;
   } finally {
     await browser.close();
     await server.close();
@@ -261,6 +416,10 @@ async function verifySsrHtml(appDir: string): Promise<void> {
       '<md-outlined-text-field',
       '<md-switch',
       '<alpha3-native-badge',
+      '<alpha3-fast-counter',
+      '<ion-button',
+      'FAST slot label',
+      'Ionic Stencil Button',
       'Native badge light child',
       'slot="label"',
       'data-eid=',

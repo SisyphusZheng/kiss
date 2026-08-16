@@ -25,7 +25,7 @@
 import { dirname, join } from '@std/path';
 
 import { formatJson } from '@openelement/element/build-utils';
-import { prepareFixtureApp } from './third-party-wc-smoke.ts';
+import { prepareFixtureApp, verifyBrowser } from './third-party-wc-smoke.ts';
 const RECORD_PATH = join('docs', 'evidence', 'third-party-wc-ssr-corpus.json');
 
 interface SsrAdmissionDecision {
@@ -58,6 +58,7 @@ interface CorpusExpectation {
 interface CorpusEntry {
   tag: string;
   library: string;
+  metadata: 'openelement-config' | 'cem' | 'stencil-collection' | 'none';
   expect: CorpusExpectation;
 }
 
@@ -67,6 +68,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'alpha3-wc-fixture',
     library: '@openelement/app',
+    metadata: 'openelement-config',
     expect: {
       lightDomChildren: [],
       dsdTemplate: true,
@@ -77,6 +79,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'alpha3-lit-counter',
     library: 'lit',
+    metadata: 'none',
     expect: {
       lightDomChildren: ['Lit slot label'],
       dsdTemplate: false,
@@ -87,6 +90,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'alpha3-lit-host',
     library: 'lit',
+    metadata: 'none',
     expect: {
       lightDomChildren: [],
       dsdTemplate: false,
@@ -97,6 +101,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'sl-button',
     library: '@shoelace-style/shoelace',
+    metadata: 'cem',
     expect: {
       lightDomChildren: ['Shoelace Button'],
       dsdTemplate: false,
@@ -107,6 +112,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'sl-switch',
     library: '@shoelace-style/shoelace',
+    metadata: 'cem',
     expect: {
       lightDomChildren: ['Shoelace Switch'],
       dsdTemplate: false,
@@ -117,6 +123,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'sl-dialog',
     library: '@shoelace-style/shoelace',
+    metadata: 'cem',
     expect: {
       lightDomChildren: ['Dialog content'],
       dsdTemplate: false,
@@ -127,6 +134,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'md-filled-button',
     library: '@material/web',
+    metadata: 'none',
     expect: {
       lightDomChildren: ['Material Button'],
       dsdTemplate: false,
@@ -137,6 +145,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'md-outlined-text-field',
     library: '@material/web',
+    metadata: 'none',
     expect: {
       lightDomChildren: [],
       dsdTemplate: false,
@@ -147,6 +156,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'md-switch',
     library: '@material/web',
+    metadata: 'none',
     expect: {
       lightDomChildren: [],
       dsdTemplate: false,
@@ -157,6 +167,7 @@ const CORPUS: CorpusEntry[] = [
   {
     tag: 'alpha3-native-badge',
     library: 'bare-native',
+    metadata: 'none',
     expect: {
       lightDomChildren: ['Native badge light child'],
       dsdTemplate: false,
@@ -164,7 +175,66 @@ const CORPUS: CorpusEntry[] = [
       admission: 'client-only',
     },
   },
+  {
+    tag: 'alpha3-fast-counter',
+    library: '@microsoft/fast-element@3.0.2',
+    metadata: 'none',
+    expect: {
+      lightDomChildren: ['FAST slot label'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'client-only',
+    },
+  },
+  {
+    tag: 'ion-button',
+    library: '@ionic/core@8.8.18 (Stencil compiled output)',
+    metadata: 'stencil-collection',
+    expect: {
+      lightDomChildren: ['Ionic Stencil Button'],
+      dsdTemplate: false,
+      dataEid: true,
+      admission: 'client-only',
+    },
+  },
 ];
+
+const METADATA_PROBES = [
+  {
+    library: '@shoelace-style/shoelace@2.20.1',
+    path: 'node_modules/@shoelace-style/shoelace/dist/custom-elements.json',
+    format: 'cem',
+    expected: true,
+  },
+  {
+    library: '@ionic/core@8.8.18',
+    path: 'node_modules/@ionic/core/dist/collection/collection-manifest.json',
+    format: 'stencil-collection',
+    expected: true,
+  },
+  {
+    library: '@microsoft/fast-element@3.0.2',
+    path: 'node_modules/@microsoft/fast-element/custom-elements.json',
+    format: 'cem',
+    expected: false,
+  },
+  {
+    library: '@material/web@2.4.1',
+    path: 'node_modules/@material/web/custom-elements.json',
+    format: 'cem',
+    expected: false,
+  },
+] as const;
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await Deno.stat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return false;
+    throw error;
+  }
+}
 
 /** Extract the generated `var ssrAdmissionPlan = {...}` object literal. */
 export function extractSsrAdmissionPlan(entryJs: string): SsrAdmissionPlan {
@@ -217,8 +287,23 @@ async function main(): Promise<void> {
     const entryJs = await Deno.readTextFile(join(appDir, 'dist', 'server', 'entry.js'));
     const plan = extractSsrAdmissionPlan(entryJs);
     const decisionByTag = new Map(plan.decisions.map((d) => [d.tagName, d]));
+    const browser = await verifyBrowser(join(appDir, 'dist'));
+    const metadataProbes = await Promise.all(METADATA_PROBES.map(async (probe) => ({
+      library: probe.library,
+      format: probe.format,
+      path: probe.path.replace(/^node_modules\//, ''),
+      available: await pathExists(join(appDir, probe.path)),
+      expected: probe.expected,
+    })));
 
     const failures: string[] = [];
+    for (const probe of metadataProbes) {
+      if (probe.available !== probe.expected) {
+        failures.push(
+          `${probe.library}: ${probe.format} availability=${probe.available}, expected ${probe.expected}`,
+        );
+      }
+    }
     const entries = CORPUS.map((entry) => {
       const form = observeSsrForm(html, entry);
       const decision = decisionByTag.get(entry.tag);
@@ -247,7 +332,21 @@ async function main(): Promise<void> {
         );
       }
 
-      return { tag: entry.tag, library: entry.library, admission, ssrForm: form };
+      const browserCapabilities = browser[entry.tag];
+      if (
+        !browserCapabilities ||
+        Object.values(browserCapabilities).some((value) => value === false)
+      ) {
+        failures.push(`${entry.tag}: one or more browser capability probes failed`);
+      }
+      return {
+        tag: entry.tag,
+        library: entry.library,
+        metadata: entry.metadata,
+        admission,
+        ssrForm: form,
+        browserCapabilities,
+      };
     });
 
     if (failures.length > 0) {
@@ -255,13 +354,14 @@ async function main(): Promise<void> {
     }
 
     const record = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       // No timestamp: the record is checked in and regenerated by the
       // CI/release gate — a timestamp would dirty the worktree on every
       // gate run and block release-prepare's clean-tree check.
       source: 'tools/third-party-wc-corpus.ts',
       note:
-        'Pins observed SSR form + admission per third-party WC kind; known forms, not correctness claims.',
+        'Pins admission, SSR form, metadata availability, and browser interoperability probes; client-only is an explicit supported path, not an SSR claim.',
+      metadataProbes,
       entries,
     };
     await Deno.mkdir(dirname(RECORD_PATH), { recursive: true });

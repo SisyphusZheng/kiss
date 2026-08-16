@@ -5,6 +5,10 @@ import '@shoelace-style/shoelace/dist/components/dialog/dialog.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/switch/switch.js';
+import { FASTElement, html as fastHtml } from '@microsoft/fast-element';
+import { defineCustomElement as defineIonButton } from '@ionic/core/components/ion-button.js';
+
+defineIonButton();
 
 class Alpha3LitCounter extends LitElement {
   static properties = { count: { type: Number }, label: { type: String } };
@@ -63,6 +67,31 @@ class Alpha3NativeBadge extends HTMLElement {
     root.append(style, document.createElement('slot'));
   }
 }
+
+class Alpha3FastCounter extends FASTElement {
+  count = 0;
+  increment() {
+    this.count++;
+    this.shadowRoot!.querySelector('#fast-count')!.textContent = String(this.count);
+    this.dispatchEvent(
+      new CustomEvent('fast-count', {
+        detail: { count: this.count },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+}
+
+Alpha3FastCounter.define({
+  name: 'alpha3-fast-counter',
+  template: fastHtml<Alpha3FastCounter>`
+    <slot name="label"></slot>
+    <button id="fast-button" @click=${(component) => component.increment()}>
+      FAST: <span id="fast-count">0</span>
+    </button>
+  `,
+});
 
 customElements.define('alpha3-lit-counter', Alpha3LitCounter);
 customElements.define('alpha3-lit-host', Alpha3LitHost);

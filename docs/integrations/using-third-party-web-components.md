@@ -1,9 +1,9 @@
 # Using Third-Party Web Components
 
-alpha.5 validates direct consumption of mature Web Components libraries inside
-OpenElement apps. The primary evidence targets are Lit, Shoelace, Material Web
-Components, and browser-only custom element modules exercised by
-`tools/third-party-wc-smoke.ts`.
+The Universal WC qualification gate validates direct consumption of mature Web
+Components libraries inside OpenElement apps. The pinned evidence targets are
+Lit, Shoelace, Material Web, FAST Element 3.0.2, Ionic 8.8.18 as real
+Stencil-compiled output, and a bare native custom element.
 
 ## Recommended Pattern
 
@@ -106,7 +106,7 @@ the browser imports the registration module after page load.
 
 ## Library Evidence
 
-The alpha.5 smoke fixture verifies:
+The qualification fixture verifies:
 
 - Lit custom elements upgrade in an openElement page, render slots, and dispatch
   composed custom events.
@@ -115,6 +115,25 @@ The alpha.5 smoke fixture verifies:
 - openElement can contain a Lit element, and a Lit element can contain an
   openElement custom element.
 - Browser-only custom element registration can be kept out of the SSG path.
+- A FAST element preserves authored slot content, upgrades with its own shadow
+  root, round-trips state, and emits a composed custom event.
+- A real Stencil `dist-custom-elements` consumer (`ion-button`) requires an
+  explicit `defineCustomElement()` registration, then upgrades, preserves light
+  DOM, reflects a property, and participates in OpenElement event handling.
+
+The current evidence is deliberately client-only for every foreign tag. That is
+a supported interoperability path, not a claim that OpenElement server-renders
+another library's shadow tree.
+
+| Package kind                        | Metadata observed                   | SSR form               | Browser evidence                                       |
+| ----------------------------------- | ----------------------------------- | ---------------------- | ------------------------------------------------------ |
+| OpenElement control                 | `openElement` island config         | DSD + client           | registered, upgraded, hydration-safe                   |
+| Shoelace                            | Custom Elements Manifest            | light DOM, client-only | slots, properties, events, shadow upgrade              |
+| Ionic / Stencil                     | Stencil collection manifest         | light DOM, client-only | explicit registration, property, event, shadow upgrade |
+| Lit, Material, FAST fixture, native | no package CEM used by this fixture | light DOM, client-only | per-tag probes recorded in the corpus                  |
+
+`null` in a corpus browser capability means the capability was not applicable
+or not exercised for that tag. It is never converted to a passing `true`.
 
 Run the fixture with:
 
@@ -124,3 +143,6 @@ deno task third-party-wc:smoke
 
 The fixture source lives under `tools/third-party-wc-smoke/` and is copied into a
 fresh generated OpenElement app during the smoke run.
+The same run writes the deterministic, diff-reviewable matrix at
+`docs/evidence/third-party-wc-ssr-corpus.json`; there is no second build-only
+corpus gate.

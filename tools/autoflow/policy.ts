@@ -448,21 +448,9 @@ const GATES: readonly GateDefinition[] = [
     triggers: [
       /^packages\//,
       /^tools\/third-party-wc-smoke\.ts$/,
-      /^docs\/integrations\//,
-      /^deno\.json$/,
-    ],
-  },
-  {
-    // SSR-form corpus: build-only (no Playwright), strictly cheaper than the
-    // smoke above; keeps the pinned SSR forms from drifting.
-    name: 'third-party-wc:corpus',
-    command: ['deno', 'task', 'third-party-wc:corpus'],
-    tiers: ['ci', 'release'],
-    triggers: [
-      /^packages\//,
-      /^tools\/third-party-wc-smoke\.ts$/,
       /^tools\/third-party-wc-corpus\.ts$/,
       /^tools\/third-party-wc-smoke\//,
+      /^docs\/evidence\/third-party-wc-ssr-corpus\.json$/,
       /^docs\/integrations\//,
       /^deno\.json$/,
     ],
