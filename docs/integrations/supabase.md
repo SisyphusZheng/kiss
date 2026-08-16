@@ -336,7 +336,11 @@ export function sanitizeFilename(name: string): string {
 
 /** Objects live under the owner's folder so storage RLS can scope by prefix. */
 export function objectKeyFor(userId: string, filename: string): string {
-  return `${userId}/${sanitizeFilename(filename)}`;
+  return `${userId}/${crypto.randomUUID()}-${sanitizeFilename(filename)}`;
+}
+
+export function ownsObjectKey(userId: string, key: string): boolean {
+  return key.startsWith(`${userId}/`) && !key.slice(userId.length + 1).includes('/');
 }
 ```
 
@@ -358,7 +362,20 @@ export function createUploadAction(
     if (file.size > MAX_FILE_BYTES) {
       return fail(422, { error: 'file exceeds the 1 MiB reference cap' });
     }
-    const key = objectKeyFor(user.id, file.name || 'upload.bin');
+    if (!ALLOWED_CONTENT_TYPES.has(file.type)) {
+      return fail(422, { error: 'file type is not allowed' });
+    }
+    const displayName = sanitizeFilename(file.name || 'upload.bin');
+    const reservationId = crypto.randomUUID();
+    const key = objectKeyFor(user.id, displayName);
+    const reserved = await supabase.rpc('reserve_attachment', {
+      reservation_id: reservationId,
+      object_key: key,
+      display_name: displayName,
+      byte_size: file.size,
+      content_type: file.type || 'application/octet-stream',
+    });
+    if (reserved.error) return fail(422, { error: reserved.error.message });
     // Never silently overwrite: different originals can normalize to the same
     // key, and upsert:true would lose the earlier file without a trace.
     const { error } = await supabase.storage.from(BUCKET).upload(key, file, {
@@ -366,14 +383,16 @@ export function createUploadAction(
       upsert: false,
     });
     if (error) {
-      const duplicate = /already exists|Duplicate/i.test(error.message);
-      return fail(422, {
-        error: duplicate
-          ? `a file named '${
-            sanitizeFilename(file.name || 'upload.bin')
-          }' already exists — rename it to upload a new one`
-          : error.message,
-      });
+      await supabase.rpc('release_attachment', { reservation_id: reservationId });
+      return fail(422, { error: error.message });
+    }
+    const finalized = await supabase.rpc('finalize_attachment', {
+      reservation_id: reservationId,
+    });
+    if (finalized.error) {
+      await supabase.storage.from(BUCKET).remove([key]);
+      await supabase.rpc('release_attachment', { reservation_id: reservationId });
+      return fail(500, { error: 'upload could not be finalized' });
     }
     throw redirect('/upload');
   };
