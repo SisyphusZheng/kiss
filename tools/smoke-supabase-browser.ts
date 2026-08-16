@@ -155,6 +155,46 @@ try {
   });
   await record('browser-realtime-offline-online-recovery-delivers');
 
+  const refreshedSession = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!refreshedSession.ok) {
+    throw new Error(`Realtime token refresh failed with HTTP ${refreshedSession.status}`);
+  }
+  const refreshedAccessToken = (await refreshedSession.json() as { access_token?: string })
+    .access_token;
+  if (!refreshedAccessToken) throw new Error('Realtime token refresh returned no access token');
+  await live.evaluate(
+    (element, token) => element.setAttribute('data-access-token', token),
+    refreshedAccessToken,
+  );
+
+  const refreshedMarker = `browser-realtime-refreshed-${runId}`;
+  const refreshedInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      'content-type': 'application/json',
+      prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      title: 'realtime refreshed token smoke',
+      body: refreshedMarker,
+    }),
+  });
+  if (!refreshedInsert.ok) {
+    throw new Error(`Refreshed-token Realtime seed failed with HTTP ${refreshedInsert.status}`);
+  }
+  await live.locator('#live-events').getByText(refreshedMarker, { exact: true }).waitFor({
+    state: 'visible',
+    timeout: 20_000,
+  });
+  await record('browser-realtime-refreshed-jwt-delivers');
+
   await page.goto(`${baseUrl}/admin`);
   await page.getByRole('heading', { name: 'Admin', exact: true }).waitFor({ state: 'visible' });
   await record('browser-app-metadata-admin-guard');
