@@ -333,6 +333,29 @@ export default GuestbookPage;`}</code></pre>
               </>
             )}
         </p>
+        <p class='full-guide'>
+          {zh
+            ? (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/supabase.md'>
+                  Supabase（参考应用配方）
+                </a>——@supabase/ssr 服务端客户端经 ADR-0129 响应头通道写会话 cookie，loader/action
+                内复检授权，RLS 优先的 notes / Storage / Realtime；所有代码块取自
+                examples/supabase-cloudflare-starter，已对真实 Supabase 项目完成资格验证。
+              </>
+            )
+            : (
+              <>
+                <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/supabase.md'>
+                  Supabase (reference starter)
+                </a>{' '}
+                — @supabase/ssr server client writing session cookies over the ADR-0129
+                response-header channel, authorization re-checked in loaders/actions, RLS-first
+                notes / Storage / Realtime; every code block lifted from
+                examples/supabase-cloudflare-starter and qualified against a real Supabase project.
+              </>
+            )}
+        </p>
       </>
     );
   }
