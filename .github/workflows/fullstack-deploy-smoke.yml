@@ -1,0 +1,79 @@
+name: Fullstack deploy smoke (real providers)
+
+# #984 tier 3: deploys the Supabase × Cloudflare reference starter to a real
+# Cloudflare Worker and smokes the live URL. Requires maintainer-provided
+# secrets (see below). Manual-only: never runs on push/PR.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-smoke:
+    name: Deploy reference starter to Workers and smoke the live URL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: ./.github/actions/setup-deno-workspace
+
+      - name: Build the Workers bundle
+        working-directory: examples/supabase-cloudflare-starter
+        run: deno task nitro:build
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: examples/supabase-cloudflare-starter
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: >-
+          deno run -A npm:wrangler@latest deploy .output-workers/server/index.mjs
+          --name openelement-ref-starter
+          --assets .output-workers/public
+          --compatibility-date 2026-08-16
+          --compatibility-flags nodejs_compat
+          --var "SUPABASE_URL:$SUPABASE_URL" "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY"
+
+      - name: Smoke the live worker
+        env:
+          WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
+        run: |
+          set -e
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$WORKER_URL/" || true)
+            [ "$code" = "200" ] && break
+            sleep 10
+          done
+          echo "GET / -> $code"; [ "$code" = "200" ]
+          notes=$(curl -s --max-time 15 "$WORKER_URL/notes")
+          echo "$notes" | grep -q "Sign-in is required" && echo "anonymous /notes -> denied branch OK"
+          csrf=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$WORKER_URL/login" -H 'Origin: https://evil.example.com' -H 'Content-Type: application/x-www-form-urlencoded' -d 'x=1')
+          echo "cross-origin POST /login -> $csrf"; [ "$csrf" = "403" ]
+
+      - name: Write the smoke report
+        if: always()
+        env:
+          WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
+        run: |
+          {
+            echo "{"
+            echo "  \"version\": \"$(git rev-parse --short HEAD)\","
+            echo "  \"workerUrl\": \"$WORKER_URL\","
+            echo "  \"jobStatus\": \"${{ job.status }}\","
+            echo "  \"note\": \"tier-3 deploy smoke; redacted — no credentials in this report\""
+            echo "}"
+          } > fullstack-deploy-smoke.json
+
+      - name: Archive the smoke report
+        if: always()
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: fullstack-deploy-smoke
+          path: fullstack-deploy-smoke.json
+          if-no-files-found: error
