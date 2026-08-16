@@ -9,8 +9,10 @@
  *   - local: base is origin/main...HEAD
  * An amendment reference is any of:
  *   1. a changed/added file under docs/adr/ (the amendment path itself),
- *   2. an `ADR-\d+` token in the last commit message,
- *   3. an `ADR-\d+` token in the PR body (GITHUB_EVENT_PATH, CI only).
+ *   2. an `ADR-\d+` token OTHER than the frozen baselines (ADR-0119,
+ *      ADR-0122) in the last commit message — citing the frozen ADR itself
+ *      is not an amendment,
+ *   3. same as (2) for the PR body (GITHUB_EVENT_PATH, CI only).
  *
  * Frozen-semantics path list (extend here, with the ADR citation):
  *
@@ -60,7 +62,22 @@ const FROZEN_PATHS: ReadonlyArray<{ pattern: RegExp; citation: string }> = [
   },
 ];
 
-const ADR_TOKEN_RE = /\bADR-\d+\b/i;
+const ADR_TOKEN_RE = /\bADR-(\d+)\b/gi;
+
+/**
+ * The frozen baselines themselves (ADR-0119: 0.41.x static freeze;
+ * ADR-0122: loop/action/start semantics). Citing one of these alone merely
+ * acknowledges the freeze — it is NOT an amendment reference.
+ */
+const FROZEN_BASELINE_ADRS = new Set(['0119', '0122']);
+
+/** Pure: does free text cite an amendment ADR (not just a frozen baseline)? */
+function mentionsAmendmentAdr(text: string): boolean {
+  for (const match of text.matchAll(ADR_TOKEN_RE)) {
+    if (!FROZEN_BASELINE_ADRS.has(match[1])) return true;
+  }
+  return false;
+}
 
 export interface AmendmentSignals {
   changedPaths: string[];
@@ -87,8 +104,8 @@ export function findFrozenChanges(
 /** Pure: does the change set carry an amendment ADR reference? */
 export function hasAmendmentReference(signals: AmendmentSignals): boolean {
   if (signals.changedPaths.some((p) => p.startsWith('docs/adr/'))) return true;
-  if (signals.commitMessage && ADR_TOKEN_RE.test(signals.commitMessage)) return true;
-  if (signals.prBody && ADR_TOKEN_RE.test(signals.prBody)) return true;
+  if (signals.commitMessage && mentionsAmendmentAdr(signals.commitMessage)) return true;
+  if (signals.prBody && mentionsAmendmentAdr(signals.prBody)) return true;
   return false;
 }
 
@@ -125,8 +142,10 @@ export function failureMessage(result: GateResult): string {
     'Rule (ADR-0122 Consequences): a PR touching frozen semantics must',
     'reference an amendment ADR. To comply, do one of:',
     '  1. author/commit an amendment ADR under docs/adr/ in this change, or',
-    '  2. cite the amendment ADR (an `ADR-NNNN` token) in the commit message',
+    '  2. cite the amendment ADR (an `ADR-NNNN` token whose number differs',
+    '     from the frozen baselines ADR-0119/ADR-0122) in the commit message',
     '     or PR body.',
+    'Citing a frozen baseline ADR alone is not an amendment reference.',
     'If this change does not alter the frozen semantics, the file is',
     'misclassified: extend the list header in tools/check-frozen-semantics.ts',
     'via an amendment ADR instead of weakening the gate.',

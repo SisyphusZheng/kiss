@@ -59,6 +59,44 @@ Deno.test('freeze: ADR token in PR body satisfies the rule', () => {
   );
 });
 
+Deno.test('freeze: citing the frozen baseline ADR-0122 alone is not compliance', () => {
+  assertEquals(
+    hasAmendmentReference({
+      changedPaths: ['packages/app/src/authoring.ts'],
+      commitMessage: 'fix(app): adjust loader per ADR-0122',
+    }),
+    false,
+  );
+});
+
+Deno.test('freeze: citing the frozen baseline ADR-0119 alone is not compliance', () => {
+  assertEquals(
+    hasAmendmentReference({
+      changedPaths: ['packages/app/src/authoring.ts'],
+      prBody: 'Frozen since ADR-0119.',
+    }),
+    false,
+  );
+});
+
+Deno.test('freeze: baseline citation plus an amendment ADR passes', () => {
+  assert(
+    hasAmendmentReference({
+      changedPaths: ['packages/app/src/authoring.ts'],
+      commitMessage: 'fix(app): amend ADR-0122 loop contract per ADR-0129',
+    }),
+  );
+});
+
+Deno.test('freeze: citing ADR-0129 alone passes', () => {
+  assert(
+    hasAmendmentReference({
+      changedPaths: ['packages/app/src/authoring.ts'],
+      commitMessage: 'fix(app): adjust loader per ADR-0129',
+    }),
+  );
+});
+
 Deno.test('freeze: plain docs change without frozen paths passes', () => {
   const result = evaluate({
     changedPaths: ['docs/current/STATUS.md'],
@@ -79,6 +117,7 @@ Deno.test('freeze: frozen path without any reference fails', () => {
   assert(msg.includes('ADR-0122'));
   assert(msg.includes('docs/adr/'));
   assert(msg.includes('ADR-NNNN'));
+  assert(msg.includes('frozen baseline'));
 });
 
 Deno.test('freeze: frozen path plus docs/adr change passes', () => {
