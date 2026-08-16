@@ -24,6 +24,15 @@ export default defineConfig({
       html: {
         title: 'OpenElement × Supabase × Cloudflare reference',
       },
+      // Explicit CORS allowlist (#983): the deployed worker origin plus the
+      // local request-time server (deno task start, default port 4173).
+      middleware: {
+        corsOrigin: [
+          'https://openelement-ref-starter.freemanzheng.workers.dev',
+          'http://localhost:4173',
+          'http://127.0.0.1:4173',
+        ],
+      },
     }),
   ],
 });
