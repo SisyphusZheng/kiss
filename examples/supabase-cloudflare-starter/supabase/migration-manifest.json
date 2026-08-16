@@ -40,6 +40,10 @@
     {
       "file": "20260817000006_payment_queue.sql",
       "sha256": "62a565bd62ec0299d6b1ee145039de92409a94240ecf229d22d9577af2a024fd"
+    },
+    {
+      "file": "20260817000007_attachment_scan_authorization.sql",
+      "sha256": "2e622479d9923cb47a4f6333acf4fccc237618c204a63154ae0bb480ad19e703"
     }
   ]
 }

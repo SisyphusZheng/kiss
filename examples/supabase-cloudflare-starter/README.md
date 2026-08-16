@@ -49,6 +49,8 @@ application layer.
 - Deno (workspace tasks), Node (Nitro `node` preset run),
 - Supabase CLI + Docker (local emulator; migrations), or a hosted project,
 - Cloudflare account for deployment (wrangler, secret-boundary runbook).
+- A self-hosted OPSWAT MetaDefender Core HTTPS endpoint and API key for real
+  attachment qualification; the scanner fails closed when these are absent.
 
 ## Tasks
 
@@ -87,6 +89,8 @@ STRIPE_SECRET_KEY
 STRIPE_PRICE_ID
 STRIPE_CHECKOUT_HOST
 APP_ORIGIN
+METADEFENDER_CORE_URL
+METADEFENDER_API_KEY
 ```
 
 The anon key is additionally rendered into the /notes page as a data attribute

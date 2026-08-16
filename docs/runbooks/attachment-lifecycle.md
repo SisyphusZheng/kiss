@@ -18,6 +18,10 @@ only `fetch` implementation. The entry composes application-owned `queue` and
   recovery instead of silent deletion.
 - Service binding `ATTACHMENT_SCANNER` whose `POST /scan` response is exactly
   `{ "verdict": "clean" }` or `{ "verdict": "quarantined" }`.
+- The maintained scanner target is a private Cloudflare Worker backed by a
+  self-hosted OPSWAT MetaDefender Core HTTPS origin. It requires
+  `METADEFENDER_CORE_URL` and `METADEFENDER_API_KEY`; missing or malformed
+  configuration can never produce `clean`.
 - A Cron Trigger for reconciliation. Five-minute cadence is the reference
   setting.
 
@@ -27,11 +31,13 @@ is green, dispatch `Fullstack deploy smoke (real providers)` with
 `async_mode=provision`. That mode:
 
 1. renders `.wrangler-async.generated.json` from the single base config;
-2. idempotently creates `openelement-attachment-scan`, its `-dlq`, and the
+2. deploys the private scanner Worker and stores only its Supabase service-role
+   and MetaDefender credentials as encrypted secrets;
+3. idempotently creates `openelement-attachment-scan`, its `-dlq`, and the
    persistence-failure safety queue;
-3. stores `SUPABASE_SERVICE_ROLE_KEY` as an encrypted Worker secret;
-4. deploys with a three-retry, 30-second-delay consumer, DLQ, and five-minute Cron;
-5. records the selected mode in the redacted Tier 3 artifact.
+4. stores `SUPABASE_SERVICE_ROLE_KEY` as an encrypted application Worker secret;
+5. deploys with a three-retry, 30-second-delay consumer, DLQ, and five-minute Cron;
+6. records the selected mode in the redacted Tier 3 artifact.
 
 Do not commit a second hand-maintained Wrangler config. Do not run base mode
 after async provisioning: base mode intentionally removes async bindings and is
@@ -49,6 +55,13 @@ only the pre-migration deployment path.
    the object: Cron re-enqueues pending rows older than five minutes.
 4. The Queue consumer acknowledges only after the scanner verdict and database
    transition succeed. Invalid responses and transient failures are retried.
+   The scanner first calls `authorize_attachment_scan`, which requires the exact
+   reservation id/object key pair in a pending state. It then downloads the
+   private object with a server credential, enforces the database byte count and
+   10 MiB cap while reading, and sends only bounded bytes to MetaDefender Core.
+   Only result code 0 is clean; infected, suspicious, and blocklisted codes are
+   quarantined. Timeouts, skipped/failed scans, malformed output, and every
+   unknown code are retryable failures.
 5. `complete_attachment_scan` is idempotent for duplicate delivery. A conflicting
    second verdict is rejected, and every first transition appends an immutable
    owner-readable storage audit event.
@@ -74,3 +87,12 @@ only the pre-migration deployment path.
 - If pending scans accumulate, verify both bindings and service-role secret,
   invoke the scheduled handler in a non-production environment, then replay the
   DLQ. Do not mark Alpha 5 complete without a real at-least-once + DLQ replay run.
+- MetaDefender Core is deliberately self-hosted so file residency and retention
+  remain operator-owned. Pin an approved Core version/profile, disable external
+  sample sharing, document engine licenses and update cadence, and set Core's
+  retention cleanup before enabling production traffic. The reference cap is
+  10 MiB even if the licensed Core deployment accepts larger files.
+- Rotate `METADEFENDER_API_KEY` with overlapping Core credentials: install the
+  new Worker secret, run clean and EICAR fixtures, then revoke the old key. On
+  rollback, restore the previous scanner deployment; never bypass scanning or
+  return `clean` during a provider outage.
