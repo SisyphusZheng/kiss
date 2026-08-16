@@ -15,9 +15,12 @@ Deno.test('fullstack-boundary: clean browser bundle produces no secret leaks', (
   assertEquals(issues, []);
 });
 
-Deno.test('fullstack-boundary: service-role marker in a bundle is flagged with location', () => {
+Deno.test('fullstack-boundary: service-role assignment in a bundle is flagged with location', () => {
   const issues = findSecretLeaks([
-    { path: 'dist/assets/app.js', text: 'const ok = 1;\nconst key = "service_role";' },
+    {
+      path: 'dist/assets/app.js',
+      text: 'const ok = 1;\nconst cfg = { SERVICE_ROLE_KEY: "live-value" };',
+    },
   ]);
   assertEquals(issues.length, 1);
   assertEquals(issues[0].check, 'secret-leak');
@@ -25,17 +28,22 @@ Deno.test('fullstack-boundary: service-role marker in a bundle is flagged with l
   assertEquals(issues[0].line, 2);
 });
 
-Deno.test('fullstack-boundary: SERVICE_ROLE is matched case-insensitively', () => {
+Deno.test('fullstack-boundary: the bare terms in library code are NOT flagged', () => {
+  // supabase-js itself contains the words service_role / sb_secret_ — the
+  // gate matches secret VALUES, not names.
   const issues = findSecretLeaks([
-    { path: 'dist/assets/app.js', text: 'env.SUPABASE_SERVICE_ROLE_KEY' },
+    {
+      path: 'dist/assets/vendor.js',
+      text:
+        'const keyName = "service_role"; if (key.startsWith("sb_secret_")) warn(); env.SUPABASE_SERVICE_ROLE_KEY;',
+    },
   ]);
-  assertEquals(issues.length, 1);
-  assertEquals(issues[0].message.includes('service-role'), true);
+  assertEquals(issues, []);
 });
 
-Deno.test('fullstack-boundary: sb_secret_ and JWT-shaped tokens are flagged', () => {
+Deno.test('fullstack-boundary: sb_secret_ key material and JWT-shaped tokens are flagged', () => {
   const issues = findSecretLeaks([
-    { path: 'dist/index.html', text: 'sb_secret_abc123' },
+    { path: 'dist/index.html', text: 'sb_secret_abc1234567890' },
     { path: 'dist/assets/app.js', text: 'const t = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abc";' },
   ]);
   assertEquals(issues.length, 2);
@@ -126,7 +134,7 @@ Deno.test('fullstack-boundary: real credential material in .env.example is flagg
   const text = [
     'SUPABASE_URL=https://abcdef.supabase.co',
     'SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9payload',
-    'SUPABASE_SERVICE_ROLE_KEY=sb_secret_livevalue',
+    'SUPABASE_SERVICE_ROLE_KEY=sb_secret_livevalue123456',
   ].join('\n');
   const issues = findEnvExampleLeaks(text);
   assertEquals(issues.length, 2);

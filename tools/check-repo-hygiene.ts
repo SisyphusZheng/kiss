@@ -83,6 +83,10 @@ const allowedTrackedIgnoredPaths = [
 // Secret scanning: tracked credential files are always failures, and
 // credential-shaped content in active source files fails the gate. These
 // patterns intentionally stay narrow to keep false positives at zero.
+// Placeholder templates (.env.example/.env.sample/.env.template) are
+// allowed by name — the content scan below still applies to them, so a
+// template carrying real credentials still fails.
+const allowedCredentialTemplates = /(?:^|\/)\.env(?:\.example|\.sample|\.template)$/;
 const forbiddenTrackedSecretFiles = [
   /(?:^|\/)\.env(?:\.[^/]+)?$/,
   /(?:^|\/)[^/]+\.pem$/,
@@ -167,7 +171,10 @@ for (const file of files.filter(isActiveScanFile)) {
 }
 
 for (const file of files) {
-  if (forbiddenTrackedSecretFiles.some((pattern) => pattern.test(file))) {
+  if (
+    !allowedCredentialTemplates.test(file) &&
+    forbiddenTrackedSecretFiles.some((pattern) => pattern.test(file))
+  ) {
     failures.push({ path: file, message: 'credential file is tracked' });
   }
   if (allowedLargeBinaryDirs.some((pattern) => pattern.test(file))) continue;

@@ -9,7 +9,7 @@
  *
  * 1. Secret boundary — the browser-reachable build output (dist/index.html,
  *    dist/assets/**, dist/client/** when present; never dist/server/**)
- *    contains no service-role markers, no `sb_secret_` key material, and no
+ *    contains no service-role assignments, no `sb_secret_` key material, and no
  *    JWT-shaped tokens (`eyJ…`).
  * 2. Cache boundary — in the generated server entry (dist/server/entry.js),
  *    every request-time route registered in dist/server/index.js's route
@@ -20,7 +20,7 @@
  *    booting the server would need real Supabase credentials for the loaders
  *    to answer.
  * 3. Env example — .env.example exists and carries placeholders only (no
- *    JWT-shaped tokens, no `sb_secret_` values).
+ *    JWT-shaped tokens, no `sb_secret_` key material).
  *
  * dist/ is gitignored, so on a fresh checkout the gate builds the starter
  * itself (`deno task build` in the example directory).
@@ -53,10 +53,15 @@ const STARTER_DIR = 'examples/supabase-cloudflare-starter';
 const SCANNABLE_EXTENSIONS = ['.html', '.js', '.mjs', '.css', '.json', '.map', '.svg', '.txt'];
 
 const SECRET_PATTERNS: ReadonlyArray<{ name: string; pattern: RegExp }> = [
-  // Covers `service_role` and `SERVICE_ROLE` in one case-insensitive pass.
-  { name: 'service-role marker', pattern: /service_role/i },
-  { name: 'Supabase secret key prefix', pattern: /sb_secret_/i },
+  // Value shapes, not names: the words `service_role` / `sb_secret_` appear
+  // in supabase-js itself, so matching the bare term false-positives on the
+  // library. A real secret has a long material tail.
+  { name: 'Supabase secret key material', pattern: /sb_secret_[A-Za-z0-9_-]{10,}/ },
   { name: 'JWT-shaped token', pattern: /eyJ[A-Za-z0-9_-]{20,}/ },
+  // A service-role env binding embedded as a bundle assignment (name + value
+  // shape), e.g. SERVICE_ROLE_KEY: "…" — the identifier alone is fine in
+  // library code; the assignment is not.
+  { name: 'service-role assignment in bundle', pattern: /SERVICE_ROLE_KEY\s*[:=]\s*['"]\S+['"]/ },
 ];
 
 /** Assertion 1: flag secret material in browser-reachable files. */
@@ -169,7 +174,7 @@ export function findCacheBoundaryIssues(
 
 const ENV_PLACEHOLDER_PATTERNS: ReadonlyArray<{ name: string; pattern: RegExp }> = [
   { name: 'JWT-shaped token', pattern: /eyJ[A-Za-z0-9_-]{20,}/ },
-  { name: 'Supabase secret key prefix', pattern: /sb_secret_/i },
+  { name: 'Supabase secret key material', pattern: /sb_secret_[A-Za-z0-9_-]{10,}/ },
 ];
 
 /** Assertion 3: .env.example must carry placeholders, not real credentials. */
