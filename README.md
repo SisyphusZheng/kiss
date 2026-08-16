@@ -2,10 +2,11 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**A Web Components-native, static-first application framework.** Custom
-Elements are the durable application contract; JSX and Basic Element are the
-authoring layer; Declarative Shadow DOM is the default server representation;
-interactive regions upgrade selectively.
+**OpenElement is the Web Components-native, static-first application
+framework for delivering DSD-first applications with a standard Custom
+Element contract.** Custom Elements are the durable application contract;
+JSX and Basic Element are the authoring layer; Declarative Shadow DOM is the
+default server representation; interactive regions upgrade selectively.
 
 Source package line: `0.43.0-alpha.1` (`v0.43.0-alpha.1`) — the current
 five-package source line; the request-time Application Loop froze under
@@ -50,9 +51,31 @@ native element authoring with routing, static generation, DSD, selective
 upgrades and deployable output without making a framework-specific virtual DOM
 the enduring UI model.
 
-The strategic target is WC fullstack leadership, earned through WC SSR
-compatibility evidence, third-party element interop, portable deployments and
+The strategic target is WC fullstack leadership, earned through
+[WC SSR compatibility evidence](./docs/evidence/third-party-wc-ssr-corpus.json),
+third-party element interop, portable deployments and
 external adoption. It is not presented as an already-achieved market claim.
+
+## The fullstack composition path
+
+The official fullstack delivery path is OpenElement × Supabase × Cloudflare,
+with explicit ownership boundaries: OpenElement owns the application UX;
+Supabase owns data, Auth, RLS, Storage and Realtime; Cloudflare owns edge
+delivery, security, cache and async execution. Supabase and Cloudflare are
+composed providers, not built-in framework features.
+
+Evidence: the [Supabase recipe](./docs/integrations/supabase.md), the
+verified [reference starter](./examples/supabase-cloudflare-starter/), the
+[tier-1 boundary gate](./tools/check-fullstack-boundary.ts), the
+[real-project qualification workflow](./.github/workflows/supabase-project-smoke.yml)
+and the
+[real Workers deploy smoke](./.github/workflows/fullstack-deploy-smoke.yml)
+(green run
+[31925944647](https://github.com/open-element/openelement/actions/runs/31925944647)),
+built on the
+[ADR-0129](./docs/adr/ADR-0129-response-header-channel.md) response-header
+channel. Delivered scope is the 0.43 line together with Universal WC SSR;
+production-runtime recovery and cache semantics remain 0.44 work.
 
 ## Current release state
 

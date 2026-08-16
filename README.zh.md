@@ -2,9 +2,10 @@
 
 [English](./README.md) | 简体中文
 
-**以 Web Components 为原生组件契约、static-first 的应用框架。** Custom
-Elements 是可长期保存的应用组件模型；JSX 与 Basic Element 是作者层；
-Declarative Shadow DOM 是默认服务端表示；交互区域按需升级。
+**OpenElement 是以 Web Components 为原生组件契约、static-first 的应用框架，
+用于以标准 Custom Element 契约交付 DSD-first 应用。** Custom Elements 是可
+长期保存的应用组件模型；JSX 与 Basic Element 是作者层；Declarative Shadow
+DOM 是默认服务端表示；交互区域按需升级。
 
 源码包行为 `0.43.0-alpha.1`（`v0.43.0-alpha.1`）——ADR-0119 范围化接口冻结下的
 在途五包源码行；已放弃的 beta 命名不再是当前版本线。
@@ -40,8 +41,27 @@ official build path = Vite + Nitro
 提供统一契约。它把原生元素作者体验、路由、静态生成、DSD、选择性升级和可部署
 输出组合在一起，而不把某个框架专有 virtual DOM 变成长期 UI 模型。
 
-“WC 全栈第一”是明确的战略目标，必须通过 WC SSR 兼容性、第三方元素互操作、
-可移植部署与外部采用来证明；当前不将其表述为已取得的市场结论。
+“WC 全栈第一”是明确的战略目标，必须通过
+[WC SSR 兼容性证据](./docs/evidence/third-party-wc-ssr-corpus.json)、
+第三方元素互操作、可移植部署与外部采用来证明；当前不将其表述为已取得的市场结论。
+
+## 全栈组合路径
+
+官方全栈交付路径是 OpenElement × Supabase × Cloudflare，所有权边界明确：
+OpenElement 负责应用 UX；Supabase 负责数据、Auth、RLS、Storage 与
+Realtime；Cloudflare 负责边缘交付、安全、缓存与异步执行。Supabase 与
+Cloudflare 是被组合的服务提供方，不是框架内建功能。
+
+证据：[Supabase 配方](./docs/integrations/supabase.md)、已验证的
+[参考应用](./examples/supabase-cloudflare-starter/)、
+[tier-1 边界门禁](./tools/check-fullstack-boundary.ts)、
+[真实项目验证工作流](./.github/workflows/supabase-project-smoke.yml)与
+[真实 Workers 部署冒烟](./.github/workflows/fullstack-deploy-smoke.yml)
+（绿色运行
+[31925944647](https://github.com/open-element/openelement/actions/runs/31925944647)），
+构建于 [ADR-0129](./docs/adr/ADR-0129-response-header-channel.md)
+响应头通道之上。交付范围是 0.43 线与 Universal WC SSR；生产运行时恢复与
+缓存语义仍是 0.44 的工作。
 
 ## 当前发布状态
 
