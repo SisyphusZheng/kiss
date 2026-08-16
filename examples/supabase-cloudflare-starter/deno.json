@@ -10,15 +10,19 @@
     "@openelement/ui": "../../packages/ui/src/index.ts",
     "@openelement/element": "../../packages/element/src/index.ts",
     "@openelement/element/jsx-runtime": "../../packages/element/src/jsx-runtime.ts",
+    "@openelement/element/build-utils": "../../packages/element/src/build-utils.ts",
     "@openelement/element/": "../../packages/element/src/",
     "@openelement/app": "../../packages/app/src/index.ts",
     "@openelement/adapter-vite": "../../packages/adapter-vite/src/index.ts",
-    "vite": "npm:vite@8.0.16"
+    "vite": "npm:vite@8.0.16",
+    "@supabase/ssr": "npm:@supabase/ssr@^0.8.0",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.84.0"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@openelement/element",
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
   },
+  "nodeModulesDir": "auto",
   "exclude": ["node_modules", "dist", ".output-node", ".output-workers", ".nitro"]
 }

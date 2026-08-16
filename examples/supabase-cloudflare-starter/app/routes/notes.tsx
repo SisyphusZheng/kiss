@@ -1,33 +1,65 @@
 /**
  * /notes — RLS-protected resource (reference starter, #983).
  *
- * Anonymous-denied path (skeleton phase, ADR-0129 pending): session
- * read-back needs the response-header channel, so loaders currently see an
- * anonymous session and render the denied branch. The protection is not
- * only the UX path — the notes table has RLS enabled with owner-scoped
- * policies only, so an anonymous client is rejected at the database
- * regardless of application code.
+ * The loader reads the session from the request cookies (via @supabase/ssr)
+ * and queries the notes table with the user's JWT — RLS scopes the rows
+ * server-side. Anonymous requests render the denied branch; the same
+ * anonymous select would also be rejected by the database.
+ *
+ * The page also hosts the sign-out action (named action `logout` on POST
+ * /notes), which clears the session cookies through the same channel.
  */
-import { definePage } from '@openelement/app';
+import { definePage, redirect, useLoaderData } from '@openelement/app';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
 
 export const tagName = 'page-notes';
 
-export async function loader(
-  ctx: { request: Request; env: Record<string, string> },
-): Promise<{ denied: boolean }> {
-  const supabase = createServerSupabase(ctx.env);
-  const { session } = await supabase.readSession();
-  // ponytail: when ADR-0129 lands, query notes here through the Supabase
-  // client (RLS rejects anonymous selects server-side). Until then the
-  // denied branch is the only reachable state.
-  return { denied: session === null };
+interface NoteRow {
+  id: string;
+  body: string;
+  created_at: string;
 }
 
-const NotesPage = definePage<{ denied: boolean }>({
+interface NotesData {
+  denied: boolean;
+  email?: string;
+  notes?: NoteRow[];
+  error?: string;
+}
+
+export async function loader(ctx: {
+  request: Request;
+  env: Record<string, string>;
+  responseHeaders: Headers;
+}): Promise<NotesData> {
+  const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { denied: true };
+  const { data: notes, error } = await supabase
+    .from('notes')
+    .select('id, body, created_at')
+    .order('created_at', { ascending: false });
+  if (error) return { denied: false, email: user.email, error: error.message };
+  return { denied: false, email: user.email, notes: notes ?? [] };
+}
+
+export const actions = {
+  async logout(ctx: {
+    env: Record<string, string>;
+    request: Request;
+    responseHeaders: Headers;
+  }): Promise<never> {
+    const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
+    await supabase.auth.signOut();
+    throw redirect('/login');
+  },
+};
+
+const NotesPage = definePage<NotesData>({
   renderIntent: { mode: 'dynamic' },
   head: { title: 'Notes — reference starter' },
-  render({ data }) {
+  render() {
+    const data = useLoaderData() as NotesData;
     if (data.denied) {
       return (
         <main>
@@ -44,7 +76,14 @@ const NotesPage = definePage<{ denied: boolean }>({
     return (
       <main>
         <h1>Notes</h1>
-        <p>Your notes will render here once sign-in lands (ADR-0129).</p>
+        <p id='who'>signed-in:{data.email}</p>
+        {data.error ? <p id='error'>{data.error}</p> : null}
+        <ul id='notes'>
+          {(data.notes ?? []).map((note) => <li key={note.id}>{note.body}</li>)}
+        </ul>
+        <form method='post' action='/notes?/logout'>
+          <button type='submit'>Sign out</button>
+        </form>
       </main>
     );
   },
