@@ -28,6 +28,10 @@
     {
       "file": "20260817000003_attachment_scan_replay.sql",
       "sha256": "942a3a56b47a50daa9f0291de594fce584c8d51e75f8d2e6817304d5affb93d3"
+    },
+    {
+      "file": "20260817000004_stripe_webhooks.sql",
+      "sha256": "adec9029d1edd8007d22a37233a7885cdcf4fe65a4ac56dcfb64aaba6e1146df"
     }
   ]
 }

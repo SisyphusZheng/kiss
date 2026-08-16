@@ -32,6 +32,9 @@ application layer.
       and explicit unsubscribe on disconnect
 - [x] admin authorization reads issuer-controlled `app_metadata.role` only;
       matching RLS and immutable append-only audit migration included
+- [x] Stripe webhook ingress preserves and verifies the raw body before JSON
+      parsing, enforces timestamp tolerance, durably deduplicates provider event
+      ids, and applies only monotonic order-state transitions
 
 ## Prerequisites
 
@@ -66,12 +69,16 @@ Required worker env (server-side only, never in the client bundle):
 ```
 SUPABASE_URL
 SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_LIVEMODE
 ```
 
 The anon key is additionally rendered into the /notes page as a data attribute
 for the realtime island — it is a public key by design; row visibility stays
-enforced by RLS and the island's `user_id` filter. The service-role key never
-enters this app.
+enforced by RLS and the island's `user_id` filter. The service-role and Stripe
+webhook secrets are server-only Worker bindings used by lifecycle/webhook
+handlers and must never be rendered or prefixed with `VITE_`.
 
 ## Qualification still required
 
