@@ -16,10 +16,18 @@ interface DeadLetter {
   delivery_count: number;
   first_failed_at: string;
 }
+interface PaymentDeadLetter {
+  provider_event_id: string;
+  event_type: string;
+  processing_state: 'dead_letter' | 'replay_requested';
+  delivery_count: number;
+  dead_lettered_at: string;
+}
 interface Data {
   email?: string;
   noteCount: number;
   deadLetters: DeadLetter[];
+  paymentDeadLetters: PaymentDeadLetter[];
   error?: string;
 }
 interface AdminClient {
@@ -51,16 +59,40 @@ export function createAdminLoader(
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     requireAdmin(user);
-    const [{ count, error }, deadLetters] = await Promise.all([
+    const [{ count, error }, deadLetters, paymentDeadLetters] = await Promise.all([
       supabase.from('notes').select('id', { count: 'exact', head: true }),
       supabase.rpc('list_attachment_scan_dead_letters'),
+      supabase.rpc('list_payment_event_dead_letters'),
     ]);
     return {
       email: user?.email,
       noteCount: count ?? 0,
       deadLetters: (deadLetters.data ?? []) as DeadLetter[],
-      error: error?.message ?? deadLetters.error?.message,
+      paymentDeadLetters: (paymentDeadLetters.data ?? []) as PaymentDeadLetter[],
+      error: error?.message ?? deadLetters.error?.message ?? paymentDeadLetters.error?.message,
     };
+  };
+}
+
+export function createPaymentReplayAction(
+  createClient: (env: Record<string, string>, request: Request, headers: Headers) => AdminClient =
+    createServerSupabase as never,
+) {
+  return async function replayPayment(
+    ctx: AdminContext & { formData: FormData },
+  ): Promise<OpenElementActionFailure<{ error: string }>> {
+    const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { data: { user } } = await supabase.auth.getUser();
+    requireAdmin(user);
+    const eventId = String(ctx.formData.get('event_id') ?? '');
+    if (!/^evt_[A-Za-z0-9_]+$/.test(eventId)) {
+      return fail(422, { error: 'invalid payment event id' });
+    }
+    const { error } = await supabase.rpc('request_payment_event_replay', {
+      target_event_id: eventId,
+    });
+    if (error) return fail(422, { error: error.message });
+    throw redirect('/admin');
   };
 }
 
@@ -87,7 +119,10 @@ export function createReplayAction(
 }
 
 export const loader = createAdminLoader();
-export const actions = { replay: createReplayAction() };
+export const actions = {
+  replay: createReplayAction(),
+  replayPayment: createPaymentReplayAction(),
+};
 const Page = definePage<Data>({
   renderIntent: { mode: 'dynamic' },
   head: { title: 'Admin' },
@@ -112,6 +147,25 @@ const Page = definePage<Data>({
                   <form method='post' action='/admin?/replay'>
                     <input type='hidden' name='id' value={item.id} />
                     <button type='submit'>Request replay</button>
+                  </form>
+                )
+                : null}
+            </li>
+          ))}
+        </ul>
+        <h2>Payment event dead letters</h2>
+        <ul id='payment-dead-letters'>
+          {data.paymentDeadLetters.map((item) => (
+            <li key={item.provider_event_id}>
+              <code>{item.provider_event_id}</code>{' '}
+              <span>
+                {item.event_type} — {item.processing_state} (deliveries:{item.delivery_count})
+              </span>{' '}
+              {item.processing_state === 'dead_letter'
+                ? (
+                  <form method='post' action='/admin?/replayPayment'>
+                    <input type='hidden' name='event_id' value={item.provider_event_id} />
+                    <button type='submit'>Request payment replay</button>
                   </form>
                 )
                 : null}

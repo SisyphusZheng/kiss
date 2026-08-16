@@ -4,6 +4,11 @@ export interface AttachmentScanMessage {
   objectKey: string;
 }
 
+export interface PaymentEventMessage {
+  type: 'payment.process';
+  eventId: string;
+}
+
 export interface QueueMessage<T> {
   body: T;
   ack(): void;
@@ -20,6 +25,7 @@ export interface WorkerEnv {
   SUPABASE_SERVICE_ROLE_KEY: string;
   ATTACHMENT_SCANNER: { fetch(request: Request): Promise<Response> };
   ATTACHMENT_SCAN_QUEUE: { send(message: AttachmentScanMessage): Promise<void> };
+  PAYMENT_EVENT_QUEUE: { send(message: PaymentEventMessage): Promise<void> };
 }
 
 const BUCKET = 'notes-attachments';
@@ -98,6 +104,44 @@ export async function consumeAttachmentScanDeadLetters(
   }
 }
 
+export async function consumePaymentEvents(
+  batch: QueueBatch<PaymentEventMessage>,
+  env: WorkerEnv,
+): Promise<void> {
+  for (const message of batch.messages) {
+    if (message.body?.type !== 'payment.process' || !message.body.eventId?.startsWith('evt_')) {
+      message.ack();
+      continue;
+    }
+    try {
+      await rpc(env, 'process_stripe_event', { target_event_id: message.body.eventId });
+      message.ack();
+    } catch {
+      message.retry();
+    }
+  }
+}
+
+export async function consumePaymentEventDeadLetters(
+  batch: QueueBatch<PaymentEventMessage>,
+  env: WorkerEnv,
+): Promise<void> {
+  for (const message of batch.messages) {
+    if (message.body?.type !== 'payment.process' || !message.body.eventId?.startsWith('evt_')) {
+      message.ack();
+      continue;
+    }
+    try {
+      await rpc(env, 'record_payment_event_dead_letter', {
+        target_event_id: message.body.eventId,
+      });
+      message.ack();
+    } catch {
+      message.retry();
+    }
+  }
+}
+
 export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
   const stale = await rpc<{ id: string; object_key: string }[]>(
     env,
@@ -151,5 +195,38 @@ export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
     } catch {
       // Keep replay_requested durable; the next Cron run retries the handoff.
     }
+  }
+}
+
+export async function reconcilePayments(env: WorkerEnv): Promise<void> {
+  const pending = await rpc<{ provider_event_id: string; processing_state: string }[]>(
+    env,
+    'list_pending_payment_events',
+    {},
+  );
+  for (const event of pending) {
+    try {
+      await env.PAYMENT_EVENT_QUEUE.send({
+        type: 'payment.process',
+        eventId: event.provider_event_id,
+      });
+      if (event.processing_state === 'replay_requested') {
+        await rpc(env, 'mark_payment_event_replay_enqueued', {
+          target_event_id: event.provider_event_id,
+        });
+      }
+    } catch {
+      // Durable received/replay_requested state remains for the next Cron run.
+    }
+  }
+}
+
+export async function reconcileLifecycle(env: WorkerEnv): Promise<void> {
+  const results = await Promise.allSettled([
+    reconcileAttachments(env),
+    reconcilePayments(env),
+  ]);
+  if (results.some((result) => result.status === 'rejected')) {
+    throw new Error('one or more lifecycle reconciliation passes failed');
   }
 }

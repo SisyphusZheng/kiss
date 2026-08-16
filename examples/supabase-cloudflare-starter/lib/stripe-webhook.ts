@@ -104,3 +104,14 @@ export function stripeOrderReference(event: StripeEvent): string | null {
   const orderId = (metadata as Record<string, unknown>).order_id;
   return typeof orderId === 'string' ? orderId : null;
 }
+
+/** Retain only state-machine inputs; never persist the full provider/customer payload. */
+export function stripeEventData(event: StripeEvent): Record<string, unknown> {
+  const object = event.data.object;
+  const data: Record<string, unknown> = {};
+  for (const key of ['id', 'payment_status', 'amount_total', 'currency', 'payment_intent']) {
+    const value = object[key];
+    if (typeof value === 'string' || typeof value === 'number' || value === null) data[key] = value;
+  }
+  return data;
+}

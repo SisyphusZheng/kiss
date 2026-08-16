@@ -39,6 +39,10 @@ application layer.
       ids and Stripe idempotency keys; Session and PaymentIntent metadata carry
       the order id, paid events must reconcile amount/currency, and the success
       URL never grants payment state
+- [x] verified Stripe events persist a minimal envelope before Queue handoff;
+      the Queue consumer owns state transitions, exhausted delivery becomes a
+      durable admin-visible DLQ row, and Cron safely re-enqueues received events
+      and requested replays
 
 ## Prerequisites
 
@@ -67,6 +71,9 @@ Production migration checks and deployment use the pinned
 `Supabase project smoke (real project)` workflow and the dedicated credentials documented in
 [`docs/runbooks/supabase-migrations.md`](../../docs/runbooks/supabase-migrations.md). Runtime
 service-role credentials are not migration credentials.
+
+Payment delivery, DLQ recovery, and replay operations are documented in
+[`docs/runbooks/payment-events.md`](../../docs/runbooks/payment-events.md).
 
 Required worker env (server-side only, never in the client bundle):
 

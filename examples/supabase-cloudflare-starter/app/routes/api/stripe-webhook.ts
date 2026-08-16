@@ -1,5 +1,6 @@
 import {
   parseStripeEvent,
+  stripeEventData,
   stripeOrderReference,
   verifyStripeSignature,
 } from '../../../lib/stripe-webhook.ts';
@@ -7,6 +8,10 @@ import {
 interface ApiContext {
   request: Request;
   env: Record<string, unknown>;
+}
+
+interface PaymentQueue {
+  send(message: { type: 'payment.process'; eventId: string }): Promise<void>;
 }
 
 const MAX_WEBHOOK_BYTES = 1024 * 1024;
@@ -25,8 +30,10 @@ export function createStripeWebhook(fetchImpl: typeof fetch = fetch) {
     const supabaseUrl = serverSecret(env, 'SUPABASE_URL');
     const serviceRoleKey = serverSecret(env, 'SUPABASE_SERVICE_ROLE_KEY');
     const livemode = serverSecret(env, 'STRIPE_LIVEMODE');
+    const queue = env.PAYMENT_EVENT_QUEUE as PaymentQueue | undefined;
     if (
-      !webhookSecret || !supabaseUrl || !serviceRoleKey || !['true', 'false'].includes(livemode)
+      !webhookSecret || !supabaseUrl || !serviceRoleKey || !queue ||
+      !['true', 'false'].includes(livemode)
     ) {
       return Response.json({ error: 'webhook unavailable' }, { status: 503 });
     }
@@ -57,7 +64,7 @@ export function createStripeWebhook(fetchImpl: typeof fetch = fetch) {
     }
 
     try {
-      const response = await fetchImpl(`${supabaseUrl}/rest/v1/rpc/ingest_stripe_event`, {
+      const response = await fetchImpl(`${supabaseUrl}/rest/v1/rpc/receive_stripe_event`, {
         method: 'POST',
         headers: {
           apikey: serviceRoleKey,
@@ -65,15 +72,20 @@ export function createStripeWebhook(fetchImpl: typeof fetch = fetch) {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          provider_event_id: event.id,
+          target_event_id: event.id,
           event_type: event.type,
           event_created_at: event.created,
           event_livemode: event.livemode,
           order_reference: stripeOrderReference(event),
-          provider_object: event.data.object,
+          event_data: stripeEventData(event),
         }),
       });
       if (!response.ok) return Response.json({ error: 'event not durable' }, { status: 503 });
+      const durable = await response.json() as { processing_state?: string };
+      if (durable.processing_state === 'completed' || durable.processing_state === 'dead_letter') {
+        return Response.json({ received: true });
+      }
+      await queue.send({ type: 'payment.process', eventId: event.id });
       return Response.json({ received: true });
     } catch {
       return Response.json({ error: 'event not durable' }, { status: 503 });

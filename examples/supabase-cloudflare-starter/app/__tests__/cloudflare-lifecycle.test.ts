@@ -2,7 +2,10 @@ import { assertEquals } from '@std/assert';
 import {
   consumeAttachmentScanDeadLetters,
   consumeAttachmentScans,
+  consumePaymentEventDeadLetters,
+  consumePaymentEvents,
   reconcileAttachments,
+  reconcilePayments,
   type WorkerEnv,
 } from '../../lib/cloudflare-lifecycle.ts';
 
@@ -12,6 +15,7 @@ function env(overrides: Partial<WorkerEnv> = {}): WorkerEnv {
     SUPABASE_SERVICE_ROLE_KEY: 'service-role-test',
     ATTACHMENT_SCANNER: { fetch: () => Promise.resolve(Response.json({ verdict: 'clean' })) },
     ATTACHMENT_SCAN_QUEUE: { send: () => Promise.resolve() },
+    PAYMENT_EVENT_QUEUE: { send: () => Promise.resolve() },
     ...overrides,
   };
 }
@@ -266,4 +270,81 @@ Deno.test('Cron leaves a failed replay request durable and continues later rows'
     globalThis.fetch = originalFetch;
   }
   assertEquals(marked, ['good']);
+});
+
+Deno.test('payment Queue acknowledges only after the durable processor succeeds', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls: unknown[] = [];
+  globalThis.fetch = (_input, init) => {
+    calls.push(JSON.parse(String(init?.body)));
+    return Promise.resolve(Response.json('applied'));
+  };
+  let acked = 0;
+  let retried = 0;
+  try {
+    await consumePaymentEvents({
+      queue: 'openelement-payment-events',
+      messages: [{
+        body: { type: 'payment.process', eventId: 'evt_paid' },
+        ack: () => acked++,
+        retry: () => retried++,
+      }],
+    }, env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals({ acked, retried }, { acked: 1, retried: 0 });
+  assertEquals(calls, [{ target_event_id: 'evt_paid' }]);
+});
+
+Deno.test('payment DLQ retries until the dead letter is durable', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response(null, { status: 503 }));
+  let acked = 0;
+  let retried = 0;
+  try {
+    await consumePaymentEventDeadLetters({
+      queue: 'openelement-payment-events-dlq',
+      messages: [{
+        body: { type: 'payment.process', eventId: 'evt_failed' },
+        ack: () => acked++,
+        retry: () => retried++,
+      }],
+    }, env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals({ acked, retried }, { acked: 0, retried: 1 });
+});
+
+Deno.test('payment Cron queues received events and marks replay only after handoff', async () => {
+  const originalFetch = globalThis.fetch;
+  const operations: string[] = [];
+  globalThis.fetch = (input, init) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_pending_payment_events')) {
+      return Promise.resolve(Response.json([
+        { provider_event_id: 'evt_received', processing_state: 'received' },
+        { provider_event_id: 'evt_replay', processing_state: 'replay_requested' },
+      ]));
+    }
+    if (url.endsWith('/rpc/mark_payment_event_replay_enqueued')) {
+      operations.push(`mark:${JSON.parse(String(init?.body)).target_event_id}`);
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcilePayments(env({
+      PAYMENT_EVENT_QUEUE: {
+        send: (message) => {
+          operations.push(`send:${message.eventId}`);
+          return Promise.resolve();
+        },
+      },
+    }));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(operations, ['send:evt_received', 'send:evt_replay', 'mark:evt_replay']);
 });
