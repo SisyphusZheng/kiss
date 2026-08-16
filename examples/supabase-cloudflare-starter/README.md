@@ -45,8 +45,13 @@ deno task test         # unit smoke for route logic (stubbed Supabase client)
 
 ```sh
 supabase link --project-ref <ref>
-supabase db push        # applies supabase/migrations/ (notes + storage + realtime)
+supabase db push        # applies ordered, manifest-checked migrations
 ```
+
+Production migration checks and deployment use the pinned
+`Supabase project smoke (real project)` workflow and the dedicated credentials documented in
+[`docs/runbooks/supabase-migrations.md`](../../docs/runbooks/supabase-migrations.md). Runtime
+service-role credentials are not migration credentials.
 
 Required worker env (server-side only, never in the client bundle):
 

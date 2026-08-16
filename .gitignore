@@ -49,6 +49,7 @@ packages/*/*.tgz
 **/.dev.vars
 **/.dev.vars.*
 **/.wrangler/
+**/supabase/.temp/
 !.env.example
 !.env.sample
 !.env.template

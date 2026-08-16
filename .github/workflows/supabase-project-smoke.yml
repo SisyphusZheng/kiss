@@ -15,12 +15,26 @@ name: Supabase project smoke (real project)
 
 on:
   workflow_dispatch:
+    inputs:
+      migration_mode:
+        description: Check/apply committed migrations before provider qualification
+        required: true
+        default: skip
+        type: choice
+        options:
+          - skip
+          - check
+          - apply
   schedule:
     # Mondays 06:00 UTC
     - cron: '0 6 * * 1'
 
 permissions:
   contents: read
+
+concurrency:
+  group: supabase-real-project
+  cancel-in-progress: false
 
 jobs:
   project-smoke:
@@ -31,10 +45,51 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
       # v7.0.0
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/setup-deno-workspace
+
+      - name: Require dedicated migration credentials
+        if: ${{ inputs.migration_mode == 'check' || inputs.migration_mode == 'apply' }}
+        run: |
+          set -euo pipefail
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID; do
+            [ -n "${!name:-}" ] || { echo "$name is not configured" >&2; exit 1; }
+          done
+
+      # v1, pinned 2026-08-17
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1
+        if: ${{ inputs.migration_mode == 'check' || inputs.migration_mode == 'apply' }}
+        with:
+          version: 2.114.0
+
+      - name: Link target, inspect history, and dry-run migrations
+        if: ${{ inputs.migration_mode == 'check' || inputs.migration_mode == 'apply' }}
+        working-directory: examples/supabase-cloudflare-starter
+        run: |
+          set -euo pipefail
+          supabase --version | grep -Fx '2.114.0'
+          supabase link --project-ref "$SUPABASE_PROJECT_ID"
+          supabase migration list --linked
+          supabase db push --linked --dry-run
+
+      - name: Apply committed migrations
+        if: ${{ inputs.migration_mode == 'apply' }}
+        working-directory: examples/supabase-cloudflare-starter
+        run: supabase db push --linked --yes
+
+      - name: Prove the linked project is current after apply
+        if: ${{ inputs.migration_mode == 'apply' }}
+        working-directory: examples/supabase-cloudflare-starter
+        run: |
+          set -euo pipefail
+          output=$(supabase db push --linked --dry-run 2>&1)
+          echo "$output"
+          echo "$output" | grep -q 'Remote database is up to date.'
 
       - name: Install Chromium for the real browser journey
         run: ./node_modules/.bin/playwright install --with-deps chromium
@@ -253,11 +308,15 @@ jobs:
             --arg version "$(git rev-parse --short HEAD)" \
             --arg runId "${{ github.run_id }}" \
             --arg status "${{ job.status }}" \
+            --arg migrationMode "${{ inputs.migration_mode || 'skip' }}" \
+            --arg manifestSha "$(sha256sum examples/supabase-cloudflare-starter/supabase/migration-manifest.json | cut -d' ' -f1)" \
             --argjson matrix "$matrix" \
             '{
               version: $version,
               runId: $runId,
               jobStatus: $status,
+              migrationMode: $migrationMode,
+              migrationManifestSha256: $manifestSha,
               matrix: $matrix,
               note: "tier-2 real-project qualification; redacted — no credentials, emails, or user ids in this report"
             }' > supabase-project-smoke.json
