@@ -90,11 +90,16 @@ export function showBranchMarker(truthy: boolean): string {
  * mis-binding data-eid handlers. A non-array `each` emits the -1 empty-branch
  * token (mirrors the SSR fallback that renders an empty fragment).
  */
-export function forBranchMarker(items: unknown): string {
+export function forBranchMarker(
+  items: unknown,
+  /** Precomputed per-item keys (render-ir computes them once per render so a
+   * getter with side effects is read exactly once per item). */
+  keys?: readonly (string | number | undefined)[],
+): string {
   if (!Array.isArray(items)) return `${BRANCH_MARKER_PREFIX}for:-1`;
   let signature = '';
   for (let i = 0; i < items.length; i++) {
-    signature += `${forItemSignature(items[i], i)};`;
+    signature += `${forItemSignature(items[i], i, keys?.[i])};`;
   }
   return `${BRANCH_MARKER_PREFIX}for:${items.length}:${hashBranchSignature(signature)}`;
 }
@@ -125,7 +130,7 @@ export function forEndMarker(): string {
  * accepted limitation that avoids JSON.stringify on arbitrary (potentially
  * large or circular) objects.
  */
-function forItemSignature(item: unknown, index: number): string {
+function forItemSignature(item: unknown, index: number, key?: string | number): string {
   if (item === null) return 'null';
   const t = typeof item;
   if (t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint' || t === 'symbol') {
@@ -133,7 +138,7 @@ function forItemSignature(item: unknown, index: number): string {
     return `${t}:${s.length}:${s}`;
   }
   if (t === 'undefined') return 'undefined';
-  const stable = forItemKey(item);
+  const stable = key !== undefined ? key : forItemKey(item);
   if (stable !== undefined) return `key:${String(stable)}`;
   return `${t}#${index}`;
 }

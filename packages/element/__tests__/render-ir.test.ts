@@ -205,6 +205,27 @@ Deno.test('SSR depth-trip path shows the For item key when the render path knows
   }
 });
 
+Deno.test('SSR For item identity getters are read exactly once per item', async () => {
+  // The branch marker signs with the item key and the depth-path window
+  // reuses it — a getter with side effects must not run twice.
+  let reads = 0;
+  const items = [
+    {
+      get id() {
+        reads++;
+        return 'k1';
+      },
+    },
+  ];
+  const html = await renderDsdTree({
+    tag: FOR_TAG,
+    props: { each: items },
+    children: [() => jsx('span', { children: 'x' })],
+  });
+  assertStringIncludes(html, '<span>x</span>');
+  assertEquals(reads, 1);
+});
+
 Deno.test('SSR depth-trip path falls back to the For item ordinal without a stable key (#975)', async () => {
   class ForOrdinalFrame {
     render(): unknown {

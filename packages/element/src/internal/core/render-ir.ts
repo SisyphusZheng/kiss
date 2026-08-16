@@ -390,7 +390,12 @@ async function renderForBranch(
 ): Promise<RenderNode> {
   const items = unwrapSignalLike(props?.each) as unknown[];
   const renderFn = children[0] as RenderFn;
-  const branch = branchCommentNode(forBranchMarker(items));
+  // Read each item's identity getter exactly once per render: the branch
+  // marker signs with these keys and the #975 path window reuses them —
+  // a getter with side effects (or one that throws on a second read) must
+  // not run twice.
+  const itemKeys = Array.isArray(items) ? items.map((item) => forItemKey(item)) : undefined;
+  const branch = branchCommentNode(forBranchMarker(items, itemKeys));
   if (!Array.isArray(items) || typeof renderFn !== 'function') {
     return fragmentNode([branch]);
   }
@@ -401,9 +406,13 @@ async function renderForBranch(
     parts.push(branchCommentNode(forItemBoundaryMarker(index)));
     // #975: while the depth-trip path window is active, distinguish the
     // per-item subtree by the item's stable key (same id/key fields the
-    // branch token signs), falling back to the item ordinal.
+    // branch token signs), falling back to the item ordinal. Reuses the
+    // key already read for the branch marker — no second getter call.
     const itemPath = renderPath
-      ? appendRenderPathSegment(renderPath, forItemPathSegment(items[index], index))
+      ? appendRenderPathSegment(
+        renderPath,
+        forItemPathSegment(items[index], index, itemKeys?.[index]),
+      )
       : renderPath;
     parts.push(
       await renderToNode(
@@ -420,9 +429,9 @@ async function renderForBranch(
 }
 
 /** #975 path segment for one `<For>` item: keyed when identifiable, else ordinal. */
-function forItemPathSegment(item: unknown, index: number): string {
-  const key = forItemKey(item);
-  return key !== undefined ? `for-item[key=${String(key)}]` : `for-item[index=${index}]`;
+function forItemPathSegment(item: unknown, index: number, key?: string | number): string {
+  const resolved = key !== undefined ? key : forItemKey(item);
+  return resolved !== undefined ? `for-item[key=${String(resolved)}]` : `for-item[index=${index}]`;
 }
 
 /** Component class/function: invoke, then render the returned node. */
