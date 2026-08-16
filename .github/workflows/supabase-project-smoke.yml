@@ -266,12 +266,12 @@ jobs:
             --data-binary 'immutable owner object')
           [[ "$owner_insert" =~ ^2 ]]
           owner_select=$(curl -s -o .smoke/storage-owner.txt -w '%{http_code}' \
-            "$SUPABASE_URL/storage/v1/object/authenticated/notes-attachments/$STORAGE_POLICY_KEY" \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
           [[ "$owner_select" =~ ^2 ]]
           grep -Fxq 'immutable owner object' .smoke/storage-owner.txt
           cross_select=$(curl -s -o /dev/null -w '%{http_code}' \
-            "$SUPABASE_URL/storage/v1/object/authenticated/notes-attachments/$STORAGE_POLICY_KEY" \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_b")
           [[ ! "$cross_select" =~ ^2 ]]
           owner_update=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
@@ -292,7 +292,7 @@ jobs:
             --data-binary 'cross-user overwrite')
           [[ ! "$cross_update" =~ ^2 ]]
           after_updates=$(curl -s -o .smoke/storage-after-updates.txt -w '%{http_code}' \
-            "$SUPABASE_URL/storage/v1/object/authenticated/notes-attachments/$STORAGE_POLICY_KEY" \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
           [[ "$after_updates" =~ ^2 ]]
           grep -Fxq 'immutable owner object' .smoke/storage-after-updates.txt
@@ -303,7 +303,7 @@ jobs:
             -d "{\"prefixes\":[\"$STORAGE_POLICY_KEY\"]}")
           [[ ! "$cross_delete" =~ ^5 ]]
           still_present=$(curl -s -o .smoke/storage-after-cross-delete.txt -w '%{http_code}' \
-            "$SUPABASE_URL/storage/v1/object/authenticated/notes-attachments/$STORAGE_POLICY_KEY" \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
           [[ "$still_present" =~ ^2 ]]
           grep -Fxq 'immutable owner object' .smoke/storage-after-cross-delete.txt
@@ -314,7 +314,7 @@ jobs:
             -d "{\"prefixes\":[\"$STORAGE_POLICY_KEY\"]}")
           [[ "$owner_delete" =~ ^2 ]]
           after_delete=$(curl -s -o /dev/null -w '%{http_code}' \
-            "$SUPABASE_URL/storage/v1/object/authenticated/notes-attachments/$STORAGE_POLICY_KEY" \
+            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
           [[ ! "$after_delete" =~ ^2 ]]
           record storage-policy-select-insert-update-delete pass
