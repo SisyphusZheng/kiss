@@ -95,6 +95,13 @@ Deno.test('policy: package artifacts gate packs before the packaged consumer run
   assert(gates.indexOf('package-artifacts:check') < gates.indexOf('consumer:packaged'));
 });
 
+Deno.test('policy: visual baseline changes report duplicate storage', () => {
+  const gates = selectGates('ci', [
+    'www/e2e/visual-baselines.spec.ts-snapshots/shared-dark-desktop-docs-chromium-canonical.png',
+  ]).map((gate) => gate.name);
+  assert(gates.includes('check:visual-baselines'));
+});
+
 Deno.test('cli: parse approved plan for release command', () => {
   assertEquals(parseArgs(['release', '--approved-plan', 'ADR-0101/v0.40', '--dry-run']), {
     command: 'release',
