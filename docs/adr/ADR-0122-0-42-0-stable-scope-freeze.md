@@ -122,3 +122,8 @@ reactivity. Freezing must protect these properties, not just the API list.
   §2 two-channel symmetry as written.
 - 7a30f1b8 — empty 200/422 HTML action responses navigate instead of
   morphing: restores §2 / MORPH_CONTRACT.md step 3 as written.
+- 6fc3f2f2 — the node:http bridge (cli/start + generated serve.mjs) builds
+  the request URL from the validated Host header (with an explicit
+  OPEN_ELEMENT_TRUST_PROXY=1 opt-in for forwarded headers) and preserves
+  multi-value Set-Cookie: bug fixes restoring §3/§4 behavior as written;
+  the CSRF matrix and the start pipeline shape are unchanged.
