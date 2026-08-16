@@ -9,13 +9,18 @@ const HomePage = definePage({
     return (
       <main>
         <h1>Reference starter</h1>
-        <p>OpenElement app shell on the Nitro cloudflare_module output, Supabase-backed.</p>
+        <p>
+          OpenElement app shell on the Nitro cloudflare_module output, Supabase-backed.
+        </p>
         <ul>
           <li>
             <a href='/notes'>Protected notes (RLS)</a>
           </li>
           <li>
-            <a href='/login'>Sign-in (pending ADR-0129)</a>
+            <a href='/upload'>Storage upload (owner-scoped bucket)</a>
+          </li>
+          <li>
+            <a href='/login'>Sign-in</a>
           </li>
         </ul>
       </main>

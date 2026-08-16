@@ -2961,6 +2961,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/assert@1",
       "npm:@supabase/ssr@0.8",
       "npm:@supabase/supabase-js@^2.84.0",
       "npm:vite@8.0.16"

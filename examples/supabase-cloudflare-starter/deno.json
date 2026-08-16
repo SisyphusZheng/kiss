@@ -4,7 +4,8 @@
     "build": "deno run --config ../../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../../packages/adapter-vite/src/cli/build.ts",
     "nitro:build": "OPEN_ELEMENT_NITRO_PRESET=cloudflare_module deno run --config ../../deno.json --node-modules-dir=auto -A npm:nitro@3.0.0 build",
     "start": "deno run -A ../../packages/adapter-vite/src/cli/start.ts",
-    "check": "deno check app/routes/index.tsx app/routes/notes.tsx app/routes/login.tsx app/shell.tsx lib/supabase-server.ts"
+    "check": "deno check app/routes/index.tsx app/routes/notes.tsx app/routes/login.tsx app/routes/upload.tsx app/islands/notes-live.tsx app/shell.tsx lib/supabase-server.ts",
+    "test": "deno test --allow-env app/__tests__/"
   },
   "imports": {
     "@openelement/ui": "../../packages/ui/src/index.ts",
@@ -16,13 +17,34 @@
     "@openelement/adapter-vite": "../../packages/adapter-vite/src/index.ts",
     "vite": "npm:vite@8.0.16",
     "@supabase/ssr": "npm:@supabase/ssr@^0.8.0",
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.84.0"
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.84.0",
+    "@std/assert": "jsr:@std/assert@1"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@openelement/element",
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
   },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "exclude": ["no-sloppy-imports"]
+    }
+  },
   "nodeModulesDir": "auto",
-  "exclude": ["node_modules", "dist", ".output-node", ".output-workers", ".nitro"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".output-node",
+    ".output-workers",
+    ".nitro"
+  ]
 }
