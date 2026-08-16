@@ -1,3 +1,9 @@
+import {
+  ATTACHMENT_SCAN_DLQ_NAME,
+  ATTACHMENT_SCAN_PERSISTENCE_DLQ_NAME,
+  ATTACHMENT_SCAN_QUEUE_NAME,
+} from '../examples/supabase-cloudflare-starter/lib/cloudflare-queues.ts';
+
 interface WranglerConfig {
   name?: string;
   main?: string;
@@ -7,8 +13,9 @@ interface WranglerConfig {
   [key: string]: unknown;
 }
 
-export const SCAN_QUEUE = 'openelement-attachment-scan';
-export const SCAN_DLQ = 'openelement-attachment-scan-dlq';
+export const SCAN_QUEUE = ATTACHMENT_SCAN_QUEUE_NAME;
+export const SCAN_DLQ = ATTACHMENT_SCAN_DLQ_NAME;
+export const SCAN_PERSISTENCE_DLQ = ATTACHMENT_SCAN_PERSISTENCE_DLQ_NAME;
 
 export function withAsyncBindings(
   base: WranglerConfig,
@@ -34,6 +41,13 @@ export function withAsyncBindings(
         max_retries: 3,
         retry_delay: 30,
         dead_letter_queue: SCAN_DLQ,
+      }, {
+        queue: SCAN_DLQ,
+        max_batch_size: 10,
+        max_batch_timeout: 5,
+        max_retries: 10,
+        retry_delay: 60,
+        dead_letter_queue: SCAN_PERSISTENCE_DLQ,
       }],
     },
     triggers: { crons: ['*/5 * * * *'] },

@@ -24,6 +24,10 @@
     {
       "file": "20260817000002_attachment_scanning.sql",
       "sha256": "453ca62cca30f9e8085f90e6a9a91889f0aefcc38f36665597b6fb2cf7790e4c"
+    },
+    {
+      "file": "20260817000003_attachment_scan_replay.sql",
+      "sha256": "942a3a56b47a50daa9f0291de594fce584c8d51e75f8d2e6817304d5affb93d3"
     }
   ]
 }

@@ -1,5 +1,10 @@
 import { assertEquals, assertThrows } from '@std/assert';
-import { SCAN_DLQ, SCAN_QUEUE, withAsyncBindings } from './render-cloudflare-async-config.ts';
+import {
+  SCAN_DLQ,
+  SCAN_PERSISTENCE_DLQ,
+  SCAN_QUEUE,
+  withAsyncBindings,
+} from './render-cloudflare-async-config.ts';
 
 Deno.test('async overlay preserves the single entry and adds bounded Queue/DLQ/Cron', () => {
   const rendered = withAsyncBindings({
@@ -17,6 +22,13 @@ Deno.test('async overlay preserves the single entry and adds bounded Queue/DLQ/C
       max_retries: 3,
       retry_delay: 30,
       dead_letter_queue: SCAN_DLQ,
+    }, {
+      queue: SCAN_DLQ,
+      max_batch_size: 10,
+      max_batch_timeout: 5,
+      max_retries: 10,
+      retry_delay: 60,
+      dead_letter_queue: SCAN_PERSISTENCE_DLQ,
     }],
   });
   assertEquals(rendered.triggers, { crons: ['*/5 * * * *'] });

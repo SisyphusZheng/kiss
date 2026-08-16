@@ -11,6 +11,7 @@ export interface QueueMessage<T> {
 }
 
 export interface QueueBatch<T> {
+  queue: string;
   messages: QueueMessage<T>[];
 }
 
@@ -76,6 +77,27 @@ export async function consumeAttachmentScans(
   }
 }
 
+export async function consumeAttachmentScanDeadLetters(
+  batch: QueueBatch<AttachmentScanMessage>,
+  env: WorkerEnv,
+): Promise<void> {
+  for (const message of batch.messages) {
+    if (message.body?.type !== 'attachment.scan') {
+      message.ack();
+      continue;
+    }
+    try {
+      await rpc(env, 'record_attachment_scan_dead_letter', {
+        reservation_id: message.body.reservationId,
+        target_key: message.body.objectKey,
+      });
+      message.ack();
+    } catch {
+      message.retry();
+    }
+  }
+}
+
 export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
   const stale = await rpc<{ id: string; object_key: string }[]>(
     env,
@@ -110,6 +132,24 @@ export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
       });
     } catch {
       // Continue the page; the failed row remains pending for the next run.
+    }
+  }
+
+  const replays = await rpc<{ id: string; reservation_id: string; object_key: string }[]>(
+    env,
+    'list_requested_attachment_scan_replays',
+    {},
+  );
+  for (const replay of replays) {
+    try {
+      await env.ATTACHMENT_SCAN_QUEUE.send({
+        type: 'attachment.scan',
+        reservationId: replay.reservation_id,
+        objectKey: replay.object_key,
+      });
+      await rpc(env, 'mark_attachment_scan_replayed', { dead_letter_id: replay.id });
+    } catch {
+      // Keep replay_requested durable; the next Cron run retries the handoff.
     }
   }
 }

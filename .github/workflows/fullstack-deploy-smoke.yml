@@ -59,7 +59,10 @@ jobs:
           deno run --allow-read --allow-write ../../tools/render-cloudflare-async-config.ts \
             wrangler.jsonc .wrangler-async.generated.json "$SCANNER_SERVICE"
           queues=$(deno run -A npm:wrangler@4.123.0 queues list --json)
-          for queue in openelement-attachment-scan openelement-attachment-scan-dlq; do
+          for queue in \
+            openelement-attachment-scan \
+            openelement-attachment-scan-dlq \
+            openelement-attachment-scan-persistence-failures; do
             if echo "$queues" | jq -e --arg name "$queue" '.[] | select(.queue_name == $name)' >/dev/null; then
               echo "$queue already exists"
             else
@@ -118,7 +121,9 @@ jobs:
           set -euo pipefail
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
-          echo "Queue + DLQ provider lookup -> OK"
+          deno run -A npm:wrangler@4.123.0 queues info \
+            openelement-attachment-scan-persistence-failures >/dev/null
+          echo "Queue + DLQ + persistence-failure queue provider lookup -> OK"
 
       - name: Write the smoke report
         if: always()
