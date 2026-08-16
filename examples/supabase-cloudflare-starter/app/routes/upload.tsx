@@ -126,11 +126,22 @@ export function createUploadAction(
       return fail(422, { error: 'file exceeds the 1 MiB reference cap' });
     }
     const key = objectKeyFor(user.id, file.name || 'upload.bin');
+    // Never silently overwrite: different originals can normalize to the same
+    // key, and upsert:true would lose the earlier file without a trace.
     const { error } = await supabase.storage.from(BUCKET).upload(key, file, {
       contentType: file.type || undefined,
-      upsert: true,
+      upsert: false,
     });
-    if (error) return fail(422, { error: error.message });
+    if (error) {
+      const duplicate = /already exists|Duplicate/i.test(error.message);
+      return fail(422, {
+        error: duplicate
+          ? `a file named '${
+            sanitizeFilename(file.name || 'upload.bin')
+          }' already exists — rename it to upload a new one`
+          : error.message,
+      });
+    }
     throw redirect('/upload');
   };
 }

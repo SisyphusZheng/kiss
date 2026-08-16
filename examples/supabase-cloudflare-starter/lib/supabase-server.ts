@@ -24,7 +24,10 @@ export function createServerSupabase(
       '[reference starter] SUPABASE_URL and SUPABASE_ANON_KEY must be set in the worker env',
     );
   }
-  const secure = url.startsWith('https://');
+  // Secure follows the APPLICATION's origin, not the Supabase URL: the
+  // cookie belongs to the app; over plain http (local/LAN) a Secure cookie
+  // would be dropped by the browser and the session would vanish.
+  const secure = new URL(request.url).protocol === 'https:';
   return createServerClient(url, anonKey, {
     cookies: {
       // parseCookieHeader marks value optional; GetAllCookies wants a

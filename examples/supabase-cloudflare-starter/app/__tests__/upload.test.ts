@@ -144,3 +144,17 @@ Deno.test('action surfaces storage errors as 422', async () => {
   assertEquals(result.status, 422);
   assertEquals(result.data, { error: 'row level security' });
 });
+
+Deno.test('action never silently overwrites an existing object (collision gets a 422)', async () => {
+  const action = createUploadAction(
+    stubClient({ uploadError: { message: 'The resource already exists' } }),
+  );
+  const formData = new FormData();
+  // Two originals that normalize to the same key: the second must be told,
+  // not silently overwrite the first (upsert stays off).
+  formData.set('file', new File(['x'], 'a b.txt'));
+  const result = await action({ ...ctx(), formData });
+  assert(isActionFailure(result));
+  assertEquals(result.status, 422);
+  assert((result.data?.error ?? '').includes('already exists'));
+});
