@@ -4,7 +4,7 @@
     "build": "deno run --config ../../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../../packages/adapter-vite/src/cli/build.ts",
     "nitro:build": "OPEN_ELEMENT_NITRO_PRESET=cloudflare_module deno run --config ../../deno.json --node-modules-dir=auto -A npm:nitro@3.0.0 build && rm -rf .output-workers/public/server",
     "start": "deno run -A ../../packages/adapter-vite/src/cli/start.ts",
-    "check": "deno check app/routes/index.tsx app/routes/admin.tsx app/routes/checkout.tsx app/routes/notes.tsx app/routes/login.tsx app/routes/signup.tsx app/routes/magic-link.tsx app/routes/recover.tsx app/routes/reset-password.tsx app/routes/auth/callback.tsx app/routes/upload.tsx app/routes/api/stripe-webhook.ts app/islands/notes-live.tsx app/shell.tsx lib/supabase-server.ts lib/auth-security.ts lib/authorization.ts lib/rate-limit.ts lib/cloudflare-queues.ts lib/cloudflare-lifecycle.ts lib/cloudflare-handlers.ts lib/stripe-checkout.ts lib/stripe-webhook.ts cloudflare-entry.ts",
+    "check": "deno check app/routes/index.tsx app/routes/admin.tsx app/routes/checkout.tsx app/routes/notes.tsx app/routes/login.tsx app/routes/signup.tsx app/routes/magic-link.tsx app/routes/recover.tsx app/routes/reset-password.tsx app/routes/auth/callback.tsx app/routes/upload.tsx app/routes/api/stripe-webhook.ts app/islands/notes-live.tsx app/shell.tsx lib/supabase-server.ts lib/auth-security.ts lib/authorization.ts lib/rate-limit.ts lib/cloudflare-queues.ts lib/cloudflare-lifecycle.ts lib/cloudflare-handlers.ts lib/stripe-checkout.ts lib/stripe-webhook.ts cloudflare-entry.ts scanner-worker.ts",
     "test": "deno test --allow-env app/__tests__/"
   },
   "imports": {

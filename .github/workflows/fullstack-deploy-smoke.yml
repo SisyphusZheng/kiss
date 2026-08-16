@@ -44,6 +44,32 @@ jobs:
           deno task build
           deno task nitro:build
 
+      - name: Deploy the private attachment scanner
+        if: inputs.async_mode == 'provision'
+        working-directory: examples/supabase-cloudflare-starter
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          METADEFENDER_CORE_URL: ${{ secrets.METADEFENDER_CORE_URL }}
+          METADEFENDER_API_KEY: ${{ secrets.METADEFENDER_API_KEY }}
+          SCANNER_SERVICE: ${{ inputs.scanner_service }}
+        run: |
+          set -euo pipefail
+          for required in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY METADEFENDER_CORE_URL METADEFENDER_API_KEY SCANNER_SERVICE; do
+            [ -n "${!required}" ] || { echo "$required is not configured" >&2; exit 1; }
+          done
+          deno run -A npm:wrangler@4.123.0 deploy --config scanner-wrangler.jsonc \
+            --name "$SCANNER_SERVICE" \
+            --var "SUPABASE_URL:$SUPABASE_URL" "METADEFENDER_CORE_URL:$METADEFENDER_CORE_URL"
+          jq -n \
+            --arg supabase "$SUPABASE_SERVICE_ROLE_KEY" \
+            --arg metadefender "$METADEFENDER_API_KEY" \
+            '{SUPABASE_SERVICE_ROLE_KEY:$supabase,METADEFENDER_API_KEY:$metadefender}' | \
+            deno run -A npm:wrangler@4.123.0 secret bulk \
+              --config scanner-wrangler.jsonc --name "$SCANNER_SERVICE"
+
       - name: Render and provision bounded async resources
         if: inputs.async_mode == 'provision'
         working-directory: examples/supabase-cloudflare-starter
@@ -136,6 +162,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
+          deno run -A npm:wrangler@4.123.0 deployments list \
+            --name "${{ inputs.scanner_service }}" --json | jq -e 'length > 0' >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info \
