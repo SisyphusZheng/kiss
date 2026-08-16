@@ -93,19 +93,31 @@ const log = createLogger('scanner');
  * definePage() always registers under the path-derived fallback tag; its
  * `tagName` export only names a content element and is ignored for
  * registration. Detection must not trip on `definePage(` occurrences inside
- * strings — guide pages embed full route samples in template literals
- * (www/app/routes/guide/*.tsx) — so the regex runs against source with
- * string/template contents masked (maskSourceStrings).
+ * strings or comments — guide pages embed full route samples in template
+ * literals (www/app/routes/guide/*.tsx), and a comment like
+ * `// migrate to definePage(` must not flip a plain element route to the
+ * path-derived fallback tag (ADR-0128) — so the regex runs against source
+ * with string/template/comment contents masked (maskSourceStrings).
  */
 const DEFINE_PAGE_RE = /\bdefinePage\s*\(/;
 
 /**
- * Mask string and template-literal contents (replaced with spaces, newlines
- * preserved) so code samples embedded in route sources never trip static
- * source detection. Quoted strings only mask within a single line (JS
- * strings cannot span raw newlines), so an apostrophe in JSX text bails out
- * unmasked; template literals mask to the closing backtick while ${…}
- * expressions are scanned as code (nested templates/strings recurse).
+ * Mask string, template-literal, and comment contents (replaced with spaces,
+ * newlines preserved) so code samples and prose embedded in route sources
+ * never trip static source detection. Quoted strings only mask within a
+ * single line (JS strings cannot span raw newlines), so an apostrophe in JSX
+ * text bails out unmasked; template literals mask to the closing backtick
+ * while ${…} expressions are scanned as code (nested templates/strings
+ * recurse). Line comments (`//` to end of line) and block comments
+ * (slash-star to star-slash) are masked in code regions (including ${…}
+ * expressions) so a comment merely mentioning `definePage(` or a
+ * custom-element tag never changes the scan result.
+ *
+ * Limitation: regex literals are not tokenized — a `/` followed by `/` or
+ * `*` is always treated as a comment opener. A regex literal containing a
+ * raw `//` or `/*` sequence (e.g. `/[//]/`) therefore masks its own tail as
+ * a comment; that is the safe direction (over-masking can only suppress a
+ * detection, never invent one).
  *
  * Exported for the foreign-tag scanner (#979): JSX usage extraction must apply
  * the exact same masking so embedded samples never register as consumed tags.
@@ -169,7 +181,7 @@ export function maskSourceStrings(source: string): string {
   };
 
   // Code starting at i; returns the index of the first unmatched '}' (or
-  // len). Strings and templates found along the way are masked.
+  // len). Strings, templates, and comments found along the way are masked.
   const scanCode = (i: number): number => {
     let j = i;
     let depth = 0;
@@ -181,6 +193,28 @@ export function maskSourceStrings(source: string): string {
       }
       if (c === '`') {
         j = scanTemplate(j);
+        continue;
+      }
+      if (c === '/' && source[j + 1] === '/') {
+        // Line comment: mask to end of line (the newline itself survives).
+        // Skipping the range keeps braces inside comments out of the depth
+        // accounting below. Strings are consumed before this branch, so a
+        // '//' inside a string never reaches here. Regex literals are not
+        // tokenized — a raw '//' inside one (e.g. /[//]/) over-masks the
+        // regex tail as a comment; documented limitation, safe direction.
+        let k = j + 2;
+        while (k < len && source[k] !== '\n') k++;
+        blank(j, k);
+        j = k;
+        continue;
+      }
+      if (c === '/' && source[j + 1] === '*') {
+        // Block comment: mask through the closing '*/' (newlines preserved).
+        let k = j + 2;
+        while (k < len && !(source[k] === '*' && source[k + 1] === '/')) k++;
+        const end = Math.min(k + 2, len);
+        blank(j, end);
+        j = end;
         continue;
       }
       if (c === '{') depth++;

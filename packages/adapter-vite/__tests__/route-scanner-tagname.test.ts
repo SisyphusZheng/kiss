@@ -318,3 +318,72 @@ export default class PlainPage {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }
 });
+
+Deno.test('scanRoutes does not flag a route when definePage( appears only in comments', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    // A plain element route whose comments merely MENTION definePage( —
+    // a migration note like this must not flip the route to the path-derived
+    // fallback registration tag (ADR-0128).
+    await Deno.writeTextFile(
+      join(routesDir, 'commented.tsx'),
+      "import { defineCustomElement } from '@openelement/element';\n" +
+        '\n' +
+        '// TODO: migrate to definePage({ render() { … } }) eventually.\n' +
+        '/* Historical note: this used to be written with definePage(\n' +
+        '   before the plain-element shape was adopted. */\n' +
+        'class CommentedPage extends HTMLElement {}\n' +
+        '\n' +
+        "export const tagName = 'commented-sample-page';\n" +
+        'defineCustomElement(tagName, CommentedPage);\n' +
+        'export default CommentedPage;\n',
+    );
+
+    const entries = await scanRoutes(routesDir);
+    assertEquals(entries.length, 1);
+    assertEquals(
+      entries[0].definePage,
+      undefined,
+      'definePage( inside comments must not flag a plain element route',
+    );
+    assertEquals(entries[0].tagName, 'commented-sample-page');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('scanRoutes masks comments inside template-literal ${…} expressions', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    // ${…} expressions are scanned as code — and comments inside them are
+    // comments: definePage( mentioned there must still be masked.
+    await Deno.writeTextFile(
+      join(routesDir, 'interp.tsx'),
+      "import { defineCustomElement } from '@openelement/element';\n" +
+        '\n' +
+        'class InterpPage extends HTMLElement {}\n' +
+        '\n' +
+        'const label = `docs: ${/* see definePage( for pages */ chapter}`;\n' +
+        'void label;\n' +
+        '\n' +
+        "export const tagName = 'interp-sample-page';\n" +
+        'defineCustomElement(tagName, InterpPage);\n' +
+        'export default InterpPage;\n',
+    );
+
+    const entries = await scanRoutes(routesDir);
+    assertEquals(entries.length, 1);
+    assertEquals(
+      entries[0].definePage,
+      undefined,
+      'definePage( inside a comment in a ${…} expression must be masked',
+    );
+    assertEquals(entries[0].tagName, 'interp-sample-page');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});

@@ -77,6 +77,15 @@ Deno.test('foreign-tag scan: string/template contents never register as usage', 
   assertEquals(used.size, 0);
 });
 
+Deno.test('foreign-tag scan: tags mentioned in comments never register as usage', () => {
+  const used = collectUsedTags(
+    '// renders a <fake-widget> here\n/* and a <ghost-panel /> there */\nconst x = 1;\nvoid x;',
+  );
+  assertEquals(used.has('fake-widget'), false);
+  assertEquals(used.has('ghost-panel'), false);
+  assertEquals(used.size, 0);
+});
+
 Deno.test('foreign-tag scan: collects openElement-authored element definitions', () => {
   const defined = collectDefinedTags(ISLAND_SOURCE);
   assertEquals(defined.has('local-child'), true);
