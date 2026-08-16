@@ -6,17 +6,11 @@ Execution and release state follow the
 > Source of truth for forward product planning.\
 > Source package line: `v0.43.0-alpha.1`.\
 > npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `alpha` — see Current release state).\
-> Active execution target: `v0.43.0-alpha.1`.\
-> Current implementation state: five-package convergence is published;
-> 0.42 alphas through alpha.7 closed the light-fullstack floor (morph
-> residuals, start path, SSG fail-closed, CSRF default, honest tags);
-> alpha.9 shipped the cleanup train and the first fully completed AutoFlow3
-> five-package publish; alpha.10 shipped the audit round 4 remediation
-> trains; alpha.11 shipped the audit round 5 remediation trains;
-> alpha.12 is published to npm (2026-08-02); alpha.13 shipped TP-5.9 (TP-6
-> freeze preparation + the standards-as-seams train); alpha.14–16 were
-> remediation trains closing TP-5.9, and alpha.17 is the last train before
-> the TP-6 freeze decision.\
+> Latest landed train: `v0.43.0-alpha.2`.\
+> Active execution target: `v0.43.0-alpha.2`.\
+> Next planned train: `v0.43.0-alpha.3`.\
+> Current implementation state: alpha.2 admission visibility is on main;
+> Gate 0 correctness and the #1002 fullstack production plan are in flight.\
 > Planned line: `0.43.0` (Universal WC SSR) — `0.42.0` (WC light fullstack)
 > shipped 2026-08-15 under ADR-0120 and ADR-0122.\
 > Maturity stage: stable (0.42.0 — the 0.41.x interface freeze under
@@ -138,12 +132,11 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.43.0-alpha.1` is the published package line (npm, 2026-08-14). Alpha.8
-was a release attempt whose npm publish failed (see CHANGELOG.md) and whose
-source changes were carried forward into alpha.9; the npm registry's `alpha`
-dist-tag therefore jumped straight to alpha.9 and has since advanced to
-alpha.16. The next train is alpha.17, closing the remaining freeze-blocking
-items before the TP-6 decision.
+`0.43.0-alpha.1` is both the current source package line and the published npm
+line (2026-08-15). `0.43.0-alpha.2` is the latest train landed on main and the
+active release target; `0.43.0-alpha.3` is the next planned train. These are
+separate facts by design: landed work is not described as published until the
+registry and immutable release evidence prove it.
 npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn
 from the active release story. The planned beta name was cancelled so the
 version label honestly reflects that breaking architecture and interface

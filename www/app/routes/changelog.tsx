@@ -9,7 +9,7 @@ import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
 import { pageStyles } from '../components/page-styles.js';
 import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml from 'npm:sanitize-html@^2.17.4';
+import sanitizeHtml from 'sanitize-html';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';

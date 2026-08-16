@@ -75,6 +75,16 @@ Deno.test('renderEntry: CSP without nonce generates header middleware', () => {
   assertStringIncludes(code, "cspNonce: c.get('cspNonce')");
 });
 
+Deno.test('renderEntry: does not emit the retired duplicate /_data loader protocol (#987)', () => {
+  const code = renderEntry(buildEntryDescriptor(basicRoutes, {}));
+
+  // SPA mode executes its RouteConfig loader with decoded router params;
+  // request-time navigation uses the canonical page route. A second generated
+  // loader endpoint had no consumer and lost params/headers/control flow.
+  assertFalse(code.includes('/_data'));
+  assertFalse(code.includes('__dataRouteMap'));
+});
+
 Deno.test('renderEntry: CSP with nonce generates per-request nonce', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     middleware: {

@@ -237,7 +237,7 @@ export async function ssgRender(
   // #600: only non-200 for known page routes (in routeInfo) fail the build.
   // API routes registered on the Hono app are not page routes — their non-200
   // status does not mean missing content. The same routeInfo-filter avoids
-  // hard-coding path conventions like /api/ or /_data.
+  // hard-coding path conventions such as /api/.
   const pagePaths = new Set(routeInfo.map((r) => r.path));
   const pageNon200 = staticNon200.filter((r) => pagePaths.has(r.path));
   if (pageNon200.length > 0) {

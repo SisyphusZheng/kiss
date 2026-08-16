@@ -8,7 +8,8 @@ application layer.
 
 ## Status: working reference
 
-- [x] application shell + routes (home, notes, login, upload)
+- [x] application shell + request-time routes (login, signup, Magic Link,
+      PKCE callback, recovery/reset, notes, upload, admin)
 - [x] real sign-in/sign-out via @supabase/ssr cookies on the ADR-0129
       response-header channel (`lib/supabase-server.ts`)
 - [x] /notes loader: getUser + RLS-scoped query; anonymous renders the denied
@@ -19,7 +20,10 @@ application layer.
       anonymous writes and cross-user access
 - [x] notes-live island: Supabase Realtime INSERT subscription in the browser,
       RLS-scoped via the user's short-lived access token + a hard `user_id`
-      filter, with explicit unsubscribe on disconnect
+      filter, with bounded/deduplicated state, reconnect recovery, token refresh,
+      and explicit unsubscribe on disconnect
+- [x] admin authorization reads issuer-controlled `app_metadata.role` only;
+      matching RLS and immutable append-only audit migration included
 
 ## Prerequisites
 
@@ -56,6 +60,8 @@ for the realtime island — it is a public key by design; row visibility stays
 enforced by RLS and the island's `user_id` filter. The service-role key never
 enters this app.
 
-## Next steps
+## Qualification still required
 
-1. alpha.5 → Supabase recipe extraction, qualification gates (#982/#984).
+- Tier 2 real Supabase password/OAuth/RLS/Realtime matrix.
+- Tier 3 deployed Workers journey and Cloudflare production rate limiting.
+- Production SMTP domain/authentication and bounce handling checklist.

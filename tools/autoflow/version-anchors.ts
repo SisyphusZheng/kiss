@@ -7,6 +7,9 @@
  */
 
 import {
+  ACTIVE_EXECUTION_VERSION,
+  LATEST_LANDED_TRAIN,
+  NEXT_EXECUTION_VERSION,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -15,6 +18,13 @@ import {
 
 export function releaseTag(version: string): string {
   return `v${version}`;
+}
+
+export function nextPrereleaseTag(version: string): string {
+  const match = version.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/u);
+  if (!match) return releaseTag(version);
+  const [, base, name, number] = match;
+  return `v${base}-${name}.${Number(number) + 1}`;
 }
 
 /**
@@ -43,6 +53,17 @@ export function bumpProjectConstantsText(text: string, version: string): string 
     /ACTIVE_EXECUTION_VERSION = '[^']+'/u,
     `ACTIVE_EXECUTION_VERSION = '${releaseTag(version)}'`,
   );
+  updated = updated.replace(
+    /LATEST_LANDED_TRAIN = '[^']+'/u,
+    `LATEST_LANDED_TRAIN = '${releaseTag(version)}'`,
+  );
+  const next = nextPrereleaseTag(version);
+  if (next !== releaseTag(version)) {
+    updated = updated.replace(
+      /NEXT_EXECUTION_VERSION = '[^']+'/u,
+      `NEXT_EXECUTION_VERSION = '${next}'`,
+    );
+  }
   return updated;
 }
 
@@ -200,6 +221,16 @@ export function buildVersionAnchorReplacements(
       'Current npm registry line: `$PREV_PVT`',
       'Current npm registry line: `$TAG`',
     ],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'Latest landed train: `$LATEST`',
+      'Latest landed train: `$TAG`',
+    ],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'Next planned train: `$NEXT_CURRENT`',
+      'Next planned train: `$NEXT_TARGET`',
+    ],
     // Interop example version anchor (check-version-anchors governs it with
     // the registry-style lag allowance): cover both the source-line form and
     // the lagging npm-published form so the bump advances it mechanically.
@@ -245,6 +276,16 @@ export function buildVersionAnchorReplacements(
     ],
     [
       'docs/roadmap/ROADMAP.md',
+      'Latest landed train: `$LATEST`.',
+      'Latest landed train: `$TAG`.',
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
+      'Next planned train: `$NEXT_CURRENT`.',
+      'Next planned train: `$NEXT_TARGET`.',
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
       '`$PV` is the published package line',
       '`$VER` is the published package line',
     ],
@@ -265,17 +306,27 @@ export function buildVersionAnchorReplacements(
     ],
     [
       'docs/status/STATUS.md',
-      'Active release target: `$PVT`',
+      'Latest landed train: `$LATEST`',
+      'Latest landed train: `$TAG`',
+    ],
+    [
+      'docs/status/STATUS.md',
+      'Next planned train: `$NEXT_CURRENT`',
+      'Next planned train: `$NEXT_TARGET`',
+    ],
+    [
+      'docs/status/STATUS.md',
+      'Active release target: `$ACTIVE`',
       'Active release target: `$TAG`',
     ],
     [
       'docs/current/VERSION_PLAN.md',
-      'Active release target: `$PVT`',
+      'Active release target: `$ACTIVE`',
       'Active release target: `$TAG`',
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Active execution target: `$PVT`.',
+      'Active execution target: `$ACTIVE`.',
       'Active execution target: `$TAG`.',
     ],
     [
@@ -293,6 +344,10 @@ export function buildVersionAnchorReplacements(
     s
       .replaceAll('$PREV_PVT', PREVIOUS_PACKAGE_VERSION_TAG)
       .replaceAll('$PREV_PV', PREVIOUS_PACKAGE_VERSION)
+      .replaceAll('$NEXT_CURRENT', NEXT_EXECUTION_VERSION)
+      .replaceAll('$NEXT_TARGET', nextPrereleaseTag(version))
+      .replaceAll('$LATEST', LATEST_LANDED_TRAIN)
+      .replaceAll('$ACTIVE', ACTIVE_EXECUTION_VERSION)
       .replaceAll('$PVT', pvTag)
       .replaceAll('$PV', pv)
       .replaceAll('$TAG', tag)

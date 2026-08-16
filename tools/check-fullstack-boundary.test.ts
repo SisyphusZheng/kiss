@@ -3,9 +3,16 @@ import {
   findCacheBoundaryIssues,
   findEnvExampleLeaks,
   findSecretLeaks,
+  findStoragePolicyIssues,
   parseRequestTimeRoutePaths,
   sliceRouteHandlers,
 } from './check-fullstack-boundary.ts';
+
+const STORAGE_POLICY_BASELINE = `
+create policy "read" on storage.objects for select to authenticated using (true);
+create policy "upload" on storage.objects for insert to authenticated with check (true);
+create policy "delete" on storage.objects for delete to authenticated using (true);
+`;
 
 Deno.test('fullstack-boundary: clean browser bundle produces no secret leaks', () => {
   const issues = findSecretLeaks([
@@ -140,4 +147,17 @@ Deno.test('fullstack-boundary: real credential material in .env.example is flagg
   assertEquals(issues.length, 2);
   assertEquals(issues[0].line, 2);
   assertEquals(issues[1].line, 3);
+});
+
+Deno.test('fullstack-boundary: immutable storage policy operations pass', () => {
+  assertEquals(findStoragePolicyIssues(STORAGE_POLICY_BASELINE), []);
+});
+
+Deno.test('fullstack-boundary: adding object UPDATE access is flagged', () => {
+  const issues = findStoragePolicyIssues(
+    `${STORAGE_POLICY_BASELINE}\ncreate policy "overwrite" on storage.objects for update using (true);`,
+  );
+  assertEquals(issues.length, 1);
+  assertEquals(issues[0].check, 'storage-policy');
+  assertEquals(issues[0].message.includes('update'), true);
 });

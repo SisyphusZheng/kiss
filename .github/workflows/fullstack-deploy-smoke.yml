@@ -34,11 +34,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: >-
-          deno run -A npm:wrangler@latest deploy .output-workers/server/index.mjs
-          --name openelement-ref-starter
-          --assets .output-workers/public
-          --compatibility-date 2026-08-16
-          --compatibility-flags nodejs_compat
+          deno run -A npm:wrangler@latest deploy --config wrangler.jsonc
           --var "SUPABASE_URL:$SUPABASE_URL" "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY"
 
       - name: Smoke the live worker

@@ -1,9 +1,11 @@
 # OpenElement Status
 
-> Updated: 2026-08-15\
+> Updated: 2026-08-17\
 > Repository package line: `v0.43.0-alpha.1`\
 > npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `alpha`)\
-> Active release target: `v0.43.0-alpha.1`\
+> Latest landed train: `v0.43.0-alpha.2`\
+> Active release target: `v0.43.0-alpha.2`\
+> Next planned train: `v0.43.0-alpha.3`\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Product graph: five packages\
 > Current maturity stage: stable (0.42.0, WC light fullstack under ADR-0122)

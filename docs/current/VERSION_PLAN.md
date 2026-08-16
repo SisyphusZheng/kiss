@@ -2,10 +2,11 @@
 
 > Current source package line: `v0.43.0-alpha.1`\
 > Current npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `alpha`)\
-> In-flight work: the 0.43.0-alpha.1 foundation train on the `v0.43.0`
-> line; TP-6 closed 2026-08-14 with ADR-0122 accepted (#962) and the WC
-> light-fullstack stable cut shipped\
-> Active release target: `v0.43.0-alpha.1`\
+> Latest landed train: `v0.43.0-alpha.2` (admission visibility, on main)\
+> Active release target: `v0.43.0-alpha.2`\
+> Next planned train: `v0.43.0-alpha.3`\
+> In-flight work: close the alpha.2 Gate 0 correctness set and release
+> evidence while the fullstack production plan proceeds under #1002\
 > Planning release target: `v0.43.0` (Universal WC SSR — this plan)\
 > Next release line: `v0.44.0` (production runtime)\
 > Current maturity stage: stable (the 0.42 line, WC light fullstack frozen

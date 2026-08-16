@@ -134,6 +134,17 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\//, /^docs\//, /^tools\//],
   },
   {
+    name: 'docs:check-recipe-parity',
+    command: ['deno', 'task', 'docs:check-recipe-parity'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^docs\/integrations\/supabase\.md$/,
+      /^examples\/supabase-cloudflare-starter\//,
+      /^tools\/check-supabase-recipe-parity(?:\.test)?\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-strategy',
     command: ['deno', 'task', 'docs:check-strategy'],
     tiers: ['ci', 'release'],
@@ -144,6 +155,19 @@ const GATES: readonly GateDefinition[] = [
     command: ['deno', 'task', 'www:check-theme-tokens'],
     tiers: ['dev', 'push', 'ci', 'release'],
     triggers: [/^www\/app\//, /^www\/vite\.config\.ts$/, /^packages\/ui\/src\/open-props-tokens/],
+  },
+  {
+    // The static browser suite serves www/dist and cannot detect a Vite SSR
+    // import failure. Exercise the contributor entry point through real HTTP.
+    name: 'www:dev-smoke',
+    command: ['deno', 'task', 'www:dev-smoke'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^www\//,
+      /^packages\/(adapter-vite|app|element|ui)\//,
+      /^tools\/smoke-www-dev\.ts$/,
+      /^deno\.json$/,
+    ],
   },
   {
     name: 'www:check-current-truth',

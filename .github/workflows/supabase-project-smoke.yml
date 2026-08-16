@@ -69,12 +69,14 @@ jobs:
         run: |
           set -euo pipefail
           source .smoke/smoke.env
-          curl -sf -o /dev/null -X POST "$SUPABASE_URL/rest/v1/notes" \
+          response=$(curl -sf -X POST "$SUPABASE_URL/rest/v1/notes" \
             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
-            -H "Prefer: return=minimal" \
-            -d "{\"user_id\":\"$A_ID\",\"title\":\"smoke\",\"body\":\"$MARKER\"}"
+            -H "Prefer: return=representation" \
+            -d "{\"user_id\":\"$A_ID\",\"title\":\"smoke\",\"body\":\"$MARKER\"}")
+          NOTE_ID=$(echo "$response" | jq -er '.[0].id')
+          echo "NOTE_ID=$NOTE_ID" >> .smoke/smoke.env
           echo "seeded note with run-unique marker"
 
       - name: Build and start the reference starter
@@ -122,6 +124,17 @@ jobs:
           echo "$page_a" | grep -q "signed-in:$A_EMAIL"
           record user-a-sees-own-row pass
 
+          # 3b. The application write action stamps user A, persists, and PRG redirects.
+          CREATED_MARKER="created-$MARKER"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -b .smoke/jar-a \
+            -X POST "$BASE/notes?/create" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode "title=created by smoke" \
+            --data-urlencode "body=$CREATED_MARKER")
+          [ "$code" = "303" ]
+          curl -s -b .smoke/jar-a "$BASE/notes" | grep -q "$CREATED_MARKER"
+          record user-a-creates-note-via-action pass
+
           # 4. User B sees none of A's rows (cross-user RLS).
           code=$(curl -s -o /dev/null -w '%{http_code}' -c .smoke/jar-b \
             -X POST "$BASE/login" \
@@ -136,6 +149,43 @@ jobs:
             exit 1
           fi
           record user-b-isolated-from-a pass
+
+          # 4b. Exercise database RLS directly with user B's JWT: attempts to
+          # update/delete A's known row must affect zero rows.
+          token_b=$(curl -sf -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$B_EMAIL\",\"password\":\"$B_PASSWORD\"}" | jq -er '.access_token')
+          changed=$(curl -sf -X PATCH "$SUPABASE_URL/rest/v1/notes?id=eq.$NOTE_ID" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_b" \
+            -H 'Content-Type: application/json' -H 'Prefer: return=representation' \
+            -d '{"body":"cross-user overwrite"}')
+          [ "$(echo "$changed" | jq 'length')" = "0" ]
+          deleted=$(curl -sf -X DELETE "$SUPABASE_URL/rest/v1/notes?id=eq.$NOTE_ID" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_b" \
+            -H 'Prefer: return=representation')
+          [ "$(echo "$deleted" | jq 'length')" = "0" ]
+          record user-b-update-delete-a-denied pass
+
+          # 4c. Anonymous REST reads cannot observe any notes.
+          anonymous_rows=$(curl -sf "$SUPABASE_URL/rest/v1/notes?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY")
+          [ "$(echo "$anonymous_rows" | jq 'length')" = "0" ]
+          record anonymous-direct-rest-denied pass
+
+          # 4d. Storage action is owner-scoped and collision-safe.
+          printf 'smoke attachment' > .smoke/attachment.txt
+          code=$(curl -s -o /dev/null -w '%{http_code}' -b .smoke/jar-a \
+            -X POST "$BASE/upload?/upload" -F 'file=@.smoke/attachment.txt;type=text/plain')
+          [ "$code" = "303" ]
+          curl -s -b .smoke/jar-a "$BASE/upload" | grep -q 'attachment.txt'
+          duplicate=$(curl -s -o .smoke/duplicate.html -w '%{http_code}' -b .smoke/jar-a \
+            -X POST "$BASE/upload?/upload" -F 'file=@.smoke/attachment.txt;type=text/plain')
+          [ "$duplicate" = "422" ]
+          if curl -s -b .smoke/jar-b "$BASE/upload" | grep -q 'attachment.txt'; then
+            record user-b-storage-isolated fail
+            exit 1
+          fi
+          record storage-owner-and-collision-boundary pass
 
           # 5. Logout clears the session: the next /notes read is denied again.
           # The action entry parses a form body unconditionally, so the POST

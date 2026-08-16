@@ -2564,7 +2564,8 @@
       },
       "www": {
         "dependencies": [
-          "npm:marked@15"
+          "npm:marked@15",
+          "npm:sanitize-html@^2.17.4"
         ]
       }
     }

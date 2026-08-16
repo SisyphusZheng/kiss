@@ -22,13 +22,6 @@ create policy "attachments: owner uploads own folder"
   to authenticated
   with check (bucket_id = 'notes-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
--- upsert re-uploads land as UPDATE once the object exists.
-create policy "attachments: owner updates own folder"
-  on storage.objects for update
-  to authenticated
-  using (bucket_id = 'notes-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text)
-  with check (bucket_id = 'notes-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
-
 create policy "attachments: owner deletes own folder"
   on storage.objects for delete
   to authenticated

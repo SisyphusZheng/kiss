@@ -7,7 +7,9 @@
  * re-render with a 422 + error echo.
  */
 import { definePage, fail, type OpenElementActionFailure, redirect } from '@openelement/app';
+import { publicAuthError } from '../../lib/auth-security.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
+import { authRequestAllowed, type WorkerEnv } from '../../lib/rate-limit.ts';
 
 export const tagName = 'page-login';
 
@@ -16,24 +18,43 @@ interface LoginActionData {
   email?: string;
 }
 
-export async function action(ctx: {
-  formData: FormData;
-  env: Record<string, string>;
-  request: Request;
-  responseHeaders: Headers;
-}): Promise<OpenElementActionFailure<LoginActionData>> {
-  const email = String(ctx.formData.get('email') ?? '').trim();
-  const password = String(ctx.formData.get('password') ?? '');
-  if (!email || !password) {
-    return fail(422, { error: 'email and password are required', email });
-  }
-  const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    return fail(422, { error: error.message, email });
-  }
-  throw redirect('/notes');
+export interface LoginAuthClient {
+  auth: {
+    signInWithPassword(credentials: { email: string; password: string }): PromiseLike<{
+      error: { message: string } | null;
+    }>;
+  };
 }
+
+export type LoginClientFactory = (
+  env: WorkerEnv,
+  request: Request,
+  responseHeaders: Headers,
+) => LoginAuthClient;
+
+export function createLoginAction(createClient: LoginClientFactory = createServerSupabase) {
+  return async function action(ctx: {
+    formData: FormData;
+    env: WorkerEnv;
+    request: Request;
+    responseHeaders: Headers;
+  }): Promise<OpenElementActionFailure<LoginActionData>> {
+    if (!(await authRequestAllowed(ctx.env, ctx.request, 'login'))) {
+      return fail(429, { error: 'too many attempts; retry later' });
+    }
+    const email = String(ctx.formData.get('email') ?? '').trim();
+    const password = String(ctx.formData.get('password') ?? '');
+    if (!email || !password) {
+      return fail(422, { error: 'email and password are required', email });
+    }
+    const client = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) return fail(422, { error: publicAuthError(error), email });
+    throw redirect('/notes');
+  };
+}
+
+export const action = createLoginAction();
 
 const LoginPage = definePage({
   renderIntent: { mode: 'dynamic' },
@@ -55,6 +76,10 @@ const LoginPage = definePage({
           </p>
           <button type='submit'>Sign in</button>
         </form>
+        <p>
+          <a href='/signup'>Create account</a> · <a href='/magic-link'>Use a Magic Link</a> ·{' '}
+          <a href='/recover'>Forgot password?</a>
+        </p>
         <p>
           <a href='/notes'>Back to notes</a>
         </p>

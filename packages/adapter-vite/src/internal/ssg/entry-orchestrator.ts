@@ -33,8 +33,6 @@ import { validateIslandModuleSpecifier } from './entry-generators.ts';
 import {
   renderActionRoute,
   renderApiRoute,
-  renderDataEndpoint,
-  renderDataRouteMap,
   renderImport,
   renderMiddleware,
   renderNotFoundRoute,
@@ -315,10 +313,6 @@ export function renderEntry(desc: EntryDescriptor): string {
   if (notFoundPage) {
     renderNotFoundRoute(lines, notFoundPage, desc.renderers, docConfig, desc.isSSG);
   }
-
-  // --- /_data endpoint for SPA navigation ---
-  renderDataRouteMap(lines, desc.pageRoutes);
-  renderDataEndpoint(lines);
 
   // --- Export ---
   if (desc.fetchMiddleware?.length) {
