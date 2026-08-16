@@ -79,6 +79,18 @@ export default defineIsland(tagName, {
           <h2>Bidirectional</h2>
           <alpha3-lit-host></alpha3-lit-host>
         </section>
+        <section id='fast-section'>
+          <h2>FAST</h2>
+          <alpha3-fast-counter id='fast-counter' on-fast-count={() => bump('fast-count')}>
+            <span slot='label'>FAST slot label</span>
+          </alpha3-fast-counter>
+        </section>
+        <section id='stencil-section'>
+          <h2>Stencil compiled output (Ionic)</h2>
+          <ion-button id='ionic-button' onClick={() => bump('ionic-button')}>
+            Ionic Stencil Button
+          </ion-button>
+        </section>
         <section id='native-section'>
           <h2>Bare native</h2>
           <alpha3-native-badge id='native-badge' onClick={() => bump('native-badge')}>

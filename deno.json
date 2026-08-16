@@ -70,7 +70,7 @@
     "graph:check": "deno run --allow-read --allow-env tools/check-package-graph.ts",
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
     "consumer:packaged": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
-    "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-smoke.ts",
+    "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-corpus.ts",
     "third-party-wc:corpus": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-corpus.ts",
     "examples:check": "cd examples/deno-desktop-reader && deno task check && deno task smoke && cd ../deno-desktop-mastodon && deno task check && deno task smoke && cd ../open-element-in-fresh && deno task check && cd ../supabase-cloudflare-starter && deno task check && deno task test",
     "stress:dogfood": "deno run --allow-read --allow-run --allow-env tools/run-dogfood-stress.ts",
