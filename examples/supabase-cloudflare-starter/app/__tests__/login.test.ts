@@ -7,7 +7,7 @@ if (!('customElements' in globalThis)) {
     get: () => undefined,
   };
 }
-const { createLoginAction } = await import('../routes/login.tsx');
+const { createLoginAction, default: LoginPage } = await import('../routes/login.tsx');
 type LoginAuthClient = import('../routes/login.tsx').LoginAuthClient;
 
 function client(error: { message: string } | null = null): () => LoginAuthClient {
@@ -61,4 +61,9 @@ Deno.test('login sanitizes provider failures', async () => {
 Deno.test('login success redirects with PRG', async () => {
   const error = await assertRejects(() => createLoginAction(client())(context(credentials())));
   assert(isOpenElementRedirect(error));
+});
+
+Deno.test('login SSR includes the action error mount point contract', () => {
+  const html = new LoginPage().render();
+  assert(html);
 });

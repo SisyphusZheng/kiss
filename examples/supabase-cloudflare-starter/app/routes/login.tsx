@@ -6,7 +6,13 @@
  * response-header channel, then the action redirects (PRG). Failures
  * re-render with a 422 + error echo.
  */
-import { definePage, fail, type OpenElementActionFailure, redirect } from '@openelement/app';
+import {
+  definePage,
+  fail,
+  type OpenElementActionFailure,
+  redirect,
+  useActionData,
+} from '@openelement/app';
 import { publicAuthError } from '../../lib/auth-security.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
 import { authRequestAllowed, type WorkerEnv } from '../../lib/rate-limit.ts';
@@ -60,13 +66,15 @@ const LoginPage = definePage({
   renderIntent: { mode: 'dynamic' },
   head: { title: 'Sign in — reference starter' },
   render() {
+    const result = useActionData() as LoginActionData | undefined;
     return (
       <main>
         <h1>Sign in</h1>
+        {result?.error ? <p id='error'>{result.error}</p> : null}
         <form method='post'>
           <p>
             <label>
-              Email <input type='email' name='email' required />
+              Email <input type='email' name='email' value={result?.email ?? ''} required />
             </label>
           </p>
           <p>
