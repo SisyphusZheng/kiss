@@ -67,7 +67,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'two-chains',
         title: 'Two loader/action chains',
         body:
-          "Request-time ('dynamic') loaders/actions run on the server with the Web-standard context { request, params, env, platform, route } and the fail()/redirect() protocol. SPA-mode loaders/actions run client-side with only { params } (plus formData for actions) and signal failure by throwing — a throw is normalized into action data. The names are intentionally parallel, but the contexts differ: code written against one chain cannot assume the other's context (#570, ADR-0119 frozen SPA semantics).",
+          "Request-time ('dynamic') loaders/actions run on the server with the Web-standard context { request, params, env, platform, route, responseHeaders } and the fail()/redirect() protocol. responseHeaders (ADR-0129) is a mutable Headers channel merged into every response of the request — renders, redirects, 422 re-renders and fetch-channel JSON alike — so recipes can write session cookies; framework protocol headers always win on conflict. SPA-mode loaders/actions run client-side with only { params } (plus formData for actions) and signal failure by throwing — a throw is normalized into action data. The names are intentionally parallel, but the contexts differ: code written against one chain cannot assume the other's context (#570, ADR-0119 frozen SPA semantics).",
       },
     ],
   },
@@ -132,7 +132,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'two-chains',
         title: '两条 loader/action 链',
         body:
-          "request-time('dynamic')loader/action 运行在服务端,上下文是 Web 标准的 { request, params, env, platform, route },并使用 fail()/redirect() 协议。SPA 模式的 loader/action 运行在客户端,上下文只有 { params }(action 另有 formData),通过抛出异常来表达失败——throw 会被规整为 action 数据。两者命名刻意保持一致,但上下文不同:针对其中一条链编写的代码不能假设另一条链的上下文(#570,ADR-0119 已冻结的 SPA 语义)。",
+          "request-time('dynamic')loader/action 运行在服务端,上下文是 Web 标准的 { request, params, env, platform, route, responseHeaders },并使用 fail()/redirect() 协议。responseHeaders(ADR-0129)是可变的 Headers 通道,会被合并进该请求的所有响应——渲染、重定向、422 重渲染与 fetch 通道 JSON——配方借此写入会话 cookie;冲突时框架协议头永远优先。SPA 模式的 loader/action 运行在客户端,上下文只有 { params }(action 另有 formData),通过抛出异常来表达失败——throw 会被规整为 action 数据。两者命名刻意保持一致,但上下文不同:针对其中一条链编写的代码不能假设另一条链的上下文(#570,ADR-0119 已冻结的 SPA 语义)。",
       },
     ],
   },

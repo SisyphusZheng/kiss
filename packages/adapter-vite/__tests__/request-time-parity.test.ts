@@ -235,6 +235,71 @@ Deno.test({
         },
       );
 
+      // ADR-0129: the loader writes the channel on every GET; the action
+      // writes Set-Cookie then redirects; a 422 re-render carries the
+      // action's header; protocol headers (Cache-Control) cannot be
+      // overridden by the channel.
+      await t.step(
+        'ADR-0129 response-header channel: render + redirect + 422 + protocol wins',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const page = await fetch(`${base}/set-header`);
+            assertEquals(
+              page.headers.get('x-oe-channel'),
+              'loader-render',
+              `${name}: GET channel header`,
+            );
+            assertEquals(
+              page.headers.get('cache-control'),
+              'private, no-cache',
+              `${name}: protocol Cache-Control wins over the channel`,
+            );
+            await page.body?.cancel();
+
+            const action = await fetch(`${base}/set-header`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                origin: new URL(base).origin,
+              },
+              body: 'mode=go',
+              redirect: 'manual',
+            });
+            assertEquals(action.status, 303, `${name}: action redirect status`);
+            assertEquals(
+              action.headers.get('set-cookie'),
+              'oe_session=stub-ok; HttpOnly; Path=/; SameSite=Lax',
+              `${name}: Set-Cookie survives the redirect`,
+            );
+            assertEquals(
+              action.headers.get('x-oe-channel'),
+              'action-redirect',
+              `${name}: action channel header`,
+            );
+            await action.body?.cancel();
+
+            const failed = await fetch(`${base}/set-header`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                origin: new URL(base).origin,
+              },
+              body: 'mode=fail',
+            });
+            assertEquals(failed.status, 422, `${name}: 422 status`);
+            // The channel accumulates across the action and the re-run
+            // loader (Headers.append join) — assert membership, not equality.
+            const channel = failed.headers.get('x-oe-channel') ?? '';
+            assertEquals(
+              channel.includes('action-422'),
+              true,
+              `${name}: 422 re-render carries the action's channel entry`,
+            );
+            await failed.body?.cancel();
+          }
+        },
+      );
+
       await t.step('POST /form valid → 303 + Location', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form`, formBody({ message: 'parity-check' }));

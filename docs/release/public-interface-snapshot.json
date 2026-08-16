@@ -330,7 +330,7 @@
           "reExportedNames": []
         },
         "./nitro-mount": {
-          "sha256": "0ed56d2df8d75bab95dca1cf821332111eea18b1923cfae4f41e9f813d5f45ae",
+          "sha256": "1fefcc0d1498a3056b01a0a0f6bf97ab7005b0959e20294435cdf062b3d7523d",
           "publicDeclarations": [
             "export interface NitroRequestEvent<",
             "export interface OpenElementNitroMountOptions<",

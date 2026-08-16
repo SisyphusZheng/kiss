@@ -180,6 +180,13 @@ function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContex
   } else {
     lines.push(`app.get(${pathLiteral}, async (c) => {`);
   }
+  // ADR-0129: one mutable response-header channel per request, shared by the
+  // loader and the action (the spread into the action context carries the
+  // reference). The handler body is wrapped in an IIFE so EVERY exit —
+  // success, re-render, redirect, rejection, error fallback — merges the
+  // channel via __mergeChannelHeaders.
+  lines.push(`  const __responseHeaders = new Headers();`);
+  lines.push(`  return __mergeChannelHeaders(await (async () => {`);
   lines.push(`  let __tag = ${tagNameExpr}`);
   lines.push(`  let __page = ${pageDefExpr}`);
   lines.push(`  let __params = {}`);
@@ -201,6 +208,7 @@ function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContex
   lines.push(`    const __loadContext = {`);
   lines.push(`      params: __params,`);
   lines.push(`      request: c.req.raw,`);
+  lines.push(`      responseHeaders: __responseHeaders,`);
   lines.push(`      env: c.env || {},`);
   lines.push(
     `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
@@ -548,6 +556,9 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   lines.push(`      return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`);
   lines.push(`    }`);
   lines.push(`  }`);
+  // ADR-0129: close the handler-body IIFE and merge the response-header
+  // channel into whatever response the body produced.
+  lines.push(`  })(), __responseHeaders);`);
   lines.push(`})`);
   lines.push('');
 }
@@ -627,6 +638,8 @@ export function renderNotFoundRoute(
     : quoteGeneratedJavaScriptValue(docConfig.headExtras);
   lines.push('// Styled 404 (#923): unmatched paths render the /404 page with a 404 status');
   lines.push('app.notFound(async (c) => {');
+  lines.push(`  const __responseHeaders = new Headers();`);
+  lines.push(`  return __mergeChannelHeaders(await (async () => {`);
   lines.push(`  let __tag = ${routeTagNameExpr(route.tagName)};`);
   lines.push(`  let __page = ${pageDefinitionExpr(route.varName)};`);
   lines.push(`  let __params = {};`);
@@ -641,6 +654,7 @@ export function renderNotFoundRoute(
   lines.push(`    const __loadContext = {`);
   lines.push(`      params: __params,`);
   lines.push(`      request: c.req.raw,`);
+  lines.push(`      responseHeaders: __responseHeaders,`);
   lines.push(`      env: c.env || {},`);
   lines.push(
     `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
@@ -694,6 +708,8 @@ export function renderNotFoundRoute(
     }, cspNonce: c.get('cspNonce') }), 404);`,
   );
   lines.push(`  }`);
+  // ADR-0129: close the IIFE and merge the 404-page loader's channel too.
+  lines.push(`})(), __responseHeaders);`);
   lines.push(`});`);
   lines.push('');
 }

@@ -96,6 +96,9 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   lines.push('  const loadContext = {');
   lines.push('    params,');
   lines.push('    request: options.request,');
+  // ADR-0129: at build time there is no per-request response to merge into;
+  // the channel exists so loader code can write to it without crashing.
+  lines.push('    responseHeaders: new Headers(),');
   lines.push('    env: options.env || {},');
   lines.push('    platform: options.platform,');
   lines.push('    route: { path: routePath, filePath: info.filePath },');
