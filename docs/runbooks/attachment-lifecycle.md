@@ -12,6 +12,10 @@ only `fetch` implementation. The entry composes application-owned `queue` and
   handlers and must never enter HTML or a client bundle.
 - Queue producer/consumer binding `ATTACHMENT_SCAN_QUEUE` with a dead-letter
   queue and a bounded `max_retries` policy.
+- The DLQ is consumed by the same application entry and persisted before ack.
+  Its own bounded failures route to the unconsumed
+  `openelement-attachment-scan-persistence-failures` safety queue for manual
+  recovery instead of silent deletion.
 - Service binding `ATTACHMENT_SCANNER` whose `POST /scan` response is exactly
   `{ "verdict": "clean" }` or `{ "verdict": "quarantined" }`.
 - A Cron Trigger for reconciliation. Five-minute cadence is the reference
@@ -23,7 +27,8 @@ is green, dispatch `Fullstack deploy smoke (real providers)` with
 `async_mode=provision`. That mode:
 
 1. renders `.wrangler-async.generated.json` from the single base config;
-2. idempotently creates `openelement-attachment-scan` and its `-dlq`;
+2. idempotently creates `openelement-attachment-scan`, its `-dlq`, and the
+   persistence-failure safety queue;
 3. stores `SUPABASE_SERVICE_ROLE_KEY` as an encrypted Worker secret;
 4. deploys with a three-retry, 30-second-delay consumer, DLQ, and five-minute Cron;
 5. records the selected mode in the redacted Tier 3 artifact.
@@ -47,14 +52,21 @@ only the pre-migration deployment path.
 5. `complete_attachment_scan` is idempotent for duplicate delivery. A conflicting
    second verdict is rejected, and every first transition appends an immutable
    owner-readable storage audit event.
-6. Cron deletes objects for reservations stuck for fifteen minutes through the
+6. Exhausted messages are persisted as `scan_dead_letter` before the DLQ ack;
+   normal pending reconciliation ignores them. An admin requests one replay in
+   `/admin`; Cron retries that durable handoff until Queue send succeeds.
+7. Cron deletes objects for reservations stuck for fifteen minutes through the
    Storage API, then releases Postgres quota. Never delete `storage.objects`
    rows directly: that orphans the underlying object.
 
 ## Failure and recovery
 
-- Inspect the Queue retry count and DLQ before replay. Fix the scanner or
-  Supabase cause, then replay the original message body unchanged.
+- Inspect the Queue retry count and `/admin` dead-letter row before replay. Fix
+  the scanner or Supabase cause, then select **Request replay**. Cron sends the
+  original reservation id/object key unchanged and records the transition.
+- If DLQ persistence itself exhausts retries, consume
+  `openelement-attachment-scan-persistence-failures` manually within its
+  four-day retention window after Supabase is healthy; do not purge it first.
 - Duplicate replay is safe after a successful verdict; the database function
   returns without appending a second audit record.
 - If Storage deletion succeeds but quota release fails, leave the reservation

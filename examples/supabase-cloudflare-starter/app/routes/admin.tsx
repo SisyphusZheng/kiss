@@ -1,35 +1,123 @@
-import { definePage, useLoaderData } from '@openelement/app';
-import { requireAdmin } from '../../lib/authorization.ts';
+import {
+  definePage,
+  fail,
+  type OpenElementActionFailure,
+  redirect,
+  useActionData,
+  useLoaderData,
+} from '@openelement/app';
+import { type AuthenticatedIdentity, requireAdmin } from '../../lib/authorization.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
 export const tagName = 'page-admin';
+interface DeadLetter {
+  id: string;
+  object_key: string;
+  state: 'dead_letter' | 'replay_requested' | 'replayed';
+  delivery_count: number;
+  first_failed_at: string;
+}
 interface Data {
   email?: string;
   noteCount: number;
+  deadLetters: DeadLetter[];
   error?: string;
 }
-export async function loader(
-  ctx: { env: Record<string, string>; request: Request; responseHeaders: Headers },
-): Promise<Data> {
-  const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
-  const { data: { user } } = await supabase.auth.getUser();
-  requireAdmin(user);
-  const { count, error } = await supabase.from('notes').select('id', {
-    count: 'exact',
-    head: true,
-  });
-  return { email: user?.email, noteCount: count ?? 0, error: error?.message };
+interface AdminClient {
+  auth: {
+    getUser(): Promise<{
+      data: { user: (AuthenticatedIdentity & { email?: string }) | null };
+    }>;
+  };
+  from(name: string): {
+    select(column: string, options: { count: 'exact'; head: true }): Promise<{
+      count: number | null;
+      error: { message: string } | null;
+    }>;
+  };
+  rpc(name: string, body?: Record<string, string>): Promise<{
+    data: unknown;
+    error: { message: string } | null;
+  }>;
 }
+type AdminContext = { env: Record<string, string>; request: Request; responseHeaders: Headers };
+
+// The browser receives no service-role material. These calls use the signed-in
+// user's JWT; SQL independently requires issuer-controlled app_metadata.admin.
+export function createAdminLoader(
+  createClient: (env: Record<string, string>, request: Request, headers: Headers) => AdminClient =
+    createServerSupabase as never,
+) {
+  return async function adminLoader(ctx: AdminContext): Promise<Data> {
+    const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { data: { user } } = await supabase.auth.getUser();
+    requireAdmin(user);
+    const [{ count, error }, deadLetters] = await Promise.all([
+      supabase.from('notes').select('id', { count: 'exact', head: true }),
+      supabase.rpc('list_attachment_scan_dead_letters'),
+    ]);
+    return {
+      email: user?.email,
+      noteCount: count ?? 0,
+      deadLetters: (deadLetters.data ?? []) as DeadLetter[],
+      error: error?.message ?? deadLetters.error?.message,
+    };
+  };
+}
+
+export function createReplayAction(
+  createClient: (env: Record<string, string>, request: Request, headers: Headers) => AdminClient =
+    createServerSupabase as never,
+) {
+  return async function replay(
+    ctx: AdminContext & { formData: FormData },
+  ): Promise<OpenElementActionFailure<{ error: string }>> {
+    const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { data: { user } } = await supabase.auth.getUser();
+    requireAdmin(user);
+    const id = String(ctx.formData.get('id') ?? '');
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      return fail(422, { error: 'invalid dead-letter id' });
+    }
+    const { error } = await supabase.rpc('request_attachment_scan_replay', {
+      dead_letter_id: id,
+    });
+    if (error) return fail(422, { error: error.message });
+    throw redirect('/admin');
+  };
+}
+
+export const loader = createAdminLoader();
+export const actions = { replay: createReplayAction() };
 const Page = definePage<Data>({
   renderIntent: { mode: 'dynamic' },
   head: { title: 'Admin' },
   render() {
     const data = useLoaderData() as Data;
+    const actionData = useActionData() as { error?: string } | undefined;
     return (
       <main>
         <h1>Admin</h1>
         <p>signed-in:{data.email}</p>
         {data.error ? <p id='error'>{data.error}</p> : null}
+        {actionData?.error ? <p id='action-error'>{actionData.error}</p> : null}
         <p id='note-count'>notes:{data.noteCount}</p>
+        <h2>Attachment scan dead letters</h2>
+        <ul id='attachment-dead-letters'>
+          {data.deadLetters.map((item) => (
+            <li key={item.id}>
+              <code>{item.object_key}</code>{' '}
+              <span>{item.state} (deliveries:{item.delivery_count})</span>{' '}
+              {item.state === 'dead_letter'
+                ? (
+                  <form method='post' action='/admin?/replay'>
+                    <input type='hidden' name='id' value={item.id} />
+                    <button type='submit'>Request replay</button>
+                  </form>
+                )
+                : null}
+            </li>
+          ))}
+        </ul>
       </main>
     );
   },

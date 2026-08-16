@@ -8,6 +8,7 @@ Deno.test('custom Cloudflare entry preserves the Nitro fetch response exactly', 
   const handlers = createCloudflareHandlers({ fetch: () => expected }, {
     reconcileAttachments: () => Promise.resolve(),
     consumeAttachmentScans: () => Promise.resolve(),
+    consumeAttachmentScanDeadLetters: () => Promise.resolve(),
   });
   const response = await handlers.fetch(
     new Request('https://app.test/notes'),
@@ -30,9 +31,14 @@ Deno.test('scheduled and queue events use application lifecycle hooks', async ()
       calls.push('queue');
       return Promise.resolve();
     },
+    consumeAttachmentScanDeadLetters: () => {
+      calls.push('dlq');
+      return Promise.resolve();
+    },
   });
   handlers.scheduled({}, env, { waitUntil: (promise) => waits.push(promise) });
-  await handlers.queue({ messages: [] }, env);
+  await handlers.queue({ queue: 'openelement-attachment-scan', messages: [] }, env);
+  await handlers.queue({ queue: 'openelement-attachment-scan-dlq', messages: [] }, env);
   await Promise.all(waits);
-  assertEquals(calls, ['scheduled', 'queue']);
+  assertEquals(calls, ['scheduled', 'queue', 'dlq']);
 });
