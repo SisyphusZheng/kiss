@@ -1,0 +1,215 @@
+import {
+  definePage,
+  fail,
+  type OpenElementActionFailure,
+  redirect,
+  useActionData,
+  useLoaderData,
+} from '@openelement/app';
+import { createServerSupabase } from '../../lib/supabase-server.ts';
+import {
+  checkoutConfiguration,
+  checkoutSessionBody,
+  verifiedCheckoutUrl,
+} from '../../lib/stripe-checkout.ts';
+
+export const tagName = 'page-checkout';
+const PRODUCT_CODE = 'starter-support';
+
+interface CheckoutContext {
+  request: Request;
+  env: Record<string, unknown>;
+  responseHeaders: Headers;
+}
+
+interface CheckoutData {
+  denied: boolean;
+  attemptId?: string;
+  result?: 'success' | 'cancelled';
+  orders?: { id: string; status: string; amount_total: number; currency: string }[];
+  error?: string;
+}
+
+interface CheckoutActionData {
+  error?: string;
+  attemptId?: string;
+}
+
+export interface CheckoutSupabaseClient {
+  auth: { getUser(): Promise<{ data: { user: { id: string } | null } }> };
+  rpc(
+    name: string,
+    args: Record<string, unknown>,
+  ): PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  from(table: 'orders'): {
+    select(columns: string): {
+      order(column: string, options: { ascending: boolean }): PromiseLike<{
+        data: CheckoutData['orders'] | null;
+        error: { message: string } | null;
+      }>;
+    };
+  };
+}
+
+type ClientFactory = (
+  env: Record<string, unknown>,
+  request: Request,
+  responseHeaders: Headers,
+) => CheckoutSupabaseClient;
+
+type Fetch = typeof fetch;
+
+function safeResult(request: Request): CheckoutData['result'] {
+  const result = new URL(request.url).searchParams.get('result');
+  return result === 'success' || result === 'cancelled' ? result : undefined;
+}
+
+export function createCheckoutLoader(createClient: ClientFactory = createServerSupabase) {
+  return async function loader(ctx: CheckoutContext): Promise<CheckoutData> {
+    const client = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return { denied: true };
+    const { data, error } = await client.from('orders')
+      .select('id,status,amount_total,currency')
+      .order('created_at', { ascending: false });
+    return {
+      denied: false,
+      attemptId: crypto.randomUUID(),
+      result: safeResult(ctx.request),
+      orders: data ?? [],
+      error: error?.message,
+    };
+  };
+}
+
+async function serviceRpc(
+  fetchImpl: Fetch,
+  env: Record<string, unknown>,
+  name: string,
+  body: Record<string, unknown>,
+): Promise<boolean> {
+  const url = typeof env.SUPABASE_URL === 'string' ? env.SUPABASE_URL : '';
+  const key = typeof env.SUPABASE_SERVICE_ROLE_KEY === 'string'
+    ? env.SUPABASE_SERVICE_ROLE_KEY
+    : '';
+  if (!url || !key) return false;
+  const response = await fetchImpl(`${url}/rest/v1/rpc/${name}`, {
+    method: 'POST',
+    headers: { apikey: key, authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return response.ok;
+}
+
+export function createCheckoutAction(
+  createClient: ClientFactory = createServerSupabase,
+  fetchImpl: Fetch = fetch,
+) {
+  return async function checkout(
+    ctx: CheckoutContext & { formData: FormData },
+  ): Promise<OpenElementActionFailure<CheckoutActionData>> {
+    const attemptId = String(ctx.formData.get('attempt_id') ?? '');
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(attemptId)) {
+      return fail(422, { error: 'invalid checkout attempt' });
+    }
+    const client = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return fail(401, { error: 'sign-in required to checkout', attemptId });
+
+    const reserved = await client.rpc('create_checkout_order', {
+      product_code: PRODUCT_CODE,
+      checkout_attempt: attemptId,
+    });
+    if (reserved.error || typeof reserved.data !== 'string') {
+      return fail(409, { error: 'checkout is temporarily unavailable; retry safely', attemptId });
+    }
+
+    let config;
+    try {
+      config = checkoutConfiguration(ctx.env);
+    } catch {
+      return fail(409, { error: 'checkout is temporarily unavailable; retry safely', attemptId });
+    }
+    const orderId = reserved.data;
+    let checkoutUrl: string;
+    try {
+      const response = await fetchImpl('https://api.stripe.com/v1/checkout/sessions', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${config.secretKey}`,
+          'content-type': 'application/x-www-form-urlencoded',
+          'idempotency-key': `checkout-${attemptId}`,
+        },
+        body: checkoutSessionBody(config, orderId),
+      });
+      if (!response.ok) throw new Error('Stripe Checkout creation failed');
+      const session = await response.json() as { id?: unknown; url?: unknown; livemode?: unknown };
+      if (
+        typeof session.id !== 'string' || session.livemode !== config.livemode ||
+        typeof session.url !== 'string'
+      ) throw new Error('Stripe Checkout response mismatch');
+      const attached = await serviceRpc(fetchImpl, ctx.env, 'attach_checkout_session', {
+        order_id: orderId,
+        checkout_session_id: session.id,
+      });
+      if (!attached) throw new Error('Checkout session was not persisted');
+      checkoutUrl = verifiedCheckoutUrl(session.url, config.checkoutHost);
+    } catch {
+      await serviceRpc(fetchImpl, ctx.env, 'mark_checkout_creation_failed', { order_id: orderId });
+      return fail(409, { error: 'checkout is temporarily unavailable; retry safely', attemptId });
+    }
+    throw redirect(checkoutUrl);
+  };
+}
+
+export const loader = createCheckoutLoader();
+export const actions = { checkout: createCheckoutAction() };
+
+const CheckoutPage = definePage<CheckoutData>({
+  renderIntent: { mode: 'dynamic' },
+  head: { title: 'Checkout — reference starter' },
+  render() {
+    const data = useLoaderData() as CheckoutData;
+    const actionData = useActionData() as CheckoutActionData | undefined;
+    if (data.denied) {
+      return (
+        <main>
+          <h1>Checkout</h1>
+          <p id='denied'>Sign-in is required.</p>
+        </main>
+      );
+    }
+    const attemptId = actionData?.attemptId ?? data.attemptId ?? '';
+    return (
+      <main>
+        <h1>One-time Checkout</h1>
+        {data.result === 'success'
+          ? (
+            <p id='checkout-result'>
+              Checkout returned. Payment status is confirmed by webhook only.
+            </p>
+          )
+          : null}
+        {data.result === 'cancelled' ? <p id='checkout-result'>Checkout was cancelled.</p> : null}
+        {actionData?.error ? <p id='action-error'>{actionData.error}</p> : null}
+        <p>Starter support — USD 5.00, one-time card payment.</p>
+        <form method='post' action='/checkout?/checkout'>
+          <input type='hidden' name='attempt_id' value={attemptId} />
+          <button type='submit'>Pay with Stripe</button>
+        </form>
+        <h2>Your orders</h2>
+        <ul id='orders'>
+          {(data.orders ?? []).map((order) => (
+            <li key={order.id}>
+              {order.currency.toUpperCase()} {(order.amount_total / 100).toFixed(2)} —{' '}
+              {order.status}
+            </li>
+          ))}
+        </ul>
+      </main>
+    );
+  },
+});
+
+customElements.define(tagName, CheckoutPage);
+export default CheckoutPage;

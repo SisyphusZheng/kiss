@@ -22,6 +22,9 @@ const HomePage = definePage({
           <li>
             <a href='/login'>Sign-in</a>
           </li>
+          <li>
+            <a href='/checkout'>One-time Stripe Checkout</a>
+          </li>
         </ul>
       </main>
     );
