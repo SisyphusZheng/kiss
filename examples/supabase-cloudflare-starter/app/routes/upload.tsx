@@ -175,7 +175,7 @@ export function createUploadAction(
     if (finalized.error) {
       await supabase.storage.from(BUCKET).remove([key]);
       await supabase.rpc('release_attachment', { reservation_id: reservationId });
-      return fail(500, { error: 'upload could not be finalized' });
+      throw new Error('upload could not be finalized');
     }
     const queue = ctx.env.ATTACHMENT_SCAN_QUEUE as
       | { send(message: Record<string, string>): Promise<void> }
@@ -205,7 +205,7 @@ export function createDeleteAction(
     const removed = await supabase.storage.from(BUCKET).remove([key]);
     if (removed.error) return fail(422, { error: removed.error.message });
     const released = await supabase.rpc('release_attachment_by_key', { target_key: key });
-    if (released.error) return fail(500, { error: 'object deleted but quota release failed' });
+    if (released.error) throw new Error('object deleted but quota release failed');
     throw redirect('/upload');
   };
 }

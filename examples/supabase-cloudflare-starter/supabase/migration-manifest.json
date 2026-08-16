@@ -32,6 +32,10 @@
     {
       "file": "20260817000004_stripe_webhooks.sql",
       "sha256": "adec9029d1edd8007d22a37233a7885cdcf4fe65a4ac56dcfb64aaba6e1146df"
+    },
+    {
+      "file": "20260817000005_stripe_checkout.sql",
+      "sha256": "076c0129de202bd07cee58d69428e606198195b5bcc1b422c090f8b49654bc56"
     }
   ]
 }

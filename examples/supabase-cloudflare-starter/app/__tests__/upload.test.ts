@@ -225,6 +225,22 @@ Deno.test('action atomically reserves and releases quota when upload fails', asy
   assertEquals(calls, ['reserve_attachment', 'release_attachment']);
 });
 
+Deno.test('finalize failure compensates storage and quota before surfacing server error', async () => {
+  const calls: string[] = [];
+  const removed: string[][] = [];
+  const action = createUploadAction(stubClient({
+    rpcErrors: { finalize_attachment: { message: 'database unavailable' } },
+    onRpc: (name) => calls.push(name),
+    onRemove: (paths) => removed.push(paths),
+  }));
+  const formData = new FormData();
+  formData.set('file', new File(['x'], 'a.txt', { type: 'text/plain' }));
+  const error = await assertRejects(() => action({ ...ctx(), formData }), Error);
+  assertEquals(error.message, 'upload could not be finalized');
+  assertEquals(calls, ['reserve_attachment', 'finalize_attachment', 'release_attachment']);
+  assertEquals(removed.length, 1);
+});
+
 Deno.test('delete rejects a cross-user object key before Storage', async () => {
   const action = createDeleteAction(stubClient({}));
   const formData = new FormData();
@@ -247,4 +263,14 @@ Deno.test('delete removes the owner object and releases quota', async () => {
   assert(isOpenElementRedirect(error));
   assertEquals(removed, [['user-123/opaque-a.txt']]);
   assertEquals(calls, ['release_attachment_by_key']);
+});
+
+Deno.test('delete quota failure surfaces as a server error, not invalid fail(500)', async () => {
+  const action = createDeleteAction(stubClient({
+    rpcErrors: { release_attachment_by_key: { message: 'database unavailable' } },
+  }));
+  const formData = new FormData();
+  formData.set('key', 'user-123/opaque-a.txt');
+  const error = await assertRejects(() => action({ ...ctx(), formData }), Error);
+  assertEquals(error.message, 'object deleted but quota release failed');
 });

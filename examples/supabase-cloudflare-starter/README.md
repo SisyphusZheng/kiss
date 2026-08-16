@@ -35,6 +35,10 @@ application layer.
 - [x] Stripe webhook ingress preserves and verifies the raw body before JSON
       parsing, enforces timestamp tolerance, durably deduplicates provider event
       ids, and applies only monotonic order-state transitions
+- [x] one-time card Checkout uses a server-owned catalog, retry-stable attempt
+      ids and Stripe idempotency keys; Session and PaymentIntent metadata carry
+      the order id, paid events must reconcile amount/currency, and the success
+      URL never grants payment state
 
 ## Prerequisites
 
@@ -72,6 +76,10 @@ SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 STRIPE_WEBHOOK_SECRET
 STRIPE_LIVEMODE
+STRIPE_SECRET_KEY
+STRIPE_PRICE_ID
+STRIPE_CHECKOUT_HOST
+APP_ORIGIN
 ```
 
 The anon key is additionally rendered into the /notes page as a data attribute
