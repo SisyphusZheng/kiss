@@ -17,6 +17,7 @@ const baseUrl = required('SMOKE_BASE_URL');
 const email = required('SMOKE_USER_EMAIL');
 const password = required('SMOKE_USER_PASSWORD');
 const userId = required('SMOKE_USER_ID');
+const otherUserId = required('SMOKE_OTHER_USER_ID');
 const supabaseUrl = required('SUPABASE_URL');
 const anonKey = required('SUPABASE_ANON_KEY');
 const serviceRoleKey = required('SUPABASE_SERVICE_ROLE_KEY');
@@ -36,7 +37,18 @@ try {
   const context = await browser.newContext();
   const page = await context.newPage();
   const pageErrors: string[] = [];
+  let resolveRealtimeLeave!: () => void;
+  const realtimeLeave = new Promise<void>((resolve) => {
+    resolveRealtimeLeave = resolve;
+  });
   page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('websocket', (socket) => {
+    socket.on('framesent', ({ payload }) => {
+      if (typeof payload === 'string' && payload.includes('phx_leave')) {
+        resolveRealtimeLeave();
+      }
+    });
+  });
 
   await page.goto(`${baseUrl}/notes`);
   await page.getByText('Sign-in is required').waitFor({ state: 'visible' });
@@ -70,6 +82,30 @@ try {
     timeout: 20_000,
   });
   await record('browser-realtime-user-jwt-subscribed');
+
+  const isolatedMarker = `browser-realtime-isolated-${runId}`;
+  const otherUserInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      'content-type': 'application/json',
+      prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      user_id: otherUserId,
+      title: 'realtime isolation smoke',
+      body: isolatedMarker,
+    }),
+  });
+  if (!otherUserInsert.ok) {
+    throw new Error(`Cross-user Realtime seed failed with HTTP ${otherUserInsert.status}`);
+  }
+  await page.waitForTimeout(2_000);
+  if (await live.locator('#live-events').getByText(isolatedMarker, { exact: true }).count()) {
+    throw new Error("Realtime isolation breach: owner received another user's INSERT");
+  }
+  await record('browser-realtime-cross-user-insert-denied');
 
   const realtimeMarker = `browser-realtime-${runId}`;
   const inserted = await fetch(`${supabaseUrl}/rest/v1/notes`, {
@@ -106,7 +142,78 @@ try {
     state: 'visible',
     timeout: 20_000,
   });
-  await record('browser-realtime-offline-online-recovery');
+  const recoveredMarker = `browser-realtime-recovered-${runId}`;
+  const recoveredInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      'content-type': 'application/json',
+      prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      title: 'realtime recovery smoke',
+      body: recoveredMarker,
+    }),
+  });
+  if (!recoveredInsert.ok) {
+    throw new Error(`Recovered Realtime seed failed with HTTP ${recoveredInsert.status}`);
+  }
+  await live.locator('#live-events').getByText(recoveredMarker, { exact: true }).waitFor({
+    state: 'visible',
+    timeout: 20_000,
+  });
+  await record('browser-realtime-offline-online-recovery-delivers');
+
+  const refreshedSession = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!refreshedSession.ok) {
+    throw new Error(`Realtime token refresh failed with HTTP ${refreshedSession.status}`);
+  }
+  const refreshedAccessToken = (await refreshedSession.json() as { access_token?: string })
+    .access_token;
+  if (!refreshedAccessToken) throw new Error('Realtime token refresh returned no access token');
+  await live.evaluate(
+    (element, token) => element.setAttribute('data-access-token', token),
+    refreshedAccessToken,
+  );
+
+  const refreshedMarker = `browser-realtime-refreshed-${runId}`;
+  const refreshedInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      'content-type': 'application/json',
+      prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      title: 'realtime refreshed token smoke',
+      body: refreshedMarker,
+    }),
+  });
+  if (!refreshedInsert.ok) {
+    throw new Error(`Refreshed-token Realtime seed failed with HTTP ${refreshedInsert.status}`);
+  }
+  await live.locator('#live-events').getByText(refreshedMarker, { exact: true }).waitFor({
+    state: 'visible',
+    timeout: 20_000,
+  });
+  await record('browser-realtime-refreshed-jwt-delivers');
+
+  await live.evaluate((element) => element.remove());
+  await Promise.race([
+    realtimeLeave,
+    page.waitForTimeout(10_000).then(() => {
+      throw new Error('Removing the Realtime island did not send a channel leave frame');
+    }),
+  ]);
+  await record('browser-realtime-removal-releases-channel');
 
   await page.goto(`${baseUrl}/admin`);
   await page.getByRole('heading', { name: 'Admin', exact: true }).waitFor({ state: 'visible' });

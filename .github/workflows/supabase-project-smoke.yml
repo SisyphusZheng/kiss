@@ -270,6 +270,7 @@ jobs:
           SMOKE_USER_EMAIL="$A_EMAIL" \
           SMOKE_USER_PASSWORD="$A_PASSWORD" \
           SMOKE_USER_ID="$A_ID" \
+          SMOKE_OTHER_USER_ID="$B_ID" \
           SMOKE_RUN_ID="$RUN_ID" \
           SMOKE_RESULTS_FILE="$GITHUB_WORKSPACE/.smoke/results.jsonl" \
             deno run -A tools/smoke-supabase-browser.ts
