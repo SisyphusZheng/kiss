@@ -17,6 +17,7 @@
     "@openelement/adapter-vite": "../../packages/adapter-vite/src/index.ts",
     "vite": "npm:vite@8.0.16",
     "@supabase/ssr": "npm:@supabase/ssr@^0.8.0",
+    "@supabase/realtime-js": "npm:@supabase/realtime-js@^2.84.0",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.84.0",
     "@std/assert": "jsr:@std/assert@1"
   },

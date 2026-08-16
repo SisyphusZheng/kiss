@@ -16,7 +16,7 @@
 import { computed, defineCustomElement, OpenElement, signal } from '@openelement/element';
 import type { VNode } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
-import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
+import { type RealtimeChannel, RealtimeClient } from '@supabase/realtime-js';
 
 export const tagName = 'notes-live';
 export const openElement = defineIslandConfig({
@@ -59,7 +59,7 @@ export default class NotesLive extends OpenElement {
     </ul>,
   ]);
 
-  #client: SupabaseClient | null = null;
+  #client: RealtimeClient | null = null;
   #channel: RealtimeChannel | null = null;
   #reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   #reconnectAttempt = 0;
@@ -91,12 +91,18 @@ export default class NotesLive extends OpenElement {
       return;
     }
     this.#status.value = 'connecting';
-    const client = createClient(url, key);
+    // This island only needs Realtime. Importing createClient from
+    // supabase-js also bundles Auth, PostgREST, Storage, and Functions into
+    // the browser chunk, duplicating server-only capabilities. Connect to
+    // the same Realtime endpoint directly and keep the island single-purpose.
+    const client = new RealtimeClient(`${url.replace(/\/$/, '')}/realtime/v1`, {
+      params: { apikey: key },
+    });
     // Hosted Realtime scopes postgres_changes by RLS: without the user's
     // short-lived access token the connection is `anon`, which has no
     // SELECT policy on notes and would receive nothing. setAuth upgrades
     // the realtime connection only — no session is persisted client-side.
-    if (accessToken) client.realtime.setAuth(accessToken);
+    if (accessToken) client.setAuth(accessToken);
     this.#client = client;
     this.#channel = client
       .channel('notes-live')
@@ -169,7 +175,7 @@ export default class NotesLive extends OpenElement {
   override attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
     super.attributeChangedCallback(name, oldValue, value);
     if (name === 'data-access-token' && value && value !== oldValue) {
-      this.#client?.realtime.setAuth(value);
+      this.#client?.setAuth(value);
     }
   }
 
