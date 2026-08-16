@@ -392,7 +392,7 @@ export function createUploadAction(
     if (finalized.error) {
       await supabase.storage.from(BUCKET).remove([key]);
       await supabase.rpc('release_attachment', { reservation_id: reservationId });
-      return fail(500, { error: 'upload could not be finalized' });
+      throw new Error('upload could not be finalized');
     }
     const queue = ctx.env.ATTACHMENT_SCAN_QUEUE as
       | { send(message: Record<string, string>): Promise<void> }
