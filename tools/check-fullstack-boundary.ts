@@ -263,6 +263,24 @@ async function main(): Promise<void> {
     issues.push(...findEnvExampleLeaks(await Deno.readTextFile(envExampleFile), envExampleFile));
   }
 
+  // Deployable-bundle boundary: when the Nitro workers output exists, its
+  // public/ dir is what actually ships to the CDN. Scan it for secrets too,
+  // and require the server implementation was stripped from it (the starter's
+  // nitro:build chain removes .output-workers/public/server — the deploy
+  // would otherwise serve dist/server/entry.js publicly).
+  const workersPublicDir = join(STARTER_DIR, '.output-workers', 'public');
+  if (await exists(workersPublicDir)) {
+    issues.push(...findSecretLeaks(await collectBrowserBundleFiles(workersPublicDir)));
+    if (await exists(join(workersPublicDir, 'server'))) {
+      issues.push({
+        check: 'deploy-bundle',
+        file: join(workersPublicDir, 'server'),
+        message:
+          'server implementation must not be under the Nitro public assets dir (strip .output-workers/public/server before deploy)',
+      });
+    }
+  }
+
   if (issues.length > 0) {
     console.error('Fullstack boundary check failed:');
     for (const issue of issues) {
