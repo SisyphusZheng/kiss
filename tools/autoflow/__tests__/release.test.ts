@@ -31,6 +31,9 @@ import {
 import { buildVersionAnchorReplacements, bumpProjectConstantsText } from '../version-anchors.ts';
 import { commitIfStaged } from '../../lib/git.ts';
 import {
+  ACTIVE_EXECUTION_VERSION,
+  LATEST_LANDED_TRAIN,
+  NEXT_EXECUTION_VERSION,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -48,7 +51,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // anchors appear twice: once for the current-tag form and once for the
   // lag-state previous-tag form (#754). The interop example anchor likewise
   // covers the source-line and lagging npm-published forms.
-  assertEquals(reps.length, 32);
+  assertEquals(reps.length, 38);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -83,8 +86,10 @@ Deno.test('buildVersionAnchorReplacements: from side derives from the loaded sou
   for (const [, from] of reps) {
     assert(
       from.includes(PACKAGE_VERSION) || from.includes(PACKAGE_VERSION_TAG) ||
-        from.includes(PREVIOUS_PACKAGE_VERSION) || from.includes(PREVIOUS_PACKAGE_VERSION_TAG),
-      `from must derive from PACKAGE_VERSION or PREVIOUS_PACKAGE_VERSION: ${from}`,
+        from.includes(PREVIOUS_PACKAGE_VERSION) || from.includes(PREVIOUS_PACKAGE_VERSION_TAG) ||
+        from.includes(LATEST_LANDED_TRAIN) || from.includes(ACTIVE_EXECUTION_VERSION) ||
+        from.includes(NEXT_EXECUTION_VERSION),
+      `from must derive from the canonical release-state constants: ${from}`,
     );
   }
   assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, `v${PREVIOUS_PACKAGE_VERSION}`);
@@ -175,7 +180,9 @@ Deno.test('createReleasePlan: rejects shell metacharacters in approval ids', () 
 const CONSTANTS_FIXTURE = [
   "export const PACKAGE_VERSION = '0.41.0-alpha.16';",
   'export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;',
+  "export const LATEST_LANDED_TRAIN = 'v0.41.0-alpha.17';",
   "export const ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.17';",
+  "export const NEXT_EXECUTION_VERSION = 'v0.41.0-alpha.18';",
   "export const PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.15';",
   '',
 ].join('\n');
@@ -188,6 +195,8 @@ Deno.test('bumpProjectConstantsText: bump maintains previous line and active exe
   // The active execution target is the version the active plan is delivering:
   // the bump target itself, until a new plan advances it.
   assert(updated.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.17'"));
+  assert(updated.includes("LATEST_LANDED_TRAIN = 'v0.41.0-alpha.17'"));
+  assert(updated.includes("NEXT_EXECUTION_VERSION = 'v0.41.0-alpha.18'"));
 });
 
 Deno.test('bumpProjectConstantsText: stable bump sets the active target to the bump target', () => {
@@ -479,9 +488,9 @@ Deno.test('buildVersionAnchorReplacements: bump updates the VERSION_PLAN head li
   const version = '9.9.9';
   const reps = buildVersionAnchorReplacements(version)
     .filter(([path]) => path === 'docs/current/VERSION_PLAN.md');
-  // Source line + registry line in both accepted states (#754), plus the
-  // active release target line (alpha.13).
-  assertEquals(reps.length, 4);
+  // Source line + registry line in both accepted states (#754), plus latest,
+  // active, and next train fields.
+  assertEquals(reps.length, 6);
 
   // Simulate the bump against the plan's real head shape: the two header
   // lines and the active release target all move to the target.
@@ -490,12 +499,17 @@ Deno.test('buildVersionAnchorReplacements: bump updates the VERSION_PLAN head li
     '',
     `> Current source package line: \`${PACKAGE_VERSION_TAG}\`\\`,
     `> Current npm registry line: \`${PACKAGE_VERSION_TAG}\`\\`,
-    `> Active release target: \`v${version}\`\\`,
+    `> Latest landed train: \`${LATEST_LANDED_TRAIN}\`\\`,
+    `> Active release target: \`${ACTIVE_EXECUTION_VERSION}\`\\`,
+    `> Next planned train: \`${NEXT_EXECUTION_VERSION}\`\\`,
   ].join('\n');
   let updated = head;
   for (const [, from, to] of reps) updated = updated.replace(from, to);
   assert(updated.includes(`Current source package line: \`v${version}\``));
   assert(updated.includes(`Current npm registry line: \`v${version}\``));
+  assert(updated.includes(`Latest landed train: \`v${version}\``));
+  assert(updated.includes(`Active release target: \`v${version}\``));
+  assert(updated.includes(`Next planned train: \`v${version}\``));
   assert(!updated.includes(`Current source package line: \`${PACKAGE_VERSION_TAG}\``));
 });
 

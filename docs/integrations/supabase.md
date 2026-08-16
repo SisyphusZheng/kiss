@@ -1,7 +1,8 @@
 # Supabase recipe (Auth + RLS + Storage + Realtime)
 
 > Status: **verified against the maintained reference application** — every
-> code block below is lifted verbatim from
+> TypeScript, TSX, and SQL block below names its source file and is mechanically
+> checked as a verbatim excerpt from
 > `examples/supabase-cloudflare-starter` (#983), which was qualified
 > end-to-end against a real Supabase project by the tier-2 workflow
 > `.github/workflows/supabase-project-smoke.yml` (#984). The starter's built
@@ -55,18 +56,21 @@ import { createServerClient } from '@supabase/ssr';
 import { parseCookieHeader, serializeCookieHeader } from '@supabase/ssr';
 
 export function createServerSupabase(
-  env: Record<string, string>,
+  env: Record<string, unknown>,
   request: Request,
   responseHeaders: Headers,
 ) {
-  const url = env.SUPABASE_URL ?? '';
-  const anonKey = env.SUPABASE_ANON_KEY ?? '';
+  const url = typeof env.SUPABASE_URL === 'string' ? env.SUPABASE_URL : '';
+  const anonKey = typeof env.SUPABASE_ANON_KEY === 'string' ? env.SUPABASE_ANON_KEY : '';
   if (!url || !anonKey) {
     throw new Error(
       '[reference starter] SUPABASE_URL and SUPABASE_ANON_KEY must be set in the worker env',
     );
   }
-  const secure = url.startsWith('https://');
+  // Secure follows the APPLICATION's origin, not the Supabase URL: the
+  // cookie belongs to the app; over plain http (local/LAN) a Secure cookie
+  // would be dropped by the browser and the session would vanish.
+  const secure = new URL(request.url).protocol === 'https:';
   return createServerClient(url, anonKey, {
     cookies: {
       // parseCookieHeader marks value optional; GetAllCookies wants a
@@ -104,37 +108,31 @@ composition boundary in `lib/supabase-server.ts`.
 
 Email+password sign-in is a plain action on the login route: authenticate,
 let the cookie adapter write the session through `ctx.responseHeaders`,
-then PRG-redirect. Failures re-render with a 422 and an error echo.
+then PRG-redirect. Failures re-render with a 422 and a stable public error;
+provider diagnostics and session material are never echoed.
 
 ```ts
 // app/routes/login.tsx
-import { definePage, fail, type OpenElementActionFailure, redirect } from '@openelement/app';
-import { createServerSupabase } from '../../lib/supabase-server.ts';
-
-export const tagName = 'page-login';
-
-interface LoginActionData {
-  error?: string;
-  email?: string;
-}
-
-export async function action(ctx: {
-  formData: FormData;
-  env: Record<string, string>;
-  request: Request;
-  responseHeaders: Headers;
-}): Promise<OpenElementActionFailure<LoginActionData>> {
-  const email = String(ctx.formData.get('email') ?? '').trim();
-  const password = String(ctx.formData.get('password') ?? '');
-  if (!email || !password) {
-    return fail(422, { error: 'email and password are required', email });
-  }
-  const supabase = createServerSupabase(ctx.env, ctx.request, ctx.responseHeaders);
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    return fail(422, { error: error.message, email });
-  }
-  throw redirect('/notes');
+export function createLoginAction(createClient: LoginClientFactory = createServerSupabase) {
+  return async function action(ctx: {
+    formData: FormData;
+    env: WorkerEnv;
+    request: Request;
+    responseHeaders: Headers;
+  }): Promise<OpenElementActionFailure<LoginActionData>> {
+    if (!(await authRequestAllowed(ctx.env, ctx.request, 'login'))) {
+      return fail(429, { error: 'too many attempts; retry later' });
+    }
+    const email = String(ctx.formData.get('email') ?? '').trim();
+    const password = String(ctx.formData.get('password') ?? '');
+    if (!email || !password) {
+      return fail(422, { error: 'email and password are required', email });
+    }
+    const client = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) return fail(422, { error: publicAuthError(error), email });
+    throw redirect('/notes');
+  };
 }
 ```
 
@@ -144,6 +142,7 @@ plain form post to `/notes?/logout`:
 ```ts
 // app/routes/notes.tsx
 export const actions = {
+  create: createNoteAction(),
   async logout(ctx: {
     env: Record<string, string>;
     request: Request;
@@ -177,42 +176,36 @@ protection.
 
 ```tsx
 // app/routes/notes.tsx
-export async function loader(ctx: {
-  request: Request;
-  env: Record<string, string>;
-  responseHeaders: Headers;
-}): Promise<NotesData> {
-  const supabase = createServerSupabase(
-    ctx.env,
-    ctx.request,
-    ctx.responseHeaders,
-  );
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { denied: true };
-  const { data: notes, error } = await supabase
-    .from('notes')
-    .select('id, body, created_at')
-    .order('created_at', { ascending: false });
-  if (error) return { denied: false, email: user.email, error: error.message };
-  const { data: { session } } = await supabase.auth.getSession();
-  return {
-    denied: false,
-    email: user.email,
-    notes: notes ?? [],
-    live: {
-      url: ctx.env.SUPABASE_URL ?? '',
-      anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
-      userId: user.id,
-      accessToken: session?.access_token ?? '',
-    },
+export function createNotesLoader(createClient: NotesClientFactory = createServerSupabase) {
+  return async function loader(ctx: NotesContext): Promise<NotesData> {
+    const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { denied: true };
+    const { data: notes, error } = await supabase
+      .from('notes')
+      .select('id, body, created_at')
+      .order('created_at', { ascending: false });
+    if (error) return { denied: false, email: user.email, error: error.message };
+    const { data: { session } } = await supabase.auth.getSession();
+    return {
+      denied: false,
+      email: user.email,
+      notes: notes ?? [],
+      live: {
+        url: ctx.env.SUPABASE_URL ?? '',
+        anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
+        userId: user.id,
+        accessToken: session?.access_token ?? '',
+      },
+    };
   };
 }
 ```
 
 The page is a DSD/SSR `renderIntent: { mode: 'dynamic' }` route, so both
-branches render fully before any client JavaScript — anonymous visitors get
-a usable denied page, signed-in users get their rows, the live island
-element, and a working no-JS sign-out form:
+branches render fully before any client JavaScript. The denial branch is
+source-backed below; signed-in users additionally receive the create form,
+their rows, the live island, and working no-JS sign-out:
 
 ```tsx
 // app/routes/notes.tsx
@@ -221,6 +214,7 @@ const NotesPage = definePage<NotesData>({
   head: { title: 'Notes — reference starter' },
   render() {
     const data = useLoaderData() as NotesData;
+    const actionData = useActionData() as CreateNoteData | undefined;
     if (data.denied) {
       return (
         <main>
@@ -236,35 +230,6 @@ const NotesPage = definePage<NotesData>({
         </main>
       );
     }
-    return (
-      <main>
-        <h1>Notes</h1>
-        <p id='who'>signed-in:{data.email}</p>
-        {data.error ? <p id='error'>{data.error}</p> : null}
-        <ul id='notes'>
-          {(data.notes ?? []).map((note) => <li key={note.id}>{note.body}</li>)}
-        </ul>
-        {data.live
-          ? (
-            <notes-live
-              data-url={data.live.url}
-              data-key={data.live.anonKey}
-              data-user-id={data.live.userId}
-              data-access-token={data.live.accessToken}
-            >
-            </notes-live>
-          )
-          : null}
-        <form method='post' action='/notes?/logout'>
-          <button type='submit'>Sign out</button>
-        </form>
-        <p>
-          <a href='/upload'>Upload a file</a>
-        </p>
-      </main>
-    );
-  },
-});
 ```
 
 ## RLS-first migrations
@@ -326,13 +291,6 @@ create policy "attachments: owner reads own folder"
 create policy "attachments: owner uploads own folder"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id = 'notes-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
-
--- upsert re-uploads land as UPDATE once the object exists.
-create policy "attachments: owner updates own folder"
-  on storage.objects for update
-  to authenticated
-  using (bucket_id = 'notes-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text)
   with check (bucket_id = 'notes-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 create policy "attachments: owner deletes own folder"
@@ -401,11 +359,22 @@ export function createUploadAction(
       return fail(422, { error: 'file exceeds the 1 MiB reference cap' });
     }
     const key = objectKeyFor(user.id, file.name || 'upload.bin');
+    // Never silently overwrite: different originals can normalize to the same
+    // key, and upsert:true would lose the earlier file without a trace.
     const { error } = await supabase.storage.from(BUCKET).upload(key, file, {
       contentType: file.type || undefined,
-      upsert: true,
+      upsert: false,
     });
-    if (error) return fail(422, { error: error.message });
+    if (error) {
+      const duplicate = /already exists|Duplicate/i.test(error.message);
+      return fail(422, {
+        error: duplicate
+          ? `a file named '${
+            sanitizeFilename(file.name || 'upload.bin')
+          }' already exists — rename it to upload a new one`
+          : error.message,
+      });
+    }
     throw redirect('/upload');
   };
 }
@@ -442,62 +411,38 @@ export const openElement = defineIslandConfig({
 ```
 
 ```tsx
-  override connectedCallback(): void {
-    super.connectedCallback();
-    const url = this.getAttribute('data-url');
-    const key = this.getAttribute('data-key');
-    const userId = this.getAttribute('data-user-id');
-    const accessToken = this.getAttribute('data-access-token');
-    if (!url || !key || !userId) {
-      this.#status.value = 'unconfigured';
-      return;
-    }
-    const client = createClient(url, key);
-    // Hosted Realtime scopes postgres_changes by RLS: without the user's
-    // short-lived access token the connection is `anon`, which has no
-    // SELECT policy on notes and would receive nothing. setAuth upgrades
-    // the realtime connection only — no session is persisted client-side.
-    if (accessToken) client.realtime.setAuth(accessToken);
-    this.#client = client;
-    this.#channel = client
-      .channel('notes-live')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notes',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const body = (payload.new as { body?: string }).body;
-          if (typeof body === 'string') {
-            this.#events.value = [body, ...this.#events.value];
-          }
-        },
-      )
-      .subscribe((status) => {
-        this.#status.value = status === 'SUBSCRIBED' ? 'subscribed' : status.toLowerCase();
-      });
-  }
+// app/islands/notes-live.tsx
+export const MAX_LIVE_EVENTS = 100;
+export const MAX_RECONNECT_DELAY_MS = 30_000;
 
-  override disconnectedCallback(): void {
-    const channel = this.#channel;
-    const client = this.#client;
-    this.#channel = null;
-    this.#client = null;
-    if (channel) {
-      // removeChannel unsubscribes the channel and closes its socket share.
-      if (client) void client.removeChannel(channel);
-      else void channel.unsubscribe();
-    }
-    super.disconnectedCallback();
-  }
+export interface LiveNoteEvent {
+  id: string;
+  body: string;
+}
+
+/** Stable-id dedupe with an explicit DOM/memory bound. */
+export function mergeLiveEvent(
+  events: readonly LiveNoteEvent[],
+  incoming: LiveNoteEvent,
+  maximum = MAX_LIVE_EVENTS,
+): LiveNoteEvent[] {
+  if (events.some((event) => event.id === incoming.id)) return [...events];
+  return [incoming, ...events].slice(0, Math.max(0, maximum));
+}
+
+/** Capped exponential retry with full jitter; random is injectable for tests. */
+export function reconnectDelayMs(attempt: number, random = Math.random): number {
+  const cap = Math.min(MAX_RECONNECT_DELAY_MS, 1_000 * 2 ** Math.max(0, attempt));
+  return Math.floor(random() * cap);
+}
 ```
 
-The anon key in the data attributes is public by design; row visibility
-stays enforced by RLS plus the hard filter, and no service-role key ever
-reaches this bundle (the tier-1 gate scans for exactly that).
+The live component additionally updates Realtime auth when its access-token
+attribute changes, releases the channel on disconnect, distinguishes
+connecting/subscribed/degraded/offline, and exposes a manual reconnect path.
+The anon key in the data attributes is public by design; row visibility stays
+enforced by RLS plus the hard filter, and no service-role key ever reaches this
+bundle (the tier-1 gate scans for exactly that).
 
 ## Verification evidence
 

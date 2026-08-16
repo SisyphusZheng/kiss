@@ -27,6 +27,8 @@
 
 import {
   ACTIVE_EXECUTION_VERSION,
+  LATEST_LANDED_TRAIN,
+  NEXT_EXECUTION_VERSION,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -67,6 +69,14 @@ export function versionAnchors(): VersionAnchor[] {
       snippet: `Active release target: \`${ACTIVE_EXECUTION_VERSION}\``,
     },
     {
+      path: 'docs/status/STATUS.md',
+      snippet: `Latest landed train: \`${LATEST_LANDED_TRAIN}\``,
+    },
+    {
+      path: 'docs/status/STATUS.md',
+      snippet: `Next planned train: \`${NEXT_EXECUTION_VERSION}\``,
+    },
+    {
       path: 'README.md',
       snippet: `Source package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`)`,
     },
@@ -101,6 +111,14 @@ export function versionAnchors(): VersionAnchor[] {
       snippet: `Active execution target: \`${ACTIVE_EXECUTION_VERSION}\`.`,
     },
     {
+      path: 'docs/roadmap/ROADMAP.md',
+      snippet: `Latest landed train: \`${LATEST_LANDED_TRAIN}\`.`,
+    },
+    {
+      path: 'docs/roadmap/ROADMAP.md',
+      snippet: `Next planned train: \`${NEXT_EXECUTION_VERSION}\`.`,
+    },
+    {
       path: 'docs/governance/PROJECT_WORKFLOW.md',
       snippet: `package line \`${PACKAGE_VERSION_TAG}\``,
     },
@@ -119,6 +137,18 @@ export function versionAnchors(): VersionAnchor[] {
       snippet: `Current npm registry line: \`${PACKAGE_VERSION_TAG}\``,
       // The registry publishes at release time, one alpha after the source bump.
       alternatives: [`Current npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
+    },
+    {
+      path: 'docs/current/VERSION_PLAN.md',
+      snippet: `Latest landed train: \`${LATEST_LANDED_TRAIN}\``,
+    },
+    {
+      path: 'docs/current/VERSION_PLAN.md',
+      snippet: `Active release target: \`${ACTIVE_EXECUTION_VERSION}\``,
+    },
+    {
+      path: 'docs/current/VERSION_PLAN.md',
+      snippet: `Next planned train: \`${NEXT_EXECUTION_VERSION}\``,
     },
     {
       path: 'examples/open-element-in-fresh/README.md',

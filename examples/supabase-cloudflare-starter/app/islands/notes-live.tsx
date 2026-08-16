@@ -25,18 +25,48 @@ export const openElement = defineIslandConfig({
   dsd: true,
 });
 
+export const MAX_LIVE_EVENTS = 100;
+export const MAX_RECONNECT_DELAY_MS = 30_000;
+
+export interface LiveNoteEvent {
+  id: string;
+  body: string;
+}
+
+/** Stable-id dedupe with an explicit DOM/memory bound. */
+export function mergeLiveEvent(
+  events: readonly LiveNoteEvent[],
+  incoming: LiveNoteEvent,
+  maximum = MAX_LIVE_EVENTS,
+): LiveNoteEvent[] {
+  if (events.some((event) => event.id === incoming.id)) return [...events];
+  return [incoming, ...events].slice(0, Math.max(0, maximum));
+}
+
+/** Capped exponential retry with full jitter; random is injectable for tests. */
+export function reconnectDelayMs(attempt: number, random = Math.random): number {
+  const cap = Math.min(MAX_RECONNECT_DELAY_MS, 1_000 * 2 ** Math.max(0, attempt));
+  return Math.floor(random() * cap);
+}
+
 export default class NotesLive extends OpenElement {
   #status = signal('idle');
-  #events = signal<string[]>([]);
+  #events = signal<LiveNoteEvent[]>([]);
   #liveNodes = computed((): VNode[] => [
     <p key='status' id='live-status'>realtime: {this.#status.value}</p>,
     <ul key='events' id='live-events'>
-      {this.#events.value.map((body, index) => <li key={`${index}-${body}`}>{body}</li>)}
+      {this.#events.value.map((event) => <li key={event.id}>{event.body}</li>)}
     </ul>,
   ]);
 
   #client: SupabaseClient | null = null;
   #channel: RealtimeChannel | null = null;
+  #reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  #reconnectAttempt = 0;
+
+  static override get observedAttributes(): string[] {
+    return [...super.observedAttributes, 'data-access-token'];
+  }
 
   constructor() {
     super();
@@ -45,6 +75,13 @@ export default class NotesLive extends OpenElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    globalThis.addEventListener?.('online', this.#onOnline);
+    globalThis.addEventListener?.('offline', this.#onOffline);
+    this.#connect();
+  }
+
+  #connect(): void {
+    if (!this.isConnected || this.#channel) return;
     const url = this.getAttribute('data-url');
     const key = this.getAttribute('data-key');
     const userId = this.getAttribute('data-user-id');
@@ -53,6 +90,7 @@ export default class NotesLive extends OpenElement {
       this.#status.value = 'unconfigured';
       return;
     }
+    this.#status.value = 'connecting';
     const client = createClient(url, key);
     // Hosted Realtime scopes postgres_changes by RLS: without the user's
     // short-lived access token the connection is `anon`, which has no
@@ -71,27 +109,76 @@ export default class NotesLive extends OpenElement {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          const body = (payload.new as { body?: string }).body;
-          if (typeof body === 'string') {
-            this.#events.value = [body, ...this.#events.value];
+          const row = payload.new as { id?: string; body?: string };
+          if (typeof row.id === 'string' && typeof row.body === 'string') {
+            this.#events.value = mergeLiveEvent(this.#events.value, {
+              id: row.id,
+              body: row.body,
+            });
           }
         },
       )
       .subscribe((status) => {
-        this.#status.value = status === 'SUBSCRIBED' ? 'subscribed' : status.toLowerCase();
+        if (status === 'SUBSCRIBED') {
+          this.#reconnectAttempt = 0;
+          this.#status.value = 'subscribed';
+          return;
+        }
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          this.#status.value = 'degraded';
+          this.#scheduleReconnect();
+          return;
+        }
       });
   }
 
-  override disconnectedCallback(): void {
+  #scheduleReconnect(): void {
+    if (this.#reconnectTimer !== undefined || !this.isConnected) return;
+    const delay = reconnectDelayMs(this.#reconnectAttempt++);
+    this.#reconnectTimer = setTimeout(() => {
+      this.#reconnectTimer = undefined;
+      void this.#releaseChannel().then(() => this.#connect());
+    }, delay);
+  }
+
+  #releaseChannel(): Promise<unknown> {
     const channel = this.#channel;
     const client = this.#client;
     this.#channel = null;
     this.#client = null;
-    if (channel) {
-      // removeChannel unsubscribes the channel and closes its socket share.
-      if (client) void client.removeChannel(channel);
-      else void channel.unsubscribe();
+    if (!channel) return Promise.resolve();
+    return client ? client.removeChannel(channel) : channel.unsubscribe();
+  }
+
+  #reconnectNow = (): void => {
+    if (this.#reconnectTimer !== undefined) clearTimeout(this.#reconnectTimer);
+    this.#reconnectTimer = undefined;
+    this.#reconnectAttempt = 0;
+    void this.#releaseChannel().then(() => this.#connect());
+  };
+
+  #onOnline = (): void => {
+    this.#status.value = 'connecting';
+    this.#reconnectNow();
+  };
+
+  #onOffline = (): void => {
+    this.#status.value = 'offline';
+  };
+
+  override attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
+    super.attributeChangedCallback(name, oldValue, value);
+    if (name === 'data-access-token' && value && value !== oldValue) {
+      this.#client?.realtime.setAuth(value);
     }
+  }
+
+  override disconnectedCallback(): void {
+    globalThis.removeEventListener?.('online', this.#onOnline);
+    globalThis.removeEventListener?.('offline', this.#onOffline);
+    if (this.#reconnectTimer !== undefined) clearTimeout(this.#reconnectTimer);
+    this.#reconnectTimer = undefined;
+    void this.#releaseChannel();
     super.disconnectedCallback();
   }
 
@@ -100,6 +187,7 @@ export default class NotesLive extends OpenElement {
       <section id='notes-live'>
         <h2>Live updates</h2>
         <div data-signal-render='liveNodes' />
+        <button type='button' onClick={this.#reconnectNow}>Reconnect</button>
       </section>
     );
   }

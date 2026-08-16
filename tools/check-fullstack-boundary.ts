@@ -32,7 +32,12 @@ import { join } from '@std/path';
 import { exists } from './lib/fs.ts';
 
 export interface BoundaryIssue {
-  check: 'secret-leak' | 'cache-boundary' | 'env-example' | 'deploy-bundle';
+  check:
+    | 'secret-leak'
+    | 'cache-boundary'
+    | 'env-example'
+    | 'deploy-bundle'
+    | 'storage-policy';
   file: string;
   line?: number;
   message: string;
@@ -196,6 +201,32 @@ export function findEnvExampleLeaks(text: string, file = '.env.example'): Bounda
   return issues;
 }
 
+const REQUIRED_STORAGE_OPERATIONS = ['delete', 'insert', 'select'] as const;
+
+/**
+ * Assertion 4: the starter deliberately exposes create/read/delete only.
+ * An UPDATE policy would turn a collision-safe immutable object key into an
+ * overwrite surface and must be reviewed as a product/API change.
+ */
+export function findStoragePolicyIssues(
+  sql: string,
+  file = 'supabase/migrations/notes_attachments_storage.sql',
+): BoundaryIssue[] {
+  const operations = [
+    ...sql.matchAll(/on\s+storage\.objects\s+for\s+(select|insert|update|delete)/giu),
+  ]
+    .map((match) => match[1].toLowerCase())
+    .sort();
+  if (JSON.stringify(operations) === JSON.stringify(REQUIRED_STORAGE_OPERATIONS)) return [];
+  return [{
+    check: 'storage-policy',
+    file,
+    message: `storage.objects policies must be exactly SELECT, INSERT, DELETE; found ${
+      operations.join(', ') || 'none'
+    }`,
+  }];
+}
+
 async function ensureStarterBuild(): Promise<void> {
   if (await exists(join(STARTER_DIR, 'dist', 'server', 'entry.js'))) return;
   console.log(
@@ -262,6 +293,19 @@ async function main(): Promise<void> {
   } else {
     issues.push(...findEnvExampleLeaks(await Deno.readTextFile(envExampleFile), envExampleFile));
   }
+
+  const storageMigrationFile = join(
+    STARTER_DIR,
+    'supabase',
+    'migrations',
+    '20260816000001_notes_attachments_storage.sql',
+  );
+  issues.push(
+    ...findStoragePolicyIssues(
+      await Deno.readTextFile(storageMigrationFile),
+      storageMigrationFile,
+    ),
+  );
 
   // Deployable-bundle boundary: when the Nitro workers output exists, its
   // public/ dir is what actually ships to the CDN. Scan it for secrets too,

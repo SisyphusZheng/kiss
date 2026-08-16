@@ -13,12 +13,12 @@ import { createServerClient } from '@supabase/ssr';
 import { parseCookieHeader, serializeCookieHeader } from '@supabase/ssr';
 
 export function createServerSupabase(
-  env: Record<string, string>,
+  env: Record<string, unknown>,
   request: Request,
   responseHeaders: Headers,
 ) {
-  const url = env.SUPABASE_URL ?? '';
-  const anonKey = env.SUPABASE_ANON_KEY ?? '';
+  const url = typeof env.SUPABASE_URL === 'string' ? env.SUPABASE_URL : '';
+  const anonKey = typeof env.SUPABASE_ANON_KEY === 'string' ? env.SUPABASE_ANON_KEY : '';
   if (!url || !anonKey) {
     throw new Error(
       '[reference starter] SUPABASE_URL and SUPABASE_ANON_KEY must be set in the worker env',

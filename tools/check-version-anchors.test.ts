@@ -9,6 +9,8 @@ import {
 } from './check-version-anchors.ts';
 import {
   ACTIVE_EXECUTION_VERSION,
+  LATEST_LANDED_TRAIN,
+  NEXT_EXECUTION_VERSION,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -26,17 +28,17 @@ function readerFrom(files: Record<string, string>): (path: string) => string {
 function goodFiles(): Record<string, string> {
   return {
     'docs/status/STATUS.md':
-      `Repository package line: \`${PACKAGE_VERSION_TAG}\`\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nActive release target: \`${ACTIVE_EXECUTION_VERSION}\``,
+      `Repository package line: \`${PACKAGE_VERSION_TAG}\`\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nLatest landed train: \`${LATEST_LANDED_TRAIN}\`\nActive release target: \`${ACTIVE_EXECUTION_VERSION}\`\nNext planned train: \`${NEXT_EXECUTION_VERSION}\``,
     'README.md':
       `Source package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`).\nnpm registry line: \`${PACKAGE_VERSION_TAG}\``,
     'README.zh.md':
       `源码包行为 \`${PACKAGE_VERSION}\`（\`${PACKAGE_VERSION_TAG}\`）。\nnpm registry 行为 \`${PACKAGE_VERSION_TAG}\``,
     'docs/roadmap/ROADMAP.md':
-      `Source package line: \`${PACKAGE_VERSION_TAG}\`.\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nActive execution target: \`${ACTIVE_EXECUTION_VERSION}\`.`,
+      `Source package line: \`${PACKAGE_VERSION_TAG}\`.\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nLatest landed train: \`${LATEST_LANDED_TRAIN}\`.\nActive execution target: \`${ACTIVE_EXECUTION_VERSION}\`.\nNext planned train: \`${NEXT_EXECUTION_VERSION}\`.`,
     'docs/governance/PROJECT_WORKFLOW.md':
       `package line \`${PACKAGE_VERSION_TAG}\`, npm registry line \`${PACKAGE_VERSION_TAG}\`, done`,
     'docs/current/VERSION_PLAN.md':
-      `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\``,
+      `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\`\nLatest landed train: \`${LATEST_LANDED_TRAIN}\`\nActive release target: \`${ACTIVE_EXECUTION_VERSION}\`\nNext planned train: \`${NEXT_EXECUTION_VERSION}\``,
     'examples/open-element-in-fresh/README.md':
       `Maintained against the current framework source line (\`${PACKAGE_VERSION}\`).`,
   };

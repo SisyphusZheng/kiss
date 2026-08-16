@@ -4,7 +4,17 @@
 
 export const PACKAGE_VERSION = '0.43.0-alpha.1';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
-export const ACTIVE_EXECUTION_VERSION = 'v0.43.0-alpha.1';
+// Release-train truth is intentionally separate from the package and registry
+// line: work may be landed on main before the next package is published.
+export const LATEST_LANDED_TRAIN = 'v0.43.0-alpha.2';
+export const ACTIVE_EXECUTION_VERSION = 'v0.43.0-alpha.2';
+export const NEXT_EXECUTION_VERSION = 'v0.43.0-alpha.3';
+export const RELEASE_STATE = Object.freeze({
+  sourcePackageLine: PACKAGE_VERSION_TAG,
+  latestLandedTrain: LATEST_LANDED_TRAIN,
+  activeReleaseTarget: ACTIVE_EXECUTION_VERSION,
+  nextPlannedTrain: NEXT_EXECUTION_VERSION,
+});
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',

@@ -714,48 +714,6 @@ export function renderNotFoundRoute(
   lines.push('');
 }
 
-/** Generate the route-to-module map for /_data endpoint. */
-export function renderDataRouteMap(
-  lines: string[],
-  pageRoutes: PageRouteDecl[],
-): void {
-  lines.push('// Route-to-module map for /_data endpoint (SPA client navigation)');
-  lines.push('const __dataRouteMap = {');
-  for (const r of pageRoutes) {
-    lines.push(`  ${quoteGeneratedJavaScriptValue(r.path)}: ${r.varName},`);
-  }
-  lines.push('};');
-  lines.push('');
-}
-
-/** Generate the /_data GET endpoint for SPA navigation data fetching. */
-export function renderDataEndpoint(lines: string[]): void {
-  lines.push('// /_data endpoint - returns JSON loader data for SPA navigation');
-  lines.push(`app.get(${quoteGeneratedJavaScriptValue('/_data')}, async (c) => {`);
-  lines.push(`  const routePath = c.req.query('route');`);
-  lines.push(`  if (!routePath) return c.json({ error: 'Missing route query' }, 400);`);
-  lines.push(`  const mod = __dataRouteMap[routePath];`);
-  lines.push(`  if (!mod) return c.json({ error: 'Route not found' }, 404);`);
-  lines.push(`  if (typeof mod.loader !== 'function') return c.json({ data: null });`);
-  lines.push(`  try {`);
-  lines.push(`    const loadContext = {`);
-  lines.push(`      params: {},`);
-  lines.push(`      request: c.req.raw,`);
-  lines.push(`      env: c.env || {},`);
-  lines.push(`      platform: undefined,`);
-  lines.push(`      route: { path: routePath, filePath: '' },`);
-  lines.push(`    };`);
-  lines.push(`    const data = await mod.loader(loadContext);`);
-  lines.push(`    return c.json({ data });`);
-  lines.push(`  } catch (err) {`);
-  lines.push(
-    `    return c.json({ error: import.meta.env.PROD ? 'Internal Server Error' : String(err) }, 500);`,
-  );
-  lines.push(`  }`);
-  lines.push(`})`);
-  lines.push('');
-}
-
 function renderCorsOrigin(origin: CorsOriginConfig): string {
   if (typeof origin === 'object' && !Array.isArray(origin)) return origin.body;
   if (Array.isArray(origin)) {

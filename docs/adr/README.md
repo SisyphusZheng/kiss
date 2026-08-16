@@ -172,6 +172,7 @@ git history.
 | 0121 | 0.42 Action Protocol Hardening Amendment (Audit Round 1)                                                                             | Accepted                                         |
 | 0122 | 0.42.0 Stable Scope Freeze — WC Light Fullstack                                                                                      | Proposed (TP-6)                                  |
 | 0123 | Standards as Seams — Evolution Plan                                                                                                  | Proposed (alpha.13)                              |
+| 0130 | Retire the Duplicate `/_data` Loader Endpoint                                                                                        | Accepted                                         |
 
 ## Superseded / Historical
 
