@@ -51,10 +51,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_ID: ${{ secrets.STRIPE_PRICE_ID }}
           SCANNER_SERVICE: ${{ inputs.scanner_service }}
         run: |
           set -euo pipefail
           [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] || { echo "SUPABASE_SERVICE_ROLE_KEY is not configured" >&2; exit 1; }
+          [ -n "$STRIPE_SECRET_KEY" ] || { echo "STRIPE_SECRET_KEY is not configured" >&2; exit 1; }
+          [ -n "$STRIPE_WEBHOOK_SECRET" ] || { echo "STRIPE_WEBHOOK_SECRET is not configured" >&2; exit 1; }
+          [ -n "$STRIPE_PRICE_ID" ] || { echo "STRIPE_PRICE_ID is not configured" >&2; exit 1; }
           [ -n "$SCANNER_SERVICE" ] || { echo "scanner_service is required" >&2; exit 1; }
           deno run --allow-read --allow-write ../../tools/render-cloudflare-async-config.ts \
             wrangler.jsonc .wrangler-async.generated.json "$SCANNER_SERVICE"
@@ -62,7 +68,10 @@ jobs:
           for queue in \
             openelement-attachment-scan \
             openelement-attachment-scan-dlq \
-            openelement-attachment-scan-persistence-failures; do
+            openelement-attachment-scan-persistence-failures \
+            openelement-payment-events \
+            openelement-payment-events-dlq \
+            openelement-payment-events-persistence-failures; do
             if echo "$queues" | jq -e --arg name "$queue" '.[] | select(.queue_name == $name)' >/dev/null; then
               echo "$queue already exists"
             else
@@ -72,6 +81,11 @@ jobs:
           printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | \
             deno run -A npm:wrangler@4.123.0 secret put SUPABASE_SERVICE_ROLE_KEY \
               --config .wrangler-async.generated.json
+          for secret_name in STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET STRIPE_PRICE_ID; do
+            printf '%s' "${!secret_name}" | \
+              deno run -A npm:wrangler@4.123.0 secret put "$secret_name" \
+                --config .wrangler-async.generated.json
+          done
 
       - name: Select deployment config
         working-directory: examples/supabase-cloudflare-starter
@@ -94,6 +108,9 @@ jobs:
         run: >-
           deno run -A npm:wrangler@4.123.0 deploy --config "$WRANGLER_CONFIG"
           --var "SUPABASE_URL:$SUPABASE_URL" "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY"
+          "STRIPE_LIVEMODE:false"
+          "APP_ORIGIN:https://openelement-ref-starter.freemanzheng.workers.dev"
+          "STRIPE_CHECKOUT_HOST:checkout.stripe.com"
 
       - name: Smoke the live worker
         env:
@@ -123,7 +140,11 @@ jobs:
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info \
             openelement-attachment-scan-persistence-failures >/dev/null
-          echo "Queue + DLQ + persistence-failure queue provider lookup -> OK"
+          deno run -A npm:wrangler@4.123.0 queues info openelement-payment-events >/dev/null
+          deno run -A npm:wrangler@4.123.0 queues info openelement-payment-events-dlq >/dev/null
+          deno run -A npm:wrangler@4.123.0 queues info \
+            openelement-payment-events-persistence-failures >/dev/null
+          echo "Attachment/payment Queue + DLQ + persistence-failure provider lookup -> OK"
 
       - name: Write the smoke report
         if: always()
