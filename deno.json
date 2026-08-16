@@ -57,6 +57,7 @@
     "export-files:generate": "deno run --allow-read --allow-write --allow-run tools/generate-openelement-export-files.ts",
     "export-files:check": "deno run --allow-read --allow-write --allow-run tools/generate-openelement-export-files.ts --check",
     "signals:check-protocol-boundary": "deno run --allow-read --allow-env tools/check-signal-protocol-boundary.ts",
+    "fullstack:boundary-check": "deno run --allow-read --allow-run tools/check-fullstack-boundary.ts",
     "arch:check": "deno run --allow-read --allow-run tools/check-architecture-contract.ts",
     "type-safety:check": "deno run --allow-read tools/check-type-safety.ts",
     "deno-api:check": "deno run --allow-read --allow-env tools/check-deno-api-free.ts",

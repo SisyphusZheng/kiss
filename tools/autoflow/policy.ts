@@ -204,6 +204,20 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // #984 tier 1: PR-safe secret/cache boundary gate on the reference
+    // starter's BUILT output — no credentials needed, so it gates ci/release
+    // while tier-2 (supabase-project-smoke.yml) and tier-3
+    // (fullstack-deploy-smoke.yml) hold the real-project evidence.
+    name: 'fullstack:boundary-check',
+    command: ['deno', 'task', 'fullstack:boundary-check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^examples\/supabase-cloudflare-starter\//,
+      /^tools\/check-fullstack-boundary\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'arch:check',
     command: ['deno', 'task', 'arch:check'],
     tiers: ['ci', 'release'],
