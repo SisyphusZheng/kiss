@@ -13,6 +13,7 @@ type CheckoutSupabaseClient = import('../routes/checkout.tsx').CheckoutSupabaseC
 
 const ATTEMPT = '147f2ee7-289a-4da4-8a2b-6f930d1d5c47';
 const ORDER = '0a32b472-7252-4b02-a86a-7b459c639a71';
+const STRIPE_CHECKOUT_API = 'https://api.stripe.com/v1/checkout/sessions';
 
 function client(
   options: { user?: boolean; rpcError?: boolean } = {},
@@ -95,7 +96,7 @@ Deno.test('Checkout uses fixed server price, idempotency and persists session be
   const fetchStub: typeof fetch = (input, init) => {
     const url = String(input);
     calls.push({ url, init });
-    if (url.includes('api.stripe.com')) {
+    if (url === STRIPE_CHECKOUT_API) {
       return Promise.resolve(Response.json({
         id: 'cs_test_123',
         url: 'https://checkout.stripe.com/c/pay/test',
@@ -122,7 +123,7 @@ Deno.test('Checkout fails closed on unexpected redirect host and records creatio
   const rpcNames: string[] = [];
   const fetchStub: typeof fetch = (input) => {
     const url = String(input);
-    if (url.includes('api.stripe.com')) {
+    if (url === STRIPE_CHECKOUT_API) {
       return Promise.resolve(Response.json({
         id: 'cs_test_123',
         url: 'https://evil.example/collect',
