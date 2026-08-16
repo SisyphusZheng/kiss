@@ -22,7 +22,9 @@ jobs:
 
       - name: Build the Workers bundle
         working-directory: examples/supabase-cloudflare-starter
-        run: deno task nitro:build
+        run: |
+          deno task build
+          deno task nitro:build
 
       - name: Deploy to Cloudflare Workers
         working-directory: examples/supabase-cloudflare-starter
