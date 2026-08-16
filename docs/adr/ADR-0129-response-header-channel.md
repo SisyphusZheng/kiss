@@ -1,7 +1,7 @@
 # ADR-0129: Response-Header Channel for Loaders and Actions
 
-- Status: PROPOSED (acceptance = maintainer; blocks the #981 fullstack
-  epic's session step)
+- Status: ACCEPTED (2026-08-16, maintainer decision; implements the
+  additive channel below)
 - Date: 2026-08-16
 - Amends: ADR-0122 §1 (the loop contract gains one additive channel; no
   existing semantics change)
