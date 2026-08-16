@@ -15,9 +15,10 @@ application layer.
 - [x] /notes loader: getUser + RLS-scoped query; anonymous renders the denied
       branch over a hard database-level RLS floor
 - [x] explicit `middleware.corsOrigin` allowlist (deployed worker + localhost)
-- [x] /upload: no-JS multipart form → Storage upload into the private
-      `notes-attachments` bucket under the owner's folder; storage RLS rejects
-      anonymous writes and cross-user access
+- [x] /upload: no-JS multipart upload/list/delete in the private
+      `notes-attachments` bucket; unpredictable object ids, MIME/size guards,
+      60-second signed downloads, Storage RLS, and atomic Postgres quota
+      reservation/release reject anonymous, cross-user, and quota-race access
 - [x] notes-live island: Supabase Realtime INSERT subscription in the browser,
       RLS-scoped via the user's short-lived access token + a hard `user_id`
       filter, with bounded/deduplicated state, reconnect recovery, token refresh,

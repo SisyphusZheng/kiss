@@ -16,6 +16,10 @@
     {
       "file": "20260817000000_admin_audit.sql",
       "sha256": "ced3d14b1d6ea406acff11bcfecfaebd7be0a0c577ce7d72ea2e91f1bd57e065"
+    },
+    {
+      "file": "20260817000001_attachment_quota.sql",
+      "sha256": "195e47e9c9d4fca14a953bf143f41e4402a6ed5368b34e43a0de6d10ea6faf39"
     }
   ]
 }
