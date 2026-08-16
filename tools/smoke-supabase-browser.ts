@@ -37,7 +37,18 @@ try {
   const context = await browser.newContext();
   const page = await context.newPage();
   const pageErrors: string[] = [];
+  let resolveRealtimeLeave!: () => void;
+  const realtimeLeave = new Promise<void>((resolve) => {
+    resolveRealtimeLeave = resolve;
+  });
   page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('websocket', (socket) => {
+    socket.on('framesent', ({ payload }) => {
+      if (typeof payload === 'string' && payload.includes('phx_leave')) {
+        resolveRealtimeLeave();
+      }
+    });
+  });
 
   await page.goto(`${baseUrl}/notes`);
   await page.getByText('Sign-in is required').waitFor({ state: 'visible' });
@@ -194,6 +205,15 @@ try {
     timeout: 20_000,
   });
   await record('browser-realtime-refreshed-jwt-delivers');
+
+  await live.evaluate((element) => element.remove());
+  await Promise.race([
+    realtimeLeave,
+    page.waitForTimeout(10_000).then(() => {
+      throw new Error('Removing the Realtime island did not send a channel leave frame');
+    }),
+  ]);
+  await record('browser-realtime-removal-releases-channel');
 
   await page.goto(`${baseUrl}/admin`);
   await page.getByRole('heading', { name: 'Admin', exact: true }).waitFor({ state: 'visible' });
