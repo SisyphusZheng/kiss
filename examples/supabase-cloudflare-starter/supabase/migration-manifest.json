@@ -20,6 +20,10 @@
     {
       "file": "20260817000001_attachment_quota.sql",
       "sha256": "195e47e9c9d4fca14a953bf143f41e4402a6ed5368b34e43a0de6d10ea6faf39"
+    },
+    {
+      "file": "20260817000002_attachment_scanning.sql",
+      "sha256": "453ca62cca30f9e8085f90e6a9a91889f0aefcc38f36665597b6fb2cf7790e4c"
     }
   ]
 }

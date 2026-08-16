@@ -19,6 +19,9 @@ application layer.
       `notes-attachments` bucket; unpredictable object ids, MIME/size guards,
       60-second signed downloads, Storage RLS, and atomic Postgres quota
       reservation/release reject anonymous, cross-user, and quota-race access
+- [x] application-owned Cloudflare module entry composes Nitro `fetch` with
+      Queue scan and Cron reconciliation handlers; unscanned objects stay
+      hidden, duplicate verdicts are idempotent, and lifecycle events are audited
 - [x] notes-live island: Supabase Realtime INSERT subscription in the browser,
       RLS-scoped via the user's short-lived access token + a hard `user_id`
       filter, with bounded/deduplicated state, reconnect recovery, token refresh,
