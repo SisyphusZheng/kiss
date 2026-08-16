@@ -24,6 +24,13 @@ export default defineConfig({
       html: {
         title: 'OpenElement × Supabase × Cloudflare reference',
       },
+      build: {
+        // Realtime's Phoenix/WebSocket protocol implementation is the only
+        // vendor runtime in this island. Keep the ceiling explicit so a
+        // future accidental reintroduction of the full supabase-js client
+        // (249 KB before the direct realtime-js import) fails visibly.
+        manifestBudget: { islandKB: 100, totalJsKB: 120 },
+      },
       // Explicit CORS allowlist (#983): the deployed worker origin plus the
       // local request-time server (deno task start, default port 4173).
       middleware: {

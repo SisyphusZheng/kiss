@@ -15,6 +15,7 @@
     "npm:@preact/signals@^2.9.0": "2.10.1_preact@10.29.8__preact-render-to-string@6.7.0_preact-render-to-string@6.7.0__preact@10.29.8",
     "npm:@rollup/plugin-terser@1.0.0": "1.0.0_rollup@4.62.4",
     "npm:@shoelace-style/shoelace@^2.19.0": "2.20.1_@floating-ui+utils@0.2.11_@types+react@19.2.17",
+    "npm:@supabase/realtime-js@^2.84.0": "2.112.3",
     "npm:@supabase/ssr@0.8": "0.8.0_@supabase+supabase-js@2.112.3",
     "npm:@supabase/supabase-js@^2.84.0": "2.112.3",
     "npm:@types/sanitize-html@2": "2.16.1",
@@ -2962,6 +2963,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1",
+      "npm:@supabase/realtime-js@^2.84.0",
       "npm:@supabase/ssr@0.8",
       "npm:@supabase/supabase-js@^2.84.0",
       "npm:vite@8.0.16"
