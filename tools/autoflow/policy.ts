@@ -442,6 +442,17 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/element\//, /^tools\/consumer-smoke\.ts$/, /^deno\.json$/],
   },
   {
+    name: 'check:visual-baselines',
+    command: ['deno', 'task', 'check:visual-baselines'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^www\/e2e\/visual-baselines\.spec\.ts$/,
+      /^www\/e2e\/visual-baselines\.spec\.ts-snapshots\//,
+      /^tools\/check-visual-baseline-duplicates\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'third-party-wc:smoke',
     command: ['deno', 'task', 'third-party-wc:smoke'],
     tiers: ['ci', 'release'],
