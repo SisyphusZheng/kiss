@@ -189,6 +189,33 @@ export default definePage({
   }
 });
 
+Deno.test('scanRoutes treats customElements.define(tagName) as usage (no orphan note)', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-scan-tagname-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    await Deno.mkdir(routesDir, { recursive: true });
+    // The www site and some starters register via the platform primitive
+    // instead of defineElement — that is still a use of the export.
+    await Deno.writeTextFile(
+      join(routesDir, 'home.tsx'),
+      `import { definePage } from '@openelement/app';
+export const tagName = 'page-home';
+class HomePage extends HTMLElement {}
+customElements.define(tagName, HomePage);
+export default definePage({ render() { return <page-home />; } });
+`,
+    );
+
+    const messages = await captureInfo(async () => {
+      await scanRoutes(routesDir);
+    });
+    const notes = messages.filter((m) => m.includes('ignored for registration'));
+    assertEquals(notes, [], 'customElements.define(tagName) must count as usage');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
 Deno.test('scanRoutes notes an orphaned tagName export on a definePage route once', async () => {
   const dir = await Deno.makeTempDir({ prefix: 'oe-scan-decouple-' });
   try {

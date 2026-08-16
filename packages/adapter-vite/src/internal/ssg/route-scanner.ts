@@ -211,8 +211,14 @@ function escapeRegExp(value: string): string {
  * an embedded code sample merely suppresses the note (the safe direction).
  */
 function routeUsesTagName(source: string, tagName: string): boolean {
-  if (/\bdefineElement\s*\(\s*tagName\b/.test(source)) return true;
-  if (new RegExp(`\\bdefineElement\\s*\\(\\s*['"\`]${escapeRegExp(tagName)}['"\`]`).test(source)) {
+  // defineElement(tagName, …) or customElements.define(tagName, …) — the
+  // www site and some starters register via the platform primitive.
+  if (/\b(?:defineElement|customElements\.define)\s*\(\s*tagName\b/.test(source)) return true;
+  if (
+    new RegExp(
+      `\\b(?:defineElement|customElements\\.define)\\s*\\(\\s*['"\`]${escapeRegExp(tagName)}['"\`]`,
+    ).test(source)
+  ) {
     return true;
   }
   return new RegExp(`</?${escapeRegExp(tagName)}(?=[\\s/>])`).test(source);
