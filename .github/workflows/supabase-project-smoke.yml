@@ -138,8 +138,12 @@ jobs:
           record user-b-isolated-from-a pass
 
           # 5. Logout clears the session: the next /notes read is denied again.
+          # The action entry parses a form body unconditionally, so the POST
+          # needs a form content type even with an empty body.
           code=$(curl -s -o /dev/null -w '%{http_code}' -b .smoke/jar-a -c .smoke/jar-a \
-            -X POST "$BASE/notes?/logout")
+            -X POST "$BASE/notes?/logout" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            -d '')
           [ "$code" = "303" ]
           after=$(curl -s -b .smoke/jar-a "$BASE/notes")
           echo "$after" | grep -q "Sign-in is required"
