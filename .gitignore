@@ -42,6 +42,19 @@ packages/*/*.tgz
 .env
 .env.local
 .env.*.local
+# Credential-bearing variants in any package/example (deploy secrets, wrangler
+# dev vars); placeholder templates stay tracked.
+**/.env.production
+**/.env.*.production
+**/.dev.vars
+**/.dev.vars.*
+**/.wrangler/
+!.env.example
+!.env.sample
+!.env.template
+!**/.env.example
+!**/.env.sample
+!**/.env.template
 
 # IDE
 .vscode/
