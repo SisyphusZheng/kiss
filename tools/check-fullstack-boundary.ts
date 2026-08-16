@@ -32,7 +32,7 @@ import { join } from '@std/path';
 import { exists } from './lib/fs.ts';
 
 export interface BoundaryIssue {
-  check: 'secret-leak' | 'cache-boundary' | 'env-example';
+  check: 'secret-leak' | 'cache-boundary' | 'env-example' | 'deploy-bundle';
   file: string;
   line?: number;
   message: string;
