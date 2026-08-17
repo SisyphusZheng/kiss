@@ -24,6 +24,10 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      # #997: the release-tier fullstack:evidence-freshness gate reads the
+      # scheduled run history of the tier-2/tier-3 smoke workflows through
+      # the Actions API; GITHUB_TOKEN needs actions:read for that.
+      actions: read
     steps:
       # v7.0.0
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0

@@ -2,7 +2,15 @@ name: Fullstack deploy smoke (real providers)
 
 # #984 tier 3: deploys the Supabase × Cloudflare reference starter to a real
 # Cloudflare Worker and smokes the live URL. Requires maintainer-provided
-# secrets (see below). Manual-only: never runs on push/PR.
+# secrets (see below). Manual + weekly only: never runs on push/PR.
+#
+# #997 scheduled-run semantics: schedule events carry no inputs, so the
+# job-level env below defaults ASYNC_MODE to `provision` — the weekly run
+# executes the full probe (scanner redeploy + Queue/DLQ verification), which
+# is idempotent against the already-created bounded async resources. The
+# release freshness gate (tools/check-evidence-freshness.ts) reads only the
+# scheduled run conclusions, so a weekly red run blocks release exactly like
+# a manual one; there is no base/provision ambiguity for the gate to resolve.
 
 on:
   workflow_dispatch:
@@ -20,6 +28,9 @@ on:
         required: true
         default: openelement-attachment-scanner
         type: string
+  schedule:
+    # Tuesdays 06:00 UTC (staggered from the tier-2 Monday run)
+    - cron: '0 6 * * 2'
 
 concurrency:
   group: fullstack-real-cloudflare
@@ -33,6 +44,11 @@ jobs:
     name: Deploy reference starter to Workers and smoke the live URL
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # Scheduled runs have no inputs; default them to the full provision
+      # probe so the weekly evidence covers Queue/DLQ, not just HTTP.
+      ASYNC_MODE: ${{ inputs.async_mode || 'provision' }}
+      SCANNER_SERVICE: ${{ inputs.scanner_service || 'openelement-attachment-scanner' }}
     steps:
       # v7.0.0
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -45,7 +61,7 @@ jobs:
           deno task nitro:build
 
       - name: Deploy the private attachment scanner
-        if: inputs.async_mode == 'provision'
+        if: env.ASYNC_MODE == 'provision'
         working-directory: examples/supabase-cloudflare-starter
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -54,7 +70,6 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           METADEFENDER_CORE_URL: ${{ secrets.METADEFENDER_CORE_URL }}
           METADEFENDER_API_KEY: ${{ secrets.METADEFENDER_API_KEY }}
-          SCANNER_SERVICE: ${{ inputs.scanner_service }}
         run: |
           set -euo pipefail
           for required in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY METADEFENDER_CORE_URL METADEFENDER_API_KEY SCANNER_SERVICE; do
@@ -71,7 +86,7 @@ jobs:
               --config scanner-wrangler.jsonc --name "$SCANNER_SERVICE"
 
       - name: Render and provision bounded async resources
-        if: inputs.async_mode == 'provision'
+        if: env.ASYNC_MODE == 'provision'
         working-directory: examples/supabase-cloudflare-starter
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -80,7 +95,6 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           STRIPE_PRICE_ID: ${{ secrets.STRIPE_PRICE_ID }}
-          SCANNER_SERVICE: ${{ inputs.scanner_service }}
         run: |
           set -euo pipefail
           [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] || { echo "SUPABASE_SERVICE_ROLE_KEY is not configured" >&2; exit 1; }
@@ -115,8 +129,6 @@ jobs:
 
       - name: Select deployment config
         working-directory: examples/supabase-cloudflare-starter
-        env:
-          ASYNC_MODE: ${{ inputs.async_mode }}
         run: |
           if [ "$ASYNC_MODE" = "provision" ]; then
             echo "WRANGLER_CONFIG=.wrangler-async.generated.json" >> "$GITHUB_ENV"
@@ -143,16 +155,21 @@ jobs:
           WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
         run: |
           set -e
+          mkdir -p .smoke
+          record() { echo "{\"check\":\"$1\",\"result\":\"$2\"}" >> .smoke/results.jsonl; }
           for i in 1 2 3 4 5 6; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$WORKER_URL/" || true)
             [ "$code" = "200" ] && break
             sleep 10
           done
           echo "GET / -> $code"; [ "$code" = "200" ]
+          record worker-root-200 pass
           notes=$(curl -s --max-time 15 "$WORKER_URL/notes")
-          echo "$notes" | grep -q "Sign-in is required" && echo "anonymous /notes -> denied branch OK"
+          echo "$notes" | grep -q "Sign-in is required"
+          record anonymous-notes-denied pass
           csrf=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$WORKER_URL/login" -H 'Origin: https://evil.example.com' -H 'Content-Type: application/x-www-form-urlencoded' -d 'x=1')
           echo "cross-origin POST /login -> $csrf"; [ "$csrf" = "403" ]
+          record cross-origin-login-denied pass
 
       - name: Probe cookie security floor and Host hygiene
         env:
@@ -205,7 +222,7 @@ jobs:
           rm -f "$headers" "$headers.clean"
 
       - name: Verify provisioned Queue and DLQ
-        if: inputs.async_mode == 'provision'
+        if: env.ASYNC_MODE == 'provision'
         working-directory: examples/supabase-cloudflare-starter
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -213,7 +230,7 @@ jobs:
         run: |
           set -euo pipefail
           deno run -A npm:wrangler@4.123.0 deployments list \
-            --name "${{ inputs.scanner_service }}" --json | jq -e 'length > 0' >/dev/null
+            --name "$SCANNER_SERVICE" --json | jq -e 'length > 0' >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info \
@@ -223,22 +240,42 @@ jobs:
           deno run -A npm:wrangler@4.123.0 queues info \
             openelement-payment-events-persistence-failures >/dev/null
           echo "Attachment/payment Queue + DLQ + persistence-failure provider lookup -> OK"
+          echo '{"check":"attachment-payment-queues","result":"pass"}' \
+            >> "$GITHUB_WORKSPACE/.smoke/results.jsonl"
 
       - name: Write the smoke report
         if: always()
         env:
           WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
         run: |
-          {
-            echo "{"
-            echo "  \"version\": \"$(git rev-parse --short HEAD)\","
-            echo "  \"workerUrl\": \"$WORKER_URL\","
-            echo "  \"asyncMode\": \"${{ inputs.async_mode }}\","
-            echo "  \"asyncResourcesVerified\": ${{ inputs.async_mode == 'provision' }},"
-            echo "  \"jobStatus\": \"${{ job.status }}\","
-            echo "  \"note\": \"tier-3 deploy smoke; redacted — no credentials in this report\""
-            echo "}"
-          } > fullstack-deploy-smoke.json
+          checks='[]'
+          if [ -f .smoke/results.jsonl ]; then
+            checks=$(jq -s '.' .smoke/results.jsonl)
+          fi
+          jq -n \
+            --arg version "$(git rev-parse --short HEAD)" \
+            --arg runId "${{ github.run_id }}" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg environment "cloudflare-workers-test" \
+            --arg workerUrl "$WORKER_URL" \
+            --arg asyncMode "$ASYNC_MODE" \
+            --argjson asyncResourcesVerified "$([ "$ASYNC_MODE" = "provision" ] && echo true || echo false)" \
+            --arg status "${{ job.status }}" \
+            --arg cleanup "not-applicable" \
+            --argjson checks "$checks" \
+            '{
+              version: $version,
+              runId: $runId,
+              timestamp: $timestamp,
+              environment: $environment,
+              workerUrl: $workerUrl,
+              asyncMode: $asyncMode,
+              asyncResourcesVerified: $asyncResourcesVerified,
+              jobStatus: $status,
+              cleanup: $cleanup,
+              checks: $checks,
+              note: "tier-3 deploy smoke; redacted — no credentials in this report; the test worker and queues are persistent shared infrastructure, so there is no per-run cleanup"
+            }' > fullstack-deploy-smoke.json
 
       - name: Archive the smoke report
         if: always()

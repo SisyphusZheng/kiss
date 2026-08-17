@@ -264,6 +264,25 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // #997: release-level freshness gate over the SCHEDULED runs of the
+    // tier-2 (supabase-project-smoke) and tier-3 (fullstack-deploy-smoke)
+    // provider evidence workflows. Two consecutive scheduled failures, a
+    // newest-run failure, >14-day-stale success, or no scheduled history all
+    // block release; the API/token being unavailable fails closed too.
+    // Release-only by design: the weekly cadence must never gate PRs (ci
+    // tier), so this registration stays out of the ci tier. Requires a token
+    // with actions:read (GITHUB_TOKEN/GH_TOKEN); autoflow-release.yml grants
+    // `actions: read` to the release job for exactly this gate.
+    name: 'fullstack:evidence-freshness',
+    command: ['deno', 'task', 'fullstack:evidence-freshness'],
+    tiers: ['release'],
+    triggers: [
+      /^\.github\/workflows\/(?:supabase-project-smoke|fullstack-deploy-smoke)\.yml$/,
+      /^tools\/check-evidence-freshness(?:\.test)?\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'arch:check',
     command: ['deno', 'task', 'arch:check'],
     tiers: ['ci', 'release'],
