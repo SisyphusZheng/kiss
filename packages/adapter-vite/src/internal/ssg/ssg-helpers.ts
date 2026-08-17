@@ -39,10 +39,17 @@ export function resolveDynamicRoutePath(
     }
 
     const value = String(raw);
+    // A catch-all parameter (`:name{.+}`) legitimately spans multiple
+    // segments, so `/` is allowed in its value; single-segment params keep
+    // the strict no-slash rule. Traversal is rejected per segment so a
+    // catch-all like `a/../b` cannot escape the route root (#1022).
+    const catchAllToken = `:${name}{.+}`;
+    const isCatchAll = resolvedPath.includes(catchAllToken);
+    const segments = isCatchAll ? value.split('/') : [value];
     if (
-      value === '.' ||
-      value === '..' ||
-      /[\\/\0]/.test(value)
+      segments.some((segment) => segment === '.' || segment === '..') ||
+      /[\\\0]/.test(value) ||
+      (!isCatchAll && value.includes('/'))
     ) {
       throw new Error(
         `Unsafe value for route parameter "${name}" in ${routePath}: ${value}`,
@@ -52,13 +59,19 @@ export function resolveDynamicRoutePath(
     // Encode spaces and URL-unsafe chars, but preserve @ for scoped packages.
     // Full encodeURIComponent would encode @ -> %40, breaking file-to-URL matching.
     // `%` is encoded first so an already-encoded sequence is not double-encoded.
-    const safeValue = value
-      .replace(/%/g, '%25')
-      .replace(/#/g, '%23')
-      .replace(/\?/g, '%3F')
-      .replace(/&/g, '%26')
-      .replace(/ /g, '%20');
-    resolvedPath = resolvedPath.replace(`:${name}`, safeValue);
+    const encodeSegment = (segment: string) =>
+      segment
+        .replace(/%/g, '%25')
+        .replace(/#/g, '%23')
+        .replace(/\?/g, '%3F')
+        .replace(/&/g, '%26')
+        .replace(/ /g, '%20');
+    const safeValue = isCatchAll
+      ? value.split('/').map(encodeSegment).join('/')
+      : encodeSegment(value);
+    resolvedPath = isCatchAll
+      ? resolvedPath.replace(catchAllToken, safeValue)
+      : resolvedPath.replace(`:${name}`, safeValue);
   }
   return resolvedPath;
 }

@@ -196,7 +196,13 @@ export function buildEntryDescriptor(
     .filter((r) => r.type === 'page' && !r.special)
     .map((r) => {
       const isDynamic = r.path.includes(':');
-      const paramNames = isDynamic ? [...r.path.matchAll(/:([^/]+)/g)].map((m) => m[1]) : [];
+      // Param names come from the scanner's filename derivation
+      // (RouteEntry.params): re-deriving them from the path pattern turns a
+      // catch-all segment `:path{.+}` into the bogus name 'path{.+}' (#1022).
+      // The fallback (hand-built descriptors in tests) strips regex bodies.
+      const paramNames = isDynamic
+        ? (r.params ?? [...r.path.matchAll(/:([^/{]+)(?:\{[^}]*\})?/g)].map((m) => m[1]))
+        : [];
       const fallbackTagName = fileToTagName(r.filePath);
       return {
         kind: 'page' as const,
