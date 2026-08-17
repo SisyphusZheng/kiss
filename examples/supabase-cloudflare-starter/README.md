@@ -113,4 +113,5 @@ handlers and must never be rendered or prefixed with `VITE_`.
 
 - Tier 2 real Supabase password/OAuth/RLS/Realtime matrix.
 - Tier 3 deployed Workers journey and Cloudflare production rate limiting.
-- Production SMTP domain/authentication and bounce handling checklist.
+- Production SMTP domain/authentication and bounce handling — execute
+  [`docs/runbooks/production-smtp-checklist.md`](../../docs/runbooks/production-smtp-checklist.md).
