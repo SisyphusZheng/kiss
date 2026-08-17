@@ -483,7 +483,9 @@ export async function assertForwardOnlyTags(targetVersion: string): Promise<void
   if (min < 0) return; // Pre-window releases are legacy; no forward-only claim.
   const untagged: string[] = [];
   for (const entry of Deno.readDirSync('docs/release/autoflow3')) {
-    if (!entry.name.endsWith('.json')) continue;
+    // Prepare records (v<version>-prepare.json) are not releases: slicing
+    // their name derives a phantom version that can never carry a tag (#1024).
+    if (!entry.name.endsWith('.json') || entry.name.endsWith('-prepare.json')) continue;
     const version = entry.name.slice(1, -5); // v<version>.json → <version>
     if (compareVersions(version, firstTagged) < 0) continue;
     const evidence = await readReleaseEvidenceForVersion(version);
