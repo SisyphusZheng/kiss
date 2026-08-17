@@ -307,6 +307,29 @@ jobs:
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
           [[ "$still_present" =~ ^2 ]]
           grep -Fxq 'immutable owner object' .smoke/storage-after-cross-delete.txt
+          # 4f. The owner can mint a short-lived signed URL, and the holder of
+          # that URL downloads the exact object bytes. This is the application
+          # download path: /upload signs only clean rows for its owner
+          # (app/routes/upload.tsx createSignedUrl; unit-tested in
+          # app/__tests__/upload.test.ts).
+          signed_response=$(curl -sf -X POST \
+            "$SUPABASE_URL/storage/v1/object/sign/notes-attachments/$STORAGE_POLICY_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a" \
+            -H 'Content-Type: application/json' -d '{"expiresIn":60}')
+          signed_path=$(echo "$signed_response" | jq -er '.signedURL')
+          # Storage deployments differ on whether signedURL already carries
+          # the /storage/v1 prefix; normalize the way supabase-js does.
+          case "$signed_path" in
+            /storage/v1/*) signed_url="$SUPABASE_URL$signed_path" ;;
+            /*) signed_url="$SUPABASE_URL/storage/v1$signed_path" ;;
+            http*) signed_url="$signed_path" ;;
+            *) echo "unexpected signedURL shape" >&2; exit 1 ;;
+          esac
+          signed_get=$(curl -s -o .smoke/storage-signed-download.txt -w '%{http_code}' \
+            "$signed_url")
+          [ "$signed_get" = "200" ]
+          grep -Fxq 'immutable owner object' .smoke/storage-signed-download.txt
+          record storage-owner-signed-url-download pass
           owner_delete=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
             "$SUPABASE_URL/storage/v1/object/notes-attachments" \
             -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a" \
