@@ -190,7 +190,36 @@ function compileLinearPattern(pattern: string): LinearPattern {
       repeats.push(true);
       source += `(?:/(.*))?`;
     } else if (rest.startsWith('(')) {
-      const end = rest.indexOf(')');
+      // Find the ')' that closes the opening paren, honoring nested groups,
+      // escapes and character classes — a naive indexOf(')') stops at the
+      // first inner terminator and rejects legal patterns like
+      // `:name{(?:a|b)+}` or `:name{[)]+}` (#1036).
+      let depth = 0;
+      let inClass = false;
+      let end = -1;
+      for (let i = 0; i < rest.length; i++) {
+        const ch = rest[i];
+        if (ch === '\\') {
+          i++;
+          continue;
+        }
+        if (inClass) {
+          if (ch === ']') inClass = false;
+          continue;
+        }
+        if (ch === '[') {
+          inClass = true;
+          continue;
+        }
+        if (ch === '(') depth++;
+        else if (ch === ')') {
+          depth--;
+          if (depth === 0) {
+            end = i;
+            break;
+          }
+        }
+      }
       if (end === -1 || rest.slice(end + 1) !== '') {
         throw new TypeError(`Invalid route pattern segment "${segment}"`);
       }
@@ -560,6 +589,20 @@ export function createRouter(options: RouterOptions): RouterInstance {
     }
   }
 
+  /**
+   * Restore the entry the user came from after a guard vetoed a
+   * browser-driven navigation. replaceState — not pushState (#1036): pushing
+   * left the vetoed entry sitting directly below the restored copy, so the
+   * next back re-landed on the vetoed URL and bounced again, trapping every
+   * earlier entry behind it (the user could never back out past the guard).
+   * Rewriting the vetoed entry instead collapses the dead stop, and
+   * replaceState does not fire popstate/hashchange, so restoring cannot
+   * re-enter commitBrowserNavigation.
+   */
+  function restoreBlockedEntry(): void {
+    history.replaceState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+  }
+
   async function commitNavigation(
     path: string,
     navOptions: { replace: boolean; depth?: number; restoreOnBlock?: boolean },
@@ -585,7 +628,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
           // Browser-driven navigation already landed on this URL (via a guard
           // redirect); restore the entry the user came from, same as the
           // direct block path in commitBrowserNavigation.
-          history.pushState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+          restoreBlockedEntry();
         }
         return; // blocked
       }
@@ -626,8 +669,8 @@ export function createRouter(options: RouterOptions): RouterInstance {
    * Reconcile router state after the browser itself moved the history
    * pointer (back/forward buttons, direct hash edits). The landed URL
    * cannot be withheld the way commitNavigation withholds pushState, so
-   * a rejected guard pushes the previous entry back on top, and a guard
-   * redirect replaces the landed entry with the redirect target.
+   * a rejected guard rewrites the landed entry back to the previous URL,
+   * and a guard redirect replaces the landed entry with the redirect target.
    */
   // Dedup consecutive browser events that land on the same URL (rapid
   // popstate/hashchange bursts) so guards and onChange do not run twice
@@ -643,9 +686,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
       if (matched?.route.guard) {
         const result = await matched.route.guard();
         if (result === false) {
-          // Blocked: restore the entry the user came from. pushState does
-          // not fire popstate/hashchange, so restoring cannot re-enter here.
-          history.pushState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+          // Blocked: restore the entry the user came from (see
+          // restoreBlockedEntry for why this rewrites rather than pushes).
+          restoreBlockedEntry();
           return;
         }
         if (typeof result === 'string') {

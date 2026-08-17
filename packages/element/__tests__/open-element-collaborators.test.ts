@@ -41,6 +41,20 @@ Deno.test('params: oversized attribute logs instead of throwing', () => {
   assertEquals(params.value, {});
 });
 
+Deno.test('params: non-string-map JSON warns and falls back to an empty object (#1036)', () => {
+  // "null" / "[1,2]" / '{"a":1}' all JSON.parse cleanly but are not route
+  // params; `params.id` on null throws a TypeError downstream. Reject anything
+  // that is not a flat string→string map.
+  for (const bad of ['null', '[1,2]', '{"a":1}', '{"a":null}', '{"a":{"b":"1"}}', '"text"', '42']) {
+    const host = new ParamsHost() as unknown as HTMLElement;
+    (host as { getAttribute(name: string): string | null }).getAttribute = (name) =>
+      name === 'params' ? bad : null;
+    const params = new ElementParams();
+    assert(params.syncFromAttribute(host));
+    assertEquals(params.value, {}, `expected {} for ${bad}`);
+  }
+});
+
 Deno.test('params: setter copies, getter returns the copy', () => {
   const params = new ElementParams();
   const source = { a: '1' };
