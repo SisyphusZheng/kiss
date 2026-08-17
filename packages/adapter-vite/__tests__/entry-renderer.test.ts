@@ -85,6 +85,27 @@ Deno.test('renderEntry: does not emit the retired duplicate /_data loader protoc
   assertFalse(code.includes('__dataRouteMap'));
 });
 
+Deno.test('buildEntryDescriptor: catch-all param names come from the scanner, not the path pattern (#1022)', () => {
+  const catchAllRoutes: RouteEntry[] = [
+    {
+      path: '/docs/:path{.+}',
+      filePath: 'docs/[...path].tsx',
+      type: 'page',
+      varName: 'docsPath',
+      params: ['path'],
+    },
+  ];
+  const desc = buildEntryDescriptor(catchAllRoutes, {});
+  const route = desc.pageRoutes[0];
+  assertEquals(route.paramNames, ['path']);
+
+  // Hand-built descriptors without scanner params fall back to derivation
+  // that strips the regex body instead of capturing it.
+  const { params: _scannerParams, ...withoutParams } = catchAllRoutes[0];
+  const fallback = buildEntryDescriptor([withoutParams], {});
+  assertEquals(fallback.pageRoutes[0].paramNames, ['path']);
+});
+
 Deno.test('renderEntry: CSP with nonce generates per-request nonce', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     middleware: {

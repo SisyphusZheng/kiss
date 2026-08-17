@@ -26,6 +26,23 @@ Deno.test('resolveDynamicRoutePath rejects path traversal', () => {
   assertThrows(() => resolveDynamicRoutePath('/x/:p', ['p'], { p: '../etc' }));
 });
 
+Deno.test('resolveDynamicRoutePath resolves catch-all values and consumes the regex body (#1022)', () => {
+  assertEquals(
+    resolveDynamicRoutePath('/docs/:path{.+}', ['path'], { path: 'a/b' }),
+    '/docs/a/b',
+  );
+  // Unsafe chars are encoded per segment; the slash structure is preserved.
+  assertEquals(
+    resolveDynamicRoutePath('/docs/:path{.+}', ['path'], { path: 'a b/c#d' }),
+    '/docs/a%20b/c%23d',
+  );
+});
+
+Deno.test('resolveDynamicRoutePath rejects traversal segments inside catch-all values (#1022)', () => {
+  assertThrows(() => resolveDynamicRoutePath('/docs/:path{.+}', ['path'], { path: 'a/../b' }));
+  assertThrows(() => resolveDynamicRoutePath('/docs/:path{.+}', ['path'], { path: '..' }));
+});
+
 Deno.test('routePatternToURLPatternPath covers exact, param and catch-all patterns (#556, #856)', () => {
   // Exact and plain param segments are already valid URLPattern pathnames.
   assertEquals(routePatternToURLPatternPath('/form'), '/form');
