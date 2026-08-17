@@ -22,3 +22,10 @@ Deno.test('rewriteNpmSpecifiers preserves scoped package and uppercase subpath',
     "import('@Scope/Package/Feature/Client')",
   );
 });
+
+Deno.test('rewriteNpmSpecifiers rewrites dotted package names (#1039)', () => {
+  assertEquals(
+    rewriteNpmSpecifiers("import merge from 'npm:lodash.merge@4';"),
+    "import merge from 'lodash.merge';",
+  );
+});

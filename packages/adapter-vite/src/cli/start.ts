@@ -35,6 +35,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import process from 'node:process';
+import { formatError } from '@openelement/element';
 import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 import {
   importRequestTimeServer,
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
   try {
     parsed = extractServeMode(process.argv.slice(2));
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(formatError(error));
     process.exit(1);
   }
 

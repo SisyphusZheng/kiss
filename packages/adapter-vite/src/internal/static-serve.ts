@@ -39,6 +39,25 @@ export function contentTypeFor(filePath: string): string {
 }
 
 /**
+ * Vite emits build assets under `assets/` with a content hash in the
+ * basename (`index-Dq2gH8fM.js`) — those URLs never change content.
+ */
+const CONTENT_HASHED_ASSET_RE = /(?:^|\/)assets\/[^/]*-[0-9a-zA-Z_-]{8,}\.[^/]+$/;
+
+/**
+ * Cache-Control baseline for static output (#1039): content-hashed build
+ * assets are immutable; HTML is the deployment boundary and must revalidate
+ * so a fresh deploy is picked up. Everything else stays unpinned.
+ */
+function cacheControlFor(filePath: string): string | null {
+  if (CONTENT_HASHED_ASSET_RE.test(filePath.replaceAll(sep, '/'))) {
+    return 'public, max-age=31536000, immutable';
+  }
+  if (extname(filePath).toLowerCase() === '.html') return 'no-cache';
+  return null;
+}
+
+/**
  * Candidate file paths (relative to the static root) for a request pathname:
  * the exact file, then `<path>/index.html`, then `<path>.html`.
  *
@@ -81,9 +100,12 @@ export function tryStatic(distDir: string, pathname: string): Response | null {
     if (!filePath.startsWith(root + sep)) continue;
     if (!existsSync(filePath) || !statSync(filePath).isFile()) continue;
     const body = readFileSync(filePath);
+    const headers: Record<string, string> = { 'content-type': contentTypeFor(filePath) };
+    const cacheControl = cacheControlFor(filePath);
+    if (cacheControl) headers['cache-control'] = cacheControl;
     return new Response(body, {
       status: 200,
-      headers: { 'content-type': contentTypeFor(filePath) },
+      headers,
     });
   }
   return null;

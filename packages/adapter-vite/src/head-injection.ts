@@ -141,6 +141,28 @@ function assertSafeAttributeName(name: string, context: string): void {
 }
 
 /**
+ * Serialize an attribute record into escaped `name="value"` tokens.
+ * `undefined`/`false` values are dropped; `true` renders as a bare
+ * (boolean) attribute. Names are validated against `context`.
+ */
+function serializeAttrList(
+  attrs: Record<string, string | number | boolean | undefined>,
+  context: string,
+): string[] {
+  const out: string[] = [];
+  for (const [name, value] of Object.entries(attrs)) {
+    if (value === undefined || value === false) continue;
+    assertSafeAttributeName(name, context);
+    out.push(
+      value === true
+        ? escapeHtmlAttr(name)
+        : `${escapeHtmlAttr(name)}="${escapeHtmlAttr(String(value))}"`,
+    );
+  }
+  return out;
+}
+
+/**
  * Assert that HTML content does NOT contain <script> tags.
  * Scripts must go through inject.scripts for URL validation.
  */
@@ -257,16 +279,7 @@ export function buildHeadExtras(options: FrameworkOptions): HeadExtrasResult {
       if (entry.crossorigin) linkAttrs.push(`crossorigin="${escapeHtmlAttr(entry.crossorigin)}"`);
       if (entry.integrity && !entry.crossorigin) linkAttrs.push('crossorigin="anonymous"');
       if (entry.attrs) {
-        for (const [k, v] of Object.entries(entry.attrs)) {
-          if (v !== undefined && v !== false) {
-            assertSafeAttributeName(k, 'inject.stylesheets.attrs');
-            linkAttrs.push(
-              v === true
-                ? escapeHtmlAttr(k)
-                : `${escapeHtmlAttr(k)}="${escapeHtmlAttr(String(v))}"`,
-            );
-          }
-        }
+        linkAttrs.push(...serializeAttrList(entry.attrs, 'inject.stylesheets.attrs'));
       }
     }
     fragments.push(`<link ${linkAttrs.join(' ')} />`);
@@ -294,14 +307,7 @@ export function buildHeadExtras(options: FrameworkOptions): HeadExtrasResult {
       if (script.crossorigin) attrs.crossorigin = script.crossorigin;
       else if (script.integrity) attrs.crossorigin = 'anonymous';
     }
-    const attrText = Object.entries(attrs)
-      .filter(([, value]) => value !== undefined && value !== false)
-      .map(([name, value]) =>
-        value === true
-          ? escapeHtmlAttr(name)
-          : `${escapeHtmlAttr(name)}="${escapeHtmlAttr(String(value))}"`
-      )
-      .join(' ');
+    const attrText = serializeAttrList(attrs, 'inject.scripts').join(' ');
     fragments.push(`<script ${attrText}></script>`);
   }
 

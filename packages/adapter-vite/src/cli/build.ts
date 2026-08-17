@@ -11,6 +11,7 @@
  */
 
 import process from 'node:process';
+import { formatError } from '@openelement/element';
 import { buildApp } from '../index.ts';
 
 if (import.meta.main) {
@@ -19,7 +20,9 @@ if (import.meta.main) {
     process.exit(0);
   } catch (error) {
     console.error(
-      `Build failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`,
+      `Build failed: ${
+        error instanceof Error ? error.stack ?? formatError(error) : formatError(error)
+      }`,
     );
     if (error instanceof Error && error.cause) console.error('Caused by:', error.cause);
     process.exit(1);

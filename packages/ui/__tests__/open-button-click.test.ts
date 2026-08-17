@@ -182,6 +182,19 @@ class FakeAnchorElement {
 class FakeButtonElement {
   className = '';
   disabled = false;
+  #attrs = new Map<string, string>();
+  getAttribute(name: string): string | null {
+    return this.#attrs.get(name) ?? null;
+  }
+  setAttribute(name: string, value: string): void {
+    this.#attrs.set(name, value);
+  }
+  hasAttribute(name: string): boolean {
+    return this.#attrs.has(name);
+  }
+  removeAttribute(name: string): void {
+    this.#attrs.delete(name);
+  }
 }
 
 (globalThis as { HTMLAnchorElement?: unknown }).HTMLAnchorElement ??= FakeAnchorElement;
@@ -239,4 +252,46 @@ Deno.test('open-button disabled click is a no-op: no open-click, no form submit 
   btn._handleClick(new Event('click'));
   assertEquals(openClickFired, false);
   assertEquals(submits.length, 0);
+});
+
+// ─── #1039: target/type attribute sync ─────────────────────────────────────
+
+Deno.test('open-button syncs target (and _blank rel guard) on the inner anchor (#1039)', () => {
+  const btn = new (OpenButton as unknown as new () => OpenButtonLike)() as OpenButtonLike & {
+    attributeChangedCallback: (n: string, o: string | null, v: string | null) => void;
+    shadowRoot: unknown;
+  };
+  btn.setAttribute('href', '/x');
+  const anchor = new FakeAnchorElement();
+  btn.shadowRoot = { querySelector: (sel: string) => (sel === '.btn' ? anchor : null) };
+
+  btn.setAttribute('target', '_blank');
+  btn.attributeChangedCallback('target', null, '_blank');
+  assertEquals(anchor.getAttribute('target'), '_blank');
+  assertEquals(anchor.getAttribute('rel'), 'noopener noreferrer');
+
+  // Changing away from _blank drops the rel guard; removing target entirely
+  // removes both attributes.
+  btn.removeAttribute('target');
+  btn.attributeChangedCallback('target', '_blank', null);
+  assertEquals(anchor.hasAttribute('target'), false);
+  assertEquals(anchor.hasAttribute('rel'), false);
+});
+
+Deno.test('open-button syncs type on the inner button (#1039)', () => {
+  const btn = new (OpenButton as unknown as new () => OpenButtonLike)() as OpenButtonLike & {
+    attributeChangedCallback: (n: string, o: string | null, v: string | null) => void;
+    shadowRoot: unknown;
+  };
+  const button = new FakeButtonElement();
+  btn.shadowRoot = { querySelector: (sel: string) => (sel === '.btn' ? button : null) };
+
+  btn.setAttribute('type', 'submit');
+  btn.attributeChangedCallback('type', null, 'submit');
+  assertEquals(button.getAttribute('type'), 'submit');
+
+  // Removing type restores the render() default ('button').
+  btn.removeAttribute('type');
+  btn.attributeChangedCallback('type', 'submit', null);
+  assertEquals(button.getAttribute('type'), 'button');
 });

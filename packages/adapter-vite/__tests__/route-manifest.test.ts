@@ -56,7 +56,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/': () => import(");
+      assertStringIncludes(content, '"/": () => import(');
       assertMatch(content, /\/routes\/index\.tsx/);
     } finally {
       dir.cleanup();
@@ -76,7 +76,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/products': () => import(");
+      assertStringIncludes(content, '"/products": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -95,7 +95,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/products/:id': () => import(");
+      assertStringIncludes(content, '"/products/:id": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -114,7 +114,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/products': () => import(");
+      assertStringIncludes(content, '"/products": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -133,7 +133,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/products/reviews': () => import(");
+      assertStringIncludes(content, '"/products/reviews": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -154,7 +154,7 @@ Deno.test({
 
       // scanRoutes (#556) converts a catch-all segment to the Hono named
       // regex parameter :slug{.+} (matches across '/').
-      assertStringIncludes(content, "'/products/:slug{.+}': () => import(");
+      assertStringIncludes(content, '"/products/:slug{.+}": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -215,7 +215,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/': () => import(");
+      assertStringIncludes(content, '"/": () => import(');
       assertEquals(content.includes('_renderer'), false);
       assertEquals(content.includes('_middleware'), false);
     } finally {
@@ -237,7 +237,7 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/': () => import(");
+      assertStringIncludes(content, '"/": () => import(');
       assertEquals(content.includes('/api/posts'), false);
     } finally {
       dir.cleanup();
@@ -286,7 +286,7 @@ Deno.test({
       const content = await generateContent(routesDir, manifestPath);
 
       // Should contain ../ or ../..
-      assertMatch(content, /import\('[.][.]/);
+      assertMatch(content, /import\("[.][.]/);
     } finally {
       dir.cleanup();
     }
@@ -312,9 +312,9 @@ Deno.test({
 
       // Verify the file was written
       const written = await Deno.readTextFile(join(outDir, 'route-manifest.ts'));
-      assertStringIncludes(written, "'/': () => import(");
-      assertStringIncludes(written, "'/about': () => import(");
-      assertStringIncludes(written, "'/products': () => import(");
+      assertStringIncludes(written, '"/": () => import(');
+      assertStringIncludes(written, '"/about": () => import(');
+      assertStringIncludes(written, '"/products": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -359,10 +359,10 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/': () => import(");
-      assertStringIncludes(content, "'/products': () => import(");
-      assertStringIncludes(content, "'/products/:id': () => import(");
-      assertStringIncludes(content, "'/about': () => import(");
+      assertStringIncludes(content, '"/": () => import(');
+      assertStringIncludes(content, '"/products": () => import(');
+      assertStringIncludes(content, '"/products/:id": () => import(');
+      assertStringIncludes(content, '"/about": () => import(');
     } finally {
       dir.cleanup();
     }
@@ -383,7 +383,30 @@ Deno.test({
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
       const content = await generateContent(routesDir, manifestPath);
 
-      assertStringIncludes(content, "'/about': () => import(");
+      assertStringIncludes(content, '"/about": () => import(');
+    } finally {
+      dir.cleanup();
+    }
+  },
+});
+
+// ─── Generated-code escaping (#1039) ─────────────────────
+
+Deno.test({
+  name: 'route-manifest: file name with an apostrophe stays valid code',
+  permissions: { read: true, write: true },
+  async fn() {
+    const dir = tempDir();
+    try {
+      const routesDir = join(dir.path, 'routes');
+      await writeRoute(routesDir, "it's.tsx");
+
+      const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
+      const content = await generateContent(routesDir, manifestPath);
+
+      // Bare interpolation used to emit import('../routes/it's.tsx') — a
+      // syntax error. Literals now go through codegen-literals quoting.
+      assertStringIncludes(content, '"/it\'s": () => import("../routes/it\'s.tsx")');
     } finally {
       dir.cleanup();
     }

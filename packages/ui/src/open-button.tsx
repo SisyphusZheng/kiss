@@ -207,6 +207,8 @@ export class OpenButton extends OpenElement {
     el.className = `control btn btn--${v} btn--${s}`;
     if (el instanceof HTMLButtonElement) {
       el.disabled = this.hasAttribute('disabled');
+      // type is observed: keep the inner button in sync without re-render.
+      el.setAttribute('type', this.getAttribute('type') || 'button');
     }
     if (el instanceof HTMLAnchorElement) {
       // Anchor branch: keep href/aria-disabled in sync in BOTH directions
@@ -219,6 +221,18 @@ export class OpenButton extends OpenElement {
       } else {
         el.setAttribute('href', this.getAttribute('href') || '');
         el.removeAttribute('aria-disabled');
+      }
+      // target is observed too: mirror render() (and its _blank rel guard).
+      const target = this.getAttribute('target') || '';
+      if (target) {
+        el.setAttribute('target', target);
+      } else {
+        el.removeAttribute('target');
+      }
+      if (target === '_blank') {
+        el.setAttribute('rel', 'noopener noreferrer');
+      } else {
+        el.removeAttribute('rel');
       }
     }
   }

@@ -82,3 +82,31 @@ Deno.test('malformed percent-encoding is a defined 400, never a crash (#823)', a
     await Deno.remove(root, { recursive: true });
   }
 });
+
+Deno.test('tryStatic cache-control: content-hashed assets immutable, HTML revalidates (#1039)', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    await Deno.mkdir(join(root, 'assets'));
+    await Deno.writeTextFile(join(root, 'assets', 'index-Dq2gH8fM.js'), 'console.log(1)');
+    await Deno.writeTextFile(join(root, 'index.html'), '<h1>home</h1>');
+    await Deno.writeTextFile(join(root, 'favicon.ico'), 'ico');
+
+    const asset = tryStatic(root, '/assets/index-Dq2gH8fM.js');
+    assert(asset);
+    assertEquals(
+      asset.headers.get('cache-control'),
+      'public, max-age=31536000, immutable',
+    );
+
+    const html = tryStatic(root, '/');
+    assert(html);
+    assertEquals(html.headers.get('cache-control'), 'no-cache');
+
+    // Unhashed static files stay unpinned.
+    const icon = tryStatic(root, '/favicon.ico');
+    assert(icon);
+    assertEquals(icon.headers.get('cache-control'), null);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
