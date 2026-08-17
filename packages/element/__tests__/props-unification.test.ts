@@ -35,6 +35,20 @@ Deno.test('SSR path (collectPublicProps) filters identically to the shared core'
   assertEquals(Object.keys(collectPublicProps(host)).sort(), [...SAFE].sort());
 });
 
+Deno.test('collectPublicProps strips framework-internal host instance fields (#1037)', () => {
+  // OpenElement instances carry own-enumerable framework internals — the
+  // signal registry (a Map) and ElementInternals (an own key even when
+  // undefined, since the constructor assigns it unconditionally). Collected
+  // into props they leak into CSR `{...props}` spreads as garbage attributes
+  // (`signal-registry="[object Map]"`) and diverge SSR/CSR output.
+  const host = {
+    label: 'public',
+    signalRegistry: new Map(),
+    _internals: undefined,
+  } as unknown as object;
+  assertEquals(collectPublicProps(host), { label: 'public' });
+});
+
 Deno.test('CSR path (collectPropBindings) skips dangerous + internal keys', () => {
   const el = { localName: 'div', setAttribute: () => {} } as unknown as Element;
   const descriptors = collectPropBindings(el, FIXTURE);

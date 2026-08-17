@@ -249,8 +249,15 @@ export async function publishPackage(
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     if (msg.includes('E403') || msg.includes('previously published versions')) {
-      io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
-      return;
+      // #1038: E403 is not unique to already-published — npm also returns it
+      // for insufficient token scope and 2FA policy, and npmPackageVersionExists
+      // answers false on query failure (#875). Re-check the registry and skip
+      // only when the version is actually there; otherwise the pipeline would
+      // go green with the package unpublished.
+      if (await io.versionExists(pkg.name, pkg.version)) {
+        io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
+        return;
+      }
     }
     throw error;
   }

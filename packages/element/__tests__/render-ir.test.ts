@@ -189,6 +189,23 @@ Deno.test('SSR depth-limit trip is not logged once per function-component frame'
   assertEquals(errors.length, 0);
 });
 
+Deno.test('SSR rejects self-recursive function components at the nesting-depth limit (#1037)', async () => {
+  // A function component that returns itself never reaches renderDsd (the
+  // depth-limit enforcement point) — it used to loop forever on the microtask
+  // queue. Component frames now consume one depth level each and trip the
+  // same typed limit.
+  function RecursiveFn(): unknown {
+    return jsx(RecursiveFn, {});
+  }
+
+  const err = await assertRejects(
+    () => renderDsdTree(jsx(RecursiveFn, {})),
+    Error,
+    `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH}`,
+  );
+  assertEquals(isDepthLimitError(err), true);
+});
+
 Deno.test('SSR depth-trip message carries the ancestor path with the tripping tag last (#975)', async () => {
   class DepthPathFrame {
     render(): unknown {

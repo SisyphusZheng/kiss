@@ -190,6 +190,31 @@ Deno.test('regex fallback drives the compiled trie matcher identically', () => {
   }
 });
 
+Deno.test('regex fallback accepts custom regexes containing nested groups (#1036)', () => {
+  const grouped: RouteConfig[] = [
+    { path: '/x/:name{(?:a|b)+}', tagName: 'grouped-page' },
+    { path: '/y/:v{[)]+}', tagName: 'class-page' },
+  ];
+  // A naive indexOf(')') stopped at the inner group's terminator and threw at
+  // compile time; pair-scanning accepts what URLPattern accepts.
+  const match = matchRouteLinear('/x/ab', '', grouped);
+  assertEquals(match?.route.tagName, 'grouped-page');
+  assertEquals(match?.params.name, 'ab');
+  assertEquals(matchRouteLinear('/x/c', '', grouped), null);
+  // A ')' inside a character class is not the group terminator either.
+  assertEquals(matchRouteLinear('/y/))', '', grouped)?.params.v, '))');
+  // Parity with the native URLPattern path.
+  assertEquals(matchRoute('/x/ab', '', grouped)?.params.name, 'ab');
+  // Unbalanced groups still fail fast at compile time.
+  let threw = false;
+  try {
+    matchRouteLinear('/z/a', '', [{ path: '/z/:name{(?:a}', tagName: 'bad-page' }]);
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, true);
+});
+
 Deno.test('router falls back to the regex matcher when URLPattern is absent', () => {
   const original = globalThis.URLPattern;
   // @ts-expect-error removing a browser global to simulate Firefox (#897)
@@ -658,7 +683,111 @@ Deno.test('programmatic navigations are latest-wins: a slow stale guard cannot r
     assertEquals(router.currentPath, '/newer');
     assertEquals(browser.path(), '/newer');
     assertEquals(browser.applied, ['/newer']);
-    assertEquals(events, ['change']);
+    assertEquals(events, ['change']);  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+// ─── Guard-veto history trap (#1036) ───────────────────────────────
+
+/**
+ * Fake browser with a truthful history model: pushState truncates the forward
+ * stack and appends, replaceState rewrites the current entry, and back() moves
+ * the session pointer before dispatching popstate.
+ */
+function installFakeHistoryStack(initialEntries: string[]) {
+  const descriptors = {
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+  };
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  const entries = [...initialEntries];
+  let pointer = entries.length - 1;
+  const listeners = new Map<string, EventListener[]>();
+  const currentUrl = () => new URL(entries[pointer], 'https://router.test');
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'https:',
+      get pathname() {
+        return currentUrl().pathname;
+      },
+      get search() {
+        return currentUrl().search;
+      },
+      get hash() {
+        return '';
+      },
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: {
+      pushState(_state: unknown, _title: string, url: string) {
+        entries.length = pointer + 1;
+        entries.push(url);
+        pointer++;
+      },
+      replaceState(_state: unknown, _title: string, url: string) {
+        entries[pointer] = url;
+      },
+    },
+  });
+  globalThis.addEventListener = ((type: string, listener: EventListener) => {
+    listeners.set(type, [...(listeners.get(type) ?? []), listener]);
+  }) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = ((type: string, listener: EventListener) => {
+    listeners.set(type, (listeners.get(type) ?? []).filter((entry) => entry !== listener));
+  }) as typeof globalThis.removeEventListener;
+  return {
+    entries,
+    back() {
+      if (pointer > 0) pointer--;
+      for (const listener of listeners.get('popstate') ?? []) {
+        listener(new Event('popstate'));
+      }
+    },
+    path() {
+      return entries[pointer];
+    },
+    restore() {
+      globalThis.addEventListener = originalAdd;
+      globalThis.removeEventListener = originalRemove;
+      if (descriptors.location) Object.defineProperty(globalThis, 'location', descriptors.location);
+      else delete (globalThis as Record<string, unknown>).location;
+      if (descriptors.history) Object.defineProperty(globalThis, 'history', descriptors.history);
+      else delete (globalThis as Record<string, unknown>).history;
+    },
+  };
+}
+
+Deno.test('popstate guard veto does not trap earlier history entries (#1036)', async () => {
+  // /a ← /guarded ← /b: the user backs onto the vetoed /guarded entry.
+  const browser = installFakeHistoryStack(['/a', '/guarded', '/b']);
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page' },
+      { path: '/guarded', tagName: 'guarded-page', guard: () => Promise.resolve(false) },
+      { path: '/b', tagName: 'b-page' },
+    ],
+  });
+  try {
+    browser.back();
+    await flushBrowserNavigation();
+    // Vetoed: the router and the address bar stay on /b.
+    assertEquals(router.currentPath, '/b');
+    assertEquals(browser.path(), '/b');
+    // The vetoed entry must not sit under the restored one forever: with
+    // push-restore the next back re-landed on /guarded and bounced again,
+    // leaving /a unreachable; replace-restore rewrites the vetoed entry, so
+    // the next back reaches /a.
+    browser.back();
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/a');
+    assertEquals(browser.path(), '/a');
   } finally {
     router.dispose();
     browser.restore();

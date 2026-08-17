@@ -60,27 +60,32 @@ export function currentActionData(ctx: RenderDataContext): unknown {
 // ─── Active-context bridge for the public hooks ────────────────────────────
 // useLoaderData / useActionData are called from user render code without an
 // explicit context argument, so the render entry sets the active context for
-// the duration of one (synchronous) render. This is an explicit slot, not a
-// process-global, so two sequential renders never share data and a nested
-// component serialized inside a render reads the current page's stack.
+// the duration of one (synchronous) render. The bridge is a stack (#1037), not
+// a single slot: a page render nested inside another page render (e.g. a
+// recursive error renderer — the case MAX_DATA_CONTEXT_DEPTH's message
+// anticipates) pushes its own scope, and exiting it must restore the outer
+// scope instead of clearing the bridge. Sequential renders behave exactly as
+// before: two never share data, and a nested component serialized inside a
+// render reads the current page's stack.
 
-let _active: RenderDataContext | null = null;
+const _activeStack: RenderDataContext[] = [];
 const _nullContext: RenderDataContext = { stack: [] };
 let _warnedOutsideRender = false;
 
 /** @internal Enter a render-scoped data context. Called by the render entry. */
 export function __enterDataContext(ctx: RenderDataContext): void {
-  _active = ctx;
+  _activeStack.push(ctx);
 }
 
 /** @internal Exit the active render-scoped data context. Called by the render entry. */
 export function __exitDataContext(): void {
-  _active = null;
+  _activeStack.pop();
 }
 
 /** @internal Resolve the currently active render-scoped data context. */
 export function __activeDataContext(): RenderDataContext {
-  if (_active) return _active;
+  const active = _activeStack[_activeStack.length - 1];
+  if (active) return active;
   if (isDevMode() && !_warnedOutsideRender) {
     _warnedOutsideRender = true;
     console.warn(

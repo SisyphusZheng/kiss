@@ -115,7 +115,7 @@ async function runGuardOnBack(
       // Sign out and walk back into the protected entry via the browser.
       loggedIn = false;
       history.back();
-      // Deterministic settle: the guard outcome (restore push or redirect
+      // Deterministic settle: the guard outcome (restore replace or redirect
       // replace) is the last history mutation of the blocked walk.
       const mutationsBefore = pushes.length + replaces.length;
       await waitFor(() => pushes.length + replaces.length > mutationsBefore);
@@ -147,9 +147,12 @@ test.describe('router guards on browser history traversal', () => {
       'change:/',
       'guard:/protected',
     ]);
-    // The rejected walk pushed the entry the user came from back on top.
-    expect(outcome.pushes).toEqual(['/protected', '/', '/']);
-    expect(outcome.replaces).toEqual([]);
+    // The rejected walk replaced the landed /protected entry with the one
+    // the user came from (replaceState, not pushState — #1036: pushing left
+    // the vetoed entry below the restored copy and trapped every earlier
+    // entry behind the guard on the next back).
+    expect(outcome.pushes).toEqual(['/protected', '/']);
+    expect(outcome.replaces).toEqual(['/']);
     expect(outcome.pathname).toBe('/');
     expect(outcome.currentPath).toBe('/');
   });
@@ -180,8 +183,8 @@ test.describe('router guards on browser history traversal', () => {
       'change:/',
       'guard:/protected',
     ]);
-    expect(outcome.pushes).toEqual(['#/protected', '#/', '#/']);
-    expect(outcome.replaces).toEqual([]);
+    expect(outcome.pushes).toEqual(['#/protected', '#/']);
+    expect(outcome.replaces).toEqual(['#/']);
     expect(outcome.hash).toBe('#/');
     expect(outcome.currentPath).toBe('/');
   });

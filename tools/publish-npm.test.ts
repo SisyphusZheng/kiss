@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from '@std/assert';
+import { assertEquals, assertRejects, assertThrows } from '@std/assert';
 import {
   deriveAllDependencies,
   deriveDependencies,
@@ -184,4 +184,50 @@ Deno.test('publishPackage does not touch dist-tags during a dry run', async () =
 
   assertEquals(published.length, 1);
   assertEquals(published[0].includes('--dry-run'), true);
+});
+
+Deno.test('publishPackage skips after an E403 only when the version is actually published (#1038)', async () => {
+  // E403 is not unique to already-published (token scope, 2FA policy): the
+  // registry is re-queried after the failure, and the skip requires the
+  // version to be visible.
+  let queries = 0;
+  const logs: string[] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => {
+      queries++;
+      return Promise.resolve(queries > 1);
+    },
+    publish: () => Promise.reject(new Error('npm error code E403\nnpm error 403 Forbidden')),
+    log: (message) => logs.push(message),
+  };
+
+  await publishPackage(pkg('@openelement/element', '0.41.0'), false, publishIo);
+
+  assertEquals(queries, 2);
+  assertEquals(logs, [
+    '[npm] @openelement/element@0.41.0 already published; skipping.',
+  ]);
+});
+
+Deno.test('publishPackage propagates an E403 when the version is not actually published (#1038)', async () => {
+  // Token-scope/2FA E403 with the version absent from the registry: the old
+  // code logged "already published" and went green with nothing published.
+  let queries = 0;
+  const logs: string[] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => {
+      queries++;
+      return Promise.resolve(false);
+    },
+    publish: () => Promise.reject(new Error('npm error code E403\nnpm error 403 Forbidden')),
+    log: (message) => logs.push(message),
+  };
+
+  await assertRejects(
+    () => publishPackage(pkg('@openelement/element', '0.41.0'), false, publishIo),
+    Error,
+    'E403',
+  );
+  assertEquals(queries, 2, 'pre-publish check plus the post-E403 re-check');
+  assertEquals(logs, [], 'no misleading already-published line');
 });
