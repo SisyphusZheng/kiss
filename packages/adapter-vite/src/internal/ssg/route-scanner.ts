@@ -526,6 +526,27 @@ export async function scanRoutes(
     return a.path.localeCompare(b.path);
   });
 
+  // #1029: pathToVarName folds '/', '-', and '_' into '_', so paths like
+  // /a-b, /a/b, and /a_b all generate the identifier Route_A_b. The virtual
+  // entry would then declare the same import twice and Rollup would fail with
+  // a bare "Identifier has already been declared" — fail here instead, naming
+  // both source paths. Checked once at the top-level call (recursion passes a
+  // non-empty baseDir).
+  if (baseDir === '') {
+    const seenVarNames = new Map<string, string>();
+    for (const entry of entries) {
+      const existing = seenVarNames.get(entry.varName);
+      if (existing !== undefined) {
+        throw new Error(
+          `Route variable name collision: '${existing}' and '${entry.filePath}' both map to ` +
+            `identifier '${entry.varName}' (pathToVarName folds '/', '-', '_' to '_'). ` +
+            `Rename one of the route files.`,
+        );
+      }
+      seenVarNames.set(entry.varName, entry.filePath);
+    }
+  }
+
   return entries;
 }
 
