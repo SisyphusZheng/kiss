@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
-import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
+import { isActionFailure, isOpenElementNotFound, isOpenElementRedirect } from '@openelement/app';
 
 if (!('customElements' in globalThis)) {
   (globalThis as { customElements?: unknown }).customElements = {
@@ -94,8 +94,7 @@ Deno.test('admin loader conceals the queue console from non-admin users', async 
       user: { ...ADMIN, app_metadata: { role: 'member' } },
     }) as never)(ctx())
   );
-  assert(error instanceof Response);
-  assertEquals((error as Response).status, 404);
+  assert(isOpenElementNotFound(error));
 });
 
 Deno.test('replay action validates id and requests one durable replay', async () => {

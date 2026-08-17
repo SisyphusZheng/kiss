@@ -76,12 +76,73 @@ try {
   });
   await record('browser-note-create-prg-persistence');
 
+  const duplicateMarker = `browser-duplicate-submit-${runId}`;
+  await page.getByLabel('Title').fill('duplicate submit smoke');
+  await page.getByLabel('Body').fill(duplicateMarker);
+  await page.getByRole('button', { name: 'Create note' }).dblclick();
+  await page.locator('#notes').getByText(duplicateMarker, { exact: true }).waitFor({
+    state: 'visible',
+  });
+  await page.waitForTimeout(1_000);
+  const duplicateCount = await fetch(
+    `${supabaseUrl}/rest/v1/notes?select=id&body=eq.${encodeURIComponent(duplicateMarker)}`,
+    {
+      headers: {
+        apikey: serviceRoleKey,
+        authorization: `Bearer ${serviceRoleKey}`,
+      },
+    },
+  );
+  if (!duplicateCount.ok) {
+    throw new Error(`Duplicate-submit audit query failed with HTTP ${duplicateCount.status}`);
+  }
+  const duplicateRows = await duplicateCount.json() as unknown[];
+  if (duplicateRows.length !== 1) {
+    throw new Error(
+      `Duplicate submission created ${duplicateRows.length} rows; ` +
+        'the enhanced form guard (#564) should allow exactly one',
+    );
+  }
+  await record('browser-duplicate-submit-creates-single-row');
+
   const live = page.locator('notes-live');
   await live.locator('#live-status').getByText('realtime: subscribed', { exact: true }).waitFor({
     state: 'visible',
     timeout: 20_000,
   });
   await record('browser-realtime-user-jwt-subscribed');
+
+  const second = await browser.newContext();
+  const secondPage = await second.newPage();
+  secondPage.on('pageerror', (error) => pageErrors.push(error.message));
+  try {
+    await secondPage.goto(`${baseUrl}/login`);
+    await secondPage.getByLabel('Email').fill(email);
+    await secondPage.getByLabel('Password').fill(password);
+    await Promise.all([
+      secondPage.waitForURL(`${baseUrl}/notes`),
+      secondPage.getByRole('button', { name: 'Sign in' }).click(),
+    ]);
+    const secondLive = secondPage.locator('notes-live');
+    await secondLive.locator('#live-status').getByText('realtime: subscribed', { exact: true })
+      .waitFor({ state: 'visible', timeout: 20_000 });
+
+    const secondClientMarker = `browser-second-client-${runId}`;
+    await page.getByLabel('Title').fill('second client smoke');
+    await page.getByLabel('Body').fill(secondClientMarker);
+    await Promise.all([
+      page.waitForURL(`${baseUrl}/notes`),
+      page.getByRole('button', { name: 'Create note' }).click(),
+    ]);
+    await page.locator('#notes').getByText(secondClientMarker, { exact: true }).waitFor({
+      state: 'visible',
+    });
+    await secondLive.locator('#live-events').getByText(secondClientMarker, { exact: true })
+      .waitFor({ state: 'visible', timeout: 20_000 });
+    await record('browser-realtime-second-client-receives-ui-insert');
+  } finally {
+    await second.close();
+  }
 
   const isolatedMarker = `browser-realtime-isolated-${runId}`;
   const otherUserInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {

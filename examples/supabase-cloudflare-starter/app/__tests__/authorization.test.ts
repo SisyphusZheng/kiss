@@ -1,4 +1,5 @@
-import { assertEquals, assertThrows } from '@std/assert';
+import { assert, assertEquals, assertThrows } from '@std/assert';
+import { isOpenElementNotFound } from '@openelement/app';
 import { hasAdminRole, requireAdmin } from '../../lib/authorization.ts';
 
 Deno.test('admin authorization trusts app_metadata.role only', () => {
@@ -10,7 +11,6 @@ Deno.test('admin authorization trusts app_metadata.role only', () => {
 Deno.test('user-writable metadata can never grant admin', () => {
   const forged = { id: 'attacker', app_metadata: {}, user_metadata: { role: 'admin' } };
   assertEquals(hasAdminRole(forged), false);
-  const response = assertThrows(() => requireAdmin(forged));
-  assertEquals(response instanceof Response, true);
-  assertEquals((response as Response).status, 404);
+  const error = assertThrows(() => requireAdmin(forged));
+  assert(isOpenElementNotFound(error));
 });
