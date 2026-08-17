@@ -429,7 +429,7 @@
           "reExportedNames": []
         },
         "./open-dialog": {
-          "sha256": "883e8329222a70fe1a515707a7a86a93a0b79587eb56b23f4e59e439690f0b70",
+          "sha256": "15c7213bb4526d85c54523349f6a875bdd637b88f09dc1899f1ec49ad6f0cecc",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
