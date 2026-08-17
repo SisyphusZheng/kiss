@@ -1,8 +1,6 @@
 /**
  * isr.ts - route-level ISR cache primitives.
  *
- * v0.44: Platform adapters (CF Workers KV, Deno KV).
- *
  * Architecture:
  *   1. Build: SSG produces static HTML + isr-manifest.json
  *   2. Runtime: Edge handler checks cache before serving static

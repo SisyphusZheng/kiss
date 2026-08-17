@@ -14,8 +14,6 @@ import { formatError, OpenElementError } from './errors.ts';
  * FAST, or any Web Component library. bindSsrProps() sets props
  * directly; adapters handle framework-specific update triggers.
  *
- * v0.29.1: defineCustomElement helper inlined from custom-element.ts.
- *
  * 0.42.0-alpha.13 (#606): strategy scheduling has a single owner — the
  * generated client entry (island-scheduler.ts in @openelement/adapter-vite).
  * defineIsland() no longer observes visibility itself; when an island module
@@ -37,7 +35,6 @@ const log = createLogger('island');
 
 /**
  * SSR-safe custom element registration helper.
- * v0.29.1: Merged from custom-element.ts.
  */
 export function defineCustomElement(
   tag: string,
@@ -107,7 +104,7 @@ export function bindSsrProps(el: HTMLElement): void {
 
 /**
  * Create an idle (requestIdleCallback-based) hydration strategy.
- * v0.6': Improved fallback chain:
+ * Fallback chain:
  *   1. requestIdleCallback (optimal, progressive)
  *   2. requestAnimationFrame (next frame, good for interaction)
  *   3. setTimeout(fn, 50) (final fallback, shorter than old 200ms)
@@ -220,7 +217,7 @@ export function defineIsland<T extends CustomElementConstructor>(
 }
 
 /**
- * v0.6': connectedCallback wrapper - the prototype's connectedCallback is
+ * connectedCallback wrapper - the prototype's connectedCallback is
  * replaced with a wrapper that calls the original callback + auto-binds SSR
  * props. The original is captured first, so the wrapped chain still runs the
  * component's own (and Lit's) connectedCallback logic.
