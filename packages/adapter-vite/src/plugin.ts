@@ -7,7 +7,7 @@
  * Internal only: called by openPipeline() and the @openelement/app umbrella.
  */
 
-import type { Alias, Plugin } from 'vite';
+import type { Alias, Plugin, ViteDevServer } from 'vite';
 import type {
   FrameworkOptions,
   OpenElementPackageManifest,
@@ -15,7 +15,7 @@ import type {
 } from './internal/protocol/framework.ts';
 import type { SsgBehaviorOptions } from './internal/protocol/ssg.ts';
 
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { formatError, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
@@ -205,6 +205,28 @@ export function createOpenPlugin(
   ): string {
     entryDescriptor = buildDescriptor(routes, islandTagNames, packageManifests, islandFiles);
     return renderEntry(entryDescriptor);
+  }
+
+  /**
+   * #1028: dev-only route rescan. buildStart() scans the routes dir once, so a
+   * route file added/removed while `deno task dev` runs never reached the
+   * cached entryDescriptor and 404'd until restart. Re-scan, rebuild the
+   * descriptor (virtualEntryPlugin.load() renders from it), and invalidate the
+   * virtual entry module so the dev server re-evaluates it on the next pass.
+   */
+  async function rescanRoutes(): Promise<void> {
+    const routes = await scanRoutes(resolvedOptions.routesDir!);
+    ctx.phase1.cachedRoutes = routes;
+    if (resolvedOptions.mode === 'spa') return;
+    generateEntry(
+      routes,
+      ctx.phase1.islandTagNames,
+      ctx.phase1.packageManifests,
+      ctx.phase1.islandFiles,
+    );
+    if (entryDescriptor) {
+      ctx.phase1.ssrAdmissionPlan = entryDescriptor.ssrAdmissionPlan;
+    }
   }
 
   const corePlugin: Plugin = {
@@ -406,6 +428,36 @@ export function createOpenPlugin(
           recoverable: false,
         });
       }
+    },
+
+    configureServer(server: ViteDevServer) {
+      const absoluteRoutesDir = resolve(process.cwd(), resolvedOptions.routesDir!);
+      server.watcher.add(absoluteRoutesDir);
+
+      // Only add/unlink change the route SET; content edits to an existing
+      // route file flow through normal HMR without touching the descriptor.
+      const onRouteSetChanged = (file: string) => {
+        if (!file.startsWith(absoluteRoutesDir)) return;
+        if (!/\.(ts|tsx|js|jsx|mdx)$/.test(file)) return;
+
+        rescanRoutes().then(() => {
+          const mod = server.moduleGraph.getModuleById(RESOLVED_ENTRY_ID);
+          if (mod) server.moduleGraph.invalidateModule(mod);
+          log.info(`Routes changed: ${relative(process.cwd(), file)} - reloading`);
+          server.hot.send({ type: 'full-reload' });
+        }).catch((err: unknown) => {
+          // A broken route file must not kill the dev server — the next edit
+          // re-triggers the scan.
+          log.error(`Route rescan failed: ${formatError(err)}`);
+        });
+      };
+
+      server.watcher.on('add', onRouteSetChanged);
+      server.watcher.on('unlink', onRouteSetChanged);
+      server.httpServer?.on('close', () => {
+        server.watcher.off('add', onRouteSetChanged);
+        server.watcher.off('unlink', onRouteSetChanged);
+      });
     },
   };
 
