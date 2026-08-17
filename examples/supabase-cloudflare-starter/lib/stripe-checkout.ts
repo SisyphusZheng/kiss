@@ -49,6 +49,11 @@ export function checkoutSessionBody(
 ): URLSearchParams {
   const body = new URLSearchParams();
   body.set('mode', 'payment');
+  // Card-only is a code-owned invariant. Accounts with Managed Payments enabled
+  // by default reject explicit payment_method_types unless Managed Payments is
+  // disabled per request — otherwise the Dashboard, not this code, would decide
+  // which methods Checkout offers.
+  body.set('managed_payments[enabled]', 'false');
   body.set('payment_method_types[0]', 'card');
   body.set('line_items[0][price]', config.priceId);
   body.set('line_items[0][quantity]', '1');

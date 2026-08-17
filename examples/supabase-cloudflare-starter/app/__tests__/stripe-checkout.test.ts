@@ -32,6 +32,7 @@ Deno.test('Checkout request is one-time card-only and webhook-correlated', () =>
   const body = checkoutSessionBody(checkoutConfiguration(env), 'order-1');
   assertEquals(body.get('mode'), 'payment');
   assertEquals(body.get('payment_method_types[0]'), 'card');
+  assertEquals(body.get('managed_payments[enabled]'), 'false');
   assertEquals(body.get('line_items[0][price]'), 'price_fixed');
   assertEquals(body.get('metadata[order_id]'), 'order-1');
   assertEquals(body.get('payment_intent_data[metadata][order_id]'), 'order-1');
