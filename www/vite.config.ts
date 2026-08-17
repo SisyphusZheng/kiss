@@ -123,7 +123,7 @@ const openElementPlugins = openElement({
   },
   appShell: {
     tagName: 'open-layout',
-    import: new URL('./app/site-ui/open-layout.tsx', import.meta.url).pathname,
+    import: new URL('./app/islands/open-layout.tsx', import.meta.url).pathname,
     props: {
       footerText: 'Built with OpenElement — Web Components-native application framework',
     },

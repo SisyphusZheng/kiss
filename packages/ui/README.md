@@ -48,7 +48,7 @@ Tokens contain shared style values and classes and import no components.
 Primitives may consume tokens but never composites. Composites may compose
 primitives and tokens. Application routing and document navigation belongs to
 `@openelement/app`; the site layout component (`OpenLayout`) lives in the
-reference site (`www/app/site-ui/open-layout.tsx`).
+reference site (`www/app/islands/open-layout.tsx`).
 
 ## `open-code-block` syntax highlighting
 

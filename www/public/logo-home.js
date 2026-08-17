@@ -2,7 +2,7 @@
 (function () {
   function syncLogo() {
     // Locale list mirrors the injected `locales` attribute on open-layout
-    // (see _homeHref in app/site-ui/open-layout.tsx) — public scripts are
+    // (see _homeHref in app/islands/open-layout.tsx) — public scripts are
     // static assets and cannot import app modules. documentElement.lang is
     // a fallback for pages where the attribute has not been injected yet.
     const layout = document.querySelector('open-layout');

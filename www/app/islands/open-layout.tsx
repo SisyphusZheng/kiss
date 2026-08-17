@@ -1,17 +1,16 @@
 /** @jsxImportSource @openelement/element */
 /**
- * www/site-ui - open-layout
+ * www/app/islands - open-layout
  *
  * App layout component with header, sidebar, and footer.
  * Web Standards Lab: dark-first, cinematic at the brand surface and calm in
  * long-form reading modes.
  *
- * v0.20.0: Migrated from DsdLitElement to DsdElement (Ocean component).
- *   - CSSStyleSheet replaces Lit css``
- *   - render() returns string
- *   - @click bindings for mobile menu toggle
- *   - Native links; application/router code owns navigation policy
- * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
+ * Behavior boundaries (#995): navigation/locale policy lives in
+ * site-ui/open-layout-navigation.ts, mobile-menu/theme/scroll behaviors in
+ * site-ui/open-layout-behaviors.ts; this class keeps shell structure and slots.
+ * Menu open/close runs through a single delegated document listener via
+ * composedPath(), so DSD upgrade and SPA shadow-root replacement share it.
  *
  * @csspart container - The app-layout root div
  * @csspart header - The sticky header element
@@ -33,94 +32,37 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { defineCustomElement } from '@openelement/element';
+import { defineIslandConfig } from '@openelement/app';
 import { normalizeLocalePath } from '@openelement/app/i18n';
-import { getStr } from './get-str.ts';
+import { getStr } from '../site-ui/get-str.ts';
+import {
+  filterNavSections,
+  type HeaderNavLink,
+  isExternalLayoutUrl,
+  isSafeLayoutUrl,
+  localeSwitchLabel,
+  localeSwitchPath,
+  localeSwitchScopeNote,
+  localizeLayoutPath,
+  mobileSectionRoot,
+  type NavSection,
+} from '../site-ui/open-layout-navigation.ts';
+import {
+  installLayoutScrollState,
+  isMobileMenuToggle,
+  propagateLayoutTheme,
+  setMobileMenuState,
+  shouldDismissMobileMenu,
+} from '../site-ui/open-layout-behaviors.ts';
 import '@openelement/ui/open-theme-toggle';
 
 export const tagName = 'open-layout';
-const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
+export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 const log = createLogger('ui');
 
-function isSafeLayoutUrl(url: string): boolean {
-  const trimmed = url.trim();
-  if (!trimmed) return false;
-  if (trimmed.startsWith('//')) return false;
-  if (
-    trimmed.startsWith('/') ||
-    trimmed.startsWith('#') ||
-    trimmed.startsWith('./') ||
-    trimmed.startsWith('../')
-  ) {
-    return true;
-  }
-  try {
-    const parsed = new URL(trimmed, 'https://openelement.org/');
-    return SAFE_URL_SCHEMES.has(parsed.protocol);
-  } catch {
-    return false;
-  }
-}
-
-/* --- Locale/path helpers: thin wrappers over @openelement/app/i18n --- */
-
-const LOCALE_LABELS: Record<string, string> = { en: '中文', zh: 'English' };
-
-function localizePath(
-  path: string,
-  locale: string,
-  locales: string[],
-  defaultLocale: string,
-): string {
-  if (isSafeLayoutUrl(path) && /^https?:/i.test(path)) return path;
-  if (locale === defaultLocale) return path;
-  return normalizeLocalePath(`/${locale}${path === '/' ? '' : path}`, {
-    locales,
-    defaultLocale,
-  }).localizedPath;
-}
-
-function switchPath(
-  currentPath: string,
-  currentLocale: string,
-  locales: string[],
-  defaultLocale: string,
-): string {
-  const other = locales.find((l) => l !== currentLocale) || currentLocale;
-  const bare = normalizeLocalePath(currentPath, { locales, defaultLocale }).path;
-  return localizePath(bare, other, locales, defaultLocale);
-}
-
-function switchLabel(currentLocale: string): string {
-  return LOCALE_LABELS[currentLocale] || currentLocale;
-}
-
-/**
- * zh coverage is scoped to the guide layer (#749): the switcher states that
- * scope instead of silently implying a fully translated site.
- */
-function switchScopeNote(currentLocale: string): string {
-  return currentLocale === 'zh'
-    ? 'Switch to English'
-    : '中文翻译目前覆盖 Guide 层；其他层的页面仍为英文。';
-}
-
-/** NavItem metadata for the layout render. */
-interface NavItem {
-  path?: string;
-  href?: string;
-  label: string;
-}
-
-interface NavSection {
-  section: string;
-  items: NavItem[];
-}
-
-interface HeaderNavLink {
-  href: string;
-  label: string;
-}
-
+// Shell presentation consumes shared tokens from packages/ui/src/open-props-tokens.ts
+// (the single token source of truth); this sheet holds only shell-structure CSS, so the
+// "shared presentation tokens" boundary stays with the token layer, not this file (#995).
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
   :host {
@@ -646,8 +588,7 @@ export class OpenLayout extends OpenElement {
   }
 
   // Locale path math goes through @openelement/app/i18n (normalizeLocalePath);
-  // the module-level helpers above are localizePath, switchPath, switchLabel,
-  // and switchScopeNote.
+  // Pure locale and navigation policy lives in open-layout-navigation.ts.
 
   private _currentPath(): string {
     // SSR-safe: prefer attribute/prop set by renderDsd over URL detection
@@ -690,20 +631,7 @@ export class OpenLayout extends OpenElement {
 
   /** Auto-filter sidebar sections by current path prefix. */
   private _filterByPath(items: NavSection[]): NavSection[] {
-    const path = this._currentPath();
-    const SECTION_MAP: Record<string, string[]> = {
-      '/guide': ['Quick Start', 'Core', 'Production'],
-      '/architecture': ['Principles', 'Compatibility', 'Reference'],
-      '/registry': ['Registry'],
-      '/hub': ['Registry'],
-      '/blog': ['History'],
-    };
-    for (const [prefix, sections] of Object.entries(SECTION_MAP)) {
-      if (path.startsWith(prefix)) {
-        return items.filter((s) => sections.includes(s.section));
-      }
-    }
-    return items;
+    return filterNavSections(items, this._currentPath());
   }
 
   private _rawNavItems(): NavSection[] {
@@ -827,12 +755,7 @@ export class OpenLayout extends OpenElement {
   }
 
   private _isExternalHref(href: string): boolean {
-    try {
-      const parsed = new URL(href, 'https://openelement.org/');
-      return parsed.origin !== 'https://openelement.org' && SAFE_URL_SCHEMES.has(parsed.protocol);
-    } catch {
-      return false;
-    }
+    return isExternalLayoutUrl(href);
   }
 
   private _localizedSafeHref(href: string | undefined): { href: string; isExternal: boolean } {
@@ -841,7 +764,7 @@ export class OpenLayout extends OpenElement {
     return {
       href: isExternal
         ? safeHref
-        : localizePath(safeHref, this._currentLocale, this._locales, this._defaultLocale),
+        : localizeLayoutPath(safeHref, this._currentLocale, this._locales, this._defaultLocale),
       isExternal,
     };
   }
@@ -856,11 +779,12 @@ export class OpenLayout extends OpenElement {
     const defaultLocale = this._defaultLocale;
     const currentLocale = this._currentLocale;
     const currentPath = this._currentPathWithoutLocale;
-    const langLabel = locales.length > 1 ? switchLabel(currentLocale) : '';
+    const langLabel = locales.length > 1 ? localeSwitchLabel(currentLocale) : '';
     const langHref = locales.length > 1
-      ? switchPath(currentPath, currentLocale, locales, defaultLocale)
+      ? localeSwitchPath(currentPath, currentLocale, locales, defaultLocale)
       : '';
-    const localePath = (path: string) => localizePath(path, currentLocale, locales, defaultLocale);
+    const localePath = (path: string) =>
+      localizeLayoutPath(path, currentLocale, locales, defaultLocale);
 
     return (
       <div className='app-layout' part='container' home={home || undefined}>
@@ -887,7 +811,6 @@ export class OpenLayout extends OpenElement {
                   className='mobile-menu-btn'
                   part='nav-toggle'
                   aria-label='Toggle navigation'
-                  onClick={(event: Event) => this._toggleMenu(event)}
                 >
                   <svg
                     width='18'
@@ -910,8 +833,8 @@ export class OpenLayout extends OpenElement {
                   className='lang-switch'
                   href={langHref}
                   data-nav={langHref}
-                  title={switchScopeNote(currentLocale)}
-                  aria-label={switchScopeNote(currentLocale)}
+                  title={localeSwitchScopeNote(currentLocale)}
+                  aria-label={localeSwitchScopeNote(currentLocale)}
                 >
                   {langLabel}
                 </a>
@@ -1088,19 +1011,13 @@ export class OpenLayout extends OpenElement {
     const mobileLinks = links.slice(0, MOBILE_TAB_LIMIT);
 
     const locs = this._locales;
-    const sectionRoot = (href: string): string => {
-      const segs = href.split('/').filter(Boolean);
-      const start = locs.length > 1 && locs.includes(segs[0]) ? 1 : 0;
-      return segs.length > start + 1 ? '/' + segs[start] : href;
-    };
-
     const rawPath = this._currentPathWithoutLocale;
 
     return (
       <nav className='mobile-tab-bar' aria-label='Quick navigation'>
         {mobileLinks.map((link) => {
           const { href: localized, isExternal } = this._localizedSafeHref(link.href);
-          const root = sectionRoot(link.href);
+          const root = mobileSectionRoot(link.href, locs);
           const isActive = !isExternal &&
             (rawPath === root || rawPath.startsWith(root + '/'));
           return (
@@ -1123,24 +1040,10 @@ export class OpenLayout extends OpenElement {
 
   private _setupScrollDetection(): void {
     if (typeof globalThis.window === 'undefined') return;
-    let ticking: ReturnType<typeof setTimeout> | undefined;
-    const onScroll = () => {
-      if (ticking !== undefined) return;
-      ticking = globalThis.setTimeout(() => {
-        const header = this.shadowRoot?.querySelector('.app-header');
-        if (header) {
-          header.classList.toggle('scrolled', globalThis.scrollY > 0);
-        }
-        ticking = undefined;
-      }, 100);
-    };
-    globalThis.addEventListener('scroll', onScroll, { passive: true });
-    this._scrollCleanup = () => {
-      globalThis.removeEventListener('scroll', onScroll);
-      if (ticking !== undefined) {
-        globalThis.clearTimeout(ticking);
-      }
-    };
+    this._scrollCleanup = installLayoutScrollState(
+      globalThis,
+      () => this.shadowRoot?.querySelector('.app-header'),
+    );
   }
 
   private _teardownScrollDetection(): void {
@@ -1171,6 +1074,9 @@ export class OpenLayout extends OpenElement {
     }
 
     // Listen for theme change events from open-theme-toggle
+    if (this._themeHandler) {
+      globalThis.removeEventListener?.('open:theme-change', this._themeHandler);
+    }
     this._themeHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.theme) {
@@ -1182,15 +1088,13 @@ export class OpenLayout extends OpenElement {
 
     this._propagateTheme((docTheme as 'dark' | 'light') || 'dark');
 
-    if (this.shadowRoot && this.shadowRoot.childNodes.length > 0) {
-      this._setupDetailsToggle();
-    }
-
-    // v0.23.0: Integrated from www/public/mobile-menu.js.
-    // Close mobile menu on backdrop click or sidebar nav link click.
+    // Delegate across the composed path so DSD upgrade and SPA shadow-root
+    // replacement share one stable listener.
+    this._docClickCleanup?.();
     this._docClickCleanup = this._setupBackdropClose();
 
     // Scroll detection for header backdrop blur
+    this._teardownScrollDetection();
     this._setupScrollDetection();
   }
 
@@ -1212,68 +1116,21 @@ export class OpenLayout extends OpenElement {
 
   // --- Mobile menu ---
 
-  // v0.31 UI-shell debt: replace _replaceShadowRootFromLayout with signal-driven SPA nav.
-  // Currently SPA navigation destroys the entire shadow DOM and rebuilds it from
-  // fetched HTML, then manually re-attaches events in _setupDetailsToggle. This is
-  // incompatible with the signal architecture — we should make currentPath/navItems
-  // signals and let data-signal markers handle DOM updates reactively. Then the
-  // _setupDetailsToggle hack (and this entire method) can be deleted.
-  private _menuBtnHandler: ((e: Event) => void) | null = null;
-
-  private _setupDetailsToggle(): void {
-    const btn = this.shadowRoot?.querySelector('.mobile-menu-btn');
-    if (!btn) return;
-    // Remove any stale listener from a previous shadow root.
-    if (this._menuBtnHandler) {
-      btn.removeEventListener('click', this._menuBtnHandler);
-    }
-    this._menuBtnHandler = this._toggleMenu.bind(this);
-    btn.addEventListener('click', this._menuBtnHandler);
-  }
-
   private _toggleMenu(_e: Event): void {
     const isOpen = this.hasAttribute('menu-open');
-    this.toggleAttribute('menu-open', !isOpen);
-    this._syncInert(!isOpen);
-  }
-
-  private _syncInert(menuOpen: boolean): void {
-    const main = this.shadowRoot?.querySelector('.layout-main');
-    if (main) {
-      if (menuOpen) main.setAttribute('inert', '');
-      else main.removeAttribute('inert');
-    }
+    setMobileMenuState(this, !isOpen);
   }
 
   /**
-   * v0.23.0: Integrated from www/public/mobile-menu.js.
-   * Closes mobile menu when backdrop or sidebar nav link is clicked.
-   * Uses composedPath() to detect clicks across shadow DOM boundaries.
+   * Single delegated click listener for the mobile menu: toggles when the
+   * composed path hits .mobile-menu-btn, closes on backdrop or nav link.
+   * composedPath() detects clicks across shadow DOM boundaries.
    */
   private _setupBackdropClose(): () => void {
     const handler = (e: Event) => {
-      const target = e.target;
-      if (!target || !(target instanceof Element)) return;
-
       const path = e.composedPath();
-      let isBackdrop = false;
-      let isNavLink = false;
-
-      for (let i = 0; i < path.length; i++) {
-        const el = path[i] as Element;
-        if (!el?.classList) continue;
-        if (el.classList.contains('mobile-backdrop')) {
-          isBackdrop = true;
-          break;
-        }
-        if (el.tagName === 'A') {
-          isNavLink = true;
-          break;
-        }
-      }
-
-      if (!isBackdrop && !isNavLink) return;
-      this._closeMenu();
+      if (isMobileMenuToggle(path)) this._toggleMenu(e);
+      else if (shouldDismissMobileMenu(path)) this._closeMenu();
     };
 
     document.addEventListener('click', handler);
@@ -1281,27 +1138,16 @@ export class OpenLayout extends OpenElement {
   }
 
   private _closeMenu(): void {
-    this.removeAttribute('menu-open');
-    this._syncInert(false);
+    setMobileMenuState(this, false);
   }
 
   // --- Theme ---
   private _propagateTheme(theme: string): void {
-    const walk = (root: Element | ShadowRoot) => {
-      root.querySelectorAll('*').forEach((el) => {
-        if (el.tagName.includes('-')) {
-          el.setAttribute('data-theme', theme);
-        }
-        if (el.shadowRoot) {
-          walk(el.shadowRoot);
-        }
-      });
-    };
     // Walk light DOM children (slotted page components like the home page and UI showcase)
-    walk(this);
+    propagateLayoutTheme(this, theme);
     // Walk shadow DOM content (internal layout elements)
     if (this.shadowRoot) {
-      walk(this.shadowRoot);
+      propagateLayoutTheme(this.shadowRoot, theme);
     }
   }
 
