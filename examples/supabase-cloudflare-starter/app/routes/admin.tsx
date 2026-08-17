@@ -41,6 +41,9 @@ interface AdminClient {
       count: number | null;
       error: { message: string } | null;
     }>;
+    insert(row: Record<string, unknown>): Promise<{
+      error: { message: string } | null;
+    }>;
   };
   rpc(name: string, body?: Record<string, string>): Promise<{
     data: unknown;
@@ -92,6 +95,17 @@ export function createPaymentReplayAction(
       target_event_id: eventId,
     });
     if (error) return fail(422, { error: error.message });
+    // Append-only audit of the admin-sensitive action (#998): the RLS
+    // "admins append" policy pins actor_id to the caller, and the row carries
+    // ids only — no PII, no secrets. A failed audit write surfaces loudly
+    // instead of leaving an unaudited state change.
+    const audit = await supabase.from('admin_audit').insert({
+      actor_id: user.id,
+      action: 'payment_event_replay_requested',
+      target_type: 'payment_event',
+      target_id: eventId,
+    });
+    if (audit.error) return fail(422, { error: audit.error.message });
     throw redirect('/admin');
   };
 }
@@ -114,6 +128,14 @@ export function createReplayAction(
       dead_letter_id: id,
     });
     if (error) return fail(422, { error: error.message });
+    // Same append-only admin_audit channel as the payment replay above.
+    const audit = await supabase.from('admin_audit').insert({
+      actor_id: user.id,
+      action: 'attachment_scan_replay_requested',
+      target_type: 'attachment_scan_dead_letter',
+      target_id: id,
+    });
+    if (audit.error) return fail(422, { error: audit.error.message });
     throw redirect('/admin');
   };
 }

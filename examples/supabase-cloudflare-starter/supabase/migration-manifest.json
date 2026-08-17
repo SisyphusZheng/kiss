@@ -44,6 +44,10 @@
     {
       "file": "20260817000007_attachment_scan_authorization.sql",
       "sha256": "2e622479d9923cb47a4f6333acf4fccc237618c204a63154ae0bb480ad19e703"
+    },
+    {
+      "file": "20260817000008_admin_audit_writes.sql",
+      "sha256": "aa16b16c8beb2d8be361399fa95cfea979e0f35a231ceb450f1e119786aa0b2f"
     }
   ]
 }
