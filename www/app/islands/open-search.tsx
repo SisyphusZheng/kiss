@@ -22,6 +22,7 @@ import type { VNode } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import { computed, signal } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
+import { stripLocalePrefix } from '@openelement/site-ui/link.ts';
 
 interface SearchEntry {
   path: string;
@@ -302,8 +303,7 @@ export default class OpenSearch extends OpenElement {
 
   /** '/zh/guide/routing-and-data/' -> 'Guide'; '/' -> 'Home'. */
   private _sectionFor(url: string): string {
-    const segments = url.split('/').filter(Boolean);
-    if (segments[0] && /^[a-z]{2}$/.test(segments[0])) segments.shift();
+    const segments = stripLocalePrefix(url).split('/').filter(Boolean);
     const first = segments[0] ?? '';
     return first ? first.charAt(0).toUpperCase() + first.slice(1) : 'Home';
   }

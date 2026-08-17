@@ -25,3 +25,18 @@ export function localizePath(path: string, locale: string): string {
     defaultLocale: SITE_DEFAULT_LOCALE,
   }).localizedPath;
 }
+
+/**
+ * Strip a leading locale segment from a path, recognizing only real site
+ * locales — a bare "two-letter segment" heuristic would silently drop future
+ * sections like `/ui/...` or `/go/...` (#1032).
+ */
+export function stripLocalePrefix(
+  path: string,
+  locales: readonly string[] = SITE_LOCALES,
+): string {
+  return normalizeLocalePath(path, {
+    locales: [...locales],
+    defaultLocale: locales[0] ?? SITE_DEFAULT_LOCALE,
+  }).path;
+}

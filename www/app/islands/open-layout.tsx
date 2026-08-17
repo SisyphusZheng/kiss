@@ -34,7 +34,7 @@ import { createLogger } from '@openelement/element';
 import { defineCustomElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import { normalizeLocalePath } from '@openelement/app/i18n';
-import { getStr } from '../site-ui/get-str.ts';
+import { getBool, getStr } from '../site-ui/get-str.ts';
 import {
   filterNavSections,
   type HeaderNavLink,
@@ -580,15 +580,9 @@ export class OpenLayout extends OpenElement {
     return this._renderLayout();
   }
 
-  private _getBool(attr: string): boolean {
-    const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    const prop = (this as Record<string, unknown>)[camel];
-    if (typeof prop === 'boolean') return prop;
-    return this.hasAttribute(attr);
-  }
-
   // Locale path math goes through @openelement/app/i18n (normalizeLocalePath);
   // Pure locale and navigation policy lives in open-layout-navigation.ts.
+  // Prop-first boolean reads use getBool from get-str.ts.
 
   private _currentPath(): string {
     // SSR-safe: prefer attribute/prop set by renderDsd over URL detection
@@ -772,7 +766,7 @@ export class OpenLayout extends OpenElement {
   // --- Main render ---
 
   private _renderLayout() {
-    const home = this._getBool('full-width') || this._getBool('home');
+    const home = getBool(this, 'full-width') || getBool(this, 'home');
     const noSearch = this.hasAttribute('no-search');
     const logoSub = getStr(this, 'logo-sub', '');
     const locales = this._locales;

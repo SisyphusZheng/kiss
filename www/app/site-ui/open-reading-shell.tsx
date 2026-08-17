@@ -1,6 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW long-form reading shell. */
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
+import { getJson, getStr } from './get-str.ts';
 import type { ReadingMetadata, ReadingNavigation } from './page-contract.ts';
 
 /** Optional v4 editorial accent rendered in Instrument Serif after the title. */
@@ -43,27 +44,13 @@ sheet.replaceSync(`
 `);
 export default class OpenReadingShell extends OpenElement {
   static override styles = [sheet];
-  #value(name: string): string | null {
-    const property = Reflect.get(this, name);
-    return typeof property === 'string' ? property : this.getAttribute(name);
-  }
-  #json<T>(name: string): T | null {
-    const raw = this.#value(name);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as T;
-    } catch {
-      return null;
-    }
-  }
   override render() {
-    const metadata = this.#json<ReadingMetadataV4>('metadata');
-    const navigation = this.#json<ReadingNavigation>('navigation');
-    const previous = navigation?.previous?.href ?? this.#value('previous');
-    const next = navigation?.next?.href ?? this.#value('next');
-    const previousLabel = navigation?.previous?.label ?? this.#value('previous-label') ??
-      'Previous';
-    const nextLabel = navigation?.next?.label ?? this.#value('next-label') ?? 'Next';
+    const metadata = getJson<ReadingMetadataV4>(this, 'metadata');
+    const navigation = getJson<ReadingNavigation>(this, 'navigation');
+    const previous = navigation?.previous?.href ?? getStr(this, 'previous', '');
+    const next = navigation?.next?.href ?? getStr(this, 'next', '');
+    const previousLabel = navigation?.previous?.label ?? getStr(this, 'previous-label', 'Previous');
+    const nextLabel = navigation?.next?.label ?? getStr(this, 'next-label', 'Next');
     return (
       <div class='shell'>
         <article class='main'>
