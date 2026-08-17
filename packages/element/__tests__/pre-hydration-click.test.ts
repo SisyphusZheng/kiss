@@ -3,8 +3,9 @@
  *
  * Pins the capture/replay contract for clicks that land in the hydration
  * window (island module not yet loaded): recorded against the host found in
- * the composed path, replayed exactly once per recorded event after the host
- * hydrates, never re-recorded after flush, and inert outside island subtrees.
+ * the composed path, only the latest click per host is kept and replayed
+ * exactly once after the host hydrates (#1027), never re-recorded after
+ * flush, and inert outside island subtrees.
  *
  * Runs without a DOM: `document` is stubbed per test and the module's
  * runtime duck-typing is exercised by plain-object fakes.
@@ -168,18 +169,19 @@ Deno.test('clicks after flush are not recorded or replayed', () => {
   });
 });
 
-Deno.test('multiple pre-hydration clicks replay in order, each once', () => {
+Deno.test('multiple pre-hydration clicks replay only the latest click once (#1027)', () => {
   withStubDocument(() => {
     ensurePreHydrationClickCapture();
     const host = markerHost();
-    const events = { n: 0 };
-    const button = fakeTarget(events);
-    for (let i = 0; i < 3; i++) {
+    const counts = [{ n: 0 }, { n: 0 }, { n: 0 }];
+    const buttons = counts.map((count) => fakeTarget(count));
+    for (const button of buttons) {
       captured.captureHandler?.(fakeEvent(button, [button, host]));
     }
-    assertEquals(events.n, 0);
     flushPendingClicks(host as unknown as Element);
-    assertEquals(events.n, 3);
+    assertEquals(counts[0].n, 0, 'earlier clicks are superseded, not queued');
+    assertEquals(counts[1].n, 0, 'earlier clicks are superseded, not queued');
+    assertEquals(counts[2].n, 1, 'only the latest click replays, exactly once');
   });
 });
 
@@ -242,13 +244,10 @@ Deno.test(
   },
 );
 
-Deno.test('a throwing replay target does not starve the rest of the queue', () => {
+Deno.test('a throwing replay target does not break the flush', () => {
   withStubDocument(() => {
     ensurePreHydrationClickCapture();
     const host = markerHost();
-    const first = { n: 0 };
-    const third = { n: 0 };
-    const goodBefore = fakeTarget(first);
     const bad: FakeElementLike = {
       nodeType: 1,
       hasAttribute: () => false,
@@ -256,13 +255,11 @@ Deno.test('a throwing replay target does not starve the rest of the queue', () =
         throw new Error('target boom');
       },
     };
-    const goodAfter = fakeTarget(third);
-    captured.captureHandler?.(fakeEvent(goodBefore, [goodBefore, host]));
     captured.captureHandler?.(fakeEvent(bad, [bad, host]));
-    captured.captureHandler?.(fakeEvent(goodAfter, [goodAfter, host]));
 
+    // The throw is contained: flush completes and the host stays flushed,
+    // so a second flush has nothing left to replay.
     flushPendingClicks(host as unknown as Element);
-    assertEquals(first.n, 1, 'target before the throwing one replayed');
-    assertEquals(third.n, 1, 'target after the throwing one still replayed');
+    flushPendingClicks(host as unknown as Element);
   });
 });
