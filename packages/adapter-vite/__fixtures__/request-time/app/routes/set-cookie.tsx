@@ -1,9 +1,8 @@
 /**
- * /set-cookie — spike probe (epic #981): can an action write a Set-Cookie
- * header through the request-time entry on the Nitro cloudflare_module
- * output? ADR-0121 forbids returning a Response from an action; this route
- * exists so tools/fullstack-spike-workers.ts records the framework's actual
- * behavior on the generated entry.
+ * /set-cookie — edge-case probe: an action that returns a raw `Response`
+ * (bypassing the ADR-0121 channel contract) with a Set-Cookie header on the
+ * request-time entry. Documents the framework's actual behavior on the
+ * generated entry.
  */
 import { definePage } from '@openelement/app';
 

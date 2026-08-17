@@ -93,9 +93,12 @@ export function generateSitemap(distDir: string, options: SitemapOptions): strin
   // Scan for index.html files
   const htmlPaths = scanHtmlFiles(resolvedDist);
 
-  // Filter excluded paths
+  // Filter excluded paths. A pattern matches the path itself or a path
+  // below it — excluding `/blog` must not also exclude `/blogroll` (#1039).
   const includedPaths = htmlPaths.filter((path) => {
-    return !exclude.some((pattern) => path.startsWith(pattern) || path === pattern);
+    return !exclude.some((pattern) =>
+      path === pattern || path.startsWith(pattern.endsWith('/') ? pattern : `${pattern}/`)
+    );
   });
 
   // Build SitemapUrl[]
@@ -110,7 +113,7 @@ export function generateSitemap(distDir: string, options: SitemapOptions): strin
 
   // Write sitemap.xml
   const sitemapPath = join(resolvedDist, 'sitemap.xml');
-  writeFileSync(sitemapPath, renderSitemapXml(urls), { encoding: 'utf-8', mode: 0o600 });
+  writeFileSync(sitemapPath, renderSitemapXml(urls), { encoding: 'utf-8', mode: 0o644 });
   log.info(`Sitemap: ${urls.length} URL(s) written to sitemap.xml`);
 
   const generated: string[] = [sitemapPath];
@@ -118,7 +121,7 @@ export function generateSitemap(distDir: string, options: SitemapOptions): strin
   // Optionally write robots.txt
   if (options.robotsTxt !== false) {
     const robotsPath = join(resolvedDist, 'robots.txt');
-    writeFileSync(robotsPath, renderRobotsTxt(hostname), { encoding: 'utf-8', mode: 0o600 });
+    writeFileSync(robotsPath, renderRobotsTxt(hostname), { encoding: 'utf-8', mode: 0o644 });
     generated.push(robotsPath);
     log.info('robots.txt generated');
   }

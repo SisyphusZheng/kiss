@@ -38,7 +38,7 @@ import {
   ssgRender,
 } from '../internal/ssg/index.ts';
 import { SsrRenderError } from '@openelement/element/build-utils';
-import { createLogger } from '@openelement/element';
+import { createLogger, formatError } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import {
   createGeneratedDataResolverPlugin,
@@ -472,7 +472,7 @@ async function buildSSG(
 
     log.info('Static site generated -> ' + join(root, outDir));
   } catch (err) {
-    const cause = err instanceof Error ? err : new Error(String(err));
+    const cause = err instanceof Error ? err : new Error(formatError(err));
     throw new SsrRenderError('SSG pipeline', cause);
   }
 }

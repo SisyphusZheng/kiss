@@ -40,6 +40,7 @@ import { scanRoutes } from './internal/ssg/index.ts';
 import { dirname, join, posix, sep, win32 } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { DEFAULT_ROUTES_DIR } from './internal/paths.ts';
+import { quoteGeneratedJavaScriptValue } from './internal/ssg/codegen-literals.ts';
 
 /**
  * Parameters for route manifest generation.
@@ -68,7 +69,12 @@ async function generateRouteManifest(
   const entries = pageRoutes.map((r) => {
     const absFilePath = join(routesDir, r.filePath);
     const importPath = relativeToOutput(absFilePath, manifestDir);
-    return `  '${r.path}': () => import('${importPath}')`;
+    // Route paths and file names are interpolated into generated code, so
+    // they go through the shared JS-literal quoting (a `'` in a file name
+    // must not break the manifest's syntax, #1039).
+    return `  ${quoteGeneratedJavaScriptValue(r.path)}: () => import(${
+      quoteGeneratedJavaScriptValue(importPath)
+    })`;
   });
 
   if (entries.length === 0) {

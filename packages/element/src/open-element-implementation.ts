@@ -424,8 +424,6 @@ export class OpenElement extends _Base {
   /**
    * Hydrate DSD DOM with signal and event bindings.
    *
-   * v0.28 (ADR-0067): Replaces _walkAndBind position matching.
-   *
    * Implementation lives in open-element-hydration.ts.
    */
   private _hydrateExistingDom(): void {
@@ -516,8 +514,7 @@ export class OpenElement extends _Base {
     themeManager.disconnect(this);
   }
 
-  // v0.28 (ADR-0067): Effect + event lifecycle managed by HydrationScope.
-  // _walkAndBind DELETED — replaced by _hydrateExistingDom().
+  // Effect + event lifecycle managed by HydrationScope (ADR-0067).
 
   /**
    * Lifecycle: called when an observed attribute changes.

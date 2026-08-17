@@ -97,6 +97,15 @@ function isExcludedEntry(filePath: string, exclude: string[]): boolean {
 }
 
 /**
+ * True for the 404 page route file. Exact basename match — a substring
+ * match would also drop files like rfc-4040.tsx (#1039).
+ */
+function is404Entry(filePath: string): boolean {
+  const base = filePath.split('/').pop() ?? filePath;
+  return base.replace(/\.[^.]+$/, '') === '404';
+}
+
+/**
  * Scan route files and aggregate NavSection[].
  *
  * Reuses the SSG route scanner so route discovery, index handling, and dynamic
@@ -106,11 +115,6 @@ function isExcludedEntry(filePath: string, exclude: string[]): boolean {
 export async function scanNavData(options: NavOptions): Promise<NavSection[]> {
   const routesDir = resolve(options.routesDir ?? DEFAULT_ROUTES_DIR);
   const exclude = options.exclude || [];
-
-  // Default excludes: 404. Files starting with _ and dot-files are already
-  // skipped by the shared route scanner.
-  const defaultExclude = ['404'];
-  const allExclude = [...defaultExclude, ...exclude];
 
   if (!existsSync(routesDir)) {
     log.warn(`Routes directory not found: ${routesDir}`);
@@ -130,7 +134,10 @@ export async function scanNavData(options: NavOptions): Promise<NavSection[]> {
 
   for (const entry of entries) {
     if (entry.type !== 'page') continue;
-    if (isExcludedEntry(entry.filePath, allExclude)) continue;
+    // Default exclusion: the 404 page (exact match, #1039). Files starting
+    // with _ and dot-files are already skipped by the shared route scanner.
+    if (is404Entry(entry.filePath)) continue;
+    if (isExcludedEntry(entry.filePath, exclude)) continue;
 
     const source = entry.source;
     if (!source) {

@@ -108,7 +108,10 @@ export function createIslandScheduler(deps: IslandSchedulerDeps): IslandSchedule
 
   // client:visible islands - load when their element enters viewport
   const visibleTags = strategies.visible;
-  const observedEls: Element[] = [];
+  // Element -> observer, so a detached island can be released (it can never
+  // intersect again) and a remove/reinsert before intersection is re-observed
+  // instead of being skipped forever (#1039).
+  const observedEls = new Map<Element, IntersectionObserver>();
 
   function queryAllDeep(root: ParentNode, tag: string, out: Element[]): void {
     // Islands live inside page-element shadow roots; a plain
@@ -129,6 +132,16 @@ export function createIslandScheduler(deps: IslandSchedulerDeps): IslandSchedule
       dispatchReady('visible', visibleTags);
       return;
     }
+    // Release detached islands before scanning: their observers can never
+    // fire again, and keeping them referenced leaks the whole subtree.
+    // isConnected is compared strictly so non-DOM test doubles (which do
+    // not implement it) are left alone.
+    for (const [el, obs] of observedEls) {
+      if (el.isConnected === false) {
+        obs.disconnect();
+        observedEls.delete(el);
+      }
+    }
     visibleTags.forEach((tag) => {
       if (!map[tag]) return;
       const els: Element[] = [];
@@ -136,8 +149,7 @@ export function createIslandScheduler(deps: IslandSchedulerDeps): IslandSchedule
       els.forEach((el) => {
         // Re-observable after a morph: a replaced island is a new element and
         // gets a fresh observer (#562).
-        if (observedEls.indexOf(el) !== -1) return;
-        observedEls.push(el);
+        if (observedEls.has(el)) return;
         const Observer = win.IntersectionObserver;
         const obs = new Observer((entries) => {
           entries.forEach((entry) => {
@@ -145,9 +157,11 @@ export function createIslandScheduler(deps: IslandSchedulerDeps): IslandSchedule
               load(tag);
               dispatchReady('visible', [tag]);
               obs.disconnect();
+              observedEls.delete(el);
             }
           });
         }, { rootMargin: '200px' });
+        observedEls.set(el, obs);
         obs.observe(el);
       });
     });

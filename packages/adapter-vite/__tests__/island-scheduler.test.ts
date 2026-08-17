@@ -221,3 +221,66 @@ Deno.test('#584 onIslandLoaded runs (macrotask-deferred) after an island module 
   timeouts[0]();
   assertEquals(calls, ['import', 'rescan']);
 });
+
+Deno.test('#1039 detached visible island is released and a reinsert gets a fresh observer', () => {
+  const readyEvents: ReadyEvent[] = [];
+  const observed: FakeElement[] = [];
+  const disconnected: FakeIO[] = [];
+  class FakeIO {
+    static instances: FakeIO[] = [];
+    cb: (entries: { isIntersecting: boolean }[]) => void;
+    constructor(cb: (entries: { isIntersecting: boolean }[]) => void) {
+      this.cb = cb;
+      FakeIO.instances.push(this);
+    }
+    observe(el: FakeElement): void {
+      observed.push(el);
+    }
+    disconnect(): void {
+      disconnected.push(this);
+    }
+    intersect(): void {
+      this.cb([{ isIntersecting: true }]);
+    }
+  }
+
+  const page = new FakeElement('body');
+  const island = new FakeElement('x-vis') as FakeElement & { isConnected?: boolean };
+  page.children.push(island);
+
+  let loaded = 0;
+  const scheduler = createIslandScheduler({
+    log: { warn: () => {} },
+    win: makeWin({ IntersectionObserver: FakeIO }),
+    doc: makeDoc(page, readyEvents),
+    map: {
+      'x-vis': () => {
+        loaded++;
+        return Promise.resolve();
+      },
+    },
+    strategies: STRATEGIES({ visible: ['x-vis'] }),
+    onIslandLoaded: null,
+  });
+  assertEquals(observed, [island]);
+  assertEquals(FakeIO.instances.length, 1);
+
+  // The island leaves the DOM before ever intersecting: its observer can
+  // never fire again, so it must be released (not pinned forever).
+  island.isConnected = false;
+  page.children.length = 0;
+  scheduler.observeVisible();
+  assertEquals(disconnected.length, 1);
+  assertEquals(FakeIO.instances.length, 1);
+
+  // Reinserted before intersection: a fresh observer is attached so the
+  // island still loads when it scrolls into view.
+  island.isConnected = true;
+  page.children.push(island);
+  scheduler.observeVisible();
+  assertEquals(FakeIO.instances.length, 2);
+  assertEquals(observed, [island, island]);
+  FakeIO.instances[1].intersect();
+  assertEquals(loaded, 1);
+  assertEquals(readyEvents, [{ strategy: 'visible', islands: ['x-vis'] }]);
+});

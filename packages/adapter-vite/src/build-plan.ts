@@ -5,6 +5,7 @@ import type { OpenElementBuildContext } from './build-context.ts';
 import { fsPathToModuleSpecifier } from './internal/ssg/module-specifier.ts';
 import { resolveIslandHydrate } from './internal/ssg/island-scanner.ts';
 import { formatJson } from '@openelement/element/build-utils';
+import { formatError } from '@openelement/element';
 import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from './internal/paths.ts';
 import { walkFileEntries } from './internal/html-files.ts';
 
@@ -130,7 +131,7 @@ export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
       manifest: { routes: [], islands: plan.islands },
       clientAssets: [],
       warnings: [],
-      errors: [error instanceof Error ? error.message : String(error)],
+      errors: [formatError(error)],
       success: false,
     };
   }
