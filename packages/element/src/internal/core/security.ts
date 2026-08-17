@@ -44,6 +44,18 @@ export function isDangerousKey(key: string): boolean {
 }
 
 /**
+ * Shared safe-attribute-name predicate (#1033). Attribute *names* are not
+ * escaped on any render path, so a name must be a valid HTML attribute name
+ * (blocks quote/space injection, #602) and must not be an event handler
+ * (`on*`, case-insensitive). render-ir.ts (silent skip) and adapter-vite
+ * head-injection.ts (throw) enforce the same rule with different failure
+ * strategies; both delegate here so the boundary cannot diverge.
+ */
+export function isSafeAttributeName(name: string): boolean {
+  return /^[a-zA-Z_:][\w:.-]*$/.test(name) && !/^on/i.test(name);
+}
+
+/**
  * Mark caller-supplied HTML as trusted before injection into a DOM/string render path.
  *
  * `trustedHtml` is an explicit trust boundary, not a sanitizer. Core escapes

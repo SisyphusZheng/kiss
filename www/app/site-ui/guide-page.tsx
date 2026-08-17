@@ -12,6 +12,7 @@ import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/eleme
 import { pageStyles } from '../components/page-styles.js';
 import { serializeOutline } from './page-contract.ts';
 import { contentLocale } from './locale.ts';
+import { localizePath } from './link.ts';
 import '@openelement/ui/open-card';
 
 type GuideNav = Readonly<{ href: string; label: string }>;
@@ -138,14 +139,18 @@ export class GuidePage extends OpenElement {
 
   override render() {
     const t = this._t;
+    // Prev/next and full-page hrefs are authored unprefixed in the content
+    // records; localize them so zh guide pages stay inside the zh tree (#1031).
+    const locale = this._getLocale('en');
+    const navHref = (href: string | undefined) => href ? localizePath(href, locale) : undefined;
     return (
       <open-reading-shell
         rail
         footer
         metadata={JSON.stringify({ breadcrumb: t.breadcrumb, title: t.title, lede: t.lede })}
-        previous={t.previous?.href}
+        previous={navHref(t.previous?.href)}
         previous-label={t.previous?.label}
-        next={t.next?.href}
+        next={navHref(t.next?.href)}
         next-label={t.next?.label}
       >
         <open-page-rail slot='rail' items={serializeOutline(t.outline)}></open-page-rail>
@@ -162,7 +167,8 @@ export class GuidePage extends OpenElement {
           {t.fullPage
             ? (
               <p class='full-guide'>
-                {t.fullPage.note} <a href={t.fullPage.href}>{t.fullPage.label}</a>
+                {t.fullPage.note}{' '}
+                <a href={localizePath(t.fullPage.href, locale)}>{t.fullPage.label}</a>
               </p>
             )
             : null}

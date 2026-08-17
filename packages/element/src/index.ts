@@ -67,6 +67,10 @@ export { escapeAttr, escapeHtml } from './internal/core/index.ts';
 
 export { trustedHtml } from './internal/core/index.ts';
 
+// ─── Security predicates (re-export from core) ───────────────────
+
+export { isSafeAttributeName } from './internal/core/security.ts';
+
 // ─── Island utilities (re-export from core) ──────────────
 
 export {

@@ -12,7 +12,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "90dc02eec71752f2b342abe786e16cbda0f150690085244bd114c048ca479280",
+          "sha256": "61abf3fe6dbfdfc116c0e4a2f412d9f60211e615848ed7202ab3fdb4bd932c5f",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -114,6 +114,7 @@
             "formatError",
             "getSsrProps",
             "hydrateOpenElement",
+            "isSafeAttributeName",
             "isVNode",
             "isValidTagName",
             "jsx",
