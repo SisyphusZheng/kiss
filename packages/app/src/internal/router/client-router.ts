@@ -563,6 +563,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
   async function commitNavigation(
     path: string,
     navOptions: { replace: boolean; depth?: number; restoreOnBlock?: boolean },
+    ticket?: number,
   ): Promise<void> {
     const depth = navOptions.depth ?? 0;
     if (depth > MAX_GUARD_REDIRECTS) {
@@ -576,6 +577,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
     const matched = routeMatcher.match(u.pathname, u.search);
     if (matched?.route.guard) {
       const result = await matched.route.guard();
+      // Latest-wins (#1023): a newer programmatic navigation already owns the
+      // outcome; a superseded guard resolution must not push state.
+      if (ticket !== undefined && ticket !== programmaticNavigationSeq) return;
       if (result === false) {
         if (navOptions.restoreOnBlock) {
           // Browser-driven navigation already landed on this URL (via a guard
@@ -590,10 +594,11 @@ export function createRouter(options: RouterOptions): RouterInstance {
           replace: navOptions.replace,
           depth: depth + 1,
           restoreOnBlock: navOptions.restoreOnBlock,
-        });
+        }, ticket);
       }
     }
 
+    if (ticket !== undefined && ticket !== programmaticNavigationSeq) return;
     const url = mode === 'hash' ? toHashUrl(path) : path;
     if (navOptions.replace) {
       history.replaceState(null, '', url);
@@ -604,12 +609,17 @@ export function createRouter(options: RouterOptions): RouterInstance {
     notifyChange();
   }
 
+  // Latest-wins sequencing for programmatic navigations (#1023): guards are
+  // async, so without ordering a slow guard from an earlier navigate() would
+  // commit after a newer navigation and roll the UI back to the stale intent.
+  let programmaticNavigationSeq = 0;
+
   function navigate(path: string): Promise<void> {
-    return commitNavigation(path, { replace: false });
+    return commitNavigation(path, { replace: false }, ++programmaticNavigationSeq);
   }
 
   function replace(path: string): Promise<void> {
-    return commitNavigation(path, { replace: true });
+    return commitNavigation(path, { replace: true }, ++programmaticNavigationSeq);
   }
 
   /**
