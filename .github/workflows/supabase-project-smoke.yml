@@ -373,9 +373,11 @@ jobs:
             deno run -A tools/smoke-supabase-browser.ts
 
       - name: Delete the throwaway test users (Auth admin API)
+        id: cleanup-users
         # Cleanup guarantee: runs even when the matrix above fails, so the
         # real project never accumulates smoke users. The seeded note is
-        # removed by the notes table's ON DELETE CASCADE.
+        # removed by the notes table's ON DELETE CASCADE. The report step
+        # records this step's outcome as the artifact's cleanup field.
         if: always()
         run: |
           if [ ! -f .smoke/smoke.env ]; then
@@ -423,16 +425,22 @@ jobs:
           jq -n \
             --arg version "$(git rev-parse --short HEAD)" \
             --arg runId "${{ github.run_id }}" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg environment "supabase-real-project" \
             --arg status "${{ job.status }}" \
             --arg migrationMode "${{ inputs.migration_mode || 'skip' }}" \
             --arg manifestSha "$(sha256sum examples/supabase-cloudflare-starter/supabase/migration-manifest.json | cut -d' ' -f1)" \
+            --arg cleanup "${{ steps.cleanup-users.outcome || 'not-run' }}" \
             --argjson matrix "$matrix" \
             '{
               version: $version,
               runId: $runId,
+              timestamp: $timestamp,
+              environment: $environment,
               jobStatus: $status,
               migrationMode: $migrationMode,
               migrationManifestSha256: $manifestSha,
+              cleanup: $cleanup,
               matrix: $matrix,
               note: "tier-2 real-project qualification; redacted — no credentials, emails, or user ids in this report"
             }' > supabase-project-smoke.json
