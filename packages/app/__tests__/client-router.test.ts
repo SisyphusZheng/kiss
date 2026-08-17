@@ -623,3 +623,44 @@ Deno.test('hashchange runs the guard and restores the previous hash entry when b
     browser.restore();
   }
 });
+
+Deno.test('programmatic navigations are latest-wins: a slow stale guard cannot roll back a newer navigation (#1023)', async () => {
+  const browser = installFakeBrowser('/start');
+  let releaseGuard!: () => void;
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/start', tagName: 'start-page' },
+      {
+        path: '/guarded',
+        tagName: 'guarded-page',
+        guard: () =>
+          new Promise<boolean>((resolve) => {
+            releaseGuard = () => resolve(true);
+          }),
+      },
+      { path: '/newer', tagName: 'newer-page' },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    // First navigation suspends in its async guard.
+    const stale = router.navigate('/guarded');
+    // A newer navigation commits while the first guard is still pending.
+    await router.navigate('/newer');
+    assertEquals(router.currentPath, '/newer');
+    // The stale guard resolves afterwards: it must not push state or rematch.
+    releaseGuard();
+    await stale;
+    assertEquals(router.currentPath, '/newer');
+    assertEquals(browser.path(), '/newer');
+    assertEquals(browser.applied, ['/newer']);
+    assertEquals(events, ['change']);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
