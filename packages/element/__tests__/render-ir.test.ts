@@ -429,3 +429,23 @@ Deno.test('raw-text elements serialize text children verbatim (#932)', async () 
   );
   assertEquals(mixed, `<div><style>a > b</style>text &gt; escaped</div>`);
 });
+
+Deno.test('SSR sourceInfo route/source attributes are HTML-escaped (#1026)', async () => {
+  class OkComponent {
+    render() {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+
+  const output = await renderDsd('x-source-info', {
+    componentClass: OkComponent as unknown as CustomElementConstructor,
+    sourceInfo: {
+      route: 'routes/evil"><script>alert(1)</script>.tsx',
+      source: "src/it's a <route>/file.tsx",
+    },
+  });
+
+  assertStringIncludes(output.html, 'route="routes/evil&quot;&gt;&lt;script&gt;');
+  assertStringIncludes(output.html, 'source="src/it&#39;s a &lt;route&gt;/file.tsx"');
+  assertEquals(output.html.includes('"><script>'), false);
+});

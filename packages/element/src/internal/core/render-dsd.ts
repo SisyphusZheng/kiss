@@ -321,8 +321,8 @@ export async function renderDsd(
   }
   const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
   const sourceStr = options.sourceInfo
-    ? `${options.sourceInfo.route ? ` route="${options.sourceInfo.route}"` : ''}${
-      options.sourceInfo.source ? ` source="${options.sourceInfo.source}"` : ''
+    ? `${options.sourceInfo.route ? ` route="${escapeAttrValue(options.sourceInfo.route)}"` : ''}${
+      options.sourceInfo.source ? ` source="${escapeAttrValue(options.sourceInfo.source)}"` : ''
     }`
     : '';
 
