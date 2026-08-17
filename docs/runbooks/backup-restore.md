@@ -53,6 +53,6 @@ machines:
 
 ## Drill log
 
-| Date | Operator | Scope | Result / gaps |
-| ---- | -------- | ----- | ------------- |
-| _pending — first drill not yet run_ | | | |
+| Date                                | Operator | Scope | Result / gaps |
+| ----------------------------------- | -------- | ----- | ------------- |
+| _pending — first drill not yet run_ |          |       |               |
