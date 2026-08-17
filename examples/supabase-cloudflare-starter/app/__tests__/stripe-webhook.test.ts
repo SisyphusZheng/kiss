@@ -232,7 +232,10 @@ Deno.test('Stripe webhook logs correlate by event id and never leak payload or s
     )({ request: post(`t=${now},v1=${valid}`), env });
     assertEquals(accepted.status, 200);
 
-    const rejected = await createStripeWebhook()({ request: post(`t=${now},v1=${'0'.repeat(64)}`), env });
+    const rejected = await createStripeWebhook()({
+      request: post(`t=${now},v1=${'0'.repeat(64)}`),
+      env,
+    });
     assertEquals(rejected.status, 400);
 
     const notDurable = await createStripeWebhook(() =>
