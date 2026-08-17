@@ -473,6 +473,65 @@ The anon key in the data attributes is public by design; row visibility stays
 enforced by RLS plus the hard filter, and no service-role key ever reaches this
 bundle (the tier-1 gate scans for exactly that).
 
+## Rate limits: two independent layers
+
+Auth abuse control in the reference starter is two layers that fail
+independently; neither substitutes for the other (#998).
+
+**Layer 1 — Supabase hosted Auth (GoTrue).** Supabase rate-limits the auth
+endpoints themselves, project-side, so direct API abuse that bypasses the
+worker is still bounded. Hosted defaults (verified against
+[the official rate-limit reference](https://supabase.com/docs/guides/auth/rate-limits),
+2026-08-17) use a token bucket with up to 30 burst requests; sustained excess
+answers `429 Too Many Requests`:
+
+| Endpoint                                                  | Limited by       | Hosted default                           | Customizable          |
+| --------------------------------------------------------- | ---------------- | ---------------------------------------- | --------------------- |
+| Email sends (`/signup`, `/recover`, `/user` email change) | project-wide sum | 2 emails/hour with the built-in provider | only with custom SMTP |
+| OTP sends (`/otp`)                                        | project-wide sum | 30/hour                                  | yes                   |
+| OTP / magic-link / signup-confirm / recovery resend       | per user         | 60 s window                              | yes                   |
+| `/verify`                                                 | IP               | 360/hour                                 | no                    |
+| Token refresh (`/token`)                                  | IP               | 1800/hour                                | no                    |
+| MFA challenge/verify                                      | IP               | 15/hour                                  | no                    |
+| Anonymous sign-ins                                        | IP               | 30/hour                                  | no                    |
+
+Configure hosted limits in **Dashboard → Authentication → Rate Limits** or via
+the Management API (`GET/PATCH /v1/projects/{ref}/config/auth`,
+`rate_limit_*` keys). The `[auth.rate_limit]` section of
+`supabase/config.toml` (`email_sent`, `sms_sent`, `anonymous_users`,
+`token_refresh`, `sign_in_sign_ups`, `token_verifications`) configures only
+the **local emulator** — and its CLI defaults differ from hosted values
+(e.g. `token_refresh` 150 locally vs 1800 hosted) — so never read local
+values as production truth.
+
+**Layer 2 — Cloudflare `AUTH_RATE_LIMITER`.** The worker binding
+(`wrangler.jsonc`: 10 requests per 60 s) sits in front of the app's own auth
+actions; `lib/rate-limit.ts` keys `scope:cf-connecting-ip` and every
+credential-entry action (`signup`, `magic-link`, `login` — including the
+named `oauth` action — `recovery`) consults it before touching Supabase. A
+denial answers the app's own `fail(429, 'too many attempts; retry later')`
+with no provider round-trip. The binding **fails closed**: a limiter outage
+denies rather than opening an unlimited auth endpoint. Absence of the binding
+is the explicit local/test path — never present a process-local `Map` as a
+production limiter (see the [rate-limit recipe](./rate-limit.md) for the
+middleware-level demo that is deliberately not this).
+
+**What a trigger looks like.** Layer 2 first: repeated posts from one IP get
+the app's stable 429 page/JSON. If layer 1 trips (e.g. project-wide email
+budget exhausted), the Supabase call inside the action errors and the user
+gets the sanitized 422 (`publicAuthError`) — provider internals never echo;
+operators see the real 429 in Supabase Auth logs.
+
+**Monitoring.** Supabase: Dashboard → Logs → Auth for 429s and
+`Get current rate limits` via the Management API above to audit drift.
+Cloudflare: the Rate Limiting analytics for the binding and `wrangler tail`
+for worker-side denials. One structural caveat: the starter calls Supabase
+with the publishable anon key from shared worker egress IPs, so Supabase's
+per-IP buckets see aggregate edge traffic, and `Sb-Forwarded-For` (which
+requires a secret key) is not available on this path — the Cloudflare layer
+is what restores per-client-IP granularity; watch Auth logs for egress-IP
+429s as traffic grows.
+
 ## Verification evidence
 
 - **Tier 1 (every PR, no credentials):** `deno task
