@@ -8,6 +8,7 @@ import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { posts } from '@openelement/generated/blog-data';
 import { mastheadStyles } from '../../components/page-styles.js';
+import { localizePath } from '@openelement/site-ui/link.ts';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
@@ -225,6 +226,7 @@ export class BlogIndexPage extends OpenElement {
   override render() {
     const featured = visiblePosts[0];
     const rows = visiblePosts.slice(1, 5);
+    const locale = this._getLocale('en');
 
     return (
       <main class='journal'>
@@ -238,7 +240,7 @@ export class BlogIndexPage extends OpenElement {
         </header>
 
         {featured && (
-          <a class='featured' href={'/blog/' + featured.slug}>
+          <a class='featured' href={localizePath('/blog/' + featured.slug, locale)}>
             <p class='featured-kicker'>
               <span>
                 Featured — {featured.frontmatter.date}
@@ -256,7 +258,7 @@ export class BlogIndexPage extends OpenElement {
 
         <section class='stream' aria-label='Recent dispatches'>
           {rows.map((post, index) => (
-            <a class='row' href={'/blog/' + post.slug}>
+            <a class='row' href={localizePath('/blog/' + post.slug, locale)}>
               <span class='row-index' aria-hidden='true'>{padIndex(index)}</span>
               <div>
                 <span class='row-title'>{post.frontmatter.title}</span>

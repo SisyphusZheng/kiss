@@ -66,3 +66,41 @@ Deno.test('build output: client island JS stays within core budget and ships no 
     `Core client island JS total ${coreKB.toFixed(1)}KB exceeds 700KB limit`,
   );
 });
+
+Deno.test('build output: zh pages keep in-content links inside the zh tree (#1031)', () => {
+  assert(existsSync(DIST), `Build output is missing: ${DIST}`);
+  const zhDir = join(DIST, 'zh');
+  assert(existsSync(zhDir), `zh build output is missing: ${zhDir}`);
+
+  // Scope: the pages whose in-content links are authored in route components —
+  // the blog index, the docs index, and every guide page. Blog post *bodies*
+  // come from locale-shared markdown and are intentionally out of scope.
+  const targets = [join(zhDir, 'blog', 'index.html'), join(zhDir, 'docs', 'index.html')];
+  const guideDir = join(zhDir, 'guide');
+  if (existsSync(guideDir)) {
+    for (const entry of walkSync(guideDir, { includeDirs: false, exts: ['.html'] })) {
+      targets.push(entry.path);
+    }
+  }
+
+  // Matches absolute-path hrefs on anchor tags: <a ... href="/path" ...>
+  const anchorRe = /<a\b[^>]*?\bhref="(\/[^"]*)"[^>]*>/g;
+  const failures: string[] = [];
+  for (const file of targets) {
+    assert(existsSync(file), `Expected zh page is missing: ${file}`);
+    const html = Deno.readTextFileSync(file);
+    for (const match of html.matchAll(anchorRe)) {
+      const [tag, href] = match;
+      // Layout chrome links carry data-nav and are localized client-side by
+      // open-layout (#816); only in-content links are asserted here.
+      if (tag.includes('data-nav')) continue;
+      if (href === '/zh' || href.startsWith('/zh/')) continue;
+      failures.push(`${file}: ${href}`);
+    }
+  }
+  assertEquals(
+    failures,
+    [],
+    `zh pages must not contain unprefixed internal links:\n${failures.join('\n')}`,
+  );
+});

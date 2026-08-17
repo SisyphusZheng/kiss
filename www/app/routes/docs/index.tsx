@@ -10,6 +10,7 @@ import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import { mastheadStyles } from '../../components/page-styles.js';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
+import { localizePath } from '@openelement/site-ui/link.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -268,7 +269,7 @@ export class DocsPage extends OpenElement {
 
         <nav class='entrances' aria-label={t.navLabel}>
           {entrances.map(([index, title, copy, href]) => (
-            <a class='entrance' href={href}>
+            <a class='entrance' href={localizePath(href, locale)}>
               <span class='entrance-index' aria-hidden='true'>{index}</span>
               <div>
                 <span class='entrance-title'>{title[locale]}</span>
