@@ -22,6 +22,16 @@ import { formatError } from './errors.ts';
 const log = createLogger('props-utils');
 
 /**
+ * Framework-internal own fields of an OpenElement instance that are not user
+ * props (#1037): the signal registry (a Map) and ElementInternals. Both are
+ * own-enumerable (the constructor assigns `_internals` unconditionally, so the
+ * key exists even when undefined), so without filtering they leak into
+ * collected props and serialize as garbage attributes
+ * (`signal-registry="[object Map]"`).
+ */
+const INTERNAL_HOST_FIELDS = new Set(['signalRegistry', '_internals']);
+
+/**
  * Collect all public (non-internal) own properties from a host object.
  * Keys starting with `__openElement` are framework-internal and excluded.
  * Uses Reflect.get for safe access (respects getters); a getter that throws
@@ -31,6 +41,7 @@ export function collectPublicProps(host: object): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   for (const key of Object.keys(host)) {
     if (key.startsWith('__openElement')) continue;
+    if (INTERNAL_HOST_FIELDS.has(key)) continue;
     try {
       props[key] = Reflect.get(host, key);
     } catch (err) {

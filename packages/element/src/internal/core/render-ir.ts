@@ -28,11 +28,12 @@ import {
   BoundaryRenderError,
   isControlFlowThrow,
   isDepthLimitError,
+  MAX_SSR_NESTING_DEPTH,
   RENDER_PATH_TRACK_MIN_DEPTH,
   renderDsd,
 } from './render-dsd.ts';
 import { createLogger } from './logger.ts';
-import { formatError } from './errors.ts';
+import { formatError, OpenElementError } from './errors.ts';
 import { camelToKebab } from './tag-utils.ts';
 
 export type RenderNode =
@@ -441,11 +442,25 @@ async function renderComponentBranch(
   boundaryActive: boolean,
   renderPath: readonly string[] | undefined,
 ): Promise<RenderNode> {
+  // #1037: component frames recurse through renderToNode without ever
+  // reaching renderDsd, where the depth limit is enforced — a self-recursive
+  // function component used to loop forever on the microtask queue. Consume
+  // one depth level per component frame and trip the same typed limit here.
+  // Thrown outside the try: a depth trip is control flow, never logged.
+  const depth = nestingDepth + 1;
+  if (depth > MAX_SSR_NESTING_DEPTH) {
+    throw new OpenElementError(
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${
+        (tag as { name?: string }).name || 'anonymous'
+      }>`,
+      { code: 'SSR_NESTING_DEPTH_EXCEEDED', phase: 'ssr' },
+    );
+  }
   try {
     return await renderToNode(
       callComponent(tag, props ?? {}, children),
       eventContext,
-      nestingDepth,
+      depth,
       boundaryActive,
       renderPath,
     );

@@ -55,6 +55,27 @@ Deno.test('useLoaderData reads the active per-render context, not a process glob
   assertEquals(__activeDataContext().stack.length, 0);
 });
 
+Deno.test('nested render scopes restore the outer data context on exit (#1037)', () => {
+  // A page render nested inside another page render (e.g. a recursive error
+  // renderer) enters its own scope; exiting it must restore the outer scope,
+  // not clear the bridge. The previous single-slot bridge lost the outer
+  // context, so the rest of the outer render read an empty context.
+  const outer = createRenderDataContext();
+  const inner = createRenderDataContext();
+  pushLoaderData(outer, 'outer-data');
+  pushLoaderData(inner, 'inner-data');
+  __enterDataContext(outer);
+  __enterDataContext(inner);
+  try {
+    assertEquals(useLoaderData(), 'inner-data');
+  } finally {
+    __exitDataContext();
+  }
+  assertEquals(useLoaderData(), 'outer-data', 'exit restores the outer scope');
+  __exitDataContext();
+  assertEquals(useLoaderData(), undefined);
+});
+
 Deno.test('useLoaderData types undefined into the return instead of erasing it (#763)', () => {
   // Type-level: loader-less routes / outside render scope legitimately yield
   // undefined, so the hook's return type must include it (aligned with

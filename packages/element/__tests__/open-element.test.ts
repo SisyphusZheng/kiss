@@ -1688,6 +1688,103 @@ Deno.test('keyed For stays reactive after matched hydration (SSR DOM reconciled 
   document.body.removeChild(el);
 });
 
+Deno.test('keyed For hydration seed drops duplicate-key ghost DOM (#1037)', async () => {
+  if (!hasDOM) return;
+
+  // Duplicate keys are a user error; SSR renders both occurrences, so the
+  // hydration seed sees the same key twice.
+  const items = signal([
+    { id: 'a', label: 'first' },
+    { id: 'a', label: 'second' },
+    { id: 'b', label: 'third' },
+  ]);
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: string }) => item.id,
+          children: (item: { label: string }) => jsx('button', { children: item.label }),
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+  const tagName = uniqueTag('for-dup-seed');
+  class ForDupSeedElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ForDupSeedElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  // Last occurrence wins (the runtime reconciliation contract); the
+  // overwritten predecessor's SSR nodes must leave the DOM at seed time
+  // instead of becoming ghost nodes no cleanup path tracks.
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['second', 'third']);
+
+  // A later items change reconciles without resurrecting the ghost.
+  items.value = [
+    { id: 'a', label: 'second' },
+    { id: 'b', label: 'third' },
+    { id: 'c', label: 'fourth' },
+  ];
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), [
+    'second',
+    'third',
+    'fourth',
+  ]);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('update() render throw keeps last-good DOM and recovers on the next update (#1037)', () => {
+  if (!hasDOM) return;
+
+  // Contract pinned after review: a render throw during update() is routed to
+  // onRenderError (default: log + null fallback). The last-good DOM stays
+  // mounted — deliberately, so a transient error does not blank the element —
+  // and the next successful update() re-renders normally. The alternative
+  // (clearing the root on a null fallback) was rejected: it would erase
+  // still-readable content on every transient throw.
+  const tagName = uniqueTag('update-throw');
+  let shouldThrow = false;
+  let value = 'ok';
+  class UpdateThrowElement extends OpenElement {
+    override render(): VNode | null {
+      if (shouldThrow) throw new Error('update boom');
+      return jsx('p', { children: value });
+    }
+  }
+  customElements.define(tagName, UpdateThrowElement);
+
+  const el = document.createElement(tagName) as UpdateThrowElement;
+  document.body.appendChild(el);
+  assertEquals(el.shadowRoot?.querySelector('p')?.textContent, 'ok');
+
+  shouldThrow = true;
+  el.update();
+  assertEquals(
+    el.shadowRoot?.querySelector('p')?.textContent,
+    'ok',
+    'failed update keeps the last-good DOM',
+  );
+
+  shouldThrow = false;
+  value = 'recovered';
+  el.update();
+  assertEquals(
+    el.shadowRoot?.querySelector('p')?.textContent,
+    'recovered',
+    'the next successful update fully recovers',
+  );
+
+  document.body.removeChild(el);
+});
+
 Deno.test('unkeyed For stays reactive after matched hydration (clear + re-render on change)', async () => {
   if (!hasDOM) return;
 

@@ -139,7 +139,10 @@ export function renderIntoShadowRoot(
  * Render a fallback VNode when the unified client render/hydrate path throws.
  *
  * Ensures the render root exists, invokes onRenderError(), disposes any
- * previous bindings, and mounts the fallback content.
+ * previous bindings, and mounts the fallback content. A null fallback (the
+ * default onRenderError) keeps the last-good DOM (#1037, pinned contract): a
+ * transient render error must not blank still-readable content, and the next
+ * successful update() re-renders normally.
  */
 export function renderErrorFallback(
   instance: OpenElementLike,

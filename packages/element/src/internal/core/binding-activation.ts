@@ -446,6 +446,7 @@ function applyList(
     disposers: Set<() => void>;
   }
   let keyed: Map<string, KeyedEntry> | null = null;
+  let dupKeyWarned = false;
 
   // Matched DSD hydration seed (#917): the SSR DOM is already in place, so the
   // first activation must not render or clear anything. Keyed seeds become
@@ -458,6 +459,22 @@ function applyList(
       keyed = new Map();
       for (const entry of seed) {
         if (entry.key === undefined) continue;
+        const displaced = keyed.get(entry.key);
+        if (displaced) {
+          // Duplicate key in the seed (SSR rendered both occurrences): last
+          // occurrence wins, same contract as the runtime reconciliation
+          // below — and the overwritten predecessor's nodes must leave the
+          // DOM here, otherwise they become ghost nodes no cleanup path
+          // tracks (#1037).
+          for (const node of displaced.nodes) node.remove();
+          if (!dupKeyWarned) {
+            dupKeyWarned = true;
+            console.warn(
+              `[openElement] duplicate key "${entry.key}" in a keyed <For>; ` +
+                'only the last occurrence is kept and the replaced entry is disposed.',
+            );
+          }
+        }
         keyed.set(entry.key, { nodes: entry.nodes, disposers: new Set() });
       }
     }
@@ -477,8 +494,6 @@ function applyList(
       node.remove();
     }
   };
-
-  let dupKeyWarned = false;
 
   const render = () => {
     const list = unwrapSignalLike(items);
