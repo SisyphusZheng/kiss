@@ -124,6 +124,9 @@ export class OpenDialog extends OpenElement {
   // was a dead listener (nothing synced on change).
   static override observedAttributes = ['open'];
 
+  /** True once showModal() has run for the current open session (#1030). */
+  private _modalActive = false;
+
   override render(): RenderResult {
     // Keep the custom state in sync on every render. When the `open`
     // attribute arrives via SSR markup, attributeChangedCallback fires at
@@ -139,7 +142,7 @@ export class OpenDialog extends OpenElement {
           aria-label={label}
           part='overlay'
           onCancel={(e: Event) => this._handleCancel(e)}
-          onClose={() => this._handleClose()}
+          onClose={() => this._handleNativeClose()}
         >
           <div className='dialog-header' part='header'>
             <h2 className='dialog-title'>{label}</h2>
@@ -218,16 +221,41 @@ export class OpenDialog extends OpenElement {
   private _syncDialogElement(): void {
     const dialog = this.shadowRoot?.querySelector('dialog');
     if (!dialog) return;
-    if (this.hasAttribute('open') && !dialog.open) {
-      // Modal: showModal() puts the rest of the page on the inert top layer
-      // natively — focus, hit-testing, and the accessibility tree are all
-      // covered by the platform, so no hand-rolled sibling inert is needed.
-      // Non-modal: show() leaves the page interactive by design.
-      if ((this.getAttribute('mode') || 'modal') === 'modal') dialog.showModal();
-      else dialog.show();
-    } else if (!this.hasAttribute('open') && dialog.open) {
-      dialog.close();
+    if (this.hasAttribute('open')) {
+      if ((this.getAttribute('mode') || 'modal') === 'modal') {
+        // Modal: showModal() puts the rest of the page on the inert top layer
+        // natively — focus, hit-testing, and the accessibility tree are all
+        // covered by the platform, so no hand-rolled sibling inert is needed.
+        if (this._modalActive) return;
+        // #1030: the initial render writes `open` onto the inner <dialog>
+        // (SSR DSD / CSR first render), so dialog.open may already be true
+        // without showModal() having run — that state presents as NON-modal
+        // (no top layer, no ::backdrop, no focus containment). Close the
+        // attribute-driven open first, then enter the top layer; showModal()
+        // on an already-open dialog throws InvalidStateError.
+        if (dialog.open) dialog.close();
+        dialog.showModal();
+        this._modalActive = true;
+      } else if (!dialog.open) {
+        // Non-modal: show() leaves the page interactive by design.
+        dialog.show();
+      }
+    } else {
+      if (dialog.open) dialog.close();
+      this._modalActive = false;
     }
+  }
+
+  private _handleNativeClose(): void {
+    // The attribute→modal transition above close()es the attribute-opened
+    // dialog and immediately re-opens it via showModal(); if the resulting
+    // close event is dispatched asynchronously it arrives after the re-open
+    // (dialog.open true, host attribute still present) and must be ignored.
+    // A genuine native close (e.g. form method="dialog") finds the platform
+    // has already cleared dialog.open.
+    const dialog = this.shadowRoot?.querySelector('dialog');
+    if (dialog?.open && this.hasAttribute('open')) return;
+    this._handleClose();
   }
 
   private _handleClose(): void {
