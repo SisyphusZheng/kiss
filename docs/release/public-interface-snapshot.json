@@ -318,12 +318,12 @@
           ]
         },
         "./cli/build": {
-          "sha256": "19b817d8d114f0b107b7708675754de3fdc12c76c85c4dd3333814b6643894bd",
+          "sha256": "4432378337d75c2f3e818f29af10f5fa98012b891010fd95b53186635f7a651f",
           "publicDeclarations": [],
           "reExportedNames": []
         },
         "./cli/start": {
-          "sha256": "ededc546076ff13322fe1a9416763a4dd490ac79838c0b12d6bfb0ffe64f8cdb",
+          "sha256": "839688f8ad7b5f15897b8a7de1dcbd26b6d5f76d1bddf1e492c6c6e5f7a3da70",
           "publicDeclarations": [
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
           ],
@@ -397,7 +397,7 @@
           "reExportedNames": []
         },
         "./open-button": {
-          "sha256": "1942835e5cb518ed339f089655232f59e1e20e7dd0033fc3b7169d60967ed565",
+          "sha256": "5ea274e213d9b54b500c736bcc236c356cb9f7ac048e724b6a1f7de7ceae6993",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
