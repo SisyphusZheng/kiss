@@ -417,3 +417,109 @@ Deno.test('payment lifecycle logs correlate by event id and stay redacted', asyn
     assertEquals(all.includes(sentinel), false, `payment log leaked: ${sentinel}`);
   }
 });
+
+Deno.test('Cron audits the attachment replay handoff with the requesting admin as actor', async () => {
+  const originalFetch = globalThis.fetch;
+  const operations: unknown[] = [];
+  globalThis.fetch = (input, init) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
+      return Promise.resolve(Response.json([]));
+    }
+    if (url.endsWith('/rpc/list_pending_attachment_scans')) {
+      return Promise.resolve(Response.json([]));
+    }
+    if (url.endsWith('/rpc/list_requested_attachment_scan_replays')) {
+      return Promise.resolve(Response.json([{
+        id: 'dlq-1',
+        reservation_id: 'reservation-1',
+        object_key: 'u/replay',
+        replay_requested_by: 'admin-9',
+      }]));
+    }
+    if (url.endsWith('/rpc/mark_attachment_scan_replayed')) {
+      operations.push('marked');
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (url.endsWith('/rpc/log_admin_audit')) {
+      operations.push(JSON.parse(String(init?.body)));
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcileAttachments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(operations, ['marked', {
+    actor: 'admin-9',
+    action: 'attachment_scan_replay_enqueued',
+    target_type: 'attachment_scan_dead_letter',
+    target_id: 'dlq-1',
+  }]);
+});
+
+Deno.test('payment Cron audits the replay handoff with the requesting admin as actor', async () => {
+  const originalFetch = globalThis.fetch;
+  const operations: unknown[] = [];
+  globalThis.fetch = (input, init) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_pending_payment_events')) {
+      return Promise.resolve(Response.json([{
+        provider_event_id: 'evt_replay',
+        processing_state: 'replay_requested',
+        replay_requested_by: 'admin-9',
+      }]));
+    }
+    if (url.endsWith('/rpc/mark_payment_event_replay_enqueued')) {
+      operations.push('marked');
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (url.endsWith('/rpc/log_admin_audit')) {
+      operations.push(JSON.parse(String(init?.body)));
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcilePayments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(operations, ['marked', {
+    actor: 'admin-9',
+    action: 'payment_event_replay_enqueued',
+    target_type: 'payment_event',
+    target_id: 'evt_replay',
+  }]);
+});
+
+Deno.test('payment Cron keeps the handoff when the audit append fails after the mark', async () => {
+  const originalFetch = globalThis.fetch;
+  const operations: string[] = [];
+  globalThis.fetch = (input) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_pending_payment_events')) {
+      return Promise.resolve(Response.json([{
+        provider_event_id: 'evt_replay',
+        processing_state: 'replay_requested',
+        replay_requested_by: 'admin-9',
+      }]));
+    }
+    if (url.endsWith('/rpc/mark_payment_event_replay_enqueued')) {
+      operations.push('marked');
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (url.endsWith('/rpc/log_admin_audit')) {
+      return Promise.resolve(new Response(null, { status: 503 }));
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcilePayments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(operations, ['marked']);
+});
