@@ -43,6 +43,25 @@ async function initWorkRepo(): Promise<{ root: string; work: string }> {
   return { root, work };
 }
 
+/** A work repo on dev with main + dev both pushed to a bare origin. */
+async function initWorkRepoWithOrigin(): Promise<{ root: string; work: string }> {
+  const root = await Deno.makeTempDir({ prefix: 'release-executor-failed-evidence-' });
+  const origin = `${root}/origin.git`;
+  const work = `${root}/work`;
+  await git(root, ['init', '--bare', origin]);
+  await git(root, ['init', '-b', 'main', work]);
+  await git(work, ['config', 'user.email', 'release-test@example.com']);
+  await git(work, ['config', 'user.name', 'Release Test']);
+  await Deno.writeTextFile(`${work}/seed.txt`, 'seed\n');
+  await git(work, ['add', 'seed.txt']);
+  await git(work, ['commit', '-m', 'seed']);
+  await git(work, ['checkout', '-b', 'dev']);
+  await git(work, ['remote', 'add', 'origin', origin]);
+  await git(work, ['push', '-u', 'origin', 'main']);
+  await git(work, ['push', '-u', 'origin', 'dev']);
+  return { root, work };
+}
+
 function priorEvidence(target: string, steps: ReleaseEvidence['steps']): ReleaseEvidence {
   return {
     id: `patch-release-v${target}-test-run`,
@@ -287,6 +306,45 @@ Deno.test('release-prepare resume simulation: kill after prepare, re-run verifie
       record.steps.find((step) => step.name === 'run release gates after bump')?.status,
       'passed',
     );
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('executeReleasePlan: failed-run evidence is pushed from the branch it was committed on (#1038)', async () => {
+  const { root, work } = await initWorkRepoWithOrigin();
+  const previousCwd = Deno.cwd();
+  try {
+    Deno.chdir(work);
+    // Local full-release shape: the plan checks out main mid-run and fails
+    // after that point. The failure evidence commit lands on main, so main —
+    // not the start branch dev — is what must be pushed; pushing dev stranded
+    // the evidence locally and left an unpushed commit on main that diverged
+    // the next resume's `git merge --ff-only dev`.
+    const plan: ReleaseCommandStep[] = [
+      { name: 'checkout main', command: ['git', 'checkout', 'main'] },
+      {
+        name: 'publish npm packages',
+        run: () => Promise.reject(new Error('simulated publish failure')),
+      },
+    ];
+    await assertRejects(
+      () => executeReleasePlan('patch-release', '9.9.9', undefined, false, plan, 'dev'),
+      Error,
+      'simulated publish failure',
+    );
+
+    // The failed evidence commit reached origin/main...
+    assertEquals(
+      await git(work, ['rev-parse', 'main']),
+      await git(work, ['rev-parse', 'origin/main']),
+    );
+    // ...and it records the failed run.
+    const persisted = JSON.parse(
+      await git(work, ['show', 'origin/main:docs/release/autoflow3/v9.9.9.json']),
+    ) as ReleaseEvidence;
+    assertEquals(persisted.status, 'failed');
   } finally {
     Deno.chdir(previousCwd);
     await Deno.remove(root, { recursive: true });

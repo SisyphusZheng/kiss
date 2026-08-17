@@ -1028,12 +1028,19 @@ async function commitFinalEvidenceAndClosure(
  * only — never committed — leaving the repository's durable record blind to what
  * actually happened (#647). Push failures (no remote, permissions) downgrade to
  * a warning so the original release error still propagates.
+ *
+ * The commit lands on the CURRENT branch, which is not necessarily the start
+ * branch: a local full release checks out main mid-plan, so a failure after
+ * that point commits the evidence on main while the start branch is dev. Push
+ * the branch the commit actually landed on (#1038) — pushing the start branch
+ * stranded the evidence locally and left an unpushed commit on main that
+ * diverged the next resume's `git merge --ff-only dev`.
  */
 async function persistFailedReleaseEvidence(
   evidence: ReleaseEvidence,
-  branch: string,
 ): Promise<void> {
   try {
+    const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
     await runCaptured([
       'git',
       'add',
@@ -1281,7 +1288,7 @@ export async function executeReleasePlan(
       // that records the steps completed before failure; otherwise the evidence
       // stays on local disk only and never reaches the repository, which is
       // exactly how α8-style version holes evade release:evidence:check (#647).
-      await persistFailedReleaseEvidence(evidence, expectedBranch);
+      await persistFailedReleaseEvidence(evidence);
     }
     throw error;
   }
