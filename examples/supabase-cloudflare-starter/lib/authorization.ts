@@ -1,3 +1,5 @@
+import { notFound } from '@openelement/app';
+
 export interface AuthenticatedIdentity {
   id: string;
   app_metadata?: Record<string, unknown>;
@@ -9,6 +11,8 @@ export function hasAdminRole(user: AuthenticatedIdentity | null | undefined): bo
   return user?.app_metadata?.role === 'admin';
 }
 
+/** Denial rides the framework 404 channel: a raw thrown Response is not
+ * translated by the request-time server and would surface as a 500. */
 export function requireAdmin(user: AuthenticatedIdentity | null | undefined): void {
-  if (!hasAdminRole(user)) throw new Response('Not found', { status: 404 });
+  if (!hasAdminRole(user)) notFound('Not found');
 }

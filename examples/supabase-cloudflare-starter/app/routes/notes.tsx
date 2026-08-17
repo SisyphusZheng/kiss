@@ -8,6 +8,13 @@
  *
  * The page also hosts the sign-out action (named action `logout` on POST
  * /notes), which clears the session cookies through the same channel.
+ *
+ * The create form opts into data-open-enhance, so duplicate submission
+ * behavior is explicit: the enhancement layer ignores a second submit of
+ * the same form while one is in flight (#564), turning a double-click into
+ * exactly one INSERT. Without JavaScript the form degrades to a native
+ * POST whose PRG redirect guards refresh resubmission only — rapid native
+ * retries create one row each (the create path is not idempotent).
  */
 import {
   definePage,
@@ -183,7 +190,7 @@ const NotesPage = definePage<NotesData>({
         <p id='who'>signed-in:{data.email}</p>
         {data.error ? <p id='error'>{data.error}</p> : null}
         {actionData?.error ? <p id='action-error'>{actionData.error}</p> : null}
-        <form method='post' action='/notes?/create'>
+        <form method='post' action='/notes?/create' data-open-enhance>
           <p>
             <label>
               Title{' '}
