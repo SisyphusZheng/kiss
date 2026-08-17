@@ -7,7 +7,9 @@
  * live but has no listeners: a click lands on inert markup and is silently
  * lost. This module records clicks whose composed path crosses a
  * not-yet-hydrated host (detected by hydration markers), then re-dispatches
- * each recorded event once when that host hydrates.
+ * the latest recorded click once when that host hydrates. The per-host queue
+ * is capped at one (#1027): replaying every queued click would run the
+ * island's handler N times — N toggles, N duplicate action submissions.
  *
  * Surface is deliberately small:
  *   - click only — pointer clicks and keyboard activation (Enter/Space) both
@@ -124,12 +126,9 @@ export function ensurePreHydrationClickCapture(): void {
     const path = event.composedPath();
     const host = pendingHostFromPath(path);
     if (!host || flushedHosts.has(host)) return;
-    let queue = pendingClicks.get(host);
-    if (!queue) {
-      queue = [];
-      pendingClicks.set(host, queue);
-    }
-    queue.push({ event, target: path[0] ?? event.target });
+    // Keep only the latest click per host (#1027): replay exists to run the
+    // island's own handler once, so earlier clicks are superseded, not queued.
+    pendingClicks.set(host, [{ event, target: path[0] ?? event.target }]);
   }, true);
 }
 
