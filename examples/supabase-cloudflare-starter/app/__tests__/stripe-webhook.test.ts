@@ -180,3 +180,94 @@ Deno.test('Stripe webhook returns retryable failure when Queue handoff fails', a
   });
   assertEquals(response.status, 503);
 });
+
+const piiBody = JSON.stringify({
+  id: 'evt_pii',
+  type: 'checkout.session.completed',
+  created: 1_700_000_000,
+  livemode: false,
+  data: {
+    object: {
+      id: 'cs_test_pii',
+      payment_status: 'paid',
+      metadata: { order_id: 'x' },
+      customer_details: { email: 'cardholder@example.com', name: 'Card Holder' },
+      payment_method_details: { card: { number: '4242424242424242', cvc: '123' } },
+    },
+  },
+});
+
+function captureConsole(lines: string[]): () => void {
+  const originalLog = console.log;
+  const originalError = console.error;
+  console.log = (...args: unknown[]) => lines.push(args.map(String).join(' '));
+  console.error = (...args: unknown[]) => lines.push(args.map(String).join(' '));
+  return () => {
+    console.log = originalLog;
+    console.error = originalError;
+  };
+}
+
+Deno.test('Stripe webhook logs correlate by event id and never leak payload or secrets', async () => {
+  const now = Math.floor(Date.now() / 1000);
+  const valid = await signature(piiBody, now);
+  const lines: string[] = [];
+  const restore = captureConsole(lines);
+  const env = {
+    STRIPE_WEBHOOK_SECRET: secret,
+    STRIPE_LIVEMODE: 'false',
+    SUPABASE_URL: 'https://project.supabase.co',
+    SUPABASE_SERVICE_ROLE_KEY: 'service-role-sentinel',
+    PAYMENT_EVENT_QUEUE: { send: () => Promise.resolve() },
+  };
+  const post = (header: string) =>
+    new Request('https://app.test/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'stripe-signature': header },
+      body: piiBody,
+    });
+  try {
+    const accepted = await createStripeWebhook(() =>
+      Promise.resolve(Response.json({ processing_state: 'received' }))
+    )({ request: post(`t=${now},v1=${valid}`), env });
+    assertEquals(accepted.status, 200);
+
+    const rejected = await createStripeWebhook()({
+      request: post(`t=${now},v1=${'0'.repeat(64)}`),
+      env,
+    });
+    assertEquals(rejected.status, 400);
+
+    const notDurable = await createStripeWebhook(() =>
+      Promise.resolve(new Response('', { status: 503 }))
+    )({ request: post(`t=${now},v1=${valid}`), env });
+    assertEquals(notDurable.status, 503);
+  } finally {
+    restore();
+  }
+
+  const entries = lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+  const acceptedLog = entries.find((entry) => entry.event === 'stripe_webhook_accepted');
+  assertEquals(acceptedLog?.provider_event_id, 'evt_pii');
+  assertEquals(acceptedLog?.event_type, 'checkout.session.completed');
+  assertEquals(acceptedLog?.processing_state, 'received');
+  assertEquals(acceptedLog?.enqueued, true);
+  const rejectedLog = entries.find((entry) => entry.event === 'stripe_webhook_rejected');
+  assertEquals(rejectedLog?.reason, 'invalid_signature');
+  assertEquals(rejectedLog && 'provider_event_id' in rejectedLog, false);
+  const notDurableLog = entries.find((entry) => entry.event === 'stripe_webhook_not_durable');
+  assertEquals(notDurableLog?.provider_event_id, 'evt_pii');
+
+  const all = lines.join('\n');
+  for (
+    const sentinel of [
+      '4242424242424242',
+      'cardholder@example.com',
+      'Card Holder',
+      'service-role-sentinel',
+      piiBody,
+    ]
+  ) {
+    assertEquals(all.includes(sentinel), false, `payment log leaked: ${sentinel}`);
+  }
+});

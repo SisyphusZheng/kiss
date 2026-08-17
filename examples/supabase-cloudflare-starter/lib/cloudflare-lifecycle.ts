@@ -30,6 +30,14 @@ export interface WorkerEnv {
 
 const BUCKET = 'notes-attachments';
 
+// Minimal structured payment logs. The correlation key is always the provider
+// event id; payloads, object keys, customer data, and secrets are never logged.
+function logPayment(level: 'info' | 'error', fields: Record<string, unknown>): void {
+  const line = JSON.stringify(fields);
+  if (level === 'error') console.error(line);
+  else console.log(line);
+}
+
 function headers(env: WorkerEnv): HeadersInit {
   return {
     apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -115,8 +123,16 @@ export async function consumePaymentEvents(
     }
     try {
       await rpc(env, 'process_stripe_event', { target_event_id: message.body.eventId });
+      logPayment('info', {
+        event: 'payment_event_processed',
+        provider_event_id: message.body.eventId,
+      });
       message.ack();
     } catch {
+      logPayment('error', {
+        event: 'payment_event_process_failed',
+        provider_event_id: message.body.eventId,
+      });
       message.retry();
     }
   }
@@ -135,8 +151,16 @@ export async function consumePaymentEventDeadLetters(
       await rpc(env, 'record_payment_event_dead_letter', {
         target_event_id: message.body.eventId,
       });
+      logPayment('info', {
+        event: 'payment_event_dead_letter_recorded',
+        provider_event_id: message.body.eventId,
+      });
       message.ack();
     } catch {
+      logPayment('error', {
+        event: 'payment_event_dead_letter_failed',
+        provider_event_id: message.body.eventId,
+      });
       message.retry();
     }
   }
@@ -204,21 +228,31 @@ export async function reconcilePayments(env: WorkerEnv): Promise<void> {
     'list_pending_payment_events',
     {},
   );
+  let enqueued = 0;
+  let replays = 0;
   for (const event of pending) {
     try {
       await env.PAYMENT_EVENT_QUEUE.send({
         type: 'payment.process',
         eventId: event.provider_event_id,
       });
+      enqueued += 1;
       if (event.processing_state === 'replay_requested') {
         await rpc(env, 'mark_payment_event_replay_enqueued', {
           target_event_id: event.provider_event_id,
         });
+        replays += 1;
       }
     } catch {
       // Durable received/replay_requested state remains for the next Cron run.
     }
   }
+  logPayment('info', {
+    event: 'payment_reconciliation',
+    pending: pending.length,
+    enqueued,
+    replays,
+  });
 }
 
 export async function reconcileLifecycle(env: WorkerEnv): Promise<void> {

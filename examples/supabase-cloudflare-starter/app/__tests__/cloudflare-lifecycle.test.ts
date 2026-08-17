@@ -348,3 +348,72 @@ Deno.test('payment Cron queues received events and marks replay only after hando
   }
   assertEquals(operations, ['send:evt_received', 'send:evt_replay', 'mark:evt_replay']);
 });
+
+Deno.test('payment lifecycle logs correlate by event id and stay redacted', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalLog = console.log;
+  const originalError = console.error;
+  const lines: string[] = [];
+  console.log = (...args: unknown[]) => lines.push(args.map(String).join(' '));
+  console.error = (...args: unknown[]) => lines.push(args.map(String).join(' '));
+  globalThis.fetch = (input) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/process_stripe_event')) {
+      return Promise.resolve(Response.json('applied'));
+    }
+    if (url.endsWith('/rpc/record_payment_event_dead_letter')) {
+      return Promise.resolve(new Response(null, { status: 503 }));
+    }
+    if (url.endsWith('/rpc/list_pending_payment_events')) {
+      return Promise.resolve(Response.json([
+        { provider_event_id: 'evt_received', processing_state: 'received' },
+      ]));
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  const message = (eventId: string) => ({
+    body: { type: 'payment.process' as const, eventId },
+    ack: () => {},
+    retry: () => {},
+  });
+  try {
+    await consumePaymentEvents(
+      { queue: 'openelement-payment-events', messages: [message('evt_ok')] },
+      env(),
+    );
+    await consumePaymentEventDeadLetters(
+      { queue: 'openelement-payment-events-dlq', messages: [message('evt_dead')] },
+      env(),
+    );
+    await reconcilePayments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.log = originalLog;
+    console.error = originalError;
+  }
+
+  const entries = lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+  assertEquals(
+    entries.find((entry) => entry.event === 'payment_event_processed')?.provider_event_id,
+    'evt_ok',
+  );
+  assertEquals(
+    entries.find((entry) => entry.event === 'payment_event_dead_letter_failed')
+      ?.provider_event_id,
+    'evt_dead',
+  );
+  const reconciliation = entries.find((entry) => entry.event === 'payment_reconciliation');
+  assertEquals(
+    {
+      pending: reconciliation?.pending,
+      enqueued: reconciliation?.enqueued,
+      replays: reconciliation?.replays,
+    },
+    { pending: 1, enqueued: 1, replays: 0 },
+  );
+
+  const all = lines.join('\n');
+  for (const sentinel of ['service-role-test', 'project.supabase.co']) {
+    assertEquals(all.includes(sentinel), false, `payment log leaked: ${sentinel}`);
+  }
+});

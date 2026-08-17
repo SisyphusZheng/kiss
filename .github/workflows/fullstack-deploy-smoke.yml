@@ -154,6 +154,56 @@ jobs:
           csrf=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$WORKER_URL/login" -H 'Origin: https://evil.example.com' -H 'Content-Type: application/x-www-form-urlencoded' -d 'x=1')
           echo "cross-origin POST /login -> $csrf"; [ "$csrf" = "403" ]
 
+      - name: Probe cookie security floor and Host hygiene
+        env:
+          WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          # Short-lived smoke user; the random password is never logged.
+          SMOKE_EMAIL="deploy-smoke-$(date +%s)@example.com"
+          SMOKE_PASSWORD="Deploy-Smoke-$(date +%s)-$RANDOM$RANDOM"
+          curl -sf -X POST "$SUPABASE_URL/auth/v1/admin/users" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$SMOKE_EMAIL\",\"password\":\"$SMOKE_PASSWORD\",\"email_confirm\":true}" \
+            >/dev/null
+          ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's|https?://([^.]+)\..*|\1|')
+          headers=$(mktemp)
+          # Plant stale chunk cookies: the session write must delete them too,
+          # so the response carries several Set-Cookie headers and proves the
+          # response path preserves multi Set-Cookie instead of collapsing it.
+          curl -s -D "$headers" -o /dev/null --max-time 20 -X POST "$WORKER_URL/login" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            -H "Cookie: sb-$ref-auth-token.0=stale0; sb-$ref-auth-token.1=stale1" \
+            --data-urlencode "email=$SMOKE_EMAIL" \
+            --data-urlencode "password=$SMOKE_PASSWORD"
+          tr -d '\r' < "$headers" > "$headers.clean"
+          cookies=$(grep -c '^set-cookie:' "$headers.clean" || true)
+          echo "POST /login Set-Cookie count -> $cookies"
+          [ "$cookies" -ge 2 ]
+          grep '^set-cookie:' "$headers.clean" | while IFS= read -r line; do
+            for attribute in 'httponly' 'samesite=lax' 'path=/' 'secure'; do
+              printf '%s' "$line" | grep -qi "$attribute" || {
+                echo "Set-Cookie missing $attribute: $line"; exit 1;
+              }
+            done
+          done
+          echo "all $cookies Set-Cookie headers carry HttpOnly; SameSite=Lax; Path=/; Secure -> OK"
+          location=$(grep -i '^location:' "$headers.clean" | head -1 | cut -d' ' -f2-)
+          echo "POST /login Location -> $location"
+          case "$location" in
+            /*|"$WORKER_URL"*) : ;;
+            *) echo "login redirect leaked a non-application host: $location"; exit 1 ;;
+          esac
+          if grep -iE 'localhost|127\.0\.0\.1|\.internal|\.supabase\.co' "$headers.clean"; then
+            echo "internal/provider hostname leaked in login response headers"; exit 1
+          fi
+          echo "Host hygiene: no internal/provider hostname in response headers -> OK"
+          rm -f "$headers" "$headers.clean"
+
       - name: Verify provisioned Queue and DLQ
         if: inputs.async_mode == 'provision'
         working-directory: examples/supabase-cloudflare-starter
