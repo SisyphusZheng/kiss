@@ -93,6 +93,16 @@ METADEFENDER_CORE_URL
 METADEFENDER_API_KEY
 ```
 
+Optional OAuth provider switches (default off; a provider renders on `/login`
+only when its flag is exactly `true` and the provider is configured in the
+Supabase dashboard — otherwise the page shows
+"OAuth providers: not configured" and the `oauth` action fails closed):
+
+```
+SUPABASE_OAUTH_GOOGLE_ENABLED
+SUPABASE_OAUTH_GITHUB_ENABLED
+```
+
 The anon key is additionally rendered into the /notes page as a data attribute
 for the realtime island — it is a public key by design; row visibility stays
 enforced by RLS and the island's `user_id` filter. The service-role and Stripe
