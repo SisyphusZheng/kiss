@@ -2,6 +2,7 @@ import { assertEquals, assertRejects, assertStringIncludes } from '@std/assert';
 import { jsx } from '../src/jsx-runtime.ts';
 import { FOR_TAG } from '../src/internal/core/jsx-runtime.ts';
 import { renderDsdTree, serializeAttrs } from '../src/internal/core/render-ir.ts';
+import { isSafeAttributeName } from '../src/internal/core/security.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';
 import {
   isDepthLimitError,
@@ -75,6 +76,58 @@ Deno.test('#602 serializeAttrs rejects unsafe attribute names', () => {
   assertEquals(evil.includes('onclick'), false);
   assertEquals(evil.includes('onmouseover'), false);
   assertStringIncludes(evil, 'ok-name="yes"');
+});
+
+Deno.test('#1033 isSafeAttributeName matches both legacy spellings', () => {
+  // Legacy render-ir.ts spelling (\w character class).
+  const legacyRenderIr = (name: string) => /^[a-zA-Z_:][\w:.-]*$/.test(name) && !/^on/i.test(name);
+  // Legacy adapter-vite head-injection.ts spelling (explicit character class).
+  const legacyHeadInjection = (name: string) =>
+    /^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(name) && !/^on/i.test(name);
+
+  const names = [
+    // Valid attribute names.
+    'class',
+    'id',
+    'data-x',
+    'aria-label',
+    'xml:lang',
+    '_private',
+    ':bind',
+    'a.b-c_d:e',
+    'on',
+    // Event handlers — rejected case-insensitively.
+    'onclick',
+    'onmouseover',
+    'ONLOAD',
+    'onx',
+    // Invalid first character.
+    '1abc',
+    '-lead',
+    '.lead',
+    // Quote/space injection attempts.
+    'x" onclick="alert(1)" data-x',
+    "x' y",
+    'a b',
+    'a=b',
+    'a/b',
+    'a<b',
+    '',
+  ];
+  for (const name of names) {
+    assertEquals(
+      isSafeAttributeName(name),
+      legacyRenderIr(name),
+      `isSafeAttributeName must match the legacy render-ir spelling for ${JSON.stringify(name)}`,
+    );
+    assertEquals(
+      isSafeAttributeName(name),
+      legacyHeadInjection(name),
+      `isSafeAttributeName must match the legacy head-injection spelling for ${
+        JSON.stringify(name)
+      }`,
+    );
+  }
 });
 
 Deno.test('SSR rejects rendering beyond the nesting-depth limit', async () => {

@@ -14,7 +14,7 @@ import type { FrameworkOptions } from './internal/protocol/framework.ts';
 
 import { OpenElementError } from '@openelement/element';
 import { escapeAttr as escapeHtmlAttr } from '@openelement/element';
-import { createLogger } from '@openelement/element';
+import { createLogger, isSafeAttributeName } from '@openelement/element';
 // @deno-types="npm:@types/sanitize-html@^2"
 import sanitizeHtml, { type IOptions as SanitizeHtmlOptions } from 'sanitize-html';
 
@@ -131,7 +131,9 @@ function sanitizeHeadHtml(html: string, context: string): string {
 }
 
 function assertSafeAttributeName(name: string, context: string): void {
-  if (!/^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(name) || /^on/i.test(name)) {
+  // The predicate itself lives in @openelement/element (#1033); this path
+  // keeps its own failure strategy (throw instead of silent skip).
+  if (!isSafeAttributeName(name)) {
     throw new OpenElementError(`Unsafe attribute in ${context}: "${name}"`, {
       code: 'UNSAFE_HEAD_INJECTION',
       statusCode: 400,
