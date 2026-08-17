@@ -1719,15 +1719,21 @@ Deno.test('open-dialog: initial open state syncs after the first render', async 
   assertEquals(states.has('closed'), false);
 });
 
-Deno.test('open-dialog: DSD hydration does not re-open an already open dialog', async () => {
+Deno.test('open-dialog: DSD hydration upgrades attribute-open dialog to modal (#1030)', async () => {
   const { OpenDialog } = await import('../src/open-dialog.tsx');
   const instance = new OpenDialog();
   const calls: string[] = [];
   const fakeDialog = {
-    open: true, // DSD shadow DOM already carries the open attribute
-    showModal: () => calls.push('showModal'),
+    open: true, // DSD shadow DOM carries the open attribute — visible but NON-modal
+    showModal() {
+      this.open = true;
+      calls.push('showModal');
+    },
     show: () => calls.push('show'),
-    close: () => calls.push('close'),
+    close() {
+      this.open = false;
+      calls.push('close');
+    },
   };
   Object.defineProperty(instance, 'shadowRoot', {
     configurable: true,
@@ -1737,7 +1743,53 @@ Deno.test('open-dialog: DSD hydration does not re-open an already open dialog', 
   instance.setAttribute('open', '');
   (instance as unknown as { onDsdHydrated(): void }).onDsdHydrated();
 
-  assertEquals(calls, []);
+  // The attribute-driven open presents as non-modal: close it and re-enter
+  // via showModal() so the dialog gets the top layer, ::backdrop, and focus
+  // containment the default modal mode promises.
+  assertEquals(calls, ['close', 'showModal']);
+  assertEquals(fakeDialog.open, true);
+
+  // A repeated hydration sync must not re-open (no flicker, no double events).
+  (instance as unknown as { onDsdHydrated(): void }).onDsdHydrated();
+  assertEquals(calls, ['close', 'showModal']);
+});
+
+Deno.test('open-dialog: CSR initial open also enters modal top layer (#1030)', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  const calls: string[] = [];
+  const fakeDialog = {
+    // The first render writes open={true} onto the inner <dialog>, so the
+    // platform dialog is already open when onCsrRendered() runs.
+    open: true,
+    showModal() {
+      this.open = true;
+      calls.push('showModal');
+    },
+    show: () => calls.push('show'),
+    close() {
+      this.open = false;
+      calls.push('close');
+    },
+  };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => selector === 'dialog' ? fakeDialog : null },
+  });
+
+  instance.setAttribute('open', '');
+  instance.render();
+  (instance as unknown as { onCsrRendered(): void }).onCsrRendered();
+
+  assertEquals(calls, ['close', 'showModal']);
+  assertEquals(fakeDialog.open, true);
+
+  // Close → open cycle still works after the initial modal upgrade.
+  instance.removeAttribute('open');
+  instance.attributeChangedCallback('open', '', null);
+  instance.setAttribute('open', '');
+  instance.attributeChangedCallback('open', null, '');
+  assertEquals(calls, ['close', 'showModal', 'close', 'showModal']);
 });
 
 function setupTabs(instance: HTMLElement): { tabs: MockElement[]; panels: MockElement[] } {
