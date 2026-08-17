@@ -72,7 +72,10 @@ function findProvidedSignal<T>(
       // real node visited (not the original host) so each shadow boundary is
       // crossed exactly once and the walk terminates at the document root.
       const root = lastNode?.getRootNode?.();
-      current = root instanceof ShadowRoot ? root.host : null;
+      // Duck-typed `.host` read (no `instanceof ShadowRoot`: the global is
+      // absent in non-DOM runtimes, #1025). A non-shadow root has no host
+      // and ends the walk.
+      current = ((root as ShadowRoot | undefined)?.host as Node | undefined) ?? null;
       if (current) lastNode = current;
     }
   }
