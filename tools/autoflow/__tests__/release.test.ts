@@ -935,6 +935,13 @@ Deno.test('assertForwardOnlyTags: refuses when a completed release is untagged (
       JSON.stringify({ status: 'running' }),
     );
     await assertForwardOnlyTags('0.41.0-alpha.15');
+    // Prepare records are not releases: a completed prepare record must not
+    // derive a phantom untagged version (#1024).
+    await Deno.writeTextFile(
+      'docs/release/autoflow3/v0.41.0-alpha.16-prepare.json',
+      JSON.stringify({ status: 'completed' }),
+    );
+    await assertForwardOnlyTags('0.41.0-alpha.16');
   } finally {
     Deno.chdir(previousCwd);
     await Deno.remove(root, { recursive: true });
