@@ -13,6 +13,8 @@ export function hasAdminRole(user: AuthenticatedIdentity | null | undefined): bo
 
 /** Denial rides the framework 404 channel: a raw thrown Response is not
  * translated by the request-time server and would surface as a 500. */
-export function requireAdmin(user: AuthenticatedIdentity | null | undefined): void {
+export function requireAdmin(
+  user: AuthenticatedIdentity | null | undefined,
+): asserts user is AuthenticatedIdentity {
   if (!hasAdminRole(user)) notFound('Not found');
 }

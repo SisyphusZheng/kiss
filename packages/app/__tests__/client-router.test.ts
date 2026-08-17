@@ -683,7 +683,8 @@ Deno.test('programmatic navigations are latest-wins: a slow stale guard cannot r
     assertEquals(router.currentPath, '/newer');
     assertEquals(browser.path(), '/newer');
     assertEquals(browser.applied, ['/newer']);
-    assertEquals(events, ['change']);  } finally {
+    assertEquals(events, ['change']);
+  } finally {
     router.dispose();
     browser.restore();
   }
