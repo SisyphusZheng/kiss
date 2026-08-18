@@ -11,42 +11,42 @@
 
 ## 逐项矩阵
 
-| 检查                                                                   | 结果                                             |
-| ---------------------------------------------------------------------- | ------------------------------------------------ |
-| server-build-start-serves                                              | pass(build → production start 真实可用)          |
-| anonymous-notes-denied                                                 | pass(受保护路由匿名拒绝)                         |
-| anonymous-notes-not-publicly-cacheable                                 | pass(no-store/private)                           |
-| login-user-a-303-cookie                                                | pass(登录 PRG 303 + auth-token cookie)           |
-| user-a-sees-own-row                                                    | pass(session restoration + RLS scoping)          |
-| user-a-creates-note-via-action                                         | pass(action → 303 → revalidation → SSR 持久化)   |
-| create-note-empty-title-422                                            | pass(validation failure → HTTP 422)              |
-| create-note-long-title-422                                             | pass(>120 字符 → 422)                            |
-| create-note-anonymous-401                                              | pass(未登录写入 → 401)                           |
-| user-b-isolated-from-a                                                 | pass(应用层跨用户隔离)                           |
-| user-b-update-delete-a-denied                                          | pass(DB RLS:B 对 A 行 UPDATE/DELETE 影响 0 行)   |
-| user-a-update-own-row                                                  | pass(正常流 UPDATE)                              |
-| anonymous-direct-rest-denied                                           | pass(匿名直连 REST 读 0 行)                      |
-| storage-app-upload-pending-scan                                        | pass(上传进入扫描生命周期,未扫描不可见)          |
-| storage-owner-upsert-immutability                                      | **blocked-human(remote policy drift,见下)**      |
-| storage-owner-signed-url-download                                      | pass(60s signed URL 下载到精确字节)              |
-| storage-owner-delete                                                   | pass(Owner DELETE 后 GET 不再可读)               |
-| signup-route-fail-closed-safe-error                                    | pass(provider 拒绝时安全公开错误,不泄露细节)     |
-| signup-e2e-email-confirmation                                          | **unverified(provider policy,见下)**             |
-| logout-clears-session                                                  | pass(303 + 会话清除,再访问 /notes 回到拒绝分支)  |
-| browser-anonymous-notes-denied                                         | pass                                             |
-| browser-password-login-cookie-session                                  | pass                                             |
-| browser-note-create-prg-persistence                                    | pass                                             |
-| browser-duplicate-submit-creates-single-row                            | pass(双击 → 恰好一行)                            |
-| browser-realtime-user-jwt-subscribed                                   | pass                                             |
-| browser-realtime-second-client-receives-ui-insert                      | pass(Client A UI 写入 → Client B 收到)           |
-| browser-realtime-cross-user-insert-denied                              | pass(他人 INSERT 不投递)                         |
-| browser-realtime-insert-delivered                                      | pass                                             |
-| browser-realtime-offline-online-recovery-delivers                      | pass(离线/恢复后投递)                            |
-| browser-realtime-refreshed-jwt-delivers                                | pass(刷新 JWT 后投递)                            |
-| browser-realtime-removal-releases-channel                              | pass(移除 island 发送 channel leave)             |
-| browser-app-metadata-admin-guard                                       | pass                                             |
-| browser-role-change-invalidates-server-guard                           | pass(降级后 /admin → 404)                        |
-| browser-global-revocation-denies-session                               | pass(全局撤销后会话失效)                         |
+| 检查                                              | 结果                                            |
+| ------------------------------------------------- | ----------------------------------------------- |
+| server-build-start-serves                         | pass(build → production start 真实可用)         |
+| anonymous-notes-denied                            | pass(受保护路由匿名拒绝)                        |
+| anonymous-notes-not-publicly-cacheable            | pass(no-store/private)                          |
+| login-user-a-303-cookie                           | pass(登录 PRG 303 + auth-token cookie)          |
+| user-a-sees-own-row                               | pass(session restoration + RLS scoping)         |
+| user-a-creates-note-via-action                    | pass(action → 303 → revalidation → SSR 持久化)  |
+| create-note-empty-title-422                       | pass(validation failure → HTTP 422)             |
+| create-note-long-title-422                        | pass(>120 字符 → 422)                           |
+| create-note-anonymous-401                         | pass(未登录写入 → 401)                          |
+| user-b-isolated-from-a                            | pass(应用层跨用户隔离)                          |
+| user-b-update-delete-a-denied                     | pass(DB RLS:B 对 A 行 UPDATE/DELETE 影响 0 行)  |
+| user-a-update-own-row                             | pass(正常流 UPDATE)                             |
+| anonymous-direct-rest-denied                      | pass(匿名直连 REST 读 0 行)                     |
+| storage-app-upload-pending-scan                   | pass(上传进入扫描生命周期,未扫描不可见)         |
+| storage-owner-upsert-immutability                 | **blocked-human(remote policy drift,见下)**     |
+| storage-owner-signed-url-download                 | pass(60s signed URL 下载到精确字节)             |
+| storage-owner-delete                              | pass(Owner DELETE 后 GET 不再可读)              |
+| signup-route-fail-closed-safe-error               | pass(provider 拒绝时安全公开错误,不泄露细节)    |
+| signup-e2e-email-confirmation                     | **unverified(provider policy,见下)**            |
+| logout-clears-session                             | pass(303 + 会话清除,再访问 /notes 回到拒绝分支) |
+| browser-anonymous-notes-denied                    | pass                                            |
+| browser-password-login-cookie-session             | pass                                            |
+| browser-note-create-prg-persistence               | pass                                            |
+| browser-duplicate-submit-creates-single-row       | pass(双击 → 恰好一行)                           |
+| browser-realtime-user-jwt-subscribed              | pass                                            |
+| browser-realtime-second-client-receives-ui-insert | pass(Client A UI 写入 → Client B 收到)          |
+| browser-realtime-cross-user-insert-denied         | pass(他人 INSERT 不投递)                        |
+| browser-realtime-insert-delivered                 | pass                                            |
+| browser-realtime-offline-online-recovery-delivers | pass(离线/恢复后投递)                           |
+| browser-realtime-refreshed-jwt-delivers           | pass(刷新 JWT 后投递)                           |
+| browser-realtime-removal-releases-channel         | pass(移除 island 发送 channel leave)            |
+| browser-app-metadata-admin-guard                  | pass                                            |
+| browser-role-change-invalidates-server-guard      | pass(降级后 /admin → 404)                       |
+| browser-global-revocation-denies-session          | pass(全局撤销后会话失效)                        |
 
 ## 六项 freeze 能力判定
 
