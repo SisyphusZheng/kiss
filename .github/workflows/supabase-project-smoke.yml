@@ -92,7 +92,17 @@ jobs:
           echo "$output" | grep -q 'Remote database is up to date.'
 
       - name: Install Chromium for the real browser journey
-        run: ./node_modules/.bin/playwright install --with-deps chromium
+        run: |
+          set -euo pipefail
+          # Runner apt resilience: azure.archive.ubuntu.com (the hosted-runner
+          # default mirror) hung apt twice on 2026-08-19, stalling this step
+          # until the job timeout. Point apt at the canonical archive and
+          # bound every acquire so a dead mirror fails fast instead.
+          sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
+            /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+          echo 'Acquire::http::Timeout "20"; Acquire::https::Timeout "20"; Acquire::Retries "2";' \
+            | sudo tee /etc/apt/apt.conf.d/99-open-element-timeouts.conf > /dev/null
+          ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Create two throwaway test users (Auth admin API)
         run: |
