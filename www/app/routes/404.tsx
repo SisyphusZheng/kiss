@@ -5,6 +5,8 @@
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
+import { localizePath } from '@openelement/site-ui/link.ts';
 
 const marqueeText =
   'CUSTOM ELEMENTS ✳ SHADOW DOM ✳ DECLARATIVE SHADOW DOM ✳ ES MODULES ✳ SIGNALS ✳ HTML FIRST ✳ 404 ✳ ';
@@ -144,10 +146,10 @@ styles.replaceSync(`
 export default class Page404 extends OpenElement {
   static override styles = [styles];
   override render() {
-    const locale = this._getLocale('en');
-    const t = content[locale === 'zh' ? 'zh' : 'en'];
-    const homeHref = locale === 'en' ? '/' : '/zh/';
-    const docsHref = locale === 'en' ? '/docs' : '/zh/docs';
+    const locale = contentLocale(this._getLocale('en'));
+    const t = content[locale];
+    const homeHref = localizePath('/', locale);
+    const docsHref = localizePath('/docs', locale);
     return (
       <main class='notfound'>
         <section class='stage'>

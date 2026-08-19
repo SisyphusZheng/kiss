@@ -15,7 +15,6 @@ export default class OpenPageRail extends OpenElement {
   override connectedCallback(): void {
     super.connectedCallback();
     requestAnimationFrame(() => {
-      this.#buildAutomaticOutline();
       if (matchMedia('(max-width: 900px)').matches) {
         this.shadowRoot?.querySelector('details')?.removeAttribute('open');
       }
@@ -51,26 +50,6 @@ export default class OpenPageRail extends OpenElement {
       }
     }, { rootMargin: '-18% 0px -70% 0px', threshold: 0 });
     for (const target of targets) this.#observer.observe(target);
-  }
-  #buildAutomaticOutline(): void {
-    if (!this.hasAttribute('auto') || this.children.length) return;
-    const shell = this.closest('open-reading-shell');
-    const headings = [...(shell?.querySelectorAll<HTMLElement>('.main h2, .main h3') ?? [])];
-    for (const [index, heading] of headings.entries()) {
-      if (!heading.id) {
-        heading.id = `section-${index + 1}-${
-          heading.textContent?.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
-            /(^-|-$)/g,
-            '',
-          ) || 'section'
-        }`;
-      }
-      const link = document.createElement('a');
-      link.href = `#${heading.id}`;
-      link.textContent = heading.textContent?.trim() || `Section ${index + 1}`;
-      if (heading.tagName === 'H3') link.setAttribute('data-depth', '3');
-      this.append(link);
-    }
   }
   #items(): readonly PageOutlineItem[] {
     // During SSR OpenElement supplies JSX props before it attaches attributes

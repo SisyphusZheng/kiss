@@ -13,6 +13,8 @@ import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
 import { serializeOutline } from '@openelement/site-ui/page-contract.ts';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
+import { localizePath } from '@openelement/site-ui/link.ts';
 
 export const tagName = 'page-blog-slug';
 
@@ -96,9 +98,9 @@ export default class BlogPostPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const locale = this._getLocale('en') === 'en' ? 'en' : 'zh';
+    const locale = contentLocale(this._getLocale('en'));
     // English is the default locale: canonical routes stay unprefixed.
-    const blogHref = locale === 'en' ? '/blog' : '/zh/blog';
+    const blogHref = localizePath('/blog', locale);
     const post = getPostBySlug(this.slug);
     if (!post) {
       return (

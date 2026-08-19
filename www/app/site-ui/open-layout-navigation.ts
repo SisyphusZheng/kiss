@@ -5,8 +5,6 @@ const LOCALE_LABELS: Record<string, string> = { en: '中文', zh: 'English' };
 const SECTION_MAP: Readonly<Record<string, readonly string[]>> = {
   '/guide': ['Quick Start', 'Core', 'Production'],
   '/architecture': ['Principles', 'Compatibility', 'Reference'],
-  '/registry': ['Registry'],
-  '/hub': ['Registry'],
   '/blog': ['History'],
 };
 
