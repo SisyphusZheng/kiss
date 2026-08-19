@@ -51,3 +51,12 @@
 - 未修任何发现(审计与修复分离,修复按 P 级另行排期)。
 - 未开启新一轮全仓深扫的循环;P3 批次(#1067)默认 deferred。
 - 未改动任何 framework 公开契约;issue 中的最小修复方向仅为建议,实施时需按 ADR/现有测试复核。
+
+## 2026-08-19 补记: 修复批次已落地(#1068)
+
+全部 12 个 P1/P2 issue 于同日修复并经 PR #1068 squash-merge 入 main(merge commit `3d727134`),#1055–#1066 全部关闭。每个修复独立提交并带测试;本地门禁 1581 passed / 0 failed,CI(autoflow-ci、CodeQL、dependency-review、Node 20/24 smoke、e2e)全绿。
+
+- 一处 CI 回归及处理: #1066 把 ADR 文移出 prev/next 可见集后,`page-structure.spec.ts` 原目标文章恰为 ADR(type: adr),空 pager 判 hidden 致红;测试改指向日期序中有前后邻的 dispatch 文 `0100-three-audits-later-the-stable-line` 并注释语义,本地 40/40 复跑验证后 CI 转绿。
+- #1059 修复要点: 门禁聚合扫描全部迁移文件,operations 去重后与 SELECT/INSERT/DELETE 必需集比对(重述策略放行,新增 UPDATE 或缺失必需操作拦截)。
+- #1066 顺带修复同类漏网文案两处(`index/index.tsx:264`、`roadmap.tsx:613`);index 页保留当前 alpha 线锚点(strategic-docs 门禁要求)。
+- #1067(P3 批次)保持 deferred,未随本批次实施。
