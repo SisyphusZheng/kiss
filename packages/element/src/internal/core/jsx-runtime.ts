@@ -116,10 +116,16 @@ function normaliseChildren(raw: unknown): (VNode | string)[] {
 
 type ComponentTag = string | ComponentFn | ComponentCtor | symbol;
 
+/**
+ * Key passed by the JSX transform's third argument: string/number for host
+ * elements, or the key-extractor function for `<For key={fn}>` (#1055).
+ */
+type JsxKey = string | number | ((item: unknown, index: number) => string | number);
+
 function createVNode(
   tag: ComponentTag | typeof Fragment,
   props: Record<string, unknown>,
-  key?: string | number,
+  key?: JsxKey,
 ): VNode {
   const { children, ref, ...rest } = props as Record<string, unknown> & {
     children?: unknown;
@@ -127,7 +133,19 @@ function createVNode(
   };
   const childArray = normaliseChildren(children);
   const vnode: VNode = { tag, props: rest, children: childArray };
-  if (key !== undefined) vnode.key = key;
+  if (key !== undefined) {
+    if (tag === For) {
+      // <For key={fn}> compiles to jsx(For, props, keyFn): the tag is the
+      // For factory function (not FOR_TAG) and the key arrives as the JSX
+      // transform's third argument, not inside props. Both keyed
+      // reconciliation paths (renderForNode, visitForBranch) read
+      // props?.key, so route the function key there; vnode.key stays
+      // string | number and is left unset for <For>.
+      rest.key = key;
+    } else if (typeof key !== 'function') {
+      vnode.key = key;
+    }
+  }
   if (ref !== undefined) vnode.ref = ref as (el: Element) => void;
   return vnode;
 }
@@ -138,7 +156,7 @@ function createVNode(
 export function jsx(
   tag: ComponentTag | typeof Fragment,
   props: Record<string, unknown>,
-  key?: string | number,
+  key?: JsxKey,
 ): VNode {
   return createVNode(tag, props, key);
 }
@@ -149,7 +167,7 @@ export function jsx(
 export function jsxs(
   tag: ComponentTag | typeof Fragment,
   props: Record<string, unknown>,
-  key?: string | number,
+  key?: JsxKey,
 ): VNode {
   return createVNode(tag, props, key);
 }
@@ -161,7 +179,7 @@ export function jsxs(
 export function jsxDEV(
   tag: ComponentTag | typeof Fragment,
   props: Record<string, unknown>,
-  key?: string | number,
+  key?: JsxKey,
   _isStaticChildren?: boolean,
   source?: { fileName: string; lineNumber: number; columnNumber: number },
   _self?: unknown,

@@ -11,6 +11,7 @@ import { trustRenderHtml } from './security.ts';
 import { Fragment } from './jsx-runtime.ts';
 import { createLogger } from './logger.ts';
 import { formatError, OpenElementError } from './errors.ts';
+import { camelToKebab } from './tag-utils.ts';
 import type {
   BindingDescriptor,
   BindingDispose,
@@ -178,7 +179,10 @@ function applyStaticStyle(
 ): BindingDispose {
   const target = desc.el as HTMLElement;
   for (const [k, v] of Object.entries(desc.value)) {
-    target.style.setProperty(k, String(v));
+    // camelToKebab is the single casing rule, shared with SSR
+    // styleObjectToString (render-ir.ts) — browsers silently drop camelCase
+    // property names passed to setProperty (#1056).
+    target.style.setProperty(camelToKebab(k), String(v));
   }
   return noop;
 }
