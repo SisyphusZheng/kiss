@@ -5,7 +5,7 @@
  * secrets through the runner environment. This script never prints or writes
  * those values; its report contains check names only.
  */
-import { chromium } from 'npm:playwright@1.59.1';
+import { chromium, type Locator } from 'npm:playwright@1.59.1';
 
 function required(name: string): string {
   const value = Deno.env.get(name);
@@ -30,6 +30,41 @@ async function record(check: string): Promise<void> {
     `${JSON.stringify({ check, result: 'pass' })}\n`,
     { append: true },
   );
+}
+
+/**
+ * Seed a note via the service role until the subscribed island renders it.
+ * postgres_changes has no backfill: an insert that lands while the
+ * server-side binding is still activating (the join is already acked) is
+ * never delivered, so a single zero-notice seed false-fails on low-latency
+ * networks (CI runners near the provider). Recovery means delivery resumes —
+ * re-seed on a bound while keeping each attempt's delivery assertion intact.
+ */
+async function seedNoteUntilDelivered(
+  live: Locator,
+  marker: string,
+  title: string,
+): Promise<void> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const insert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceRoleKey,
+        authorization: `Bearer ${serviceRoleKey}`,
+        'content-type': 'application/json',
+        prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ user_id: userId, title, body: marker }),
+    });
+    if (!insert.ok) throw new Error(`Realtime seed failed with HTTP ${insert.status}`);
+    const delivered = await live
+      .locator('#live-events')
+      .getByText(marker, { exact: true })
+      .waitFor({ state: 'visible', timeout: 7_000 })
+      .then(() => true, () => false);
+    if (delivered) return;
+  }
+  throw new Error(`Realtime seed "${marker}" was not delivered after 3 bounded attempts`);
 }
 
 const browser = await chromium.launch();
@@ -206,33 +241,8 @@ try {
     state: 'visible',
     timeout: 20_000,
   });
-  // Hosted Realtime acknowledges the join before the postgres_changes binding
-  // finishes activating server-side; a zero-slack insert can land inside that
-  // window and never be delivered. Low-latency CI runners hit the window,
-  // high-latency dev machines do not — give the binding a beat before seeding.
-  await page.waitForTimeout(1_000);
   const recoveredMarker = `browser-realtime-recovered-${runId}`;
-  const recoveredInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
-    method: 'POST',
-    headers: {
-      apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
-      'content-type': 'application/json',
-      prefer: 'return=minimal',
-    },
-    body: JSON.stringify({
-      user_id: userId,
-      title: 'realtime recovery smoke',
-      body: recoveredMarker,
-    }),
-  });
-  if (!recoveredInsert.ok) {
-    throw new Error(`Recovered Realtime seed failed with HTTP ${recoveredInsert.status}`);
-  }
-  await live.locator('#live-events').getByText(recoveredMarker, { exact: true }).waitFor({
-    state: 'visible',
-    timeout: 20_000,
-  });
+  await seedNoteUntilDelivered(live, recoveredMarker, 'realtime recovery smoke');
   await record('browser-realtime-offline-online-recovery-delivers');
 
   const refreshedSession = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
@@ -250,32 +260,8 @@ try {
     (element, token) => element.setAttribute('data-access-token', token),
     refreshedAccessToken,
   );
-  // Same settle as the reconnect case above: the server must apply the new
-  // access token before the next insert is evaluated under RLS.
-  await page.waitForTimeout(1_000);
-
   const refreshedMarker = `browser-realtime-refreshed-${runId}`;
-  const refreshedInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
-    method: 'POST',
-    headers: {
-      apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
-      'content-type': 'application/json',
-      prefer: 'return=minimal',
-    },
-    body: JSON.stringify({
-      user_id: userId,
-      title: 'realtime refreshed token smoke',
-      body: refreshedMarker,
-    }),
-  });
-  if (!refreshedInsert.ok) {
-    throw new Error(`Refreshed-token Realtime seed failed with HTTP ${refreshedInsert.status}`);
-  }
-  await live.locator('#live-events').getByText(refreshedMarker, { exact: true }).waitFor({
-    state: 'visible',
-    timeout: 20_000,
-  });
+  await seedNoteUntilDelivered(live, refreshedMarker, 'realtime refreshed token smoke');
   await record('browser-realtime-refreshed-jwt-delivers');
 
   await live.evaluate((element) => element.remove());
