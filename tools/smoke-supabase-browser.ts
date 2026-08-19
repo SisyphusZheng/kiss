@@ -71,7 +71,10 @@ try {
     page.waitForURL(`${baseUrl}/notes`),
     page.getByRole('button', { name: 'Create note' }).click(),
   ]);
-  await page.locator('#notes').getByText(createdMarker, { exact: true }).waitFor({
+  // The SSR list item is `<li><strong>title</strong> — body</li>`: the marker
+  // shares its <li> with the title, so exact-text matching can never hit it.
+  // Match the list item that contains the marker instead.
+  await page.locator('#notes li').filter({ hasText: createdMarker }).first().waitFor({
     state: 'visible',
   });
   await record('browser-note-create-prg-persistence');
@@ -80,7 +83,7 @@ try {
   await page.getByLabel('Title').fill('duplicate submit smoke');
   await page.getByLabel('Body').fill(duplicateMarker);
   await page.getByRole('button', { name: 'Create note' }).dblclick();
-  await page.locator('#notes').getByText(duplicateMarker, { exact: true }).waitFor({
+  await page.locator('#notes li').filter({ hasText: duplicateMarker }).first().waitFor({
     state: 'visible',
   });
   await page.waitForTimeout(1_000);
@@ -134,7 +137,7 @@ try {
       page.waitForURL(`${baseUrl}/notes`),
       page.getByRole('button', { name: 'Create note' }).click(),
     ]);
-    await page.locator('#notes').getByText(secondClientMarker, { exact: true }).waitFor({
+    await page.locator('#notes li').filter({ hasText: secondClientMarker }).first().waitFor({
       state: 'visible',
     });
     await secondLive.locator('#live-events').getByText(secondClientMarker, { exact: true })
