@@ -48,6 +48,10 @@
     {
       "file": "20260817000008_admin_audit_writes.sql",
       "sha256": "aa16b16c8beb2d8be361399fa95cfea979e0f35a231ceb450f1e119786aa0b2f"
+    },
+    {
+      "file": "20260819000000_attachments_insert_only.sql",
+      "sha256": "d5603692e97001a81f70233be70b153c55f73d32b8a726c6037948c0c3fed7a5"
     }
   ]
 }
