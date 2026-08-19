@@ -87,6 +87,11 @@ go/no-go point.
   full emulator evidence matrix; only then the positioning copy, which
   must cite the evidence that exists. #985 stays honest about what tier-3
   (real deployment smoke) did or did not run.
+- **Consolidation note (2026-08-20)**: the alpha.2–alpha.6 train contents
+  interleaved on main during the #1002 production-closure push and ship
+  as the single `0.43.0-alpha.2` cut (release plan
+  `docs/release/v0.43.0-alpha.2-plan.md`); the per-train labels above stay
+  as the scope map, not as separately published versions.
 - **#984 tier 3 (real Cloudflare deploy smoke)** requires maintainer-
   provided credentials/accounts; without them it ships as a documented
   runbook, honestly labeled, and does not block the line.

@@ -9,9 +9,11 @@ name: Fullstack deploy smoke (real providers)
 # executes the full probe (Queue/DLQ verification, plus scanner redeploy when
 # the engine secrets exist), which is idempotent against the already-created
 # bounded async resources. The release freshness gate
-# (tools/check-evidence-freshness.ts) reads only the scheduled run
-# conclusions, so a weekly red run blocks release exactly like a manual one;
-# there is no base/provision ambiguity for the gate to resolve.
+# (tools/check-evidence-freshness.ts) reads scheduled and workflow_dispatch
+# conclusions with newest-wins across triggers (ADR-0134): a weekly red run
+# blocks release exactly like a manual red, and a newer manual green
+# supersedes older scheduled reds. Manual runs intended as release evidence
+# must select the `provision` mode so they cover the full probe.
 #
 # #1070 / ADR-0132: real scan-engine evidence is deferred to v0.44. When
 # METADEFENDER_CORE_URL / METADEFENDER_API_KEY are absent, the scanner steps
