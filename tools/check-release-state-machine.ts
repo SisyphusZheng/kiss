@@ -13,16 +13,41 @@ const toIndex = Deno.args.indexOf('--to');
 let version = (toIndex === -1 ? PACKAGE_VERSION_TAG : Deno.args[toIndex + 1])
   .replace(/^v/u, '');
 if (toIndex === -1) {
-  // A release in flight has no evidence for the current line yet — the bump
-  // commit precedes the publish evidence, and every release-tier run
+  // A release in flight has no completed evidence for the current line yet —
+  // the bump commit precedes the publish evidence, and every release-tier run
   // (prepare, publish-existing) gates before the publish plan writes it.
   // Replay the previous completed line instead; the in-flight line is
   // verified separately by release:evidence:check once it exists.
+  //
+  // A non-completed attempt whose tag never shipped also counts as in flight:
+  // nothing was published, so retrying IS the recovery, not a degraded
+  // release. A non-completed state on a shipped line (tag exists) stays
+  // blocked — that is the degraded case this gate exists for.
   const currentEvidence = `docs/release/autoflow3/v${version}.json`;
-  if (!(await runGit(['log', '--format=%H', '--', currentEvidence])).trim()) {
-    console.log(
-      `No evidence for v${version} yet (release in flight); replaying the previous line.`,
-    );
+  const history = (await runGit(['log', '--format=%H', '--', currentEvidence])).trim();
+  let inFlightReason: string | undefined;
+  if (!history) {
+    inFlightReason = `No evidence for v${version} yet`;
+  } else {
+    const newest = history.split('\n')[0];
+    const raw = await runGit(['show', `${newest}:${currentEvidence}`]);
+    const status = (JSON.parse(raw) as { status?: string }).status;
+    if (status !== 'completed') {
+      let tagMissing = false;
+      try {
+        await runGit(['rev-parse', '--verify', `v${version}`]);
+      } catch {
+        tagMissing = true;
+      }
+      if (tagMissing) {
+        inFlightReason = `v${version} ended a publish attempt as ${
+          status ?? 'unknown'
+        } and no tag shipped`;
+      }
+    }
+  }
+  if (inFlightReason) {
+    console.log(`${inFlightReason} (release in flight); replaying the previous line.`);
     version = PREVIOUS_PACKAGE_VERSION;
   }
 }
