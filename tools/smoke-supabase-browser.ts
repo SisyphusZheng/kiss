@@ -45,7 +45,7 @@ async function seedNoteUntilDelivered(
   marker: string,
   title: string,
 ): Promise<void> {
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 6; attempt++) {
     const insert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
       method: 'POST',
       headers: {
@@ -64,7 +64,14 @@ async function seedNoteUntilDelivered(
       .then(() => true, () => false);
     if (delivered) return;
   }
-  throw new Error(`Realtime seed "${marker}" was not delivered after 3 bounded attempts`);
+  // Diagnostics for CI-only failures: is the island stuck pre-subscribe, or
+  // subscribed-but-silent?
+  const status = await live.locator('#live-status').innerText().catch(() => 'unreadable');
+  const events = await live.locator('#live-events li').count().catch(() => -1);
+  throw new Error(
+    `Realtime seed "${marker}" was not delivered after 6 bounded attempts ` +
+      `(island status: "${status}", live events rendered: ${events})`,
+  );
 }
 
 const browser = await chromium.launch();
