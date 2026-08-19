@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      # v7.0.0
+      # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-deno-workspace
       - name: Generate and exercise the published starter
@@ -43,7 +43,7 @@ jobs:
     name: Published runtimes and deployment boundaries
     runs-on: ubuntu-latest
     steps:
-      # v7.0.0
+      # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-deno-workspace
       - name: Install Chromium for browser-backed consumer smoke

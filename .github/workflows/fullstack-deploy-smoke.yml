@@ -50,7 +50,7 @@ jobs:
       ASYNC_MODE: ${{ inputs.async_mode || 'provision' }}
       SCANNER_SERVICE: ${{ inputs.scanner_service || 'openelement-attachment-scanner' }}
     steps:
-      # v7.0.0
+      # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-deno-workspace
 
@@ -178,15 +178,18 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          # Short-lived smoke user; the random password is never logged.
+          # Short-lived smoke user; the random password is never logged. The
+          # id goes to $GITHUB_ENV so the always() cleanup step below can
+          # delete the user again.
           SMOKE_EMAIL="deploy-smoke-$(date +%s)@example.com"
           SMOKE_PASSWORD="Deploy-Smoke-$(date +%s)-$RANDOM$RANDOM"
-          curl -sf -X POST "$SUPABASE_URL/auth/v1/admin/users" \
+          SMOKE_USER_ID=$(curl -sf -X POST "$SUPABASE_URL/auth/v1/admin/users" \
             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H 'Content-Type: application/json' \
             -d "{\"email\":\"$SMOKE_EMAIL\",\"password\":\"$SMOKE_PASSWORD\",\"email_confirm\":true}" \
-            >/dev/null
+            | jq -r .id)
+          echo "SMOKE_USER_ID=$SMOKE_USER_ID" >> "$GITHUB_ENV"
           ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's|https?://([^.]+)\..*|\1|')
           headers=$(mktemp)
           # Plant stale chunk cookies: the session write must delete them too,
@@ -243,6 +246,27 @@ jobs:
           echo '{"check":"attachment-payment-queues","result":"pass"}' \
             >> "$GITHUB_WORKSPACE/.smoke/results.jsonl"
 
+      - name: Delete the throwaway smoke user (Auth admin API)
+        id: cleanup-user
+        # Cleanup guarantee: runs even when the probes above fail, so the
+        # project never accumulates deploy-smoke users. The report step
+        # records this step's outcome as the artifact's cleanup field.
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "${SMOKE_USER_ID:-}" ]; then
+            echo "no smoke user was created; nothing to clean up"
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+            "$SUPABASE_URL/auth/v1/admin/users/$SMOKE_USER_ID" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+          echo "DELETE admin user -> $code"
+          [ "$code" = "200" ]
+
       - name: Write the smoke report
         if: always()
         env:
@@ -261,7 +285,7 @@ jobs:
             --arg asyncMode "$ASYNC_MODE" \
             --argjson asyncResourcesVerified "$([ "$ASYNC_MODE" = "provision" ] && echo true || echo false)" \
             --arg status "${{ job.status }}" \
-            --arg cleanup "not-applicable" \
+            --arg cleanup "${{ steps.cleanup-user.outcome || 'not-run' }}" \
             --argjson checks "$checks" \
             '{
               version: $version,
@@ -274,7 +298,7 @@ jobs:
               jobStatus: $status,
               cleanup: $cleanup,
               checks: $checks,
-              note: "tier-3 deploy smoke; redacted — no credentials in this report; the test worker and queues are persistent shared infrastructure, so there is no per-run cleanup"
+              note: "tier-3 deploy smoke; redacted — no credentials in this report; the test worker and queues are persistent shared infrastructure, only the smoke user is cleaned up per run"
             }' > fullstack-deploy-smoke.json
 
       - name: Archive the smoke report
