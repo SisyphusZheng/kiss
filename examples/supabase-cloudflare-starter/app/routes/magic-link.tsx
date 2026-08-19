@@ -8,7 +8,7 @@ import {
 } from '@openelement/app';
 import { publicAuthError, safeInternalNext } from '../../lib/auth-security.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
-import { authRequestAllowed, type WorkerEnv } from '../../lib/rate-limit.ts';
+import { authRequestAllowed, type RateLimitEnv } from '../../lib/rate-limit.ts';
 
 export const tagName = 'page-magic-link';
 interface ActionData {
@@ -30,7 +30,7 @@ export interface MagicLinkAuthClient {
   };
 }
 export type MagicLinkClientFactory = (
-  env: WorkerEnv,
+  env: RateLimitEnv,
   request: Request,
   responseHeaders: Headers,
 ) => MagicLinkAuthClient;
@@ -38,7 +38,7 @@ export function createMagicLinkAction(createClient: MagicLinkClientFactory = cre
   return async function action(
     ctx: {
       formData: FormData;
-      env: WorkerEnv;
+      env: RateLimitEnv;
       request: Request;
       responseHeaders: Headers;
     },

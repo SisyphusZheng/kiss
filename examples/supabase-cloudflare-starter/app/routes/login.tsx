@@ -18,7 +18,7 @@ import {
 } from '@openelement/app';
 import { publicAuthError } from '../../lib/auth-security.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
-import { authRequestAllowed, type WorkerEnv } from '../../lib/rate-limit.ts';
+import { authRequestAllowed, type RateLimitEnv } from '../../lib/rate-limit.ts';
 
 export const tagName = 'page-login';
 
@@ -69,7 +69,7 @@ export interface LoginAuthClient {
 }
 
 export type LoginClientFactory = (
-  env: WorkerEnv,
+  env: RateLimitEnv,
   request: Request,
   responseHeaders: Headers,
 ) => LoginAuthClient;
@@ -77,7 +77,7 @@ export type LoginClientFactory = (
 export function createLoginAction(createClient: LoginClientFactory = createServerSupabase) {
   return async function action(ctx: {
     formData: FormData;
-    env: WorkerEnv;
+    env: RateLimitEnv;
     request: Request;
     responseHeaders: Headers;
   }): Promise<OpenElementActionFailure<LoginActionData>> {
@@ -111,7 +111,7 @@ export interface LoginOAuthClient {
 }
 
 export type LoginOAuthClientFactory = (
-  env: WorkerEnv,
+  env: RateLimitEnv,
   request: Request,
   responseHeaders: Headers,
 ) => LoginOAuthClient;
@@ -119,7 +119,7 @@ export type LoginOAuthClientFactory = (
 export function createOAuthAction(createClient: LoginOAuthClientFactory = createServerSupabase) {
   return async function oauth(ctx: {
     formData: FormData;
-    env: WorkerEnv;
+    env: RateLimitEnv;
     request: Request;
     responseHeaders: Headers;
   }): Promise<OpenElementActionFailure<LoginActionData>> {

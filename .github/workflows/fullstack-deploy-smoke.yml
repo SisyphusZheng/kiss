@@ -131,6 +131,9 @@ jobs:
           queues=$(curl -sf --max-time 30 \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/queues?per_page=100")
+          # Queue names are hardcoded here; the canonical source is
+          # examples/supabase-cloudflare-starter/lib/cloudflare-queues.ts
+          # (parity covered by tools/render-cloudflare-async-config.test.ts).
           for queue in \
             openelement-attachment-scan \
             openelement-attachment-scan-dlq \
@@ -264,6 +267,8 @@ jobs:
           else
             echo "scan engine not configured (#1070); skipping scanner deployment check"
           fi
+          # Queue names mirror the provisioning loop above; canonical source:
+          # examples/supabase-cloudflare-starter/lib/cloudflare-queues.ts.
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info \

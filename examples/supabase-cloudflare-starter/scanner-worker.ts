@@ -1,3 +1,4 @@
+import { ATTACHMENT_BUCKET } from './lib/cloudflare-queues.ts';
 import { serviceRoleRpc, UUID_PATTERN } from './lib/service-role.ts';
 
 interface ScannerEnv {
@@ -19,7 +20,6 @@ interface AuthorizedAttachment {
   content_type: string;
 }
 
-const BUCKET = 'notes-attachments';
 const MAX_BYTES = 10 * 1024 * 1024;
 const TIMEOUT_MS = 20_000;
 
@@ -67,7 +67,7 @@ async function boundedBytes(response: Response, expected: number): Promise<Uint8
 
 function storagePath(origin: URL, objectKey: string): string {
   const encoded = objectKey.split('/').map(encodeURIComponent).join('/');
-  return new URL(`/storage/v1/object/authenticated/${BUCKET}/${encoded}`, origin).href;
+  return new URL(`/storage/v1/object/authenticated/${ATTACHMENT_BUCKET}/${encoded}`, origin).href;
 }
 
 export function createScannerWorker(

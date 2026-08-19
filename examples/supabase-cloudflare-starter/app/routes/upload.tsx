@@ -23,10 +23,11 @@ import {
   useLoaderData,
 } from '@openelement/app';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
+import { ATTACHMENT_BUCKET } from '../../lib/cloudflare-queues.ts';
 
 export const tagName = 'page-upload';
 
-export const BUCKET = 'notes-attachments';
+export const BUCKET = ATTACHMENT_BUCKET;
 /** Reference cap (1 MiB) — a starter guardrail, not a Supabase limit. */
 export const MAX_FILE_BYTES = 1024 * 1024;
 export const ALLOWED_CONTENT_TYPES = new Set([

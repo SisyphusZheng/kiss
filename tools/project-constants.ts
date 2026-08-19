@@ -9,12 +9,6 @@ export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
 export const LATEST_LANDED_TRAIN = 'v0.43.0-alpha.2';
 export const ACTIVE_EXECUTION_VERSION = 'v0.43.0-alpha.2';
 export const NEXT_EXECUTION_VERSION = 'v0.43.0-alpha.3';
-export const RELEASE_STATE = Object.freeze({
-  sourcePackageLine: PACKAGE_VERSION_TAG,
-  latestLandedTrain: LATEST_LANDED_TRAIN,
-  activeReleaseTarget: ACTIVE_EXECUTION_VERSION,
-  nextPlannedTrain: NEXT_EXECUTION_VERSION,
-});
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',
@@ -69,8 +63,9 @@ export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 // The theme the www roadmap current-line timeline entry carried immediately
 // after the last mechanical version bump. The bump rewrites the entry's
 // version string but cannot invent the new release's theme — that is human
-// release prose. check-www-current-truth.ts fails while the entry still
-// names this superseded theme (the 0.41.1 bump left 'third audit cleanup
+// release prose. The www gate of check-docs-truth.ts
+// (deno task www:check-current-truth) fails while the entry still names
+// this superseded theme (the 0.41.1 bump left 'third audit cleanup
 // sweep' describing alpha.19 under the v0.41.1 entry). The bump side
 // re-records this constant from the pre-bump entry; bootstrap value
 // documents the incident.

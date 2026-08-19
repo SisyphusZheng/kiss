@@ -657,6 +657,12 @@ export function createRouter(options: RouterOptions): RouterInstance {
     } else {
       history.pushState(null, '', url);
     }
+    // The router now owns the address bar, so the browser-event dedup key no
+    // longer describes it: it may still name the URL an earlier guard
+    // restore/redirect rewrote the landed entry to, and a genuine back onto
+    // that entry must not be deduped away. commitBrowserNavigation re-derives
+    // the key in its finally block after browser-driven processing.
+    lastLandedUrl = null;
     rematch();
     notifyChange();
   }
@@ -702,12 +708,17 @@ export function createRouter(options: RouterOptions): RouterInstance {
           return;
         }
         if (typeof result === 'string') {
-          // Latest-wins (#1023): the browser chain carries no ticket, so a
-          // programmatic navigation committed while the guard was pending
-          // already owns the outcome; the stale redirect must not
-          // replaceState over it.
+          // Latest-wins (#1023): a programmatic navigation committed while
+          // the guard was pending already owns the outcome; the stale
+          // redirect must not replaceState over it. The captured seq rides
+          // along as the ticket so the check keeps holding across the
+          // redirect target's own guard await as well.
           if (seqAtGuardStart !== programmaticNavigationSeq) return;
-          await commitNavigation(result, { replace: true, depth: 1, restoreOnBlock: true });
+          await commitNavigation(result, {
+            replace: true,
+            depth: 1,
+            restoreOnBlock: true,
+          }, seqAtGuardStart);
           return;
         }
       }

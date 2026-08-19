@@ -8,7 +8,7 @@ import {
 } from '@openelement/app';
 import { publicAuthError, safeInternalNext } from '../../lib/auth-security.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
-import { authRequestAllowed, type WorkerEnv } from '../../lib/rate-limit.ts';
+import { authRequestAllowed, type RateLimitEnv } from '../../lib/rate-limit.ts';
 
 export const tagName = 'page-signup';
 interface ActionData {
@@ -36,7 +36,7 @@ export interface SignupAuthClient {
   };
 }
 export type SignupClientFactory = (
-  env: WorkerEnv,
+  env: RateLimitEnv,
   request: Request,
   responseHeaders: Headers,
 ) => SignupAuthClient;
@@ -44,7 +44,7 @@ export type SignupClientFactory = (
 export function createSignupAction(createClient: SignupClientFactory = createServerSupabase) {
   return async function action(ctx: {
     formData: FormData;
-    env: WorkerEnv;
+    env: RateLimitEnv;
     request: Request;
     responseHeaders: Headers;
   }): Promise<OpenElementActionFailure<ActionData>> {

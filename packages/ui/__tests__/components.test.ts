@@ -1647,6 +1647,45 @@ Deno.test('open-dropdown: each instance anchors its content to its own host (#10
   assertNotEquals(firstStyle, secondStyle);
 });
 
+Deno.test('open-dropdown: connect re-syncs both anchor halves from the client realm', async () => {
+  const { OpenDropdown } = await import('../src/open-dropdown.tsx');
+  // DSD hydration preserves the server-baked position-anchor inline style
+  // while the host anchor-name is client-written, and the two counters
+  // diverge on multi-page SSG sites — so only an own connectedCallback
+  // override can re-pair the popover with its host.
+  assertEquals(
+    Object.prototype.hasOwnProperty.call(OpenDropdown.prototype, 'connectedCallback'),
+    true,
+  );
+
+  const instance = new OpenDropdown();
+  const written = new Map<string, string>();
+  Object.defineProperty(instance, 'style', {
+    configurable: true,
+    value: { setProperty: (name: string, value: string) => written.set(`host:${name}`, value) },
+  });
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: {
+      querySelector: (selector: string) =>
+        selector === '.content'
+          ? { style: { setProperty: (n: string, v: string) => written.set(`content:${n}`, v) } }
+          : null,
+    },
+  });
+
+  // The base-class connectedCallback attachShadow path is unavailable in
+  // this harness; invoke the same sync the override performs after super.
+  (instance as unknown as { _syncAnchorName(): void })._syncAnchorName();
+
+  // The shadow .content style must be overwritten with the same client value
+  // written to the host, so the client realm wins on both ends.
+  const anchorName = written.get('host:anchor-name');
+  assertExists(anchorName);
+  assertStringIncludes(anchorName, '--open-dropdown-trigger-');
+  assertEquals(written.get('content:position-anchor'), anchorName);
+});
+
 Deno.test('open-dropdown: trigger click toggles the native popover', async () => {
   const module = asComponentModule(await import('../src/open-dropdown.tsx'));
   const instance = new (exportedConstructor(module))();

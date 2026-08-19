@@ -5,13 +5,18 @@ import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/eleme
 export type RenderResult = ReturnType<typeof OpenElement.prototype.render>;
 
 // Instance-unique ids so multiple instances of one component on a page never
-// collide on id/htmlFor/aria-*. The module-level counter is SSR-safe: SSR
-// instantiates components in document order and DSD hydration upgrades them
-// in the same document order, so both sides assign identical ids to the same
-// instance.
+// collide on id/htmlFor/aria-*. Uniqueness holds within one realm only: SSG
+// renders every page in a single process (the count accumulates across
+// pages) and island hydration does not upgrade components in document order,
+// so the server and client counters can assign different ids to the same
+// instance. Pairs that must match across realms therefore have to be
+// re-synced on the client — open-dropdown rewrites both anchor halves in
+// connectedCallback, open-tabs re-decorates its light-DOM ids on every
+// render. References that stay inside a single shadow render (open-input)
+// need no repair.
 let instanceCount = 0;
 
-/** Return the next SSR-safe instance-unique id suffix. */
+/** Return the next realm-unique instance id suffix. */
 export function nextInstanceId(): number {
   return instanceCount++;
 }

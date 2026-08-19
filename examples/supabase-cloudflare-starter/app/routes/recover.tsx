@@ -8,7 +8,7 @@ import {
 } from '@openelement/app';
 import { publicAuthError } from '../../lib/auth-security.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
-import { authRequestAllowed, type WorkerEnv } from '../../lib/rate-limit.ts';
+import { authRequestAllowed, type RateLimitEnv } from '../../lib/rate-limit.ts';
 export const tagName = 'page-recover';
 interface ActionData {
   error?: string;
@@ -28,7 +28,7 @@ export interface RecoverAuthClient {
   };
 }
 export type RecoverClientFactory = (
-  env: WorkerEnv,
+  env: RateLimitEnv,
   request: Request,
   responseHeaders: Headers,
 ) => RecoverAuthClient;
@@ -36,7 +36,7 @@ export function createRecoverAction(createClient: RecoverClientFactory = createS
   return async function action(
     ctx: {
       formData: FormData;
-      env: WorkerEnv;
+      env: RateLimitEnv;
       request: Request;
       responseHeaders: Headers;
     },
