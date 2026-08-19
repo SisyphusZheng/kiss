@@ -1,0 +1,103 @@
+{
+  "id": "publish-existing-v0.43.0-alpha.2-2026-08-19T21-33-15-275Z",
+  "kind": "publish-existing",
+  "policyVersion": "autoflow3-v0",
+  "currentVersion": "0.43.0-alpha.1",
+  "targetVersion": "0.43.0-alpha.2",
+  "status": "failed",
+  "startedAt": "2026-08-19T21:33:15.275Z",
+  "steps": [
+    {
+      "name": "verify published source version",
+      "status": "passed",
+      "startedAt": "2026-08-19T21:33:15.286Z",
+      "completedAt": "2026-08-19T21:33:15.293Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify main CI success for HEAD",
+      "status": "pending",
+      "startedAt": "2026-08-19T21:33:15.294Z"
+    },
+    {
+      "name": "verify prepare record",
+      "status": "pending"
+    },
+    {
+      "name": "package artifact gate",
+      "command": [
+        "deno",
+        "task",
+        "package-artifacts:check"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "publish npm packages",
+      "command": [
+        "deno",
+        "task",
+        "publish:npm"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "verify npm versions and dist-tags",
+      "status": "pending"
+    },
+    {
+      "name": "post-publish npm consumer smoke",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/consumer-smoke.ts",
+        "--version",
+        "0.43.0-alpha.2"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "post-publish third-party Web Component smoke",
+      "command": [
+        "deno",
+        "task",
+        "third-party-wc:smoke"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "stage release evidence",
+      "command": [
+        "git",
+        "add",
+        "docs/release/autoflow3/v0.43.0-alpha.2.json",
+        "docs/release/v0.43.0-alpha.2.md"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "commit release evidence",
+      "status": "pending"
+    },
+    {
+      "name": "tag release",
+      "status": "pending"
+    },
+    {
+      "name": "push tag",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "v0.43.0-alpha.2"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "create GitHub release",
+      "status": "pending"
+    }
+  ],
+  "completedAt": "2026-08-19T21:33:16.388Z"
+}
