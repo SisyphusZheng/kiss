@@ -1,7 +1,7 @@
 # v0.43.0 — Universal WC SSR release plan
 
-> Current source package line: `v0.43.0-alpha.1`\
-> Current npm registry line: `v0.43.0-alpha.1` (published 2026-08-15, dist-tag `alpha`)\
+> Current source package line: `v0.43.0-alpha.2`\
+> Current npm registry line: `v0.43.0-alpha.2` (published 2026-08-15, dist-tag `alpha`)\
 > Latest landed train: `v0.43.0-alpha.2` (admission visibility, on main)\
 > Active release target: `v0.43.0-alpha.2`\
 > Next planned train: `v0.43.0-alpha.3`\

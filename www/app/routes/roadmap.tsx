@@ -334,7 +334,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.0-alpha.1',
+      version: 'v0.43.0-alpha.2',
       theme: 'foundation train: hydration diagnostics, honest runtimes, WC SSR corpus',
       copy:
         "The 0.43 line opens on top of the frozen 0.42.0 (ADR-0122) with a foundation train plus a full post-freeze health check. Hydration mismatches now carry structured diagnostics (OPEN_ELEMENT_HYDRATION_MISMATCH: reason, marker counts, branch-token sequences, divergence index — detailed in dev, coded in prod, #631); dist/server boots honestly across runtimes with a clean Node 24+ floor (#969); a content-element/fallback-tag collision now fails the build instead of silently bypassing the page render (#971); the third-party WC SSR corpus pins each library kind's SSR form as machine-readable evidence (#979 groundwork); and verified recipes land for rate limiting, file-backed data and auth guards (#627/#629/#630).",
