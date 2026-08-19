@@ -99,3 +99,11 @@
 - **Gmail 腿（一次性用户，已删除）**：同一流程，邮件**进收件箱**,Gmail "显示原文" SPF/DKIM/DMARC 三项 PASS。
 - **已知限制（记录，非阻塞）**：全新发送域零信誉，微软 SmartScreen 将首封信置入垃圾箱（认证全过亦然）；域信誉随发送量累积改善，属运营爬坡而非配置缺陷。Supabase 新 sender 30 封/小时限额维持默认（参考栈证据量远低于此）。
 - **结论**:`signup-e2e-email-confirmation` 从 unverified 转为 **verified**。freeze 非 pass 项清零；#1002 blocked-human 清单仅剩 OAuth 浏览器旅程一次真实登录。
+
+## 2026-08-19 补记 4: GitHub OAuth 旅程 verified + blocked-human 清零
+
+- **配置**:GitHub OAuth App(`Ov23liFwKTNlEsSbpMAU`，回调 `https://jdyaplwhocqaczlejwml.supabase.co/auth/v1/callback`）接入 Supabase GitHub provider（经 Management API，字段 `external_github_secret`)；授权端点实测 302 → github.com，参数逐字正确。
+- **旅程实测**（本地 starter :4173 × 真实项目，维护者本人 GitHub 账号）:/login 渲染 GitHub 按钮（`SUPABASE_OAUTH_GITHUB_ENABLED=true`)→ 授权页 → Supabase 回调 → PKCE 交换 → 会话建立 → /notes signed-in。服务端核验：新用户 identity `provider=github`,`email_confirmed_at`/`last_sign_in_at` 置位（2026-08-19T14:22Z)。旅程用户已删除（200)。
+- **插曲（已修复）**：首次建错应用类型（GitHub App,`Iv23` 开头）导致 `redirect_uri_mismatch`；重建为 OAuth App(`Ov23` 开头）后通过。
+- **清理发现的遗留**：盘点发现 6 个 08-16/08-17 的遗留测试用户。其中 5 个已删除；`alpha6-smoke@example.com` **有意保留**：其名下 7 条测试订单中一条被 `stripe_events` 引用，该表有 `BEFORE UPDATE OR DELETE` 不可变触发器（#1001 支付审计不变量）——强删需要绕过该不变量，代价大于收益，记录在案（测试项目单用户残留，无安全风险）。
+- **0.43 blocked-human 清单至此清零**。
