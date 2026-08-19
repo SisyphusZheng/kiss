@@ -198,22 +198,53 @@ Deno.test('clicks outside island subtrees are never recorded', () => {
   });
 });
 
-Deno.test('light-DOM markers resolve the host via the ssr-props ancestor', () => {
+Deno.test('light-DOM markers resolve the nearest custom-element host, no ssr-props needed (#1067)', () => {
   withStubDocument(() => {
     ensurePreHydrationClickCapture();
-    const island = markerHost();
-    island.closest = () => island;
+    // A shadow island whose light-DOM child carries the markers: the host has
+    // no data-ssr-props (render-dsd.ts only emits it with public props), so
+    // the old closest('[data-ssr-props]') lookup keyed the queue to the
+    // marker node and the click never flushed.
+    const island = { ...markerHost(), tagName: 'my-island' };
     const markerEl = {
       nodeType: 1,
+      tagName: 'SPAN',
       hasAttribute: (name: string) => name === 'data-signal',
-      closest: () => island,
+      parentElement: island,
     };
     const events = { n: 0 };
     const button = fakeTarget(events);
-    captured.captureHandler?.(fakeEvent(button, [button, markerEl, island]));
-    assertEquals(events.n, 0);
+    captured.captureHandler?.(fakeEvent(button, [button, markerEl]));
+    assertEquals(events.n, 0, 'no replay before hydration');
     flushPendingClicks(island as unknown as Element);
-    assertEquals(events.n, 1);
+    assertEquals(events.n, 1, 'replay keyed to the island host');
+  });
+});
+
+Deno.test('light-mode island clicks are never queued: hydration detaches the recorded target (#1067)', () => {
+  withStubDocument(() => {
+    ensurePreHydrationClickCapture();
+    // A renderMode 'light' island hydrates by clearChildren + full re-render,
+    // so the node a pre-hydration click was recorded against is replaced
+    // before any replay could run — queueing it would dispatch on a dead
+    // node. No shadow root with markers => not queued.
+    const island = {
+      nodeType: 1,
+      tagName: 'my-light-island',
+      hasAttribute: () => false,
+      shadowRoot: null,
+    };
+    const markerEl = {
+      nodeType: 1,
+      tagName: 'SPAN',
+      hasAttribute: (name: string) => name === 'data-signal',
+      parentElement: island,
+    };
+    const events = { n: 0 };
+    const button = fakeTarget(events);
+    captured.captureHandler?.(fakeEvent(button, [button, markerEl]));
+    flushPendingClicks(island as unknown as Element);
+    assertEquals(events.n, 0, 'never queued, nothing to replay');
   });
 });
 

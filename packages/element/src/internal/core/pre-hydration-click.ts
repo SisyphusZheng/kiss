@@ -92,8 +92,15 @@ function shadowRootHasMarkers(el: Element): boolean {
  * BEFORE the host and `closest()` cannot cross the shadow boundary, so the
  * owning host is resolved via `getRootNode().host` — never the marker
  * element itself, or the replay queue would be keyed to the wrong node and
- * never flushed. Light-DOM: markers sit on descendants and the owning island
- * is the nearest `data-ssr-props` ancestor.
+ * never flushed. Markers in a shadow island's light DOM resolve to the
+ * nearest custom-element ancestor (custom-element tagNames carry a dash) —
+ * NOT via `data-ssr-props`, which render-dsd.ts only emits when the island
+ * has public props, so a no-props island would key the queue to the marker
+ * node and never flush.
+ *
+ * Light-mode islands are skipped entirely (#1067): they hydrate by
+ * clearChildren + full re-render, which detaches the recorded target node,
+ * so replaying would dispatch on a dead node — a guaranteed no-op.
  */
 function pendingHostFromPath(path: readonly EventTarget[]): Element | null {
   for (const node of path) {
@@ -105,9 +112,26 @@ function pendingHostFromPath(path: readonly EventTarget[]): Element | null {
         const host = root !== node.ownerDocument ? (root as { host?: Element }).host : undefined;
         if (host) return host;
       }
-      const host = typeof node.closest === 'function' ? node.closest('[data-ssr-props]') : null;
-      return host ?? node;
+      const host = nearestCustomElementAncestor(node);
+      // Only shadow (DSD) islands queue: the host proves its shadow root
+      // carries live markers; a light-mode island has none and is skipped.
+      if (!host || !shadowRootHasMarkers(host)) return null;
+      return host;
     }
+  }
+  return null;
+}
+
+/**
+ * Nearest custom-element ancestor — the node itself included — found by the
+ * dash every custom-element tagName carries. Null outside any custom element.
+ */
+function nearestCustomElementAncestor(node: Element): Element | null {
+  let current: Element | null = node;
+  while (current) {
+    const tagName = (current as { tagName?: unknown }).tagName;
+    if (typeof tagName === 'string' && tagName.includes('-')) return current;
+    current = (current.parentElement as Element | null) ?? null;
   }
   return null;
 }

@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from '@std/assert';
-import { hydrateOpenElement } from '../src/internal/core/client-runtime.ts';
+import { disposeOpenElement, hydrateOpenElement } from '../src/internal/core/client-runtime.ts';
 import { HydrationScope, markSelfHydrated } from '../src/internal/core/hydration-scope.ts';
 import { signal } from '../src/internal/signal/index.ts';
 
@@ -161,6 +161,35 @@ Deno.test('client runtime still hydrates and disposes third-party hosts without 
 
   // The runtime-created scope owns the binding: dispose tears it down.
   dispose();
+  count.value = 5;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assertEquals(state.text, '3');
+  assertEquals(state.writes, 1);
+});
+
+Deno.test('disposeOpenElement walks a document root and disposes subtree hosts', async () => {
+  const { marker, state } = countingMarker('count');
+  const { root } = hydrationFixture(marker);
+  const count = signal(3);
+  const hostReg = new Map([['count', count]]);
+  const registry = {
+    get: () => class {},
+    upgrade: (candidate: unknown) => {
+      Object.defineProperty(candidate, 'signalRegistry', { value: hostReg });
+    },
+  };
+
+  hydrateOpenElement(
+    root as unknown as ParentNode,
+    { registry: registry as unknown as CustomElementRegistry },
+  );
+  assertEquals(state.text, '3');
+
+  // A document root (nodeType 9) carries no host disposer of its own, but its
+  // subtree holds the hydrated host — pre-fix the walk returned on the first
+  // line and silently disposed nothing.
+  const documentRoot = { nodeType: 9, childNodes: root.childNodes };
+  disposeOpenElement(documentRoot as unknown as ParentNode);
   count.value = 5;
   await new Promise((resolve) => setTimeout(resolve, 0));
   assertEquals(state.text, '3');

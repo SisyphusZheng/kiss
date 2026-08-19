@@ -546,8 +546,13 @@ function renderHostElement(
   if (typeof (node as VNode).ref === 'function') {
     descriptors.push(bindRef(el, (node as VNode).ref as (el: Element) => void));
   }
-  for (const child of children) {
-    el.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
+  // innerHTML overrides children, matching SSR (render-ir.ts
+  // renderElementChildren): appending both would diverge the CSR tree from
+  // the SSR'd one.
+  if (props.innerHTML === undefined) {
+    for (const child of children) {
+      el.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
+    }
   }
 
   return el;
