@@ -207,7 +207,9 @@ routeSheet.replaceSync(`
 `);
 
 // The dispatch index leads with the newest story: sort by frontmatter date
-// descending before picking featured and rows.
+// descending before picking featured and rows. Keep this filter+sort in sync
+// with routes/blog/[slug].tsx, which derives prev/next from the same order
+// (#1066).
 const visiblePosts = posts
   .filter((post) => post.frontmatter.type !== 'adr')
   .sort((a, b) => b.frontmatter.date.localeCompare(a.frontmatter.date));

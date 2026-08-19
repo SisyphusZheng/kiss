@@ -113,9 +113,15 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     const article = prepareArticle(post.html);
-    const index = posts.findIndex((candidate) => candidate.slug === post.slug);
-    const previous = index >= 0 ? posts[index + 1] : undefined;
-    const next = index > 0 ? posts[index - 1] : undefined;
+    // Prev/next must follow the blog index's visible order, not the raw
+    // posts array — keep this filter+sort in sync with the visiblePosts in
+    // routes/blog/index.tsx (#1066).
+    const visiblePosts = posts
+      .filter((candidate) => candidate.frontmatter.type !== 'adr')
+      .sort((a, b) => b.frontmatter.date.localeCompare(a.frontmatter.date));
+    const index = visiblePosts.findIndex((candidate) => candidate.slug === post.slug);
+    const previous = index >= 0 ? visiblePosts[index + 1] : undefined;
+    const next = index > 0 ? visiblePosts[index - 1] : undefined;
     return (
       <open-reading-shell
         meta

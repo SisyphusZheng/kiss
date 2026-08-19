@@ -5,7 +5,7 @@ export const meta = { section: '', label: 'Changelog', order: 20 };
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
-import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
+import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../data/version.ts';
 import { pageStyles } from '../components/page-styles.js';
 import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
@@ -199,7 +199,7 @@ export class ChangelogPage extends OpenElement {
           <section id='candidate'>
             <h2>{t.stableHeading}</h2>
             <p>
-              <code>{PUBLISHED_PACKAGE_VERSION}</code> {t.stableBody}
+              <code>{PUBLISHED_STABLE_VERSION}</code> {t.stableBody}
             </p>
           </section>
           <section id='withdrawn'>

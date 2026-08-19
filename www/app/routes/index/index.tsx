@@ -1,7 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** The public WWW flagship: view-source editorial, v4 language. */
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import { PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
+import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../../data/version.ts';
 import '@openelement/ui/open-code-block';
 import '../../islands/cinematic-atmosphere.tsx';
 import '../../islands/cinematic-scroll.tsx';
@@ -261,8 +261,8 @@ export class HomePage extends OpenElement {
           <div class='spec-strip'>
             <div class='spec-cell'>
               <small>{t.specVersion}</small>
-              <strong>{PUBLISHED_PACKAGE_VERSION} — stable line</strong>
-              <small>application loop frozen (ADR-0122)</small>
+              <strong>{PUBLISHED_STABLE_VERSION} — stable line</strong>
+              <small>{PUBLISHED_PACKAGE_VERSION} alpha — application loop frozen (ADR-0122)</small>
             </div>
             <div class='spec-cell'>
               <small>{t.specGraph}</small>
