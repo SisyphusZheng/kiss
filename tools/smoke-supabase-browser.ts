@@ -206,6 +206,11 @@ try {
     state: 'visible',
     timeout: 20_000,
   });
+  // Hosted Realtime acknowledges the join before the postgres_changes binding
+  // finishes activating server-side; a zero-slack insert can land inside that
+  // window and never be delivered. Low-latency CI runners hit the window,
+  // high-latency dev machines do not — give the binding a beat before seeding.
+  await page.waitForTimeout(1_000);
   const recoveredMarker = `browser-realtime-recovered-${runId}`;
   const recoveredInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
     method: 'POST',
@@ -245,6 +250,9 @@ try {
     (element, token) => element.setAttribute('data-access-token', token),
     refreshedAccessToken,
   );
+  // Same settle as the reconnect case above: the server must apply the new
+  // access token before the next insert is evaluated under RLS.
+  await page.waitForTimeout(1_000);
 
   const refreshedMarker = `browser-realtime-refreshed-${runId}`;
   const refreshedInsert = await fetch(`${supabaseUrl}/rest/v1/notes`, {
