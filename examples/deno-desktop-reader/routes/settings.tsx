@@ -73,23 +73,6 @@ export const tagName = 'reader-settings';
 
 export default class SettingsPage extends OpenElement {
   #folderPickerError = '';
-  #sourceFeedback: { added?: string; synced?: number; error?: string } | null = null;
-
-  async #submitSourceForm(event: Event): Promise<void> {
-    event.preventDefault();
-    const form = event.currentTarget as HTMLFormElement;
-    try {
-      const { source, synced } = await addAndSyncSource(new FormData(form));
-      (this as unknown as SettingsPage & SettingsData).sources = await listSources();
-      this.#sourceFeedback = { added: source.id, synced };
-      form.reset();
-      const branchInput = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="branch"]');
-      if (branchInput) branchInput.value = 'main';
-    } catch (err) {
-      this.#sourceFeedback = { error: err instanceof Error ? err.message : String(err) };
-    }
-    this.update();
-  }
 
   async #pickLocalFolder(): Promise<void> {
     this.#folderPickerError = '';
@@ -117,7 +100,7 @@ export default class SettingsPage extends OpenElement {
 
   override render() {
     const current = (this as unknown) as SettingsPage & SettingsData;
-    const actionData = this.#sourceFeedback ?? (this as unknown as {
+    const actionData = (this as unknown as {
       actionData?: { added?: string; synced?: number; error?: string };
     })
       .actionData;
@@ -162,7 +145,7 @@ export default class SettingsPage extends OpenElement {
               </div>
             ))}
           </div>
-          <form class='source-form' onSubmit={(event: Event) => void this.#submitSourceForm(event)}>
+          <form class='source-form'>
             <label>
               类型
               <select name='kind' class='settings-select'>
