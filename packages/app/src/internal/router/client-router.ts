@@ -8,10 +8,11 @@
  *
  * Matching semantics are the WHATWG URLPattern standard (#856, ADR-0123):
  * patterns are translated to URLPattern (`:param{.+}` -> `:param(.+)`) and
- * matched through the native implementation, same as the element context's
- * extractParams. The route trie survives purely as a candidate-narrowing
- * performance index; every candidate is confirmed by URLPattern, and the
- * linear matcher remains as the equivalence oracle in tests.
+ * matched through the native implementation, same as the generated server
+ * matcher (ssg-helpers.ts routePatternToURLPatternPath, adapter-vite). The
+ * route trie survives purely as a candidate-narrowing performance index;
+ * every candidate is confirmed by URLPattern, and the linear matcher remains
+ * as the equivalence oracle in tests.
  */
 // SPA loader/action contexts are deliberately narrower than the request-time
 // LoaderContext/ActionContext: the client-side chain supplies only params
@@ -111,7 +112,7 @@ function compiledPatternFor(pattern: string): URLPattern {
   let compiled = urlPatternCache.get(pattern);
   if (!compiled) {
     // An invalid pattern fails fast at construction instead of silently
-    // never matching — same contract as the element context's extractParams.
+    // never matching — same contract as the fallback compiler below.
     compiled = new URLPattern({ pathname: routePathToURLPatternPath(pattern) });
     urlPatternCache.set(pattern, compiled);
   }
@@ -124,7 +125,7 @@ function compiledPatternFor(pattern: string): URLPattern {
 // route patterns are compiled to an equivalent RegExp instead. The compiled
 // fragment per segment carries its own leading slash, so optional segments
 // and the repeat can be skipped as a unit:
-//   static      -> escaped literal
+//   static      -> escaped literal (URLPattern modifiers/openers throw)
 //   :name       -> /([^/]+)
 //   :name?      -> (?:/([^/]+))?
 //   :name*      -> (?:/(.*))?     (zero-or-more non-empty segments)
@@ -167,6 +168,14 @@ function compileLinearPattern(pattern: string): LinearPattern {
     }
     const colon = segment.startsWith(':') ? 1 : -1;
     if (colon === -1) {
+      // A static segment must be literal in both engines: URLPattern
+      // modifiers and group/param openers would be reinterpreted (or
+      // rejected) by the native parser while the fallback silently escaped
+      // them into a never-matching dead route — fail fast instead, so both
+      // paths throw at compile time (#1067).
+      if (/[?+*():]/.test(segment)) {
+        throw new TypeError(`Invalid route pattern segment "${segment}"`);
+      }
       source += '/' + segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       continue;
     }

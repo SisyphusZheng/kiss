@@ -13,6 +13,7 @@ import {
   useLoaderData,
 } from '../src/index.ts';
 import * as appSurface from '../src/index.ts';
+import { __activeDataContext } from '../src/internal/router/data-context-store.ts';
 
 Deno.test('@openelement/app root export includes defineApp', () => {
   assertEquals(typeof defineApp, 'function');
@@ -310,6 +311,24 @@ Deno.test('page rendering pops data context when the renderer throws', () => {
 
   assertThrows(() => host.render(), Error, 'render failed');
   assertEquals(useLoaderData(), undefined);
+});
+
+Deno.test('page rendering does not strand its context on the bridge when pushing data throws (#1067)', () => {
+  const Page = definePage({ render: () => null });
+  const host = Object.create(Page.prototype) as InstanceType<typeof Page>;
+  // Throw while the render entry reads `this.data` for pushLoaderData — after
+  // the context was entered but before the try-scoped cleanup could run
+  // (#1067). The bridge must not keep the half-entered frame.
+  Object.defineProperty(host, 'data', {
+    get() {
+      throw new Error('data read failed');
+    },
+  });
+  const baseline = __activeDataContext();
+
+  assertThrows(() => host.render(), Error, 'data read failed');
+  assertEquals(useLoaderData(), undefined);
+  assertEquals(__activeDataContext() === baseline, true);
 });
 
 Deno.test('defineIslandConfig() returns canonical island metadata shape', () => {

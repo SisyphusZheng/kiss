@@ -337,11 +337,16 @@ export function definePage<
       // so nested components read the current page's data, never a leaked or
       // empty global stack (#632).
       const dataCtx = createRenderDataContext();
-      __enterDataContext(dataCtx);
-      pushLoaderData(dataCtx, this.data);
-      pushActionData(dataCtx, this.__openElementActionData);
-
+      // Enter and the data pushes live inside the try: a throwing push must
+      // not strand a frame on the active-context bridge, so the finally
+      // exits the bridge only when the enter succeeded (#1067).
+      let entered = false;
       try {
+        __enterDataContext(dataCtx);
+        entered = true;
+        pushLoaderData(dataCtx, this.data);
+        pushActionData(dataCtx, this.__openElementActionData);
+
         const params = (this.__openElementParams ?? this.params ?? {}) as Params;
         const data = this.data as Data;
         const context = {
@@ -359,8 +364,10 @@ export function definePage<
 
         return definition.render(context);
       } finally {
-        popData(dataCtx);
-        __exitDataContext();
+        if (entered) {
+          popData(dataCtx);
+          __exitDataContext();
+        }
       }
     }
   }
