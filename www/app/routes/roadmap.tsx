@@ -335,9 +335,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.43.0-alpha.2',
-      theme: 'foundation train: hydration diagnostics, honest runtimes, WC SSR corpus',
+      theme: 'Universal WC admission + the Supabase × Cloudflare production closure',
       copy:
-        "The 0.43 line opens on top of the frozen 0.42.0 (ADR-0122) with a foundation train plus a full post-freeze health check. Hydration mismatches now carry structured diagnostics (OPEN_ELEMENT_HYDRATION_MISMATCH: reason, marker counts, branch-token sequences, divergence index — detailed in dev, coded in prod, #631); dist/server boots honestly across runtimes with a clean Node 24+ floor (#969); a content-element/fallback-tag collision now fails the build instead of silently bypassing the page render (#971); the third-party WC SSR corpus pins each library kind's SSR form as machine-readable evidence (#979 groundwork); and verified recipes land for rate limiting, file-backed data and auth guards (#627/#629/#630).",
+        'The consolidated alpha.2 train ships the whole remaining 0.43 alpha scope in one cut. The SSR admission scan discovers and classifies every consumed foreign tag with machine-readable evidence (#979), and the Universal WC track extends proven admission to FAST and Stencil with a conformance matrix (#996). The OpenElement × Supabase × Cloudflare reference starter is qualified end-to-end against the real project — password and GitHub OAuth sign-in, RLS, insert-only Storage, Realtime, bounded Queue/DLQ/Cron, and one-time Stripe Checkout (#981–#985, #998–#1001) — with Tier 2/3 provider evidence automated and freshness-gated (#997, ADR-0134). Production mail runs on a verified domain; the scan engine is deferred to v0.44 with the lifecycle failing closed (#1070, ADR-0132); a pre-release sweep fixed two router guard-concurrency defects on the frozen path (ADR-0133).',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -383,10 +383,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.43.0-alpha.1',
-      theme: '地基列车:水合诊断、诚实的运行时、WC SSR 语料库',
+      version: 'v0.43.0-alpha.2',
+      theme: 'Universal WC 准入 + Supabase × Cloudflare 生产闭环',
       copy:
-        '0.43 线在冻结的 0.42.0(ADR-0122)之上以地基列车开场,并完成冻结后的首次全项目健康检查。水合不匹配现在携带结构化诊断(OPEN_ELEMENT_HYDRATION_MISMATCH:原因、标记计数、分支 token 序列与分歧索引——dev 详细、prod 一行,#631);dist/server 跨运行时诚实启动,Node 24+ 为明确地板(#969);内容元素与兜底标签的碰撞现在使构建失败,而不是静默旁路页面渲染(#971);第三方 WC SSR 语料库把各库形态的 SSR 输出钉为机器可读证据(#979 的地基);rate-limit、文件数据与认证守卫三份配方均已对真实构建验证(#627/#629/#630)。',
+        '合并后的 alpha.2 一次承载 0.43 线剩余的全部 alpha 范围。SSR 准入扫描现在能发现并分类每个被消费的外部标签,产出机器可读证据(#979);Universal WC 轨道把已证实的准入扩展到 FAST 与 Stencil,并给出一致性矩阵(#996)。OpenElement × Supabase × Cloudflare 参考栈已在真实项目上端到端验收——密码与 GitHub OAuth 登录、RLS、insert-only Storage、Realtime、有界 Queue/DLQ/Cron、一次性 Stripe Checkout(#981–#985、#998–#1001)——Tier 2/3 provider 证据自动化并受新鲜度门禁约束(#997、ADR-0134)。生产邮件跑在已认证域名上;扫描引擎延期至 v0.44,生命周期保持 fail-closed(#1070、ADR-0132);发布前清扫修复了冻结路径上的两个 router guard 并发缺陷(ADR-0133)。',
       state: 'stable',
       stamp: 'CURRENT',
     },
