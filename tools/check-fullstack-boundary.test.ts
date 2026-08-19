@@ -161,3 +161,19 @@ Deno.test('fullstack-boundary: adding object UPDATE access is flagged', () => {
   assertEquals(issues[0].check, 'storage-policy');
   assertEquals(issues[0].message.includes('update'), true);
 });
+
+Deno.test('fullstack-boundary: policies restated across aggregated migrations still pass (#1059)', () => {
+  const restated =
+    'create policy "read again" on storage.objects for select to authenticated using (true);';
+  assertEquals(findStoragePolicyIssues(`${STORAGE_POLICY_BASELINE}\n${restated}`), []);
+});
+
+Deno.test('fullstack-boundary: a required operation missing from the aggregate is flagged (#1059)', () => {
+  const withoutInsert = STORAGE_POLICY_BASELINE.replace(
+    /create policy "upload" on storage\.objects for insert[^\n]*\n/,
+    '',
+  );
+  const issues = findStoragePolicyIssues(withoutInsert);
+  assertEquals(issues.length, 1);
+  assertEquals(issues[0].check, 'storage-policy');
+});
