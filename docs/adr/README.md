@@ -173,6 +173,7 @@ git history.
 | 0122 | 0.42.0 Stable Scope Freeze — WC Light Fullstack                                                                                      | Proposed (TP-6)                                  |
 | 0123 | Standards as Seams — Evolution Plan                                                                                                  | Proposed (alpha.13)                              |
 | 0130 | Retire the Duplicate `/_data` Loader Endpoint                                                                                        | Accepted                                         |
+| 0131 | 2026-08-19 P3 Batch Touches to Frozen Paths Preserve ADR-0122 Contracts                                                              | Accepted                                         |
 
 ## Superseded / Historical
 
