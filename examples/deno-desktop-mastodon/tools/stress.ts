@@ -1,22 +1,17 @@
 /**
  * Mastodon Desktop — long-running stress runner.
  *
- * Exercises the local backend endpoints on a loop to surface memory growth
- * and latency drift over time. Outputs a JSON report suitable for archiving
- * as alpha.7 release evidence.
+ * Exercises the local backend endpoints on a loop over real HTTP (against a
+ * spawned main.ts server on an ephemeral port) to surface memory growth and
+ * latency drift over time. Outputs a JSON report suitable for archiving as
+ * alpha.7 release evidence.
  *
  * Usage:
  *   DURATION_MINUTES=30 deno run -A tools/stress.ts
  *   DURATION_MINUTES=5 deno run -A tools/stress.ts   # short smoke
  */
 
-import {
-  fetchAccount,
-  fetchAccountStatuses,
-  fetchPublicTimeline,
-  fetchStatus,
-  fetchStatusContext,
-} from '../app/api.ts';
+import type { MastodonStatus } from '../app/types.ts';
 
 const DURATION_MS = Number(Deno.env.get('DURATION_MINUTES') ?? '30') * 60 * 1000;
 const INTERVAL_MS = Number(Deno.env.get('INTERVAL_MS') ?? '5000');
@@ -37,6 +32,25 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
 }
 
+// Same port-parsing/wait pattern as app/__tests__/smoke.test.ts.
+function parsePort(stdout: string): number | undefined {
+  const match = stdout.match(/Listening on http:\/\/[^:]+:(\d+)\//);
+  return match ? Number(match[1]) : undefined;
+}
+
+async function waitForServer(port: number, timeoutMs = 5000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(`http://localhost:${port}/api/timeline`);
+      if (res.status === 200) return;
+    } catch {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
+  throw new Error(`Server did not start on port ${port} within ${timeoutMs}ms`);
+}
+
 async function getRssMb(pid: number): Promise<number | undefined> {
   try {
     const cmd = new Deno.Command('ps', {
@@ -52,31 +66,29 @@ async function getRssMb(pid: number): Promise<number | undefined> {
   }
 }
 
-async function runScenario(): Promise<{ latencyMs: number; error?: string }> {
+async function fetchJsonOrThrow(url: string): Promise<unknown> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return await res.json();
+}
+
+async function runScenario(baseUrl: string): Promise<{ latencyMs: number; error?: string }> {
   const start = performance.now();
   try {
-    const timeline = await fetchPublicTimeline({
-      instance: INSTANCE,
-      timeline: 'public',
-      limit: 5,
-    });
-    if (!timeline.ok) throw new Error(timeline.error.message);
-    const status = timeline.data[0];
+    const timeline = await fetchJsonOrThrow(
+      `${baseUrl}/api/timeline?instance=${INSTANCE}&limit=5`,
+    ) as MastodonStatus[];
+    const status = timeline[0];
     if (!status) throw new Error('empty timeline');
 
-    const acct = status.account.acct;
-    const [profile, statusDetail, context] = await Promise.all([
-      fetchAccount({ instance: INSTANCE, acct }),
-      fetchStatus({ instance: INSTANCE, id: status.id }),
-      fetchStatusContext({ instance: INSTANCE, id: status.id }),
+    const acct = encodeURIComponent(status.account.acct);
+    const query = `instance=${INSTANCE}`;
+    await Promise.all([
+      fetchJsonOrThrow(`${baseUrl}/api/profile/${acct}?${query}`),
+      fetchJsonOrThrow(`${baseUrl}/api/status/${status.id}?${query}`),
+      fetchJsonOrThrow(`${baseUrl}/api/status/${status.id}/context?${query}`),
     ]);
-
-    if (!profile.ok) throw new Error(profile.error.message);
-    if (!statusDetail.ok) throw new Error(statusDetail.error.message);
-    if (!context.ok) throw new Error(context.error.message);
-
-    const statuses = await fetchAccountStatuses({ instance: INSTANCE, acct });
-    if (!statuses.ok) throw new Error(statuses.error.message);
+    await fetchJsonOrThrow(`${baseUrl}/api/profile/${acct}/statuses?${query}`);
 
     return { latencyMs: Math.round(performance.now() - start) };
   } catch (err) {
@@ -100,11 +112,10 @@ async function main() {
   });
   const server = serverCmd.spawn();
 
-  // Drain stdout so the pipe does not back-pressure the server, and surface
+  // Drain stderr so the pipe does not back-pressure the server, and surface
   // any early stderr if the process exits before the stress loop.
   const serverStderr: string[] = [];
   const stderrReader = server.stderr.getReader();
-  const stdoutReader = server.stdout.getReader();
   void (async () => {
     const decoder = new TextDecoder();
     while (true) {
@@ -113,6 +124,17 @@ async function main() {
       serverStderr.push(decoder.decode(value));
     }
   })();
+
+  // Read stdout until the server announces its ephemeral port, then keep
+  // draining so the pipe does not back-pressure the server.
+  const stdoutReader = server.stdout.getReader();
+  const decoder = new TextDecoder();
+  let banner = '';
+  while (!banner.includes('Listening on')) {
+    const { done, value } = await stdoutReader.read();
+    if (done) break;
+    banner += decoder.decode(value, { stream: true });
+  }
   void (async () => {
     while (true) {
       const { done } = await stdoutReader.read();
@@ -120,8 +142,16 @@ async function main() {
     }
   })();
 
-  // Wait for server to be ready
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  const port = parsePort(banner);
+  if (!port) {
+    try {
+      server.kill('SIGTERM');
+    } catch { /* already exited */ }
+    await server.status;
+    throw new Error(`[stress] could not parse listening port from stdout: ${banner}`);
+  }
+  await waitForServer(port);
+  const baseUrl = `http://localhost:${port}`;
 
   const startTime = performance.now();
   const samples: Sample[] = [];
@@ -136,7 +166,7 @@ async function main() {
     }
 
     requestCount++;
-    const { latencyMs, error } = await runScenario();
+    const { latencyMs, error } = await runScenario(baseUrl);
     if (error) errorCount++;
 
     const rssMb = await getRssMb(server.pid);

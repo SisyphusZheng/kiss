@@ -10,6 +10,7 @@
  * boundary.
  */
 
+import { fetchJson } from './fetch-json.ts';
 import type {
   ApiResult,
   MastodonAccount,
@@ -50,30 +51,6 @@ function normalizeInstance(instance: string): string {
     url = `https://${url}`;
   }
   return url.replace(/\/$/, '');
-}
-
-// Same fetch-or-error shape as api-client.ts fetchJson.
-async function fetchJson<T>(url: string): Promise<ApiResult<T>> {
-  try {
-    const res = await fetch(url, {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: { type: 'http', status: res.status, message: await res.text() },
-      };
-    }
-    return { ok: true, data: await res.json() as T };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
 }
 
 export async function fetchPublicTimeline(

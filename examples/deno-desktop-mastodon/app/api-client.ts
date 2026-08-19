@@ -13,6 +13,7 @@
  */
 
 import { getCache, setCache } from './cache.ts';
+import { fetchJson } from './fetch-json.ts';
 import { loadSettings } from './settings.ts';
 import type {
   ApiResult,
@@ -30,31 +31,6 @@ function currentInstance(): string {
     return loadSettings().instanceUrl;
   }
   return 'mastodon.social';
-}
-
-async function fetchJson<T>(url: string): Promise<ApiResult<T>> {
-  try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: {
-          type: 'http',
-          status: res.status,
-          message: await res.text(),
-        },
-      };
-    }
-    return { ok: true, data: await res.json() as T };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : 'Network error',
-      },
-    };
-  }
 }
 
 function encodeAcct(acct: string): string {

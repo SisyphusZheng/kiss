@@ -1,3 +1,5 @@
+import { logPayment, serviceRoleRpc as rpc } from './service-role.ts';
+
 export interface AttachmentScanMessage {
   type: 'attachment.scan';
   reservationId: string;
@@ -30,31 +32,12 @@ export interface WorkerEnv {
 
 const BUCKET = 'notes-attachments';
 
-// Minimal structured payment logs. The correlation key is always the provider
-// event id; payloads, object keys, customer data, and secrets are never logged.
-function logPayment(level: 'info' | 'error', fields: Record<string, unknown>): void {
-  const line = JSON.stringify(fields);
-  if (level === 'error') console.error(line);
-  else console.log(line);
-}
-
 function headers(env: WorkerEnv): HeadersInit {
   return {
     apikey: env.SUPABASE_SERVICE_ROLE_KEY,
     authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
     'content-type': 'application/json',
   };
-}
-
-async function rpc<T>(env: WorkerEnv, name: string, body: unknown): Promise<T> {
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${name}`, {
-    method: 'POST',
-    headers: headers(env),
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error(`${name} failed (${response.status})`);
-  if (response.status === 204) return undefined as T;
-  return await response.json() as T;
 }
 
 export async function consumeAttachmentScans(

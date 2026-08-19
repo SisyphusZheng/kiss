@@ -271,12 +271,6 @@ button {
   width: 100%;
 }
 
-.reader-main:has(.reading-layout) {
-  max-width: min(1440px, calc(100vw - 32px));
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
 .page-header {
   align-items: flex-end;
   display: flex;
@@ -591,54 +585,12 @@ button {
 }
 
 /* ─── Reading page ────────────────────────────────────────── */
-.reading-layout {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-  margin-top: 8px;
-}
-
-.reading-toolbar {
-  align-items: flex-start;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.reading-title {
-  color: var(--text-primary);
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.4px;
-  line-height: 1.2;
-  margin: 0;
-}
-
-.reading-author {
-  color: var(--text-muted);
-  font-family: var(--font-serif);
-  font-size: 14px;
-  font-style: italic;
-  margin: 8px 0 0;
-}
-
-.reading-main {
-  min-width: 0;
-}
-
 .pdf-surface {
   background: var(--bg-reading);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-}
-
-.reading-sidebar {
-  position: sticky;
-  top: calc(var(--reader-nav-h) + 24px);
-  align-self: start;
 }
 
 /* Note panel — reuses .card */
@@ -763,11 +715,6 @@ button {
   gap: 10px;
   justify-content: space-between;
   margin-top: 8px;
-}
-
-note-panel-island {
-  display: block;
-  margin-top: 12px;
 }
 
 /* ─── Notes page ──────────────────────────────────────────── */
@@ -1389,15 +1336,6 @@ open-theme-toggle {
 }
 
 /* ─── Responsive ──────────────────────────────────────────── */
-@media (max-width: 960px) {
-  .reading-layout {
-    grid-template-columns: 1fr;
-  }
-  .reading-sidebar {
-    position: static;
-  }
-}
-
 @media (max-width: 720px) {
   .reader-topnav {
     padding: 0 16px;

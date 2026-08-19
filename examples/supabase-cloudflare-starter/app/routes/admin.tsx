@@ -7,6 +7,7 @@ import {
   useLoaderData,
 } from '@openelement/app';
 import { type AuthenticatedIdentity, requireAdmin } from '../../lib/authorization.ts';
+import { UUID_PATTERN } from '../../lib/service-role.ts';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
 export const tagName = 'page-admin';
 interface DeadLetter {
@@ -121,7 +122,7 @@ export function createReplayAction(
     const { data: { user } } = await supabase.auth.getUser();
     requireAdmin(user);
     const id = String(ctx.formData.get('id') ?? '');
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    if (!UUID_PATTERN.test(id)) {
       return fail(422, { error: 'invalid dead-letter id' });
     }
     const { error } = await supabase.rpc('request_attachment_scan_replay', {

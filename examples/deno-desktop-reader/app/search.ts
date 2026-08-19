@@ -16,7 +16,9 @@ function defaultIndexDir(): string {
 function queueIndexWrite(indexDir: string, write: () => Promise<void>): Promise<void> {
   const previous = indexWriteQueues.get(indexDir) ?? Promise.resolve();
   const next = previous.then(write, write);
-  indexWriteQueues.set(indexDir, next.catch(() => {}));
+  // Store `next` itself (not a derived promise) so the cleanup below can
+  // actually match; callers observe rejections on the returned promise.
+  indexWriteQueues.set(indexDir, next);
   return next.finally(() => {
     if (indexWriteQueues.get(indexDir) === next) indexWriteQueues.delete(indexDir);
   });

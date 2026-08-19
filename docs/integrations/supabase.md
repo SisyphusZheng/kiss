@@ -183,7 +183,7 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
     if (!user) return { denied: true };
     const { data: notes, error } = await supabase
       .from('notes')
-      .select('id, body, created_at')
+      .select('id, title, body, created_at')
       .order('created_at', { ascending: false });
     if (error) return { denied: false, email: user.email, error: error.message };
     const { data: { session } } = await supabase.auth.getSession();

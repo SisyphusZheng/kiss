@@ -302,13 +302,11 @@ Deno.test('Shoelace sl-button registers via route side-effect import', async () 
 
 Deno.test('Reader Preact islands register deterministic custom elements', async () => {
   await Promise.all([
-    import('../../islands/note-panel-island.tsx'),
     import('../../islands/pdf-reader-island.tsx'),
     import('../../islands/search-box-island.tsx'),
     import('../../islands/sync-status-island.tsx'),
   ]);
 
-  assertEquals(typeof customElements.get('note-panel-island'), 'function');
   assertEquals(typeof customElements.get('pdf-reader-island'), 'function');
   assertEquals(typeof customElements.get('search-box-island'), 'function');
   assertEquals(typeof customElements.get('sync-status-island'), 'function');
