@@ -6,7 +6,7 @@ import {
   routePatternToURLPatternPath,
 } from '../src/internal/ssg/ssg-helpers.ts';
 import { parseRouteFilePath } from '../src/internal/ssg/route-scanner.ts';
-import { contentTypeFor } from '../src/internal/static-serve.ts';
+import { cacheControlFor, contentTypeFor } from '../src/internal/static-serve.ts';
 
 Deno.test('resolveDynamicRoutePath encodes # ? & % and spaces', () => {
   const path = resolveDynamicRoutePath('/blog/:slug', ['slug'], {
@@ -115,4 +115,25 @@ Deno.test('renderStandaloneServerModule MIME table matches static-serve.ts (#732
   ) {
     assertStringIncludes(code, `'${ext}': '${contentTypeFor(`x${ext}`)}'`);
   }
+});
+
+Deno.test('renderStandaloneServerModule Cache-Control rules match static-serve.ts (#1058 drift guard)', () => {
+  const code = renderStandaloneServerModule();
+  // Same drift class as the MIME table above: serve.mjs inlines the
+  // Cache-Control policy instead of importing it. Pin every value the shared
+  // cacheControlFor can return, plus the path normalization the hashed-asset
+  // regex depends on, so the two implementations cannot diverge.
+  assertStringIncludes(code, `'${cacheControlFor('assets/index-Ab1_CD2e.js')}'`);
+  assertStringIncludes(code, `'${cacheControlFor('index.html')}'`);
+  assertEquals(cacheControlFor('favicon.ico'), null);
+  assertStringIncludes(code, "replaceAll(sep, '/')");
+});
+
+Deno.test('renderStandaloneServerModule forwards the process env to loaders (#1057)', () => {
+  const code = renderStandaloneServerModule();
+  // Mirrors cli/start.ts (#981): worker env reaches loaders through `env`;
+  // in the standalone server that is the process env, with undefined values
+  // filtered out (Record<string, string> contract).
+  assertStringIncludes(code, 'openElementServer({ req: request, env: processEnv })');
+  assertStringIncludes(code, 'if (value !== undefined) processEnv[key] = value;');
 });

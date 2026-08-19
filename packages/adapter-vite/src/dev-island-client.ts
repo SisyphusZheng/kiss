@@ -30,7 +30,9 @@ import { VIRTUAL_RUNTIME_SPECIFIERS } from './internal/ssg/entry-generators.ts';
 import { DEFAULT_ISLANDS_DIR } from './internal/paths.ts';
 
 const VIRTUAL_CLIENT_ENTRY_ID = 'virtual:open-client-entry';
-const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
+// Exported for plugin.ts: the dev watcher invalidates this module when the
+// island set changes so the client entry re-renders from the rescan (#1062).
+export const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
 const CLIENT_ENTRY_PUBLIC_PATH = 'client/islands/client.js';
 
 export function devIslandClientPlugin(

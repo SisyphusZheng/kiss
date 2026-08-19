@@ -406,6 +406,20 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
+// Keep these rules in parity with cacheControlFor in
+// internal/static-serve.ts (pinned by __tests__/ssg-helpers.test.ts) — same
+// drift class as the MIME table above: content-hashed build assets are
+// immutable; HTML is the deployment boundary and must revalidate (#1039).
+const CONTENT_HASHED_ASSET_RE = /(?:^|[/])assets[/][^/]*-[0-9a-zA-Z_-]{8,}[.][^/]+$/;
+
+function cacheControlFor(filePath) {
+  if (CONTENT_HASHED_ASSET_RE.test(filePath.replaceAll(sep, '/'))) {
+    return 'public, max-age=31536000, immutable';
+  }
+  if (extname(filePath).toLowerCase() === '.html') return 'no-cache';
+  return null;
+}
+
 function tryStatic(pathname) {
   let decoded;
   try {
@@ -422,19 +436,31 @@ function tryStatic(pathname) {
     const filePath = resolve(join(root, candidate));
     if (!filePath.startsWith(root + sep)) continue;
     if (!existsSync(filePath) || !statSync(filePath).isFile()) continue;
+    const headers = {
+      'content-type': MIME[extname(filePath).toLowerCase()] || 'application/octet-stream',
+    };
+    const cacheControl = cacheControlFor(filePath);
+    if (cacheControl) headers['cache-control'] = cacheControl;
     return new Response(readFileSync(filePath), {
       status: 200,
-      headers: {
-        'content-type': MIME[extname(filePath).toLowerCase()] || 'application/octet-stream',
-      },
+      headers,
     });
   }
   return null;
 }
 
+// Mirror cli/start.ts (#1057): the loader env contract is
+// Record<string, string>; process.env may carry undefined values, which
+// are filtered out (never forwarded).
+const processEnv = {};
+for (const key of Object.keys(process.env)) {
+  const value = process.env[key];
+  if (value !== undefined) processEnv[key] = value;
+}
+
 async function callServer(request) {
   try {
-    return await openElementServer({ req: request });
+    return await openElementServer({ req: request, env: processEnv });
   } catch (err) {
     console.error('[openElement serve] request-time handler error:', err);
     return new Response('Internal Server Error', { status: 500 });

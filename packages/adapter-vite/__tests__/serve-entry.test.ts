@@ -101,6 +101,26 @@ Deno.test({
       const home = await fetch(`${base}/`);
       assertEquals(home.status, 200, 'prerendered static page must be served');
       assertStringIncludes(await home.text(), 'request-time fixture home');
+
+      // #1058: Cache-Control parity with internal/static-serve.ts — HTML is
+      // the deployment boundary and must revalidate; content-hashed build
+      // assets are immutable.
+      assertEquals(home.headers.get('cache-control'), 'no-cache');
+      let hashedAsset: string | undefined;
+      for await (const entry of Deno.readDir(join(fixtureDir, 'dist/assets'))) {
+        if (/-[0-9a-zA-Z_-]{8,}\.[^./]+$/.test(entry.name)) {
+          hashedAsset = entry.name;
+          break;
+        }
+      }
+      assert(hashedAsset, 'fixture build must emit a content-hashed asset');
+      const asset = await fetch(`${base}/assets/${hashedAsset}`);
+      assertEquals(asset.status, 200);
+      assertEquals(
+        asset.headers.get('cache-control'),
+        'public, max-age=31536000, immutable',
+      );
+      await asset.body?.cancel();
     } finally {
       try {
         server?.kill('SIGTERM');

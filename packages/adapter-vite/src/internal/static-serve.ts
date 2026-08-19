@@ -48,8 +48,12 @@ const CONTENT_HASHED_ASSET_RE = /(?:^|\/)assets\/[^/]*-[0-9a-zA-Z_-]{8,}\.[^/]+$
  * Cache-Control baseline for static output (#1039): content-hashed build
  * assets are immutable; HTML is the deployment boundary and must revalidate
  * so a fresh deploy is picked up. Everything else stays unpinned.
+ *
+ * Exported for the serve.mjs parity pin: the generated standalone server
+ * inlines these rules (renderStandaloneServerModule, #1058) and
+ * __tests__/ssg-helpers.test.ts asserts the values cannot drift.
  */
-function cacheControlFor(filePath: string): string | null {
+export function cacheControlFor(filePath: string): string | null {
   if (CONTENT_HASHED_ASSET_RE.test(filePath.replaceAll(sep, '/'))) {
     return 'public, max-age=31536000, immutable';
   }
