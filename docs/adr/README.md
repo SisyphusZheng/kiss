@@ -174,6 +174,7 @@ git history.
 | 0123 | Standards as Seams — Evolution Plan                                                                                                  | Proposed (alpha.13)                              |
 | 0130 | Retire the Duplicate `/_data` Loader Endpoint                                                                                        | Accepted                                         |
 | 0131 | 2026-08-19 P3 Batch Touches to Frozen Paths Preserve ADR-0122 Contracts                                                              | Accepted                                         |
+| 0132 | Defer Real Scan-Engine Evidence to v0.44 — Attachment Scanning Is Optional Hardening                                                 | Accepted                                         |
 
 ## Superseded / Historical
 

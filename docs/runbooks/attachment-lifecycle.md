@@ -25,6 +25,14 @@ only `fetch` implementation. The entry composes application-owned `queue` and
 - A Cron Trigger for reconciliation. Five-minute cadence is the reference
   setting.
 
+> 0.43 status (ADR-0132, #1070): the real scan engine is deferred to v0.44.
+> Deployments without `METADEFENDER_CORE_URL` / `METADEFENDER_API_KEY` are
+> valid: the scanner Worker is not deployed, the async overlay omits the
+> `ATTACHMENT_SCANNER` binding, scan messages exhaust retries into the DLQ and
+> durable dead letters, and every attachment stays `pending_scan` — never
+> listed, never signed. This runbook describes the maintained target state;
+> the Tier 3 artifact records `not-configured` until an engine is provided.
+
 The safe base `wrangler.jsonc` intentionally contains no live Queue or Cron
 resources while database migrations are pending. Once `migration_mode=apply`
 is green, dispatch `Fullstack deploy smoke (real providers)` with

@@ -25,7 +25,7 @@ export const PAYMENT_PERSISTENCE_DLQ = PAYMENT_EVENT_PERSISTENCE_DLQ_NAME;
 
 export function withAsyncBindings(
   base: WranglerConfig,
-  scannerService = 'openelement-attachment-scanner',
+  scannerService: string | null = 'openelement-attachment-scanner',
 ): WranglerConfig {
   if (base.name !== 'openelement-ref-starter' || base.main !== 'cloudflare-entry.ts') {
     throw new Error('unexpected reference Worker identity or entrypoint');
@@ -33,7 +33,10 @@ export function withAsyncBindings(
   if (base.queues !== undefined || base.triggers !== undefined || base.services !== undefined) {
     throw new Error('base Wrangler config must stay provider-safe and async-binding-free');
   }
-  if (!/^[a-z0-9][a-z0-9-]{0,62}$/.test(scannerService)) {
+  // #1070 / ADR-0132: a null scanner service omits the ATTACHMENT_SCANNER
+  // service binding entirely. Scan messages then fail closed through Queue
+  // retry → DLQ → durable dead letter, and attachments stay pending_scan.
+  if (scannerService !== null && !/^[a-z0-9][a-z0-9-]{0,62}$/.test(scannerService)) {
     throw new Error('scanner service must be a valid explicit Worker name');
   }
   return {
@@ -74,7 +77,9 @@ export function withAsyncBindings(
       }],
     },
     triggers: { crons: ['*/5 * * * *'] },
-    services: [{ binding: 'ATTACHMENT_SCANNER', service: scannerService }],
+    ...(scannerService === null
+      ? {}
+      : { services: [{ binding: 'ATTACHMENT_SCANNER', service: scannerService }] }),
     secrets: {
       required: [
         'SUPABASE_SERVICE_ROLE_KEY',
@@ -87,12 +92,17 @@ export function withAsyncBindings(
 }
 
 async function main(args: string[]): Promise<void> {
-  const [input, output, scannerService] = args;
+  const omitScanner = args.includes('--omit-scanner');
+  const [input, output, scannerService] = args.filter((arg) => arg !== '--omit-scanner');
   if (!input || !output) throw new Error('usage: render-cloudflare-async-config <input> <output>');
   const base = JSON.parse(await Deno.readTextFile(input)) as WranglerConfig;
-  const rendered = withAsyncBindings(base, scannerService);
+  const rendered = withAsyncBindings(base, omitScanner ? null : scannerService);
   await Deno.writeTextFile(output, `${JSON.stringify(rendered, null, 2)}\n`);
-  console.log(`Rendered bounded Queue/DLQ/Cron config to ${output}`);
+  console.log(
+    omitScanner
+      ? `Rendered bounded Queue/DLQ/Cron config without the scanner binding to ${output}`
+      : `Rendered bounded Queue/DLQ/Cron config to ${output}`,
+  );
 }
 
 if (import.meta.main) await main(Deno.args);

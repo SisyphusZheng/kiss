@@ -89,3 +89,13 @@
 用 Management API 盘点发现更深的漂移: 远端 `schema_migrations` 只记录到 20260817000006,且 **0000(admin_audit)/0002(scanning)/0003(replay)/0007/0008 的效果从未在远端应用**(admin_audit、storage_audit、attachment_scan_dead_letters 三表与 authorize_attachment_scan、log_admin_audit 等函数全缺;state 约束仍停在 0001 的 `('reserved','ready')`);notes_realtime 与 0001 的效果在但缺历史行。这些是 smoke 矩阵未覆盖路径的潜伏运行时故障。
 
 处置(全部经 Management API,无需 DB 密码): 按版本序以 `begin;...commit;` 事务应用 20260817000000/0002/0003/0008 原文件(0007 此前已应用,realtime publication 与 0001 效果核实已在),补登 7 条历史行并将 20260817000001 的 null name 正名为 attachment_quota。终态实测: 历史 13/13 与本地文件一一对应;8 表齐全;state 约束为最终六值集;全部函数与 admin notes 策略在位。**SUPABASE_DB_PASSWORD 从 blocked-human 清单移除**——远端版本号与内容均已收敛,后续正常走 `migration_mode=apply` 交付新迁移即可。
+
+## 2026-08-19 补记 3: signup 邮件确认 E2E verified（生产 SMTP 就绪）
+
+生产 SMTP 已完成域名认证并接入真实项目，补记 2 遗留的唯一非 pass 项闭环：
+
+- **配置**：Resend 自定义 SMTP(`smtp.resend.com:465`,user `resend`)，发件人 `no-reply@auth.openelement.org`;`auth` 子域 DKIM/SPF/MX 三条记录经 Resend Verify 全绿（根域既有 DMARC `p=quarantine` 与腾讯企业邮记录未动）。`site_url` 已修正为 `https://openelement-ref-starter.freemanzheng.workers.dev`,`uri_allow_list` 已配置（生产源 + 本地开发端口）。均经 Management API 写入并读回确认。
+- **Hotmail 腿（一次性用户，已删除）**:signup → `confirmation_sent_at` 正常 → 邮件送达（垃圾箱，原因见下）→ `Authentication-Results: spf=pass; dkim=pass(header.d=auth.openelement.org); dmarc=pass action=none; compauth=pass reason=100` → 用户点击确认链接 → 302 携带 `type=signup` 会话跳回生产源 → admin API 确认 `email_confirmed_at` 置位 → 用户删除（200)。
+- **Gmail 腿（一次性用户，已删除）**：同一流程，邮件**进收件箱**,Gmail "显示原文" SPF/DKIM/DMARC 三项 PASS。
+- **已知限制（记录，非阻塞）**：全新发送域零信誉，微软 SmartScreen 将首封信置入垃圾箱（认证全过亦然）；域信誉随发送量累积改善，属运营爬坡而非配置缺陷。Supabase 新 sender 30 封/小时限额维持默认（参考栈证据量远低于此）。
+- **结论**:`signup-e2e-email-confirmation` 从 unverified 转为 **verified**。freeze 非 pass 项清零；#1002 blocked-human 清单仅剩 OAuth 浏览器旅程一次真实登录。

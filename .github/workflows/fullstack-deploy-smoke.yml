@@ -6,11 +6,17 @@ name: Fullstack deploy smoke (real providers)
 #
 # #997 scheduled-run semantics: schedule events carry no inputs, so the
 # job-level env below defaults ASYNC_MODE to `provision` — the weekly run
-# executes the full probe (scanner redeploy + Queue/DLQ verification), which
-# is idempotent against the already-created bounded async resources. The
-# release freshness gate (tools/check-evidence-freshness.ts) reads only the
-# scheduled run conclusions, so a weekly red run blocks release exactly like
-# a manual one; there is no base/provision ambiguity for the gate to resolve.
+# executes the full probe (Queue/DLQ verification, plus scanner redeploy when
+# the engine secrets exist), which is idempotent against the already-created
+# bounded async resources. The release freshness gate
+# (tools/check-evidence-freshness.ts) reads only the scheduled run
+# conclusions, so a weekly red run blocks release exactly like a manual one;
+# there is no base/provision ambiguity for the gate to resolve.
+#
+# #1070 / ADR-0132: real scan-engine evidence is deferred to v0.44. When
+# METADEFENDER_CORE_URL / METADEFENDER_API_KEY are absent, the scanner steps
+# are skipped and the artifact records not-configured — an honest annotation,
+# never a green scanner claim.
 
 on:
   workflow_dispatch:
@@ -49,6 +55,10 @@ jobs:
       # probe so the weekly evidence covers Queue/DLQ, not just HTTP.
       ASYNC_MODE: ${{ inputs.async_mode || 'provision' }}
       SCANNER_SERVICE: ${{ inputs.scanner_service || 'openelement-attachment-scanner' }}
+      # #1070 / ADR-0132: the real scan engine is deferred to v0.44. Scanner
+      # steps run only when both engine secrets exist; otherwise the run
+      # records not-configured instead of failing.
+      SCANNER_CONFIGURED: ${{ secrets.METADEFENDER_CORE_URL != '' && secrets.METADEFENDER_API_KEY != '' }}
     steps:
       # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -61,7 +71,7 @@ jobs:
           deno task nitro:build
 
       - name: Deploy the private attachment scanner
-        if: env.ASYNC_MODE == 'provision'
+        if: env.ASYNC_MODE == 'provision' && env.SCANNER_CONFIGURED == 'true'
         working-directory: examples/supabase-cloudflare-starter
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -85,6 +95,13 @@ jobs:
             deno run -A npm:wrangler@4.123.0 secret bulk \
               --config scanner-wrangler.jsonc --name "$SCANNER_SERVICE"
 
+      - name: Record the scan engine as not configured
+        if: env.ASYNC_MODE == 'provision' && env.SCANNER_CONFIGURED != 'true'
+        run: |
+          mkdir -p .smoke
+          echo '{"check":"attachment-scanner-engine","result":"not-configured"}' >> .smoke/results.jsonl
+          echo "scan engine deferred to v0.44 (#1070, ADR-0132): attachments stay pending_scan and undownloadable — fail-closed"
+
       - name: Render and provision bounded async resources
         if: env.ASYNC_MODE == 'provision'
         working-directory: examples/supabase-cloudflare-starter
@@ -102,8 +119,13 @@ jobs:
           [ -n "$STRIPE_WEBHOOK_SECRET" ] || { echo "STRIPE_WEBHOOK_SECRET is not configured" >&2; exit 1; }
           [ -n "$STRIPE_PRICE_ID" ] || { echo "STRIPE_PRICE_ID is not configured" >&2; exit 1; }
           [ -n "$SCANNER_SERVICE" ] || { echo "scanner_service is required" >&2; exit 1; }
-          deno run --allow-read --allow-write ../../tools/render-cloudflare-async-config.ts \
-            wrangler.jsonc .wrangler-async.generated.json "$SCANNER_SERVICE"
+          if [ "$SCANNER_CONFIGURED" = "true" ]; then
+            deno run --allow-read --allow-write ../../tools/render-cloudflare-async-config.ts \
+              wrangler.jsonc .wrangler-async.generated.json "$SCANNER_SERVICE"
+          else
+            deno run --allow-read --allow-write ../../tools/render-cloudflare-async-config.ts \
+              wrangler.jsonc .wrangler-async.generated.json --omit-scanner
+          fi
           queues=$(deno run -A npm:wrangler@4.123.0 queues list --json)
           for queue in \
             openelement-attachment-scan \
@@ -232,8 +254,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
-          deno run -A npm:wrangler@4.123.0 deployments list \
-            --name "$SCANNER_SERVICE" --json | jq -e 'length > 0' >/dev/null
+          if [ "$SCANNER_CONFIGURED" = "true" ]; then
+            deno run -A npm:wrangler@4.123.0 deployments list \
+              --name "$SCANNER_SERVICE" --json | jq -e 'length > 0' >/dev/null
+          else
+            echo "scan engine not configured (#1070); skipping scanner deployment check"
+          fi
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info openelement-attachment-scan-dlq >/dev/null
           deno run -A npm:wrangler@4.123.0 queues info \
@@ -283,6 +309,7 @@ jobs:
             --arg environment "cloudflare-workers-test" \
             --arg workerUrl "$WORKER_URL" \
             --arg asyncMode "$ASYNC_MODE" \
+            --arg scannerEngine "$SCANNER_CONFIGURED" \
             --argjson asyncResourcesVerified "$([ "$ASYNC_MODE" = "provision" ] && echo true || echo false)" \
             --arg status "${{ job.status }}" \
             --arg cleanup "${{ steps.cleanup-user.outcome || 'not-run' }}" \
@@ -294,6 +321,7 @@ jobs:
               environment: $environment,
               workerUrl: $workerUrl,
               asyncMode: $asyncMode,
+              scannerEngine: (if $scannerEngine == "true" then "configured" else "not-configured" end),
               asyncResourcesVerified: $asyncResourcesVerified,
               jobStatus: $status,
               cleanup: $cleanup,
