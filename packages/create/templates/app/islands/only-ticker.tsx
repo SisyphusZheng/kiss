@@ -17,21 +17,23 @@ sheet.replaceSync(`
   span { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
 `);
 
-const tick = signal(0);
-
 export default class OnlyTicker extends OpenElement {
   static override styles = [sheet];
 
+  // Instance field (not module scope): every hydrated island gets its own
+  // signal, so multiple tickers on one page never share state.
+  #tick = signal(0);
+
   constructor() {
     super();
-    this.registerSignal('tick', tick);
+    this.registerSignal('tick', this.#tick);
   }
 
   override render() {
     return (
       <>
         <span data-signal='tick'></span>
-        <button type='button' onClick={() => tick.value++}>tick</button>
+        <button type='button' onClick={() => this.#tick.value++}>tick</button>
       </>
     );
   }

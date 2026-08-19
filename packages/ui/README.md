@@ -103,6 +103,12 @@ export default {
 The manifest includes attributes, events, slots, CSS parts, SSR renderability,
 DSD behavior, and hydration strategy metadata.
 
+Manifest `attributes` cover only each component's `observedAttributes` set —
+that is all the generator scans. Attributes a component reads without
+observing (e.g. `open-dialog`'s `label` and `mode`, read at render/open time
+so no change listener is needed) are fully supported but absent from the
+manifest; the per-component JSDoc is the source of truth for those.
+
 ## Subpath Exports
 
 ```text

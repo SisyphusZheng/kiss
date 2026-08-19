@@ -221,8 +221,11 @@ export class OpenInput extends OpenElement {
       | null;
     if (!input) return;
     input.disabled = this.hasAttribute('disabled');
-    const val = this.getAttribute('value');
-    if (val !== null && input.value !== val) {
+    // A removed `value` attribute means the native default (''): without
+    // clearing here the inner input keeps stale text while the form value
+    // is already reset by _syncFormValue.
+    const val = this.getAttribute('value') || '';
+    if (input.value !== val) {
       input.value = val;
     }
   }
