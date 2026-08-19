@@ -176,6 +176,7 @@ git history.
 | 0131 | 2026-08-19 P3 Batch Touches to Frozen Paths Preserve ADR-0122 Contracts                                                              | Accepted                                         |
 | 0132 | Defer Real Scan-Engine Evidence to v0.44 — Attachment Scanning Is Optional Hardening                                                 | Accepted                                         |
 | 0133 | 2026-08-20 Client-Router Guard Concurrency Fixes Preserve ADR-0122 Contracts                                                         | Accepted                                         |
+| 0134 | Manual workflow_dispatch Greens Count as Release Evidence — Freshness Gate Evaluation Fix                                            | Accepted                                         |
 
 ## Superseded / Historical
 
