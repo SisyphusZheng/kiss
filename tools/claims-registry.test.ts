@@ -34,3 +34,30 @@ Deno.test('claims registry: missing target file fails the gate, does not crash',
   };
   assertEquals(checkClaim(missingTarget) !== null, true);
 });
+
+Deno.test('claims registry: a deleted claim comment trips the gate', () => {
+  const dir = Deno.makeTempDirSync({ prefix: 'claims-registry-' });
+  try {
+    const claimFile = `${dir}/claim.ts`;
+    const targetFile = `${dir}/target.ts`;
+    Deno.writeTextFileSync(claimFile, '// the claim this entry pins\nexport const x = 1;\n');
+    Deno.writeTextFileSync(targetFile, 'export const anchorPattern = true;\n');
+    const claim: CodeClaim = {
+      id: 'test-deleted-comment',
+      claimFile,
+      claimLine: '1',
+      description: 'fixture',
+      targetFile,
+      pattern: 'anchorPattern',
+    };
+    assertEquals(checkClaim(claim), null);
+    // Delete the comment: the claimLine window now covers pure code.
+    Deno.writeTextFileSync(claimFile, 'export const x = 1;\n');
+    assertEquals(
+      checkClaim(claim),
+      `claim comment missing: ${claimFile}:1 (claim test-deleted-comment)`,
+    );
+  } finally {
+    Deno.removeSync(dir, { recursive: true });
+  }
+});

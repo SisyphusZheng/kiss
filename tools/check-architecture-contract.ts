@@ -7,6 +7,7 @@
  */
 
 import { extname } from '@std/path';
+import { formatError } from '@openelement/element';
 import { MOJIBAKE_CHARS, stripCommentsLine } from './lib/text.ts';
 import { gitTrackedFiles } from './lib/git.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';
@@ -466,7 +467,7 @@ async function main(): Promise<void> {
         issues,
         'byte-read',
         path,
-        `could not read tracked file: ${error instanceof Error ? error.message : String(error)}`,
+        `could not read tracked file: ${formatError(error)}`,
       );
     }
   }

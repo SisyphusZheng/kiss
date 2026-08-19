@@ -8,8 +8,8 @@
  *
  * This registry is the minimal mechanism: every entry pairs a comment-claim
  * (file + line) with a regex that must still match in a target file. The
- * docs:truth `claims` check fails when a claim's target disappears, with the
- * message shape required by #893:
+ * docs:truth `claims` check fails when the claim comment or its target
+ * disappears, with the message shape required by #893:
  *
  *   claim in {claimFile}:{claimLine} not satisfied by code in {targetFile}
  *
@@ -64,17 +64,40 @@ export const CODE_CLAIMS: CodeClaim[] = [
 ];
 
 /**
+ * The anchor is the claim comment itself: the claimLine window of claimFile
+ * must still cover comment lines (source files) or prose (docs). Deleting
+ * the comment shifts real code into the window and trips the gate.
+ */
+function claimAnchorPresent(claim: CodeClaim, claimSource: string): boolean {
+  const match = claim.claimLine.match(/^(\d+)(?:-(\d+))?$/);
+  if (!match) return false;
+  const start = Number(match[1]);
+  const end = match[2] ? Number(match[2]) : start;
+  const lines = claimSource.split('\n');
+  if (start < 1 || end > lines.length) return false;
+  const window = lines.slice(start - 1, end);
+  const isSource = /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(claim.claimFile);
+  return window.some((line) => isSource ? /\/\/|\/\*|^\s*\*/.test(line) : line.trim() !== '');
+}
+
+/**
  * Resolve a claim against its target file. Returns the failure message, or
- * null when the claim holds. Missing files are failures, not crashes, so a
- * deleted claim comment or target always trips the gate (claims must be
- * retired from the registry explicitly).
+ * null when the claim holds. Missing files and a deleted claim comment are
+ * failures, not crashes, so a deleted claim comment or target always trips
+ * the gate (claims must be retired from the registry explicitly).
  */
 export function checkClaim(claim: CodeClaim): string | null {
+  let claimSource: string;
   let target: string;
   try {
-    if (!Deno.statSync(claim.claimFile).isFile) {
-      return `claim file missing: ${claim.claimFile}`;
-    }
+    claimSource = Deno.readTextFileSync(claim.claimFile);
+  } catch {
+    return `claim file missing: ${claim.claimFile}`;
+  }
+  if (!claimAnchorPresent(claim, claimSource)) {
+    return `claim comment missing: ${claim.claimFile}:${claim.claimLine} (claim ${claim.id})`;
+  }
+  try {
     target = Deno.readTextFileSync(claim.targetFile);
   } catch {
     return `target file missing: ${claim.targetFile} (claim ${claim.claimFile}:${claim.claimLine})`;

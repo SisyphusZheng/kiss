@@ -14,6 +14,7 @@ import {
 } from './lib/package-graph.ts';
 import { runCommand } from './lib/process.ts';
 import { assertCleanWorktree } from './lib/git-cleanliness.ts';
+import { formatError } from '@openelement/element';
 import { formatJson } from '@openelement/element/build-utils';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 import { npmTarballName, tarballPath } from './lib/npm-tarball.ts';
@@ -247,7 +248,7 @@ export async function publishPackage(
   try {
     await io.publish(args);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = formatError(error);
     if (msg.includes('E403') || msg.includes('previously published versions')) {
       // #1038: E403 is not unique to already-published — npm also returns it
       // for insufficient token scope and 2FA policy, and npmPackageVersionExists

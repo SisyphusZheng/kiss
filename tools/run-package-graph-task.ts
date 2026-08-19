@@ -109,4 +109,4 @@ async function main(): Promise<void> {
   await runCommand('deno', ['check', 'www/vite.config.ts', 'www/e2e/playwright.config.ts']);
 }
 
-await main();
+if (import.meta.main) await main();

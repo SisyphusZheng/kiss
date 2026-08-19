@@ -8,6 +8,7 @@
  */
 
 import { PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION } from '../project-constants.ts';
+import { formatError } from '@openelement/element';
 import { formatJson } from '@openelement/element/build-utils';
 import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
 import { releaseTag } from './version-anchors.ts';
@@ -70,7 +71,7 @@ async function readJsonOrUndefined<T>(path: string, label: string): Promise<T | 
   } catch (error) {
     throw new Error(
       `${label} ${path} is not readable JSON; repair or remove it before ` +
-        `re-running: ${error instanceof Error ? error.message : String(error)}`,
+        `re-running: ${formatError(error)}`,
     );
   }
 }

@@ -327,4 +327,4 @@ async function main() {
   console.log('\nAll audit citations resolve cleanly.');
 }
 
-await main();
+if (import.meta.main) await main();

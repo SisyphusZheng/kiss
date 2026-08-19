@@ -36,6 +36,7 @@ import {
   stalePackageVersionClaims,
 } from './project-constants.ts';
 import { escapeRegExp } from './lib/text.ts';
+import { formatError } from '@openelement/element';
 
 export interface VersionAnchor {
   path: string;
@@ -170,9 +171,7 @@ export function findVersionAnchorFailures(read: (path: string) => string): strin
       text = read(anchor.path);
     } catch (error) {
       failures.push(
-        `${anchor.path}: cannot read file: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `${anchor.path}: cannot read file: ${formatError(error)}`,
       );
       continue;
     }

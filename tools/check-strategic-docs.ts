@@ -5,6 +5,7 @@ import {
 } from './project-constants.ts';
 import { staleClaimsAlternation } from './check-version-anchors.ts';
 import { STALE_HISTORY_CLAIM_PATTERNS } from './lib/stale-claims.ts';
+import { formatError } from '@openelement/element';
 
 export type Check = {
   name: string;
@@ -178,7 +179,7 @@ export function findStrategicDocFailures(read: (path: string) => string): Failur
         failures.push({
           check: check.name,
           file,
-          message: `cannot read file: ${error instanceof Error ? error.message : String(error)}`,
+          message: `cannot read file: ${formatError(error)}`,
         });
         continue;
       }
