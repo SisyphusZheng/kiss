@@ -37,7 +37,7 @@ import {
   scanRoutes,
   ssgRender,
 } from '../internal/ssg/index.ts';
-import { SsrRenderError } from '@openelement/element/build-utils';
+import { normalizeSeparators, SsrRenderError } from '@openelement/element/build-utils';
 import { createLogger, formatError } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import {
@@ -433,7 +433,7 @@ async function buildSSG(
     // M-18 fix: Use process.platform instead of Deno.build.os for Node.js compat
     const isWindows = typeof process !== 'undefined' && process.platform === 'win32';
     const ssrBundleUrl = isWindows
-      ? 'file:///' + ssrBundlePath.replace(/\\/g, '/')
+      ? 'file:///' + normalizeSeparators(ssrBundlePath)
       : 'file://' + ssrBundlePath;
     const module = await import(ssrBundleUrl) as Record<string, unknown>;
 

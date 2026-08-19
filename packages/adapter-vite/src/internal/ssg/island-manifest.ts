@@ -8,7 +8,7 @@
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '../protocol/framework.ts';
-import { formatJson } from '@openelement/element/build-utils';
+import { formatJson, normalizeSeparators } from '@openelement/element/build-utils';
 import { isValidTagName } from '@openelement/element';
 import { stableHash } from './ssg-helpers.ts';
 import { walkHtmlFileEntries } from '../html-files.ts';
@@ -139,7 +139,7 @@ export function generateIslandManifests(
 
     // Route from the output-relative path: 'index.html' -> '/',
     // 'about/index.html' -> '/about', 'about.html' -> '/about'.
-    const rel = entry.relativePath.replaceAll('\\', '/').replace(/\.html$/, '');
+    const rel = normalizeSeparators(entry.relativePath).replace(/\.html$/, '');
     const route = rel === 'index' ? '/' : `/${rel.replace(/\/index$/, '')}`;
 
     manifests.push({

@@ -924,6 +924,33 @@ Deno.test('renderEntry: private,no-cache is emitted only after a successful rend
   assertEquals(returnIndex > relaxIndex, true, 'private,no-cache must precede the 200 return');
 });
 
+Deno.test('renderEntry: dev client script also wraps notFound/error HTML responses (#1067)', () => {
+  const routes: RouteEntry[] = [
+    ...basicRoutes,
+    { path: '/404', filePath: '404.ts', type: 'page', varName: 'page404' },
+  ];
+  const code = renderEntry(buildEntryDescriptor(routes, {}));
+
+  // #951 parity: prod injects the island client entry into every HTML
+  // response (post-build injectClientScript + serve-time withClientScript),
+  // so dev must run the same __withDevClientScript on the 404/error channels,
+  // not only on the successful GET page.
+  assertStringIncludes(
+    code,
+    'return c.html(__withDevClientScript(wrapInDocument(__statusHtml("404 Not Found", err.message || "Not Found"), {',
+  );
+  assertStringIncludes(code, 'return c.html(__withDevClientScript(wrapInDocument(errorContent, {');
+  const notFoundBody = code.slice(code.indexOf('app.notFound('));
+  assertStringIncludes(
+    notFoundBody,
+    'return c.html(__withDevClientScript(wrapInDocument(content, {',
+  );
+  assertStringIncludes(
+    notFoundBody,
+    'return c.html(__withDevClientScript(wrapInDocument(__statusHtml("404 Not Found", "Not Found"), {',
+  );
+});
+
 Deno.test('renderEntry: hasAction codegen covers named `actions` exports (#539)', () => {
   const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
   const code = renderEntry(desc);

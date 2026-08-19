@@ -37,8 +37,9 @@
  */
 
 import { scanRoutes } from './internal/ssg/index.ts';
-import { dirname, join, posix, sep, win32 } from 'node:path';
+import { dirname, join, posix, win32 } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 import { DEFAULT_ROUTES_DIR } from './internal/paths.ts';
 import { quoteGeneratedJavaScriptValue } from './internal/ssg/codegen-literals.ts';
 
@@ -115,8 +116,8 @@ function relativeToOutput(absSourcePath: string, fromDir: string): string {
   }
 
   // Compute the relative path
-  const parts = absSourcePath.replaceAll(sep, posix.sep).split(posix.sep);
-  const fromParts = fromDir.replaceAll(sep, posix.sep).split(posix.sep);
+  const parts = normalizeSeparators(absSourcePath).split(posix.sep);
+  const fromParts = normalizeSeparators(fromDir).split(posix.sep);
 
   // Strip common prefix
   let i = 0;

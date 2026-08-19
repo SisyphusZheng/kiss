@@ -37,10 +37,12 @@ Deno.test('start cli: extractServeMode rejects unknown or missing mode values', 
 async function runCli(
   cwd: string,
   args: string[],
+  env: Record<string, string> = {},
 ): Promise<{ code: number; output: string }> {
   const command = new Deno.Command(Deno.execPath(), {
     args: ['run', '-A', startCli, ...args],
     cwd,
+    env,
     stdout: 'piped',
     stderr: 'piped',
   });
@@ -74,6 +76,23 @@ Deno.test('start cli: preview mode refuses when dist/server exists and points at
     assertEquals(code, 1);
     assertStringIncludes(output, 'request-time routes');
     assertStringIncludes(output, 'deno task start');
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test('start cli: start mode rejects an invalid port with a clear error (#1067)', async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    await Deno.mkdir(join(dir, 'dist'), { recursive: true });
+    await Deno.writeTextFile(join(dir, 'dist', 'index.html'), '<h1>port check</h1>\n');
+
+    for (const rawPort of ['abc', '70000', '0']) {
+      const { code, output } = await runCli(dir, [], { OPEN_ELEMENT_PORT: rawPort });
+      assertEquals(code, 1);
+      assertStringIncludes(output, `Invalid port "${rawPort}"`);
+      assertStringIncludes(output, 'integer between 1 and 65535');
+    }
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
