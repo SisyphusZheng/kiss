@@ -66,6 +66,27 @@ Deno.test('async overlay preserves the single entry and adds bounded Queue/DLQ/C
   });
 });
 
+Deno.test('async overlay omits the scanner binding when the engine is deferred (#1070)', () => {
+  const rendered = withAsyncBindings({
+    name: 'openelement-ref-starter',
+    main: 'cloudflare-entry.ts',
+    compatibility_date: '2026-08-16',
+  }, null);
+  assertEquals(rendered.services, undefined);
+  // Queue/DLQ/Cron and the payment secret surface are unchanged: only the
+  // scanner service binding is conditional.
+  assertEquals(rendered.triggers, { crons: ['*/5 * * * *'] });
+  assertEquals((rendered.queues as { consumers: unknown[] }).consumers.length, 4);
+  assertEquals(rendered.secrets, {
+    required: [
+      'SUPABASE_SERVICE_ROLE_KEY',
+      'STRIPE_SECRET_KEY',
+      'STRIPE_WEBHOOK_SECRET',
+      'STRIPE_PRICE_ID',
+    ],
+  });
+});
+
 Deno.test('async overlay rejects a second provider config or entrypoint', () => {
   assertThrows(() =>
     withAsyncBindings({

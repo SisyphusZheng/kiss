@@ -49,7 +49,8 @@ into a companion Worker only when one of these holds:
    in-repo precedent: the MetaDefender-backed scanner is the private companion
    Worker `scanner-worker.ts` (`openelement-attachment-scanner`), reached only
    through the `ATTACHMENT_SCANNER` service binding and fail-closed without its
-   credentials.
+   credentials. Real-engine deployment is deferred to v0.44 (#1070 / ADR-0132);
+   while unconfigured the binding is omitted and the design stays fail-closed.
 2. **Divergent resource profile.** Consumer CPU, memory, or duration would
    starve or time out the fetch handlers sharing the isolate.
 3. **Independent deploy and rollback cadence.** The handler changes on a

@@ -89,6 +89,14 @@ STRIPE_SECRET_KEY
 STRIPE_PRICE_ID
 STRIPE_CHECKOUT_HOST
 APP_ORIGIN
+```
+
+Optional scan-engine env (real-engine evidence deferred to v0.44, #1070 /
+ADR-0132). When unset, uploads stay `pending_scan` and remain undownloadable
+by everyone — fail-closed by design. When set, the private scanner Worker
+calls this `/file/sync`-compatible HTTPS endpoint:
+
+```
 METADEFENDER_CORE_URL
 METADEFENDER_API_KEY
 ```
