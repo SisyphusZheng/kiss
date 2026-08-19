@@ -336,9 +336,19 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "{\"prefixes\":[\"$STORAGE_POLICY_KEY\"]}")
           [[ "$owner_delete" =~ ^2 ]]
-          after_delete=$(curl -s -o /dev/null -w '%{http_code}' \
-            "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
-            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
+          # Supabase Storage serves objects through a CDN whose delete
+          # invalidation is not instantaneous (observed: cf-cache-status HIT
+          # on the first read after a 200 delete). Retry the read on a bound
+          # instead of racing the invalidation; the assertion itself — the
+          # object must become inaccessible — is unchanged.
+          after_delete=""
+          for i in $(seq 1 12); do
+            after_delete=$(curl -s -o /dev/null -w '%{http_code}' \
+              "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
+              -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
+            [[ ! "$after_delete" =~ ^2 ]] && break
+            sleep 5
+          done
           [[ ! "$after_delete" =~ ^2 ]]
           record storage-policy-select-insert-update-delete pass
 
