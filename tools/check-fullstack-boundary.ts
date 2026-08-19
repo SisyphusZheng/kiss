@@ -207,16 +207,22 @@ const REQUIRED_STORAGE_OPERATIONS = ['delete', 'insert', 'select'] as const;
  * Assertion 4: the starter deliberately exposes create/read/delete only.
  * An UPDATE policy would turn a collision-safe immutable object key into an
  * overwrite surface and must be reviewed as a product/API change.
+ *
+ * The caller aggregates every migration file (the schema is the union of all
+ * of them, #1059), so operations are deduplicated before comparing against
+ * the required set: a policy restated in a later migration is fine, an
+ * added UPDATE surface or a missing required operation is not.
  */
 export function findStoragePolicyIssues(
   sql: string,
-  file = 'supabase/migrations/notes_attachments_storage.sql',
+  file = 'supabase/migrations/*.sql',
 ): BoundaryIssue[] {
   const operations = [
-    ...sql.matchAll(/on\s+storage\.objects\s+for\s+(select|insert|update|delete)/giu),
-  ]
-    .map((match) => match[1].toLowerCase())
-    .sort();
+    ...new Set(
+      [...sql.matchAll(/on\s+storage\.objects\s+for\s+(select|insert|update|delete)/giu)]
+        .map((match) => match[1].toLowerCase()),
+    ),
+  ].sort();
   if (JSON.stringify(operations) === JSON.stringify(REQUIRED_STORAGE_OPERATIONS)) return [];
   return [{
     check: 'storage-policy',
@@ -294,18 +300,20 @@ async function main(): Promise<void> {
     issues.push(...findEnvExampleLeaks(await Deno.readTextFile(envExampleFile), envExampleFile));
   }
 
-  const storageMigrationFile = join(
-    STARTER_DIR,
-    'supabase',
-    'migrations',
-    '20260816000001_notes_attachments_storage.sql',
-  );
-  issues.push(
-    ...findStoragePolicyIssues(
-      await Deno.readTextFile(storageMigrationFile),
-      storageMigrationFile,
-    ),
-  );
+  // Storage-policy invariant is schema-level: aggregate every migration
+  // file, not just the one that first created the policies (#1059).
+  const migrationsDir = join(STARTER_DIR, 'supabase', 'migrations');
+  const migrationFiles: string[] = [];
+  for await (const entry of Deno.readDir(migrationsDir)) {
+    if (entry.isFile && entry.name.endsWith('.sql')) migrationFiles.push(entry.name);
+  }
+  migrationFiles.sort();
+  const aggregatedMigrationSql = (
+    await Promise.all(
+      migrationFiles.map((name) => Deno.readTextFile(join(migrationsDir, name))),
+    )
+  ).join('\n');
+  issues.push(...findStoragePolicyIssues(aggregatedMigrationSql));
 
   // Deployable-bundle boundary: when the Nitro workers output exists, its
   // public/ dir is what actually ships to the CDN. Scan it for secrets too,

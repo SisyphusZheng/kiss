@@ -13,14 +13,25 @@ const SHA_PATTERN = /@[0-9a-f]{40}$/i;
  * the human-readable audit trail stale.
  */
 const ACTION_VERSION_PINS = new Map([
-  ['actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0', 'v7.0.0'],
+  ['actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1', 'v7.0.1'],
   ['actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a', 'v7.0.1'],
-  ['actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e', 'v6.4.0'],
+  ['actions/setup-node@820762786026740c76f36085b0efc47a31fe5020', 'v7.0.0'],
+  ['actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830', 'v4.3.0'],
   [
     'actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294',
     'v5.0.0',
   ],
+  ['github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3', 'v4.37.6'],
+  ['github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3', 'v4.37.6'],
 ]);
+
+// Repos that carry an approved pin above. A full-SHA use of one of these repos
+// that is missing from the map is an unvetted bump (e.g. Dependabot) that
+// would otherwise silently skip the version-comment audit (#1065). Repos with
+// no registered pin keep the old behavior: SHA-shape check only.
+const PINNED_REPOS = new Set(
+  [...ACTION_VERSION_PINS.keys()].map((action) => action.slice(0, action.indexOf('@'))),
+);
 
 export interface WorkflowInspection {
   failures: string[];
@@ -65,6 +76,13 @@ export function inspectWorkflowSource(file: string, source: string): WorkflowIns
     if (action.startsWith('./') || action.startsWith('docker://')) continue;
     if (!SHA_PATTERN.test(action)) {
       failures.push(`${file}: ${action} is not pinned to a full commit SHA`);
+      continue;
+    }
+    const repo = action.slice(0, action.indexOf('@'));
+    if (PINNED_REPOS.has(repo) && !ACTION_VERSION_PINS.has(action)) {
+      failures.push(
+        `${file}: ${action} is not an approved pin for ${repo} — register the SHA in ACTION_VERSION_PINS with its release version`,
+      );
     }
   }
   failures.push(...collectVersionCommentFailures(file, source));

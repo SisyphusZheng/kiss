@@ -23,7 +23,12 @@ export interface VNode {
   props: Record<string, unknown>;
   /** Child nodes (VNode or text string) */
   children: (VNode | string | RenderFn)[];
-  /** Optional key for list rendering */
+  /**
+   * Optional key for list rendering on host elements. `<For key={fn}>`
+   * arrives as the JSX transform's third argument and is routed into
+   * `props.key` by createVNode, so this field never holds the key
+   * function (#1055).
+   */
   key?: string | number;
   /** Optional ref callback — called with the DOM element after mount */
   ref?: (el: Element) => void;

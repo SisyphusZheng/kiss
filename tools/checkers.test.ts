@@ -75,7 +75,8 @@ Deno.test('action checker parses actual uses steps, not comments', () => {
       test:
         steps:
           # uses: actions/dependency-review-action@deadbeef
-          - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+          # v7.0.1
+          - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
   `,
   );
   assertEquals(result.hasDependencyReview, false);
@@ -104,11 +105,26 @@ Deno.test('action checker rejects a stale version comment for a known pinned act
       test:
         steps:
           # v4.2.2
-          - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+          - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
   `,
   );
   assertEquals(result.failures.length, 1);
-  assertStringIncludes(result.failures[0], 'immediately preceded by # v7.0.0');
+  assertStringIncludes(result.failures[0], 'immediately preceded by # v7.0.1');
+});
+
+Deno.test('action checker rejects an unregistered SHA for a pinned action repo (#1065)', () => {
+  const result = inspectWorkflowSource(
+    'ci.yml',
+    `
+    jobs:
+      test:
+        steps:
+          # v7.0.1
+          - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+  `,
+  );
+  assertEquals(result.failures.length, 1);
+  assertStringIncludes(result.failures[0], 'not an approved pin for actions/checkout');
 });
 
 Deno.test('scanner discovery follows directory and filename conventions after moves', () => {

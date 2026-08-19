@@ -5,7 +5,7 @@ export const tagName = 'page-roadmap';
 
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
+import { PUBLISHED_STABLE_VERSION } from '../data/version.ts';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-standards-visual.tsx';
@@ -610,7 +610,7 @@ export class RoadmapPage extends OpenElement {
           </span>
           <open-artifact-panel slot='artifact' class='now'>
             <span slot='label'>{t.currentLabel}</span>
-            <span slot='meta'>{PUBLISHED_PACKAGE_VERSION} {t.publishedMeta}</span>
+            <span slot='meta'>{PUBLISHED_STABLE_VERSION} {t.publishedMeta}</span>
             <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>{t.readChangelog}</open-button>
               <open-button href='/architecture/architecture'>{t.architecture}</open-button>
@@ -620,7 +620,7 @@ export class RoadmapPage extends OpenElement {
               {t.nowTitle}
             </h2>
             <p>
-              {t.nowCopy(PUBLISHED_PACKAGE_VERSION)}
+              {t.nowCopy(PUBLISHED_STABLE_VERSION)}
             </p>
           </open-artifact-panel>
         </open-page-hero>

@@ -35,7 +35,7 @@ import {
 } from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
 import { islandTransformPlugin } from './island-transform.ts';
-import { devIslandClientPlugin } from './dev-island-client.ts';
+import { devIslandClientPlugin, RESOLVED_CLIENT_ENTRY_ID } from './dev-island-client.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
   detectAndClassifyCemPackages,
@@ -220,6 +220,37 @@ export function createOpenPlugin(
     if (resolvedOptions.mode === 'spa') return;
     generateEntry(
       routes,
+      ctx.phase1.islandTagNames,
+      ctx.phase1.packageManifests,
+      ctx.phase1.islandFiles,
+    );
+    if (entryDescriptor) {
+      ctx.phase1.ssrAdmissionPlan = entryDescriptor.ssrAdmissionPlan;
+    }
+  }
+
+  /**
+   * #1062: dev-only island rescan — same mechanism as rescanRoutes (#1028).
+   * buildStart() scans the islands dir once, so an island added/removed while
+   * `deno task dev` runs never reached the cached descriptor (SSR admission
+   * plan) or the dev island client map: the page rendered DSD but the island
+   * never hydrated, with no hint why. Re-scan, rebuild the descriptor
+   * (virtualEntryPlugin.load() and devIslandClientPlugin.load() both render
+   * from ctx.phase1), and let the configureServer watcher invalidate both
+   * virtual entries and full-reload, exactly as for routes.
+   */
+  async function rescanIslands(): Promise<void> {
+    const islandsRoot = join(
+      process.cwd(),
+      resolvedOptions.islandsDir || DEFAULT_ISLANDS_DIR,
+    );
+    const islandFiles = await scanIslands(islandsRoot);
+    ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
+    ctx.phase1.islandFiles = islandFiles;
+    ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
+    if (resolvedOptions.mode === 'spa') return;
+    generateEntry(
+      ctx.phase1.cachedRoutes || [],
       ctx.phase1.islandTagNames,
       ctx.phase1.packageManifests,
       ctx.phase1.islandFiles,
@@ -432,7 +463,12 @@ export function createOpenPlugin(
 
     configureServer(server: ViteDevServer) {
       const absoluteRoutesDir = resolve(process.cwd(), resolvedOptions.routesDir!);
+      const absoluteIslandsDir = resolve(
+        process.cwd(),
+        resolvedOptions.islandsDir || DEFAULT_ISLANDS_DIR,
+      );
       server.watcher.add(absoluteRoutesDir);
+      server.watcher.add(absoluteIslandsDir);
 
       // Only add/unlink change the route SET; content edits to an existing
       // route file flow through normal HMR without touching the descriptor.
@@ -452,11 +488,37 @@ export function createOpenPlugin(
         });
       };
 
+      // #1062: same chain for the island SET (extension filter mirrors
+      // scanIslands). The island client entry is a virtual module too, so it
+      // must be invalidated alongside the SSR entry — otherwise the browser
+      // re-requests the cached client map and new islands never hydrate.
+      const onIslandSetChanged = (file: string) => {
+        if (!file.startsWith(absoluteIslandsDir)) return;
+        if (!/\.(ts|tsx|js|jsx)$/.test(file)) return;
+
+        rescanIslands().then(() => {
+          for (const id of [RESOLVED_ENTRY_ID, RESOLVED_CLIENT_ENTRY_ID]) {
+            const mod = server.moduleGraph.getModuleById(id);
+            if (mod) server.moduleGraph.invalidateModule(mod);
+          }
+          log.info(`Islands changed: ${relative(process.cwd(), file)} - reloading`);
+          server.hot.send({ type: 'full-reload' });
+        }).catch((err: unknown) => {
+          // A broken island file must not kill the dev server — the next edit
+          // re-triggers the scan.
+          log.error(`Island rescan failed: ${formatError(err)}`);
+        });
+      };
+
       server.watcher.on('add', onRouteSetChanged);
       server.watcher.on('unlink', onRouteSetChanged);
+      server.watcher.on('add', onIslandSetChanged);
+      server.watcher.on('unlink', onIslandSetChanged);
       server.httpServer?.on('close', () => {
         server.watcher.off('add', onRouteSetChanged);
         server.watcher.off('unlink', onRouteSetChanged);
+        server.watcher.off('add', onIslandSetChanged);
+        server.watcher.off('unlink', onIslandSetChanged);
       });
     },
   };

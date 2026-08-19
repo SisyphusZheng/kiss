@@ -11,14 +11,13 @@
  * @csspart content - Popover content
  */
 import { OpenElement, type StyleSheetLike } from '@openelement/element';
-import { overlayRecipe, recipe, type RenderResult } from './component-recipes.ts';
+import { nextInstanceId, overlayRecipe, recipe, type RenderResult } from './component-recipes.ts';
 
 export const tagName = 'open-dropdown';
 
 const sheet: StyleSheetLike = recipe(`
   :host {
     display: inline-block;
-    anchor-name: --open-dropdown-trigger;
   }
 
   .trigger {
@@ -31,7 +30,6 @@ const sheet: StyleSheetLike = recipe(`
        only applies anchor() longhands on top of an explicit inset. */
     position: absolute;
     inset: 100% auto auto 0;
-    position-anchor: --open-dropdown-trigger;
     top: anchor(bottom);
     left: anchor(left);
     min-width: 12rem;
@@ -45,6 +43,18 @@ const sheet: StyleSheetLike = recipe(`
 
 export class OpenDropdown extends OpenElement {
   static override styles = [overlayRecipe, sheet];
+
+  // #1061: every instance anchors its popover to its own host — with one
+  // shared `--open-dropdown-trigger` anchor name, every popover on the page
+  // resolved to the last host in document order. The host half (anchor-name)
+  // is set in connectedCallback; the content half (position-anchor) is an
+  // inline style in render().
+  private _anchorName = `--open-dropdown-trigger-${nextInstanceId()}`;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.style.setProperty('anchor-name', this._anchorName);
+  }
 
   // A mouse click on the trigger is preceded by a pointerdown that natively
   // light-dismisses an open popover; the click that follows must not re-open
@@ -76,7 +86,12 @@ export class OpenDropdown extends OpenElement {
         >
           <slot name='trigger'></slot>
         </span>
-        <div className='overlay content' part='content' popover='auto'>
+        <div
+          className='overlay content'
+          part='content'
+          popover='auto'
+          style={`position-anchor: ${this._anchorName}`}
+        >
           <slot></slot>
         </div>
       </div>

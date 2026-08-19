@@ -75,3 +75,11 @@
 ## 结论
 
 除上述两项 provider 门禁外,reference SaaS 核心链路在真实 Supabase 项目上全部实测通过。**0.43 满足 freeze 条件中可由 agent 验证的全部部分**;freeze 的最终签发等待 #1002 的 blocked-human 清单(SUPABASE_DB_PASSWORD、Stripe whsec/price 入 CI secrets、Metadefender、OAuth console、生产 SMTP)补齐。
+
+## 2026-08-19 补记: storage-owner-upsert-immutability 已收敛(verified)
+
+- repo 侧: 新增前向迁移 `20260819000000_attachments_insert_only.sql`(幂等 drop policy)+ manifest 登记,`fullstack:migrations-check` 通过。
+- 远端侧: 经 Management API 只读确认 UPDATE 策略仍在远端后,执行与迁移同文的 `drop policy if exists "attachments: owner updates own folder" on storage.objects`,复查确认 storage.objects 仅剩 SELECT/INSERT/DELETE 三条策略。
+- 探针实证(一次性用户,对象与用户均已清理): upload v1 → 200;`x-upsert: true` → **400**;PUT → 400;read-back 仍为 `v1`;owner delete → 200。不可变性在远端真实生效。
+- 遗留: `SUPABASE_DB_PASSWORD` 仍用于跑 `migration_mode=apply` 把该 no-op 迁移记入远端 `schema_migrations` 历史;策略面收敛不再依赖它。
+- 由此 freeze 非 pass 项只剩 `signup-e2e-email-confirmation`(生产 SMTP/重定向白名单,纯控制台配置)。

@@ -4,6 +4,10 @@
 export const OPENELEMENT_VERSION = 'v0.43.0-alpha.1';
 
 // Current npm registry line — the newest actually published five-package
-// release. Published/stable copy must use this constant; OPENELEMENT_VERSION
-// is reserved for source-line context.
+// release (an alpha). "Currently published alpha" copy must use this
+// constant; OPENELEMENT_VERSION is reserved for source-line context.
 export const PUBLISHED_PACKAGE_VERSION = 'v0.43.0-alpha.1';
+
+// The published stable line (npm `latest`). Stable-line copy must use this
+// constant, never the alpha PUBLISHED_PACKAGE_VERSION (#1066).
+export const PUBLISHED_STABLE_VERSION = 'v0.42.0';

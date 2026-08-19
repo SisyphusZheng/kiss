@@ -690,6 +690,47 @@ Deno.test('programmatic navigations are latest-wins: a slow stale guard cannot r
   }
 });
 
+Deno.test('popstate guard redirect does not override a newer programmatic navigation (#1063)', async () => {
+  const browser = installFakeBrowser('/public');
+  let releaseGuard!: () => void;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () =>
+          new Promise<string>((resolve) => {
+            releaseGuard = () => resolve('/login');
+          }),
+      },
+      { path: '/login', tagName: 'login-page' },
+      { path: '/x', tagName: 'x-page' },
+    ],
+  });
+  try {
+    // The browser itself lands on the guarded route; its guard suspends.
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    // A programmatic navigation commits while the guard is still pending.
+    await router.navigate('/x');
+    assertEquals(router.currentPath, '/x');
+    // The stale guard resolves with a redirect afterwards: it must not
+    // replaceState over the newer navigation.
+    releaseGuard();
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/x');
+    assertEquals(router.currentRoute?.tagName, 'x-page');
+    assertEquals(browser.path(), '/x');
+    assertEquals(browser.applied, ['/x']);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
 // ─── Guard-veto history trap (#1036) ───────────────────────────────
 
 /**

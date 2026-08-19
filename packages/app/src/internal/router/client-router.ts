@@ -684,6 +684,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
       const u = new URL(landed, 'http://x');
       const matched = routeMatcher.match(u.pathname, u.search);
       if (matched?.route.guard) {
+        const seqAtGuardStart = programmaticNavigationSeq;
         const result = await matched.route.guard();
         if (result === false) {
           // Blocked: restore the entry the user came from (see
@@ -692,6 +693,11 @@ export function createRouter(options: RouterOptions): RouterInstance {
           return;
         }
         if (typeof result === 'string') {
+          // Latest-wins (#1023): the browser chain carries no ticket, so a
+          // programmatic navigation committed while the guard was pending
+          // already owns the outcome; the stale redirect must not
+          // replaceState over it.
+          if (seqAtGuardStart !== programmaticNavigationSeq) return;
           await commitNavigation(result, { replace: true, depth: 1, restoreOnBlock: true });
           return;
         }

@@ -28,7 +28,9 @@ async function scanPosts(options?: OpenElementBlogOptions): Promise<BlogPost[]> 
   const files = readdirSync(contentDir)
     .filter((f) => f.endsWith('.md'))
     .sort()
-    .reverse(); // newest first
+    .reverse(); // reverse lexicographic by filename: date-prefixed names
+  // (YYYY-MM-DD-*) land newest first, but NNNN-* or mixed naming does
+  // not — the ordering is by name, not by date (#1066).
 
   for (const file of files) {
     const filePath = join(contentDir, file);
@@ -70,7 +72,7 @@ export async function generateBlogRoutes(options?: OpenElementBlogOptions): Prom
   const publishedPosts = posts.filter((p) => !p.frontmatter.draft);
 
   return {
-    /** All published posts, sorted newest first */
+    /** All published posts, in reverse filename order (see scanPosts, #1066) */
     posts: publishedPosts,
     /** Base path for blog routes */
     basePath,

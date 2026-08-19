@@ -14,9 +14,11 @@ export declare namespace JSX {
   /**
    * JSX expression result — structurally compatible with VNode.
    *
-   * children must match VNode.children: (VNode | string)[] to satisfy
-   * TypeScript's structural assignability check when a JSX expression
-   * is returned from OpenElement.render(): VNode | null.
+   * children must match VNode.children: (VNode | string | RenderFn)[] to
+   * satisfy TypeScript's structural assignability check when a JSX
+   * expression is returned from OpenElement.render(): VNode | null, and so
+   * that control-flow components returning VNode (<For key={fn}>, #1055)
+   * are valid JSX components.
    */
   interface Element {
     tag:
@@ -25,7 +27,11 @@ export declare namespace JSX {
       | import('./internal/protocol/vnode.ts').ComponentCtor
       | symbol;
     props: Record<string, unknown>;
-    children: (string | import('./internal/protocol/vnode.ts').VNode)[];
+    children: (
+      | string
+      | import('./internal/protocol/vnode.ts').VNode
+      | import('./internal/protocol/vnode.ts').RenderFn
+    )[];
     key?: string | number;
     ref?: (el: globalThis.Element) => void;
   }

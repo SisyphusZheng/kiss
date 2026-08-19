@@ -209,10 +209,12 @@ Deno.test('open-button anchor mode syncs href/aria-disabled on disabled changes 
   const anchor = new FakeAnchorElement();
   btn.shadowRoot = { querySelector: (sel: string) => (sel === '.btn' ? anchor : null) };
 
-  // Adding `disabled` at runtime: href must go dead, aria-disabled set.
+  // Adding `disabled` at runtime: href must be removed outright — even an
+  // empty href stays Tab-focusable and navigates on Enter / programmatic
+  // click (#1061). aria-disabled is set alongside.
   btn.setAttribute('disabled', '');
   btn.attributeChangedCallback('disabled', null, '');
-  assertEquals(anchor.getAttribute('href'), '');
+  assertEquals(anchor.hasAttribute('href'), false);
   assertEquals(anchor.getAttribute('aria-disabled'), 'true');
 
   // Removing `disabled`: href must be restored, aria-disabled removed —

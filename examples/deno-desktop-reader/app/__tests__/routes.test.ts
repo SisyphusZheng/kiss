@@ -239,6 +239,40 @@ Deno.test('Settings action adds and immediately syncs a source', async () => {
   }
 });
 
+Deno.test('Settings source form submits only through the route action (#1064)', async () => {
+  const mod = await import('../../routes/settings.tsx');
+  const page = new mod.default();
+  (page as unknown as Record<string, unknown>).sources = [];
+  const sourceForm = findVNode(
+    page.render(),
+    (node) => node.tag === 'form' && node.props.class === 'source-form',
+  );
+  assert(sourceForm, 'source form should render');
+  // A JSX onSubmit would re-run addSource/syncSource on top of the route
+  // action dispatched by the open-button submit (#1064).
+  assertEquals('onSubmit' in sourceForm.props, false);
+});
+
+function findVNode(node: unknown, match: (node: VNode) => boolean): VNode | null {
+  if (node === null || node === undefined || typeof node === 'string') return null;
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findVNode(child, match);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (typeof node !== 'object') return null;
+  const vnode = node as VNode;
+  if (match(vnode)) return vnode;
+  for (const child of vnode.children) {
+    if (typeof child === 'function') continue;
+    const found = findVNode(child, match);
+    if (found) return found;
+  }
+  return null;
+}
+
 Deno.test('WC Interop route exports a function', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
   assertEquals(typeof mod.default, 'function');

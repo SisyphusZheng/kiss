@@ -143,7 +143,9 @@ test.describe('Unified page structure', () => {
   });
 
   test('blog articles SSR their outline and deterministic navigation without mojibake', async ({ page }) => {
-    await page.goto('/zh/blog/0001-keep-hono-vite-dev-server');
+    // A dispatch post with neighbors in the index-visible order (#1066); ADR
+    // pages are excluded from prev/next and render an empty (hidden) pager.
+    await page.goto('/zh/blog/0100-three-audits-later-the-stable-line');
     const rail = page.locator('open-page-rail');
     await expect(rail).toBeVisible();
     expect(await rail.locator('a[href^="#"]').count()).toBeGreaterThan(0);
