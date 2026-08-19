@@ -4,7 +4,7 @@
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.43.0-alpha.1",
   "targetVersion": "0.43.0-alpha.2",
-  "status": "failed",
+  "status": "running",
   "startedAt": "2026-08-19T21:33:15.275Z",
   "steps": [
     {
@@ -16,12 +16,17 @@
     },
     {
       "name": "verify main CI success for HEAD",
-      "status": "pending",
-      "startedAt": "2026-08-19T21:33:15.294Z"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:47:46.001Z",
+      "completedAt": "2026-08-19T22:47:47.114Z",
+      "exitCode": 0
     },
     {
       "name": "verify prepare record",
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:47:47.115Z",
+      "completedAt": "2026-08-19T22:47:47.115Z",
+      "exitCode": 0
     },
     {
       "name": "package artifact gate",
@@ -30,7 +35,10 @@
         "task",
         "package-artifacts:check"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:47:47.116Z",
+      "completedAt": "2026-08-19T22:48:06.241Z",
+      "exitCode": 0
     },
     {
       "name": "publish npm packages",
@@ -39,11 +47,17 @@
         "task",
         "publish:npm"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:48:06.241Z",
+      "completedAt": "2026-08-19T22:48:27.376Z",
+      "exitCode": 0
     },
     {
       "name": "verify npm versions and dist-tags",
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:48:27.376Z",
+      "completedAt": "2026-08-19T22:48:38.805Z",
+      "exitCode": 0
     },
     {
       "name": "post-publish npm consumer smoke",
@@ -55,7 +69,10 @@
         "--version",
         "0.43.0-alpha.2"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:48:38.805Z",
+      "completedAt": "2026-08-19T22:48:46.582Z",
+      "exitCode": 0
     },
     {
       "name": "post-publish third-party Web Component smoke",
@@ -64,7 +81,10 @@
         "task",
         "third-party-wc:smoke"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:48:46.583Z",
+      "completedAt": "2026-08-19T22:48:49.386Z",
+      "exitCode": 0
     },
     {
       "name": "stage release evidence",
@@ -74,11 +94,17 @@
         "docs/release/autoflow3/v0.43.0-alpha.2.json",
         "docs/release/v0.43.0-alpha.2.md"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:48:49.386Z",
+      "completedAt": "2026-08-19T22:48:49.390Z",
+      "exitCode": 0
     },
     {
       "name": "commit release evidence",
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-19T22:48:49.393Z",
+      "completedAt": "2026-08-19T22:48:49.401Z",
+      "exitCode": 0
     },
     {
       "name": "tag release",
@@ -99,5 +125,5 @@
       "status": "pending"
     }
   ],
-  "completedAt": "2026-08-19T21:33:16.388Z"
+  "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/32309082680"
 }
