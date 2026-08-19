@@ -438,7 +438,7 @@
           "reExportedNames": []
         },
         "./open-dropdown": {
-          "sha256": "ca5847021381c99054b74d11d24de01a5fdf818e5654bf22f66edc76de2f3238",
+          "sha256": "ee57f9a630f32d695b7869060e1132435d4f8b2e7caf7a326cc28e0360a84d7a",
           "publicDeclarations": [
             "export const tagName = 'open-dropdown';",
             "export class OpenDropdown extends OpenElement {"
