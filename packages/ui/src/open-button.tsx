@@ -162,7 +162,7 @@ export class OpenButton extends OpenElement {
         <a
           className={classes}
           part='control'
-          href={d ? '' : href}
+          href={d ? undefined : href}
           target={target || undefined}
           aria-disabled={d ? 'true' : undefined}
           rel={target === '_blank' ? 'noopener noreferrer' : undefined}
@@ -212,11 +212,12 @@ export class OpenButton extends OpenElement {
     }
     if (el instanceof HTMLAnchorElement) {
       // Anchor branch: keep href/aria-disabled in sync in BOTH directions
-      // (#757). A disabled anchor loses its href (CSS pointer-events:none
-      // alone still allows keyboard Enter / programmatic click navigation);
+      // (#757). A disabled anchor loses its href entirely (CSS
+      // pointer-events:none alone still allows keyboard Enter / programmatic
+      // click navigation, and even href="" stays Tab-focusable, #1061);
       // re-enabling must restore the href and drop aria-disabled.
       if (this.hasAttribute('disabled')) {
-        el.setAttribute('href', '');
+        el.removeAttribute('href');
         el.setAttribute('aria-disabled', 'true');
       } else {
         el.setAttribute('href', this.getAttribute('href') || '');

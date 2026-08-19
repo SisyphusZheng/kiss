@@ -1,7 +1,13 @@
 /**
  * @openelement/ui public contract tests.
  */
-import { assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
+import {
+  assertEquals,
+  assertExists,
+  assertFalse,
+  assertNotEquals,
+  assertStringIncludes,
+} from '@std/assert';
 import type { VNode } from '@openelement/element';
 
 type TestAttributeStore = WeakMap<object, Map<string, string>>;
@@ -522,7 +528,9 @@ Deno.test('open-button: href renders anchor and disables safely', async () => {
 
   instance.setAttribute('disabled', '');
   const disabled = instance.render() as VNode;
-  assertEquals(disabled.props.href, '');
+  // #1061: a disabled anchor must carry no href at all — even href="" stays
+  // Tab-focusable and navigates on Enter / programmatic click.
+  assertEquals(disabled.props.href, undefined);
   assertEquals(disabled.props['aria-disabled'], 'true');
 });
 
@@ -1561,14 +1569,33 @@ Deno.test('open-dropdown: content is a native popover without hand-rolled dismis
   assertEquals(content.props.onToggle, undefined);
 
   // Placement relies on CSS Anchor Positioning, not z-index stacking or the
-  // deleted data-open fallback attribute.
+  // deleted data-open fallback attribute. The anchor-name/position-anchor
+  // pair is per-instance inline style (#1061), so the shared sheet only
+  // carries the anchor() longhands.
   const Component = exportedConstructor(module);
   const css = (Component as unknown as { styles: Array<{ cssRules: Array<{ cssText: string }> }> })
     .styles.map((sheet) => sheet.cssRules.map((rule) => rule.cssText).join('\n')).join('\n');
-  assertStringIncludes(css, 'position-anchor');
-  assertStringIncludes(css, 'anchor-name');
+  assertStringIncludes(css, 'anchor(bottom)');
   assertFalse(css.includes('data-open'));
   assertFalse(css.includes('z-index'));
+});
+
+// ─── #1061: per-instance anchor names ────────────────────────────────────────
+// A shared `--open-dropdown-trigger` anchor name made every popover on the
+// page resolve to the last host in document order.
+
+Deno.test('open-dropdown: each instance anchors its content to its own host (#1061)', async () => {
+  const module = asComponentModule(await import('../src/open-dropdown.tsx'));
+  const Component = exportedConstructor(module);
+
+  const first = findByPart(new Component().render() as VNode, 'content') as VNode;
+  const second = findByPart(new Component().render() as VNode, 'content') as VNode;
+  const firstStyle = String(first.props.style);
+  const secondStyle = String(second.props.style);
+
+  assertStringIncludes(firstStyle, 'position-anchor: --open-dropdown-trigger-');
+  // Two instances must never share an anchor name.
+  assertNotEquals(firstStyle, secondStyle);
 });
 
 Deno.test('open-dropdown: trigger click toggles the native popover', async () => {
