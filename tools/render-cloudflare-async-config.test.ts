@@ -1,4 +1,12 @@
-import { assertEquals, assertThrows } from '@std/assert';
+import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
+import {
+  ATTACHMENT_SCAN_DLQ_NAME,
+  ATTACHMENT_SCAN_PERSISTENCE_DLQ_NAME,
+  ATTACHMENT_SCAN_QUEUE_NAME,
+  PAYMENT_EVENT_DLQ_NAME,
+  PAYMENT_EVENT_PERSISTENCE_DLQ_NAME,
+  PAYMENT_EVENT_QUEUE_NAME,
+} from '../examples/supabase-cloudflare-starter/lib/cloudflare-queues.ts';
 import {
   PAYMENT_DLQ,
   PAYMENT_PERSISTENCE_DLQ,
@@ -107,4 +115,22 @@ Deno.test('async overlay rejects a second provider config or entrypoint', () => 
       queues: {},
     })
   );
+});
+
+Deno.test('deploy smoke workflow provisions exactly the canonical queue names', async () => {
+  // fullstack-deploy-smoke.yml hardcodes the queue names in its provisioning
+  // loop and verification step; both must match the canonical constants.
+  const workflow = await Deno.readTextFile('.github/workflows/fullstack-deploy-smoke.yml');
+  for (
+    const name of [
+      ATTACHMENT_SCAN_QUEUE_NAME,
+      ATTACHMENT_SCAN_DLQ_NAME,
+      ATTACHMENT_SCAN_PERSISTENCE_DLQ_NAME,
+      PAYMENT_EVENT_QUEUE_NAME,
+      PAYMENT_EVENT_DLQ_NAME,
+      PAYMENT_EVENT_PERSISTENCE_DLQ_NAME,
+    ]
+  ) {
+    assertStringIncludes(workflow, name);
+  }
 });

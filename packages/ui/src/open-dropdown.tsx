@@ -46,14 +46,29 @@ export class OpenDropdown extends OpenElement {
 
   // #1061: every instance anchors its popover to its own host — with one
   // shared `--open-dropdown-trigger` anchor name, every popover on the page
-  // resolved to the last host in document order. The host half (anchor-name)
-  // is set in connectedCallback; the content half (position-anchor) is an
-  // inline style in render().
+  // resolved to the last host in document order. The render() inline style
+  // keeps the SSR markup positionable; connectedCallback rewrites both
+  // halves with the client-side name.
   private _anchorName = `--open-dropdown-trigger-${nextInstanceId()}`;
 
   override connectedCallback(): void {
     super.connectedCallback();
+    this._syncAnchorName();
+  }
+
+  // Both anchor halves must hold a name from the same realm. The render()
+  // inline style bakes the server counter into DSD and hydration preserves
+  // that DOM, while the host half only exists once connectedCallback runs —
+  // and the module-level instance counter does not count in the same order
+  // on both sides (SSG renders every page in one process, island hydration
+  // order is not document order), so the two values diverge on multi-page
+  // sites and the popover loses its anchor. Rewriting both here makes the
+  // client value win on both ends; on CSR it re-applies the same value
+  // render() already baked.
+  private _syncAnchorName(): void {
     this.style.setProperty('anchor-name', this._anchorName);
+    this.shadowRoot?.querySelector<HTMLElement>('.content')
+      ?.style.setProperty('position-anchor', this._anchorName);
   }
 
   // A mouse click on the trigger is preceded by a pointerdown that natively

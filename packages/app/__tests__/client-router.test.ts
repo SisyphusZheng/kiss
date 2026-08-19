@@ -757,6 +757,58 @@ Deno.test('popstate guard redirect does not override a newer programmatic naviga
   }
 });
 
+Deno.test('popstate guard redirect does not override a newer programmatic navigation while the redirect target guard is pending', async () => {
+  const browser = installFakeBrowser('/public');
+  let releaseGuard!: () => void;
+  let releaseRedirectGuard!: () => void;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () =>
+          new Promise<string>((resolve) => {
+            releaseGuard = () => resolve('/login');
+          }),
+      },
+      {
+        path: '/login',
+        tagName: 'login-page',
+        guard: () =>
+          new Promise<boolean>((resolve) => {
+            releaseRedirectGuard = () => resolve(true);
+          }),
+      },
+      { path: '/x', tagName: 'x-page' },
+    ],
+  });
+  try {
+    // The browser itself lands on the guarded route; its guard suspends.
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    // The guard redirects, and the redirect target's own guard suspends.
+    releaseGuard();
+    await flushBrowserNavigation();
+    // A programmatic navigation commits while the nested guard is pending.
+    await router.navigate('/x');
+    assertEquals(router.currentPath, '/x');
+    // The stale nested guard resolves afterwards: it must not replaceState
+    // over the newer navigation's history entry.
+    releaseRedirectGuard();
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/x');
+    assertEquals(router.currentRoute?.tagName, 'x-page');
+    assertEquals(browser.path(), '/x');
+    assertEquals(browser.applied, ['/x']);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
 // ─── Guard-veto history trap (#1036) ───────────────────────────────
 
 /**
@@ -856,6 +908,42 @@ Deno.test('popstate guard veto does not trap earlier history entries (#1036)', a
     await flushBrowserNavigation();
     assertEquals(router.currentPath, '/a');
     assertEquals(browser.path(), '/a');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('back onto a veto-restored entry after a programmatic navigation re-syncs the router', async () => {
+  // /a ← /guarded ← /b: the user backs onto the vetoed /guarded entry, a
+  // programmatic navigation commits, then the user backs onto the /b entry
+  // the veto restore rewrote.
+  const browser = installFakeHistoryStack(['/a', '/guarded', '/b']);
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page' },
+      { path: '/guarded', tagName: 'guarded-page', guard: () => Promise.resolve(false) },
+      { path: '/b', tagName: 'b-page' },
+      { path: '/x', tagName: 'x-page' },
+    ],
+  });
+  try {
+    browser.back();
+    await flushBrowserNavigation();
+    // Vetoed: the router and the address bar stay on /b.
+    assertEquals(router.currentPath, '/b');
+    assertEquals(browser.path(), '/b');
+    // A programmatic navigation commits; pushState does not fire popstate.
+    await router.navigate('/x');
+    assertEquals(router.currentPath, '/x');
+    // A genuine back lands on the restored /b entry: the dedup key left
+    // over from the veto restore must not swallow it, or the address bar
+    // (/b) and the router (/x) diverge.
+    browser.back();
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/b');
+    assertEquals(browser.path(), '/b');
   } finally {
     router.dispose();
     browser.restore();

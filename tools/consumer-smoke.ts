@@ -277,9 +277,11 @@ async function npmPackageExists(name: string, version: string): Promise<boolean>
 async function main(): Promise<void> {
   const { PACKAGE_VERSION } = await import('./project-constants.ts');
   const local = getArgFlag('--local');
+  // An empty --version (e.g. an unset workflow input) falls back to the
+  // workspace version instead of counting as an explicit npm version.
   const versionArg = getArg('--version');
-  const version = versionArg ?? PACKAGE_VERSION;
-  const versionProvided = versionArg !== null;
+  const version = versionArg || PACKAGE_VERSION;
+  const versionProvided = versionArg !== null && versionArg !== '';
   const projectRoot = normalizeSlashes(Deno.cwd());
 
   const runJsDelivr = getArgFlag('--jsdelivr') || (versionProvided && !local);

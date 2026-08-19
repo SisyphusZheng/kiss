@@ -37,16 +37,6 @@ export function gitTrackedIgnoredFiles(): Promise<string[]> {
   return gitLsFiles(['-ci', '--exclude-standard']);
 }
 
-/** Return true if `path` is tracked by git. */
-export async function gitIsTracked(path: string): Promise<boolean> {
-  const command = new Deno.Command('git', {
-    args: ['ls-files', '--error-unmatch', '--', path],
-    stdout: 'null',
-    stderr: 'null',
-  });
-  return (await command.output()).success;
-}
-
 /** Run git capturing stdout; throws with stderr on failure. */
 export async function runGit(args: string[]): Promise<string> {
   const result = await new Deno.Command('git', {

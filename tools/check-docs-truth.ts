@@ -1,6 +1,7 @@
 /**
- * Unified docs-truth checker (Phase 3, #870): five legacy checkers merged
- * into one registry, each exposing run(opts) -> { passed, failures }.
+ * Unified docs-truth checker (Phase 3, #870): the legacy checkers merged
+ * into one registry of seven gates, each exposing
+ * run(opts) -> { passed, failures }.
  *
  *   strategic  - current-version/product-position anchors + stale claims
  *   public     - public docs integrity (anchors, doctrine, mojibake, surface)
@@ -8,6 +9,7 @@
  *   www        - www routes/current-truth gate (+ --artifacts)
  *   text       - text integrity across tracked files
  *   evidence   - release evidence consistency + forward-tag assertion
+ *   claims     - code/claim alignment (#893)
  *
  * CLI: `--check=<name>` runs one gate; no flag runs all. `--artifacts`
  * extends the www gate over www/dist. policy.ts keeps its per-gate trigger
@@ -622,7 +624,15 @@ const evidenceCheck: DocsTruthCheck = {
         failures.push({ file: closurePath, message: failure });
       }
     } catch (error) {
-      if (!(error instanceof Deno.errors.NotFound)) {
+      // The release note read is the only NotFound source in this try; a
+      // published tag without its note must fail closed (like the missing
+      // closure record above), not silently skip the note checks.
+      if (error instanceof Deno.errors.NotFound) {
+        failures.push({
+          file: releaseNotePath,
+          message: `published release tag ${tag} is missing its release note`,
+        });
+      } else {
         failures.push({
           file: closurePath,
           message: `evidence check error: ${formatError(error)}`,

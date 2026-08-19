@@ -1,3 +1,4 @@
+import { ATTACHMENT_BUCKET } from './cloudflare-queues.ts';
 import { logPayment, serviceRoleRpc as rpc } from './service-role.ts';
 
 export interface AttachmentScanMessage {
@@ -29,8 +30,6 @@ export interface WorkerEnv {
   ATTACHMENT_SCAN_QUEUE: { send(message: AttachmentScanMessage): Promise<void> };
   PAYMENT_EVENT_QUEUE: { send(message: PaymentEventMessage): Promise<void> };
 }
-
-const BUCKET = 'notes-attachments';
 
 function headers(env: WorkerEnv): HeadersInit {
   return {
@@ -157,7 +156,7 @@ export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
   );
   for (const reservation of stale) {
     try {
-      const removed = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${BUCKET}`, {
+      const removed = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${ATTACHMENT_BUCKET}`, {
         method: 'DELETE',
         headers: headers(env),
         body: JSON.stringify({ prefixes: [reservation.object_key] }),

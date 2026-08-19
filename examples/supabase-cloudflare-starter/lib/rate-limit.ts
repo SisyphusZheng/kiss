@@ -2,7 +2,7 @@ export interface RateLimitBinding {
   limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
-export type WorkerEnv = Record<string, unknown> & {
+export type RateLimitEnv = Record<string, unknown> & {
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
   AUTH_RATE_LIMITER?: RateLimitBinding;
@@ -10,7 +10,7 @@ export type WorkerEnv = Record<string, unknown> & {
 
 /** Cloudflare binding in production; absence is explicit local/test behavior. */
 export async function authRequestAllowed(
-  env: WorkerEnv,
+  env: RateLimitEnv,
   request: Request,
   scope: string,
 ): Promise<boolean> {

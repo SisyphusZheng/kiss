@@ -20,7 +20,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # Pinned to the current `latest` tag (anomalyco/opencode@latest)
+      # Pinned to the `latest` tag as of 2026-08 (anomalyco/opencode@latest)
       # SHA: 2c14fc5586fe0b88e5c04732d2e846769cc35671
       - uses: anomalyco/opencode/github@2c14fc5586fe0b88e5c04732d2e846769cc35671
         continue-on-error: true

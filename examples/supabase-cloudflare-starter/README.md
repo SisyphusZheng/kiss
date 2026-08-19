@@ -117,9 +117,17 @@ enforced by RLS and the island's `user_id` filter. The service-role and Stripe
 webhook secrets are server-only Worker bindings used by lifecycle/webhook
 handlers and must never be rendered or prefixed with `VITE_`.
 
-## Qualification still required
+## Qualification status
 
-- Tier 2 real Supabase password/OAuth/RLS/Realtime matrix.
-- Tier 3 deployed Workers journey and Cloudflare production rate limiting.
-- Production SMTP domain/authentication and bounce handling — execute
-  [`docs/runbooks/production-smtp-checklist.md`](../../docs/runbooks/production-smtp-checklist.md).
+- Tier 2 real Supabase password/OAuth/RLS/Realtime matrix: green (14/14),
+  evidence in
+  [`docs/evidence/2026-08-18-reference-saas-freeze-check.md`](../../docs/evidence/2026-08-18-reference-saas-freeze-check.md).
+- Tier 3 deployed Workers journey and Cloudflare production rate limiting:
+  green.
+- Production SMTP domain authentication and signup email-confirmation E2E:
+  verified (same evidence file, follow-ups 3/4). Known limitation: a fresh
+  sender domain has zero reputation, so the first mail can land in spam on
+  some providers — reputation ramps with volume; operational, not a defect.
+- Real scan-engine qualification stays deferred to v0.44 (#1070 / ADR-0132):
+  until `METADEFENDER_*` is configured, uploads remain `pending_scan` and
+  undownloadable by everyone — fail-closed by design.

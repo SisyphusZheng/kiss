@@ -116,7 +116,7 @@ provider diagnostics and session material are never echoed.
 export function createLoginAction(createClient: LoginClientFactory = createServerSupabase) {
   return async function action(ctx: {
     formData: FormData;
-    env: WorkerEnv;
+    env: RateLimitEnv;
     request: Request;
     responseHeaders: Headers;
   }): Promise<OpenElementActionFailure<LoginActionData>> {
