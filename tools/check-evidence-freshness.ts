@@ -22,6 +22,8 @@
  * run list injected; fetchScheduledRuns is the only network code.
  */
 
+import { formatError } from '@openelement/element';
+
 export interface ScheduledRunSummary {
   /** GitHub run status; only `completed` runs count as evidence. */
   status: string;
@@ -130,7 +132,7 @@ export async function fetchScheduledRuns(
   } catch (error) {
     throw new Error(
       `GitHub Actions API unreachable for ${workflowFile} ` +
-        `(${error instanceof Error ? error.message : String(error)}); release-level evidence ` +
+        `(${formatError(error)}); release-level evidence ` +
         'requires readable scheduled run history and fails closed',
     );
   }

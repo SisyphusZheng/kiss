@@ -32,6 +32,7 @@ jobs:
         with:
           name: mastodon-desktop-stress-report
           path: examples/deno-desktop-mastodon/stress-report.json
+          if-no-files-found: error
       - name: Archive combined framework evidence
         if: always()
         # v7.0.1
@@ -39,3 +40,4 @@ jobs:
         with:
           name: openelement-dogfood-evidence
           path: docs/evidence/dogfood-performance.json
+          if-no-files-found: error

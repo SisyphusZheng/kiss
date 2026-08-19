@@ -31,6 +31,10 @@ export function createRenderDataContext(): RenderDataContext {
 export const MAX_DATA_CONTEXT_DEPTH = 50;
 
 export function pushLoaderData(ctx: RenderDataContext, data: unknown): void {
+  // Defensive backstop: the only production caller (authoring.ts render)
+  // pushes exactly once into a fresh per-render context, so in practice this
+  // guard is reachable only from unit tests; it stays in case a future
+  // recursive renderer ever reuses a context.
   if (ctx.stack.length >= MAX_DATA_CONTEXT_DEPTH) {
     throw new Error(
       `Data context stack overflow at depth ${MAX_DATA_CONTEXT_DEPTH} ` +

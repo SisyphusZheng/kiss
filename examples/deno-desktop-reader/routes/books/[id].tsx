@@ -63,26 +63,9 @@ export function loader(
   });
 }
 
-export function action(
-  ctx: { params: Record<string, string>; formData?: FormData },
-): Promise<ReadingActionData> {
-  const quote = (ctx.formData?.get('note-quote') as string ?? '').trim();
-  const note = (ctx.formData?.get('note-text') as string ?? '').trim();
-  if (!note) {
-    return Promise.resolve({ error: '请先写下你的想法。' });
-  }
-
-  const page = readFormPage(ctx.formData, ctx.params);
-  return saveNote({
-    bookId: ctx.params.id,
-    page,
-    quote,
-    text: note,
-  }).then(() => ({ saved: true })).catch((err) => ({
-    error: err instanceof Error ? err.message : String(err),
-  }));
-}
-
+// No route action: the note form's open-button is type='button' and calls
+// requestSubmit(), and native submit events are not composed, so they cannot
+// cross the shadow root — submissions are handled by #submitNoteForm below.
 export const tagName = 'reader-reading';
 
 export default class ReadingPage extends OpenElement {
@@ -178,12 +161,7 @@ export default class ReadingPage extends OpenElement {
 
   override render() {
     const data = (this as unknown) as ReadingPage & ReadingData;
-    const routeActionData: ReadingActionData | undefined =
-      (this as unknown as Record<string, unknown>)
-        .actionData as
-          | ReadingActionData
-          | undefined;
-    const actionData = this.#noteFeedback ?? routeActionData;
+    const actionData = this.#noteFeedback;
     const book = data.book;
     const page = data.page;
     const zoom = data.zoom;

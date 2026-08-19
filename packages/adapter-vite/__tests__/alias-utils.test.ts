@@ -1,6 +1,21 @@
 import { assertEquals } from '@std/assert';
 import { normalizeViteAliases, sortAliasEntries } from '../src/alias-utils.ts';
 
+// #1067: `{ react: 'preact' }` — a bare package name is a module specifier,
+// not a root-relative path; resolving it against root corrupted the mapping.
+Deno.test('normalizeViteAliases passes bare package specifiers through untouched', () => {
+  const fromRecord = normalizeViteAliases({ react: 'preact' }, '/repo') ?? [];
+  assertEquals(fromRecord.find((alias) => alias.find === 'react')?.replacement, 'preact');
+
+  const fromArray = normalizeViteAliases([{ find: 'react', replacement: 'preact' }], '/repo') ?? [];
+  assertEquals(fromArray.find((alias) => alias.find === 'react')?.replacement, 'preact');
+});
+
+Deno.test('normalizeViteAliases still resolves relative replacements against root', () => {
+  const aliases = normalizeViteAliases({ '@app': './src/app.ts' }, '/repo') ?? [];
+  assertEquals(aliases.find((alias) => alias.find === '@app')?.replacement, '/repo/src/app.ts');
+});
+
 Deno.test('normalizeViteAliases expands retained Element public subpaths', () => {
   const aliases = normalizeViteAliases({
     '@openelement/element': './packages/element/src/index.ts',

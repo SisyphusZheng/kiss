@@ -7,6 +7,7 @@
 
 import { join, toFileUrl } from '@std/path';
 import { walkSync } from '@std/fs/walk';
+import { formatError } from '@openelement/element';
 import { extractStaticModuleSpecifiers } from './typescript-ast.ts';
 
 export interface PackageInfo {
@@ -124,9 +125,7 @@ export async function readPackage(dir: string): Promise<PackageInfo | null> {
     // that derives from readPackages() (interface snapshot, graph:check,
     // publish order) while those gates stay green.
     throw new Error(
-      `${path} is not valid JSON; refusing to silently drop the package: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `${path} is not valid JSON; refusing to silently drop the package: ${formatError(error)}`,
     );
   }
   const name = json.name;

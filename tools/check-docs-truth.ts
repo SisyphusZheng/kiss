@@ -25,7 +25,8 @@ import {
   PREVIOUS_RELEASE_THEME,
   REMOVED_PACKAGE_NAMES,
 } from './project-constants.ts';
-import { roadmapEntryTheme } from './autoflow/release.ts';
+import { formatError } from '@openelement/element';
+import { compareVersions, roadmapEntryTheme } from './autoflow/release.ts';
 
 type CheckResult = {
   passed: boolean;
@@ -82,7 +83,7 @@ const publicCheck: DocsTruthCheck = {
       } catch (error) {
         failures.push({
           file,
-          message: `cannot read file: ${error instanceof Error ? error.message : String(error)}`,
+          message: `cannot read file: ${formatError(error)}`,
         });
         return '';
       }
@@ -535,6 +536,16 @@ import { readJson } from './lib/fs.ts';
 const EVIDENCE_DIR = 'docs/release/autoflow3';
 const FIRST_TAGGED_VERSION = '0.41.0-alpha.14';
 
+/**
+ * Semver window for the forward-tag sweep: evidence records older than the
+ * first tagged release predate the immutable-tag policy. This must be a
+ * numeric semver compare — lexicographic order ranks '0.41.0-alpha.2' above
+ * '0.41.0-alpha.14' and would sweep untagged history into the gate.
+ */
+export function isInEvidenceWindow(version: string): boolean {
+  return compareVersions(version, FIRST_TAGGED_VERSION) >= 0;
+}
+
 const evidenceCheck: DocsTruthCheck = {
   name: 'evidence',
   run: async () => {
@@ -545,7 +556,7 @@ const evidenceCheck: DocsTruthCheck = {
       if (entry.name.endsWith('-prepare.json')) continue;
       const tagName = entry.name.slice(0, -'.json'.length);
       const version = tagName.startsWith('v') ? tagName.slice(1) : tagName;
-      if (version < FIRST_TAGGED_VERSION) continue;
+      if (!isInEvidenceWindow(version)) continue;
       const snapshot = await readJson(`${EVIDENCE_DIR}/${entry.name}`) as {
         status?: string;
       };
@@ -614,9 +625,7 @@ const evidenceCheck: DocsTruthCheck = {
       if (!(error instanceof Deno.errors.NotFound)) {
         failures.push({
           file: closurePath,
-          message: `evidence check error: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          message: `evidence check error: ${formatError(error)}`,
         });
       }
     }

@@ -5,7 +5,7 @@ export const tagName = 'page-roadmap';
 
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import { PUBLISHED_STABLE_VERSION } from '../data/version.ts';
+import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../data/version.ts';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-standards-visual.tsx';
@@ -634,9 +634,10 @@ export class RoadmapPage extends OpenElement {
           <div class='roadmap-grid'>
             <div class='timeline' aria-label={t.timelineAria}>
               {timeline.map((phase) => {
-                // The current-line stamp follows the bump-maintained anchor so a
-                // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.43.0-alpha.1' ? 'CURRENT' : phase.stamp;
+                // The current-line stamp follows the bump-maintained anchor
+                // (PUBLISHED_PACKAGE_VERSION) so a release bump re-marks the
+                // timeline without manual edits.
+                const stamp = phase.version === PUBLISHED_PACKAGE_VERSION ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>

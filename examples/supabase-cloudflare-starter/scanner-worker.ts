@@ -1,3 +1,5 @@
+import { serviceRoleRpc, UUID_PATTERN } from './lib/service-role.ts';
+
 interface ScannerEnv {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -20,7 +22,6 @@ interface AuthorizedAttachment {
 const BUCKET = 'notes-attachments';
 const MAX_BYTES = 10 * 1024 * 1024;
 const TIMEOUT_MS = 20_000;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function configuration(env: ScannerEnv): { supabase: URL; metadefender: URL } {
   const supabase = new URL(env.SUPABASE_URL);
@@ -84,28 +85,20 @@ export function createScannerWorker(
         const config = configuration(env);
         const body = await request.json() as Partial<ScanRequest>;
         if (
-          body.type !== 'attachment.scan' || !UUID.test(body.reservationId ?? '') ||
+          body.type !== 'attachment.scan' || !UUID_PATTERN.test(body.reservationId ?? '') ||
           typeof body.objectKey !== 'string' || body.objectKey.length > 512
         ) return Response.json({ error: 'invalid scan request' }, { status: 400 });
 
-        const authorization = await fetchImpl(
-          new URL('/rest/v1/rpc/authorize_attachment_scan', config.supabase),
+        const attachment = await serviceRoleRpc<AuthorizedAttachment>(
+          env,
+          'authorize_attachment_scan',
           {
-            method: 'POST',
-            headers: {
-              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-              authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-              'content-type': 'application/json',
-            },
-            body: JSON.stringify({
-              target_reservation_id: body.reservationId,
-              target_object_key: body.objectKey,
-            }),
-            signal: AbortSignal.timeout(timeoutMs),
+            target_reservation_id: body.reservationId,
+            target_object_key: body.objectKey,
           },
+          // Same per-request timeout the inline fetch had.
+          (input, init) => fetchImpl(input, { ...init, signal: AbortSignal.timeout(timeoutMs) }),
         );
-        if (!authorization.ok) throw new Error(`authorization failed (${authorization.status})`);
-        const attachment = await authorization.json() as AuthorizedAttachment;
         if (attachment.object_key !== body.objectKey) {
           throw new Error('object substitution rejected');
         }

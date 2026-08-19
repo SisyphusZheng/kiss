@@ -80,7 +80,7 @@ export function appendRenderPathSegment(
  * depth-trip message, or '' when no path was tracked. The tripping tag is
  * always the last segment.
  */
-function formatDepthPathSuffix(
+export function formatDepthPathSuffix(
   path: readonly string[] | undefined,
   tagName: string,
 ): string {
@@ -319,7 +319,7 @@ export async function renderDsd(
       },
     );
   }
-  const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
+  const startTime = safeNow();
   const sourceStr = options.sourceInfo
     ? `${options.sourceInfo.route ? ` route="${escapeAttrValue(options.sourceInfo.route)}"` : ''}${
       options.sourceInfo.source ? ` source="${escapeAttrValue(options.sourceInfo.source)}"` : ''

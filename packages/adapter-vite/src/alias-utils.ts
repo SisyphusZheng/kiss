@@ -10,6 +10,10 @@ import { type Alias } from 'vite';
 import { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
 
 function normalizeAliasReplacement(root: string, replacement: string): string {
+  // A bare package specifier carries no path separator (e.g. `preact` in
+  // `{ react: 'preact' }`): pass it through untouched so Vite resolves it as
+  // a module import instead of a root-relative file path (#1067).
+  if (!replacement.includes('/') && !replacement.includes('\\')) return replacement;
   return replacement.startsWith('/') || /^[A-Za-z]:/.test(replacement) ||
       replacement.startsWith('file:') || replacement.startsWith('\0')
     ? replacement

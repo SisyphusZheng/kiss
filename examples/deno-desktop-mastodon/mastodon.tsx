@@ -71,3 +71,8 @@ app.mount('#root');
 setRouter(app.router);
 
 updateActiveNav('mastodon', app.router?.currentPath ?? location.pathname + location.search);
+// Back/forward fires popstate; topnav clicks refresh the highlight inside
+// createTopNav (pushState alone does not fire popstate).
+globalThis.addEventListener('popstate', () => {
+  updateActiveNav('mastodon', globalThis.location.pathname);
+});

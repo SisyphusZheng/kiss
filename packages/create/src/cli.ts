@@ -2,7 +2,7 @@
 /**
  * @openelement/create - Minimal project scaffold for openElement framework.
  *
- * Usage: deno run -A npm:@openelement/create my-app
+ * Usage: deno run -A --minimum-dependency-age 0 npm:@openelement/create my-app
  *
  * openElement Architecture: Keep It Simple, Stupid.
  * One template, zero prompts, instant start.
@@ -14,7 +14,9 @@ import { buildTemplates, resolveVersions } from './template-builder.ts';
 async function main() {
   const name = Deno.args[0];
   if (!name || name === '--help' || name === '-h') {
-    console.log('Usage: deno run -A npm:@openelement/create <project-name>');
+    console.log(
+      'Usage: deno run -A --minimum-dependency-age 0 npm:@openelement/create <project-name>',
+    );
     Deno.exit(name ? 0 : 1);
   }
 

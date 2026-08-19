@@ -26,6 +26,7 @@ import type { DsdComponentConstructor } from '../protocol/render.ts';
 import {
   appendRenderPathSegment,
   BoundaryRenderError,
+  formatDepthPathSuffix,
   isControlFlowThrow,
   isDepthLimitError,
   MAX_SSR_NESTING_DEPTH,
@@ -343,6 +344,7 @@ export async function renderToNode(
     nestingDepth,
     boundaryActive,
     trackedPath,
+    tagName,
   );
 
   return {
@@ -371,8 +373,20 @@ async function renderShowBranch(
   const whenVal = unwrapSignalLike(props?.when);
   const target = whenVal ? children[0] : children[1];
   const branch = branchCommentNode(showBranchMarker(Boolean(whenVal)));
+  // #1067: same depth contract as a component frame (#1037) — a self-nesting
+  // Show tree recurses through renderToNode without ever reaching renderDsd,
+  // so the branch consumes one depth level and trips the same typed limit.
+  const depth = nestingDepth + 1;
+  if (depth > MAX_SSR_NESTING_DEPTH) {
+    throw new OpenElementError(
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <Show>${
+        formatDepthPathSuffix(renderPath, 'Show')
+      }`,
+      { code: 'SSR_NESTING_DEPTH_EXCEEDED', phase: 'ssr' },
+    );
+  }
   const rendered = target
-    ? await renderToNode(target, eventContext, nestingDepth, boundaryActive, renderPath)
+    ? await renderToNode(target, eventContext, depth, boundaryActive, renderPath)
     : null;
   return fragmentNode(rendered ? [branch, rendered] : [branch]);
 }
@@ -398,6 +412,19 @@ async function renderForBranch(
     return fragmentNode([branch]);
   }
   const parts: RenderNode[] = [branch];
+  // #1067: same depth contract as a component frame (#1037) — a renderFn that
+  // nests another <For> per tree level recurses through renderToNode without
+  // ever reaching renderDsd, so the branch consumes one depth level and trips
+  // the same typed limit instead of growing the microtask queue unbounded.
+  const depth = nestingDepth + 1;
+  if (depth > MAX_SSR_NESTING_DEPTH) {
+    throw new OpenElementError(
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <For>${
+        formatDepthPathSuffix(renderPath, 'For')
+      }`,
+      { code: 'SSR_NESTING_DEPTH_EXCEEDED', phase: 'ssr' },
+    );
+  }
   for (let index = 0; index < items.length; index++) {
     // Per-item boundary marker (protocol: oe-for-item:N) so matched hydration
     // can seed a keyed list binding over the existing SSR DOM (#917).
@@ -416,7 +443,7 @@ async function renderForBranch(
       await renderToNode(
         renderFn(items[index], index),
         eventContext,
-        nestingDepth,
+        depth,
         boundaryActive,
         itemPath,
       ),
@@ -490,6 +517,7 @@ async function renderElementChildren(
   nestingDepth: number,
   boundaryActive: boolean,
   renderPath: readonly string[] | undefined,
+  parentTag: string,
 ): Promise<RenderNode[]> {
   const childNodes: RenderNode[] = [];
 
@@ -499,9 +527,22 @@ async function renderElementChildren(
   } else if (props?.textContent !== undefined) {
     childNodes.push(textNode(unwrapSignalLike(props.textContent)));
   } else {
+    // #1067: same depth contract as a component frame (#1037) — bare-element
+    // recursion (a deeply self-similar vnode tree) reaches renderToNode
+    // without a component or CE frame, so each element level consumes one
+    // depth level and trips the same typed limit.
+    const depth = nestingDepth + 1;
+    if (depth > MAX_SSR_NESTING_DEPTH) {
+      throw new OpenElementError(
+        `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${parentTag}>${
+          formatDepthPathSuffix(renderPath, parentTag)
+        }`,
+        { code: 'SSR_NESTING_DEPTH_EXCEEDED', phase: 'ssr' },
+      );
+    }
     for (const child of children) {
       childNodes.push(
-        await renderToNode(child, eventContext, nestingDepth, boundaryActive, renderPath),
+        await renderToNode(child, eventContext, depth, boundaryActive, renderPath),
       );
     }
   }
@@ -552,6 +593,7 @@ async function renderRegisteredCeBranch(
         nestingDepth,
         true,
         hostPath,
+        tagName,
       );
     } catch (err) {
       if (isControlFlowThrow(err) || isDepthLimitError(err)) throw err;
@@ -573,6 +615,7 @@ async function renderRegisteredCeBranch(
       nestingDepth,
       boundaryActive,
       hostPath,
+      tagName,
     );
   }
 

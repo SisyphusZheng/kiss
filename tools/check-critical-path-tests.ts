@@ -21,6 +21,8 @@
  * toolchain.
  */
 
+import { formatError } from '@openelement/element';
+
 export interface Suite {
   file: string;
   kind: 'deno-test' | 'nitro-proof' | 'e2e';
@@ -149,9 +151,7 @@ export async function probePlaywrightBrowser(browser: string): Promise<ProbeResu
   } catch (error) {
     return {
       status: 'error',
-      reason: `playwright ${browser} probe could not spawn: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      reason: `playwright ${browser} probe could not spawn: ${formatError(error)}`,
     };
   }
   return classifyPlaywrightProbe(browser, probe.code, new TextDecoder().decode(probe.stderr));
@@ -172,7 +172,7 @@ export async function probeNitroPackage(): Promise<ProbeResult | undefined> {
     }
     return {
       status: 'error',
-      reason: `nitro probe failed: ${error instanceof Error ? error.message : String(error)}`,
+      reason: `nitro probe failed: ${formatError(error)}`,
     };
   }
 }
@@ -219,7 +219,7 @@ async function run(cmd: string[]): Promise<SuiteRun> {
     return {
       code: -1,
       out: '',
-      spawnError: error instanceof Error ? error.message : String(error),
+      spawnError: formatError(error),
     };
   }
   try {
@@ -233,7 +233,7 @@ async function run(cmd: string[]): Promise<SuiteRun> {
     return {
       code: -1,
       out: '',
-      spawnError: error instanceof Error ? error.message : String(error),
+      spawnError: formatError(error),
     };
   }
 }

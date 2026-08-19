@@ -84,7 +84,34 @@ Deno.test('host store syncs local source PDFs recursively', async () => {
   });
   const result = await syncSource(paths, source.id);
   assertEquals(result.books.length, 1);
-  assertEquals(result.books[0].id, 'local-nested-papers-nested-deeper-frankenstein-copy');
+  assertEquals(result.books[0].id, 'local-nested-papers-nested--deeper--frankenstein-copy');
+});
+
+Deno.test('host store keeps nested path depth in book ids (no slug collision)', async () => {
+  const paths = await makePaths();
+  const localRoot = await Deno.makeTempDir({ prefix: 'open-reader-collision-' });
+  await Deno.mkdir(`${localRoot}/a`, { recursive: true });
+  await Deno.mkdir(`${localRoot}/a-b`, { recursive: true });
+  await Deno.copyFile(
+    new URL('../../fixtures/books/heart-of-darkness.pdf', import.meta.url),
+    `${localRoot}/a/b-c.pdf`,
+  );
+  await Deno.copyFile(
+    new URL('../../fixtures/books/frankenstein.pdf', import.meta.url),
+    `${localRoot}/a-b/c.pdf`,
+  );
+  const source = await addSource(paths, {
+    kind: 'local',
+    label: 'Colliding Papers',
+    root: localRoot,
+  });
+  const result = await syncSource(paths, source.id);
+  // Previously both paths slugged to the same id: 'a/b-c' and 'a-b/c' both
+  // collapsed to 'a-b-c'.
+  assertEquals(result.books.map((book) => book.id).sort(), [
+    'local-colliding-papers-a--b-c',
+    'local-colliding-papers-a-b--c',
+  ]);
 });
 
 Deno.test('host store skips unchanged GitHub PDFs by sha', async () => {

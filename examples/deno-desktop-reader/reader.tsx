@@ -95,11 +95,6 @@ const SHADOW_STYLE_CSS = `
     padding: 40px 32px 80px;
     width: 100%;
   }
-  .reader-main:has(.reading-layout) {
-    max-width: min(1440px, calc(100vw - 32px));
-    padding-left: 16px;
-    padding-right: 16px;
-  }
 
   .page-header {
     align-items: flex-end;
@@ -337,46 +332,12 @@ const SHADOW_STYLE_CSS = `
   }
 
   /* === Reading page === */
-  .reading-layout {
-    display: grid;
-    gap: 24px;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-    margin-top: 8px;
-  }
-  .reading-toolbar {
-    align-items: flex-start;
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  .reading-title {
-    color: var(--text-primary);
-    font-family: var(--font-serif);
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.4px;
-    line-height: 1.2;
-    margin: 0;
-  }
-  .reading-author {
-    color: var(--text-muted);
-    font-family: var(--font-serif);
-    font-size: 14px;
-    font-style: italic;
-    margin: 8px 0 0;
-  }
-  .reading-main { min-width: 0; }
   .pdf-surface {
     background: var(--bg-reading);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
-  }
-  .reading-sidebar {
-    position: sticky;
-    top: 80px;
-    align-self: start;
   }
 
   /* === Note panel === */
@@ -498,7 +459,6 @@ const SHADOW_STYLE_CSS = `
     justify-content: space-between;
     margin-top: 8px;
   }
-  note-panel-island { display: block; margin-top: 12px; }
 
   /* === Notes page === */
   .notes-book-section { margin-bottom: 28px; }
@@ -949,10 +909,6 @@ const SHADOW_STYLE_CSS = `
   }
 
   /* === Responsive (shadow) === */
-  @media (max-width: 960px) {
-    .reading-layout { grid-template-columns: 1fr; }
-    .reading-sidebar { position: static; }
-  }
   @media (max-width: 720px) {
     .reader-main { padding: 24px 16px 64px; }
     .book-grid {
@@ -982,7 +938,6 @@ import BookshelfPage, {
   tagName as bookshelfTag,
 } from './routes/index.tsx';
 import ReadingPage, {
-  action as readingAction,
   loader as readingLoader,
   tagName as readingTag,
 } from './routes/books/[id].tsx';
@@ -1002,7 +957,6 @@ import WcInteropPage, { tagName as wcInteropTag } from './routes/wc-interop.tsx'
 // Import islands for side-effect: definePreactIsland registers custom elements.
 // In SPA mode the adapter does not inject an islands bundle, so islands must
 // be imported by the bootstrap to ensure their customElements.define() runs.
-import './islands/note-panel-island.tsx';
 import './islands/pdf-reader-island.tsx';
 import './islands/search-box-island.tsx';
 import './islands/sync-status-island.tsx';
@@ -1026,7 +980,6 @@ const routes = [
   {
     path: '/books/:id',
     loader: readingLoader,
-    action: readingAction,
     tagName: readingTag,
   },
   {

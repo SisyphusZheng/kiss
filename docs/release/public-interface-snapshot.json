@@ -324,7 +324,7 @@
           "reExportedNames": []
         },
         "./cli/start": {
-          "sha256": "839688f8ad7b5f15897b8a7de1dcbd26b6d5f76d1bddf1e492c6c6e5f7a3da70",
+          "sha256": "99f7c87c074cff317011128ae4a3a18cf45f14b3b6d388ee5b697e33ab29f457",
           "publicDeclarations": [
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
           ],
@@ -422,7 +422,7 @@
           "reExportedNames": []
         },
         "./open-code-block": {
-          "sha256": "2224a14c37727c12c5265d567738aa0b615bc33adb6c14e4c80d4d3c87ffeca7",
+          "sha256": "a184af044076695993703eebcea9f59053fc1f388d8237a4b8d9e6fc848875f0",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
@@ -446,7 +446,7 @@
           "reExportedNames": []
         },
         "./open-input": {
-          "sha256": "62f244829015a5abac45ff678f48b6b4a6404d734e1ae55a542d398547d0d07a",
+          "sha256": "c59daf0bd354446b3ea3e51f1749f6b3da7c047edcd6754ee6b1b074180eae1e",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
@@ -494,7 +494,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "f409a7e2e8052e58e4d3f606eae87d6e21467def8674b13b51994e61f5178b7f",
+          "sha256": "cb0a6e934cb12f891f7a8d88b5ed6128e33fbaea8e7235d80e394ed1d609ab91",
           "publicDeclarations": [],
           "reExportedNames": []
         }

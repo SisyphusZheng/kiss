@@ -51,7 +51,12 @@ export function createTopNav(options: TopNavOptions): HTMLElement {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const path = (link as HTMLElement).dataset.nav;
-        if (path) onNavigate(path);
+        if (path) {
+          onNavigate(path);
+          // SPA navigation uses pushState, which does not fire popstate —
+          // refresh the active highlight here (popstate covers back/forward).
+          updateActiveNav(prefix, path);
+        }
       });
     },
   );

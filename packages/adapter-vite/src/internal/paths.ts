@@ -8,7 +8,7 @@
 /** Default build output directory name (relative to the app root). */
 export const DEFAULT_OUT_DIR = 'dist';
 
-/** openElement metadata directory name (route types, build artifacts). */
+/** openElement metadata directory name (build artifacts). */
 export const OPEN_ELEMENT_DIR = '.openElement';
 
 /**

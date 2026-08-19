@@ -4,6 +4,7 @@ import {
   stripeOrderReference,
   verifyStripeSignature,
 } from '../../../lib/stripe-webhook.ts';
+import { logPayment, serviceRoleRpc } from '../../../lib/service-role.ts';
 
 interface ApiContext {
   request: Request;
@@ -15,14 +16,6 @@ interface PaymentQueue {
 }
 
 const MAX_WEBHOOK_BYTES = 1024 * 1024;
-
-// Minimal structured payment logs. The correlation key is always the provider
-// event id; payloads, headers, customer data, and secrets are never logged.
-function logPayment(level: 'info' | 'error', fields: Record<string, unknown>): void {
-  const line = JSON.stringify(fields);
-  if (level === 'error') console.error(line);
-  else console.log(line);
-}
 
 function serverSecret(env: Record<string, unknown>, name: string): string {
   const value = env[name];
@@ -83,31 +76,19 @@ export function createStripeWebhook(fetchImpl: typeof fetch = fetch) {
     }
 
     try {
-      const response = await fetchImpl(`${supabaseUrl}/rest/v1/rpc/receive_stripe_event`, {
-        method: 'POST',
-        headers: {
-          apikey: serviceRoleKey,
-          authorization: `Bearer ${serviceRoleKey}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
+      const durable = await serviceRoleRpc<{ processing_state?: string }>(
+        env,
+        'receive_stripe_event',
+        {
           target_event_id: event.id,
           event_type: event.type,
           event_created_at: event.created,
           event_livemode: event.livemode,
           order_reference: stripeOrderReference(event),
           event_data: stripeEventData(event),
-        }),
-      });
-      if (!response.ok) {
-        logPayment('error', {
-          event: 'stripe_webhook_not_durable',
-          provider_event_id: event.id,
-          event_type: event.type,
-        });
-        return Response.json({ error: 'event not durable' }, { status: 503 });
-      }
-      const durable = await response.json() as { processing_state?: string };
+        },
+        fetchImpl,
+      );
       if (durable.processing_state === 'completed' || durable.processing_state === 'dead_letter') {
         logPayment('info', {
           event: 'stripe_webhook_accepted',

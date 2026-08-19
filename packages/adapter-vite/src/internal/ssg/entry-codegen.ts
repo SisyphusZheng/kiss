@@ -481,7 +481,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   lines.push(`    }`);
   lines.push(`    if (__isOpenElementNotFound(err)) {`);
   lines.push(
-    `      return c.html(wrapInDocument(__statusHtml("404 Not Found", err.message || "Not Found"), {`,
+    `      return c.html(__withDevClientScript(wrapInDocument(__statusHtml("404 Not Found", err.message || "Not Found"), {`,
   );
   lines.push(`        title: "404 Not Found",`);
   lines.push(`        lang: ${quoteGeneratedJavaScriptValue(docConfig.lang)},`);
@@ -490,7 +490,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     `        allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
   );
   lines.push(`        cspNonce: c.get('cspNonce'),`);
-  lines.push(`      }), 404)`);
+  lines.push(`      })), 404)`);
   lines.push(`    }`);
 
   // ADR-0121 (#558): the JSON error channel scrubs internals in production,
@@ -523,7 +523,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     lines.push(
       `        const errorContent = await __renderAppShell(errorNode, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
     );
-    lines.push(`        return c.html(wrapInDocument(errorContent, {`);
+    lines.push(`        return c.html(__withDevClientScript(wrapInDocument(errorContent, {`);
     for (
       const optionLine of documentWrapOptionsLines({
         pageExpr: '__page',
@@ -536,7 +536,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     ) {
       lines.push(`          ${optionLine}`);
     }
-    lines.push(`        }), 500)`);
+    lines.push(`        })), 500)`);
     lines.push(`      } catch (errorRenderFailure) {`);
     lines.push(
       `        console.error('[openElement] Route error renderer failed for ' + ${pathLiteral} + ':', errorRenderFailure)`,
@@ -683,7 +683,7 @@ export function renderNotFoundRoute(
       quoteGeneratedJavaScriptValue(route.path)
     }, { routeMeta: __routeMetaValue })`,
   );
-  lines.push(`    return c.html(wrapInDocument(content, {`);
+  lines.push(`    return c.html(__withDevClientScript(wrapInDocument(content, {`);
   for (
     const optionLine of documentWrapOptionsLines({
       pageExpr: '__page',
@@ -696,16 +696,16 @@ export function renderNotFoundRoute(
   ) {
     lines.push(`      ${optionLine}`);
   }
-  lines.push(`    }), 404)`);
+  lines.push(`    })), 404)`);
   lines.push(`  } catch (err) {`);
   lines.push(`    if (__isOpenElementRedirect(err)) return c.redirect(err.location, err.status);`);
   lines.push(`    console.error('[openElement] 404 page render failed:', err);`);
   lines.push(
-    `    return c.html(wrapInDocument(__statusHtml("404 Not Found", "Not Found"), { title: "404 Not Found", lang: ${
+    `    return c.html(__withDevClientScript(wrapInDocument(__statusHtml("404 Not Found", "Not Found"), { title: "404 Not Found", lang: ${
       quoteGeneratedJavaScriptValue(docConfig.lang)
     }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
       JSON.stringify(docConfig.allowHeadExtrasScripts)
-    }, cspNonce: c.get('cspNonce') }), 404);`,
+    }, cspNonce: c.get('cspNonce') })), 404);`,
   );
   lines.push(`  }`);
   // ADR-0129: close the IIFE and merge the 404-page loader's channel too.

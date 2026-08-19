@@ -296,6 +296,25 @@ Deno.test('SSR For item identity getters are read exactly once per item', async 
   assertEquals(reads, 1);
 });
 
+Deno.test('SSR depth limit trips a self-nesting <For> tree with the typed error (#1067)', async () => {
+  // A renderFn that nests one <For> per tree level recurses through
+  // renderToNode without ever hitting a component or CE frame — pre-fix no
+  // branch on this path consumed depth, so the tree grew the microtask queue
+  // unbounded instead of tripping the typed limit.
+  const renderLevel = (): unknown => ({
+    tag: FOR_TAG,
+    props: { each: [0] },
+    children: [() => renderLevel()],
+  });
+
+  const err = await assertRejects(
+    () => renderDsdTree(renderLevel()),
+    Error,
+    `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <For>`,
+  );
+  assertEquals(isDepthLimitError(err), true);
+});
+
 Deno.test('SSR depth-trip path falls back to the For item ordinal without a stable key (#975)', async () => {
   class ForOrdinalFrame {
     render(): unknown {

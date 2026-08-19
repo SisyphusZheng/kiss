@@ -224,15 +224,20 @@ export function hydrateOpenElement(
 export function disposeOpenElement(root: ParentNode): void {
   // O(n) walk so callers can dispose an arbitrary container.
   const walk = (node: Node) => {
-    if (node.nodeType !== 1) return;
-    const el = node as Element;
-    const disposer = hostDisposers.get(el);
-    if (disposer) {
-      disposer();
-      hostDisposers.delete(el);
+    // Non-element nodes (document, DocumentFragment roots) have no host
+    // disposer of their own, but their subtree can still hold hosts — skip
+    // the host lookup, never the traversal. Mirrors hydrateOpenElement,
+    // which accepts a document root via TreeWalker.
+    if (node.nodeType === 1) {
+      const el = node as Element;
+      const disposer = hostDisposers.get(el);
+      if (disposer) {
+        disposer();
+        hostDisposers.delete(el);
+      }
     }
     // Walk children (supports both real DOM children and test double childNodes).
-    const container = el as ChildContainer;
+    const container = node as ChildContainer;
     for (const child of Array.from(container.children ?? container.childNodes ?? [])) {
       walk(child as Node);
     }

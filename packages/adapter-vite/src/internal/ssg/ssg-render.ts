@@ -31,7 +31,7 @@ import {
   renderRequestTimeServerModule,
   renderStandaloneServerModule,
 } from './ssg-helpers.ts';
-import { formatJson } from '@openelement/element/build-utils';
+import { formatJson, normalizeSeparators } from '@openelement/element/build-utils';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
 const log = createLogger('ssg-render');
@@ -289,7 +289,7 @@ export async function ssgRender(
     const rel = nodePath.relative(outputDir, filePath);
     if (rel.endsWith('index.html') || rel === '404.html') continue;
     const baseName = rel.replace(/\.html$/, '');
-    const urlBaseName = baseName.replace(/\\/g, '/');
+    const urlBaseName = normalizeSeparators(baseName);
     const dirPath = join(outputDir, baseName);
     const indexPath = join(dirPath, 'index.html');
     // #956: an existing directory is not a conflict — /blog coexists with the

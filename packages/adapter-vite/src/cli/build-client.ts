@@ -27,6 +27,7 @@ import { parseJsonc } from '../internal/jsonc.ts';
 import { sortAliasEntries } from '../alias-utils.ts';
 import { formatError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 import {
   CHUNK_SIZE_WARNING_LIMIT_KB,
   DEFAULT_ISLANDS_DIR,
@@ -60,7 +61,7 @@ type ViteInlineConfigWithManifest = Omit<InlineConfig, 'build'> & {
 const WORKSPACE_ROOT: string | null = (() => {
   if (!import.meta.url.startsWith('file:')) return null;
   try {
-    const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/\\/g, '/');
+    const root = normalizeSeparators(fileURLToPath(new URL('../../../..', import.meta.url)));
     if (!existsSync(join(root, 'packages', 'element', 'deno.json'))) return null;
     return root;
   } catch (e) {
@@ -137,7 +138,7 @@ function tryDenoJsonDir(
 function convertImportMapTarget(target: string, denoJsonDir: string): string | null {
   if (target.startsWith('file://')) {
     try {
-      return fileURLToPath(target).replace(/\\/g, '/');
+      return normalizeSeparators(fileURLToPath(target));
     } catch (e) {
       log.warn('Unable to convert file:// import-map target, skipping', e);
       return null;
@@ -145,7 +146,7 @@ function convertImportMapTarget(target: string, denoJsonDir: string): string | n
   }
   // Relative path — resolve relative to the deno.json directory
   if (target.startsWith('./') || target.startsWith('../')) {
-    return resolve(denoJsonDir, target).replace(/\\/g, '/');
+    return normalizeSeparators(resolve(denoJsonDir, target));
   }
   // npm:, jsr: — let Vite/Rolldown handle these normally
   return null;

@@ -18,6 +18,7 @@
 import { basename, join, resolve } from 'node:path';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { createLogger } from '@openelement/element';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 import { DEFAULT_OUT_DIR } from './internal/paths.ts';
 import { walkFileEntries } from './internal/html-files.ts';
 
@@ -73,7 +74,7 @@ function collectFiles(
   if (!existsSync(dir)) return results;
 
   for (const entry of walkFileEntries(dir, extension)) {
-    const relPath = entry.relativePath.replaceAll('\\', '/');
+    const relPath = normalizeSeparators(entry.relativePath);
     try {
       const stat = statSync(entry.absolutePath);
       results.push({

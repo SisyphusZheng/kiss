@@ -31,6 +31,7 @@ import {
 } from './lib/package-graph.ts';
 import { walk } from '@std/fs/walk';
 import { readJson } from './lib/fs.ts';
+import { formatError } from '@openelement/element';
 
 /**
  * Explicit dependency-direction rules: each package may only depend on the
@@ -80,14 +81,14 @@ function isDeclaredImport(
   return pkg.importKeys.has(specifier) || pkg.importKeys.has(base);
 }
 
-function collectWorkspaceSpecifiers(packages: PackageInfo[]): Set<string> {
+export function collectWorkspaceSpecifiers(packages: PackageInfo[]): Set<string> {
   const specifiers = new Set<string>();
   for (const pkg of packages) {
     specifiers.add(pkg.name);
     const exports = pkg.exports;
     if (typeof exports === 'object' && exports !== null) {
       for (const key of Object.keys(exports)) {
-        specifiers.add(`${pkg.name}${key === '.' ? '' : key}`);
+        specifiers.add(key === '.' ? pkg.name : pkg.name + key.slice(1));
       }
     }
   }
@@ -171,7 +172,7 @@ async function main(): Promise<void> {
   try {
     publishSteps = releasePublishOrder(packages);
   } catch (err) {
-    failures.push(err instanceof Error ? err.message : String(err));
+    failures.push(formatError(err));
   }
   const publishOrder = publishSteps.map((pkg) => pkg.name);
 
@@ -261,7 +262,7 @@ async function main(): Promise<void> {
     const topoOrder = topologicalSort(graph);
     console.log(`  Order: ${topoOrder.join(' -> ')}`);
   } catch (err) {
-    const msg = `Topological sort failed: ${err instanceof Error ? err.message : String(err)}`;
+    const msg = `Topological sort failed: ${formatError(err)}`;
     console.error(`  FAIL: ${msg}`);
     failures.push(msg);
   }

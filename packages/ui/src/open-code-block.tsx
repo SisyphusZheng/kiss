@@ -259,6 +259,7 @@ export class OpenCodeBlock extends OpenElement {
       }, OpenCodeBlock.COPY_FEEDBACK_MS);
     } catch (e) {
       log.warn('Clipboard write failed:', e);
+      this._copyState = 'failed';
       this._internals?.states.add('failed');
       this._internals?.states.delete('copied');
       this._updateCopyButtonDOM();

@@ -31,6 +31,7 @@ export const tagName = 'page-notes';
 
 interface NoteRow {
   id: string;
+  title: string;
   body: string;
   created_at: string;
 }
@@ -100,7 +101,7 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
     if (!user) return { denied: true };
     const { data: notes, error } = await supabase
       .from('notes')
-      .select('id, body, created_at')
+      .select('id, title, body, created_at')
       .order('created_at', { ascending: false });
     if (error) return { denied: false, email: user.email, error: error.message };
     const { data: { session } } = await supabase.auth.getSession();
@@ -213,7 +214,11 @@ const NotesPage = definePage<NotesData>({
           <button type='submit'>Create note</button>
         </form>
         <ul id='notes'>
-          {(data.notes ?? []).map((note) => <li key={note.id}>{note.body}</li>)}
+          {(data.notes ?? []).map((note) => (
+            <li key={note.id}>
+              <strong>{note.title}</strong> — {note.body}
+            </li>
+          ))}
         </ul>
         {data.live
           ? (

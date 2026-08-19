@@ -316,4 +316,4 @@ async function main(): Promise<void> {
   console.log('\nAll smoke tests passed');
 }
 
-await main();
+if (import.meta.main) await main();

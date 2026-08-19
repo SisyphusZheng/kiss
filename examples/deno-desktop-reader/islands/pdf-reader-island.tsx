@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { definePreactIsland } from '@openelement/app/preact';
 import { pdfMaxWidth } from '../app/pdf-measure.ts';
+import { loadSettings } from '../app/storage.ts';
 
 interface PdfReaderProps {
   'book-id'?: string;
@@ -68,26 +69,15 @@ interface ReaderPreferenceSettings {
 }
 
 function loadReaderSettings(): ReaderPreferenceSettings {
-  const defaults: ReaderPreferenceSettings = {
-    fontSize: 22,
-    lineHeight: 1.9,
-    measure: 65,
-    pdfMaxWidth: 720,
+  // Defaults live in app/storage.ts (the single source of truth);
+  // pdfMaxWidth is always derived from measure via app/pdf-measure.ts.
+  const settings = loadSettings();
+  return {
+    fontSize: settings.fontSize,
+    lineHeight: settings.lineHeight,
+    measure: settings.measure,
+    pdfMaxWidth: pdfMaxWidth(settings.measure),
   };
-  try {
-    const raw = localStorage.getItem('reader:settings');
-    if (!raw) return defaults;
-    const parsed = JSON.parse(raw);
-    const measure = Number(parsed.measure) || defaults.measure;
-    return {
-      fontSize: Number(parsed.fontSize) || defaults.fontSize,
-      lineHeight: Number(parsed.lineHeight) || defaults.lineHeight,
-      measure,
-      pdfMaxWidth: pdfMaxWidth(measure),
-    };
-  } catch {
-    return defaults;
-  }
 }
 
 // Lazy-load pdf.js to avoid doing reader work until the PDF route is visited.

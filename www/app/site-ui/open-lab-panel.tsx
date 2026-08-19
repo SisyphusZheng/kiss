@@ -7,7 +7,6 @@
 
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeHtml } from '@openelement/element';
 import { getStr } from './get-str.ts';
 
 export const tagName = 'open-lab-panel';
@@ -131,9 +130,9 @@ export class OpenLabPanel extends OpenElement {
           <header className='panel__bar' part='header'>
             <span className='panel__label'>
               <span className='panel__dot' aria-hidden='true'></span>
-              {this._esc(label)}
+              {label}
             </span>
-            {meta && <span className='panel__meta'>{this._esc(meta)}</span>}
+            {meta && <span className='panel__meta'>{meta}</span>}
           </header>
         )}
         <div className='panel__body' part='body'>
@@ -142,8 +141,6 @@ export class OpenLabPanel extends OpenElement {
       </section>
     );
   }
-
-  private _esc = escapeHtml;
 }
 
 export default OpenLabPanel;

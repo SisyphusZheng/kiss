@@ -25,6 +25,7 @@
 import { dirname, join } from '@std/path';
 
 import { formatJson } from '@openelement/element/build-utils';
+import { escapeRegExp } from './lib/text.ts';
 import { prepareFixtureApp, verifyBrowser } from './third-party-wc-smoke.ts';
 const RECORD_PATH = join('docs', 'evidence', 'third-party-wc-ssr-corpus.json');
 
@@ -261,10 +262,6 @@ interface SsrFormObservation {
   lightDomChildren: string[];
   dsdTemplate: boolean;
   dataEid: boolean;
-}
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function observeSsrForm(html: string, entry: CorpusEntry): SsrFormObservation {

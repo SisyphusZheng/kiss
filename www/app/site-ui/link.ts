@@ -11,7 +11,9 @@ import { normalizeLocalePath } from '@openelement/app/i18n';
 
 /** Locales emitted by the www build (www/vite.config.ts `locales`). */
 export const SITE_LOCALES: readonly string[] = ['en', 'zh'];
-export const SITE_DEFAULT_LOCALE: string = SITE_LOCALES[0];
+// Internal default-locale anchor for the two helpers below; not part of the
+// module's public surface.
+const SITE_DEFAULT_LOCALE: string = SITE_LOCALES[0];
 
 /**
  * Prefix an internal absolute path with the locale unless it is the default

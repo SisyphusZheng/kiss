@@ -20,9 +20,10 @@ const USER = { id: 'user-123', email: 'tester@example.com' };
 
 function stubClient(overrides: {
   user?: typeof USER | null;
-  notes?: { id: string; body: string; created_at: string }[];
+  notes?: { id: string; title: string; body: string; created_at: string }[];
   selectError?: { message: string } | null;
   insertError?: { message: string } | null;
+  onSelect?: (columns: string) => void;
   onInsert?: (values: { user_id: string; title: string; body: string }) => void;
 }): () => NotesSupabaseClient {
   const {
@@ -30,6 +31,7 @@ function stubClient(overrides: {
     notes = [],
     selectError = null,
     insertError = null,
+    onSelect,
     onInsert,
   } = overrides;
   return () => ({
@@ -38,9 +40,12 @@ function stubClient(overrides: {
       getSession: () => Promise.resolve({ data: { session: { access_token: 'token' } } }),
     },
     from: () => ({
-      select: () => ({
-        order: () => Promise.resolve({ data: notes, error: selectError }),
-      }),
+      select: (columns: string) => {
+        onSelect?.(columns);
+        return {
+          order: () => Promise.resolve({ data: notes, error: selectError }),
+        };
+      },
       insert: (values) => {
         onInsert?.(values);
         return Promise.resolve({ error: insertError });
@@ -67,8 +72,12 @@ Deno.test('notes loader denies anonymous requests', async () => {
 });
 
 Deno.test('notes loader returns the signed-in owner rows', async () => {
-  const notes = [{ id: '1', body: 'mine', created_at: '2026-08-17T00:00:00Z' }];
-  const result = await createNotesLoader(stubClient({ notes }))(ctx());
+  const notes = [{ id: '1', title: 'first', body: 'mine', created_at: '2026-08-17T00:00:00Z' }];
+  let selected = '';
+  const result = await createNotesLoader(stubClient({ notes, onSelect: (c) => selected = c }))(
+    ctx(),
+  );
+  assertEquals(selected, 'id, title, body, created_at');
   assertEquals(result.denied, false);
   assertEquals(result.notes, notes);
   assertEquals(result.live?.userId, USER.id);

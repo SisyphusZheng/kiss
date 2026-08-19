@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from '@std/assert';
+import { assertEquals, assertRejects, assertThrows } from '@std/assert';
 import {
   compileRouteMatcher,
   createRouter,
@@ -227,6 +227,32 @@ Deno.test('router falls back to the regex matcher when URLPattern is absent', ()
     }
   } finally {
     globalThis.URLPattern = original;
+  }
+});
+
+Deno.test('regex fallback fails fast on static-segment URLPattern tokens like the native path (#1067)', () => {
+  // Parity: patterns the native URLPattern rejects at compile time must also
+  // throw in the fallback instead of escaping into a never-matching route.
+  const nativeThrows = ['/foo/bar?', '/foo/bar+', '/foo/(bar', '/foo/?bar', '/foo/:'];
+  for (const path of nativeThrows) {
+    const routes: RouteConfig[] = [{ path, tagName: 'bad-page' }];
+    assertThrows(() => new URLPattern({ pathname: path }), TypeError);
+    assertThrows(() => matchRouteLinearForTests('/foo/bar', '', routes), TypeError);
+    assertThrows(() => matchRouteLinear('/foo/bar', '', routes), TypeError);
+  }
+  // Tokens the native parser would silently reinterpret (wildcard, group, or
+  // param inside a static segment) are outside the route dialect: the
+  // fallback rejects them at compile time rather than matching them
+  // literally while URLPattern matches something else.
+  const reinterpreted = ['/foo/bar)', '/foo/(bar)', '/foo/bar*', '/foo/a:b'];
+  for (const path of reinterpreted) {
+    const routes: RouteConfig[] = [{ path, tagName: 'bad-page' }];
+    assertThrows(() => matchRouteLinear('/foo/bar', '', routes), TypeError);
+  }
+  // Legal dialect patterns (including `:param?` and `{regex}` catch-alls)
+  // are unaffected.
+  for (const route of fallbackFixtures) {
+    matchRouteLinear('/x', '', [route]);
   }
 });
 

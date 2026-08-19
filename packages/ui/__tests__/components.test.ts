@@ -888,6 +888,29 @@ Deno.test('open-input: value change still syncs in place without re-render (#770
   assertEquals(formValues, ['typed']);
 });
 
+Deno.test('open-input: removeAttribute(value) also clears the rendered input (#1067)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  instance.setAttribute('value', 'typed');
+
+  // The harness has no shadow DOM; stub the inner input _syncDOM re-queries.
+  const inner = { value: 'typed', disabled: false };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => (selector === 'input' ? inner : null) },
+  });
+  const sync = instance as unknown as { _syncDOM(): void };
+  sync._syncDOM();
+  assertEquals(inner.value, 'typed');
+
+  // After removal the visible text must match the (already cleared) form
+  // value, mirroring native input behavior where the attribute is the
+  // default value.
+  instance.removeAttribute('value');
+  sync._syncDOM();
+  assertEquals(inner.value, '');
+});
+
 // FACE pilot (ADR-0123 item 14, #864): the tests below pin the
 // ElementInternals contract — what enters FormData on submit, validity
 // basics, and graceful degradation where ElementInternals is absent.
@@ -1021,6 +1044,32 @@ Deno.test('open-code-block: copy button writes text to clipboard', async () => {
     assertEquals(copied, 'const answer = 42;');
   } finally {
     restoreClipboard();
+  }
+});
+
+Deno.test('open-code-block: failed clipboard write sets copyState and shows Failed', async () => {
+  const { OpenCodeBlock } = await import('../src/open-code-block.tsx');
+  const instance = new OpenCodeBlock();
+  instance.textContent = 'const answer = 42;';
+
+  // The harness has no shadow DOM; stub the copy button the component
+  // re-queries in _updateCopyButtonDOM.
+  const button = { textContent: 'Copy' };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: {
+      querySelector: (selector: string) => (selector === 'button.copy-btn' ? button : null),
+    },
+  });
+
+  const restoreClipboard = installClipboardSpy(() => Promise.reject(new Error('denied')));
+  try {
+    await (instance as unknown as { _copy(): Promise<void> })._copy();
+    assertEquals(button.textContent, 'Failed');
+  } finally {
+    restoreClipboard();
+    // Clears the pending COPY_FEEDBACK_MS reset timer via the lifecycle scope.
+    instance.disconnectedCallback?.();
   }
 });
 

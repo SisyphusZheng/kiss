@@ -7,6 +7,7 @@ import {
   useLoaderData,
 } from '@openelement/app';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
+import { serviceRoleRpc } from '../../lib/service-role.ts';
 import {
   checkoutConfiguration,
   checkoutSessionBody,
@@ -82,25 +83,6 @@ export function createCheckoutLoader(createClient: ClientFactory = createServerS
   };
 }
 
-async function serviceRpc(
-  fetchImpl: Fetch,
-  env: Record<string, unknown>,
-  name: string,
-  body: Record<string, unknown>,
-): Promise<boolean> {
-  const url = typeof env.SUPABASE_URL === 'string' ? env.SUPABASE_URL : '';
-  const key = typeof env.SUPABASE_SERVICE_ROLE_KEY === 'string'
-    ? env.SUPABASE_SERVICE_ROLE_KEY
-    : '';
-  if (!url || !key) return false;
-  const response = await fetchImpl(`${url}/rest/v1/rpc/${name}`, {
-    method: 'POST',
-    headers: { apikey: key, authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  return response.ok;
-}
-
 export function createCheckoutAction(
   createClient: ClientFactory = createServerSupabase,
   fetchImpl: Fetch = fetch,
@@ -109,6 +91,8 @@ export function createCheckoutAction(
     ctx: CheckoutContext & { formData: FormData },
   ): Promise<OpenElementActionFailure<CheckoutActionData>> {
     const attemptId = String(ctx.formData.get('attempt_id') ?? '');
+    // Deliberately stricter than the shared UUID_PATTERN (v1–v5): attempt ids
+    // are always client-generated v4 UUIDs from the loader's crypto.randomUUID().
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(attemptId)) {
       return fail(422, { error: 'invalid checkout attempt' });
     }
@@ -148,14 +132,22 @@ export function createCheckoutAction(
         typeof session.id !== 'string' || session.livemode !== config.livemode ||
         typeof session.url !== 'string'
       ) throw new Error('Stripe Checkout response mismatch');
-      const attached = await serviceRpc(fetchImpl, ctx.env, 'attach_checkout_session', {
+      // Throws on non-2xx/missing config, landing in the catch below just
+      // like the former boolean serviceRpc's `!attached` branch did.
+      await serviceRoleRpc(ctx.env, 'attach_checkout_session', {
         order_id: orderId,
         checkout_session_id: session.id,
-      });
-      if (!attached) throw new Error('Checkout session was not persisted');
+      }, fetchImpl);
       checkoutUrl = verifiedCheckoutUrl(session.url, config.checkoutHost);
     } catch {
-      await serviceRpc(fetchImpl, ctx.env, 'mark_checkout_creation_failed', { order_id: orderId });
+      // Best-effort compensation; a failed mark must not mask the 409.
+      await serviceRoleRpc(
+        ctx.env,
+        'mark_checkout_creation_failed',
+        { order_id: orderId },
+        fetchImpl,
+      )
+        .catch(() => {});
       return fail(409, { error: 'checkout is temporarily unavailable; retry safely', attemptId });
     }
     throw redirect(checkoutUrl);

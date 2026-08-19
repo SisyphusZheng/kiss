@@ -8,6 +8,7 @@ import matter from 'gray-matter';
 import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
 import sanitizeHtml from 'sanitize-html';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 import type { BlogPost, OpenElementBlogOptions } from './types.ts';
 
 /**
@@ -129,6 +130,6 @@ export function slugFromFilename(filename: string): string {
 }
 
 function dateFromFilename(filePath: string): string | undefined {
-  const filename = filePath.replace(/\\/g, '/').split('/').pop() ?? filePath;
+  const filename = normalizeSeparators(filePath).split('/').pop() ?? filePath;
   return filename.match(/^(\d{4}-\d{2}-\d{2})-/)?.[1];
 }

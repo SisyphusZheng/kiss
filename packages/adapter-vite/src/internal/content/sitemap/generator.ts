@@ -12,6 +12,7 @@ import { dirname, join, resolve } from 'node:path';
 import { existsSync, writeFileSync } from 'node:fs';
 import type { SitemapOptions, SitemapUrl } from '../types.ts';
 import { createLogger } from '@openelement/element';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../../html-files.ts';
 
 const log = createLogger('content:sitemap');
@@ -22,9 +23,9 @@ const log = createLogger('content:sitemap');
  */
 export function scanHtmlFiles(dir: string, baseDir: string = ''): string[] {
   return walkHtmlFileEntries(dir)
-    .filter((entry) => entry.relativePath.replace(/\\/g, '/').endsWith('index.html'))
+    .filter((entry) => normalizeSeparators(entry.relativePath).endsWith('index.html'))
     .map((entry) => {
-      const parent = dirname(entry.relativePath).replace(/\\/g, '/');
+      const parent = normalizeSeparators(dirname(entry.relativePath));
       const path = parent === '.' ? '' : parent;
       return `/${[baseDir, path].filter(Boolean).join('/')}`.replace(/\/+/g, '/');
     })

@@ -65,7 +65,12 @@ function slug(value: string): string {
 }
 
 function stableBookId(sourceId: string, path: string): string {
-  return `${slug(sourceId)}-${slug(path.replace(/\.pdf$/i, ''))}`;
+  // Slug each path segment separately and join with '--' so nested paths keep
+  // their depth: 'a/b-c' and 'a-b/c' would otherwise both slug to 'a-b-c' and
+  // share the same id — and the same `${id}.pdf` cache file for GitHub
+  // sources (see githubPdfBooks below).
+  const segments = path.replace(/\.pdf$/i, '').split('/').map(slug);
+  return `${slug(sourceId)}-${segments.join('--')}`;
 }
 
 function colorFor(value: string): string {

@@ -48,7 +48,6 @@ import { nodeRequestToWeb, writeWebResponse } from '../internal/node-bridge.ts';
 const root = process.cwd();
 const distDir = join(root, DEFAULT_OUT_DIR);
 const serverEntry = join(distDir, 'server', 'index.js');
-const port = Number(process.env.OPEN_ELEMENT_PORT || process.env.PORT || 4173);
 const hostname = process.env.OPEN_ELEMENT_HOST || '0.0.0.0';
 
 type ServeMode = 'start' | 'preview';
@@ -132,6 +131,18 @@ async function runPreview(viteArgs: string[]): Promise<void> {
 }
 
 async function runStart(): Promise<void> {
+  // Same validation as the generated serve.mjs (ssg-helpers.ts): a malformed
+  // OPEN_ELEMENT_PORT must fail with guidance, not ERR_SOCKET_BAD_PORT.
+  const rawPort = process.env.OPEN_ELEMENT_PORT || process.env.PORT || '4173';
+  const port = Number(rawPort);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    console.error(
+      `[openElement start] Invalid port "${rawPort}": expected an integer between 1 and 65535 ` +
+        '(OPEN_ELEMENT_PORT / PORT).',
+    );
+    process.exit(1);
+  }
+
   let serverMod: RequestTimeServerModule | null = null;
   if (existsSync(serverEntry)) {
     serverMod = await importRequestTimeServer(serverEntry);

@@ -27,7 +27,10 @@ export function scanDenoApiSource(path: string, source: string): string[] {
 
 function scan(root: string): string[] {
   const violations: string[] = [];
-  for (const entry of walkSync(root, { includeDirs: false, skip: [/^__tests__$/] })) {
+  // Test files are excluded by name below; the restricted roots carry no
+  // __tests__ directories, so no skip list is needed (walk matches skip
+  // entries against full paths — a bare /^__tests__$/ never fired here).
+  for (const entry of walkSync(root, { includeDirs: false })) {
     if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx')) continue;
     const dot = entry.name.lastIndexOf('.');
     if (dot === -1 || !EXTENSIONS.has(entry.name.slice(dot))) continue;

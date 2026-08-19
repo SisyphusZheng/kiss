@@ -4,7 +4,7 @@ import type { BuildArtifacts, BuildPlan } from './internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { fsPathToModuleSpecifier } from './internal/ssg/module-specifier.ts';
 import { resolveIslandHydrate } from './internal/ssg/island-scanner.ts';
-import { formatJson } from '@openelement/element/build-utils';
+import { formatJson, normalizeSeparators } from '@openelement/element/build-utils';
 import { formatError } from '@openelement/element';
 import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from './internal/paths.ts';
 import { walkFileEntries } from './internal/html-files.ts';
@@ -99,12 +99,12 @@ export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
     const emitted = files(outputDir);
     const pages = emitted.filter((path) => path.endsWith('.html')).map((path) => ({
       path: '/' +
-        relative(outputDir, path).replaceAll('\\', '/').replace(/(?:\/index)?\.html$/, ''),
+        normalizeSeparators(relative(outputDir, path)).replace(/(?:\/index)?\.html$/, ''),
       html: readFileSync(path, 'utf8'),
       errors: [],
     }));
     const clientAssets = emitted.filter((path) => /\.(?:js|css)$/.test(path)).map((path) => ({
-      fileName: relative(outputDir, path).replaceAll('\\', '/'),
+      fileName: normalizeSeparators(relative(outputDir, path)),
       source: readFileSync(path),
       sizeBytes: statSync(path).size,
     }));

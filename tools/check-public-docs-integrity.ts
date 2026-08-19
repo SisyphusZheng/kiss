@@ -1,3 +1,4 @@
+import { formatError } from '@openelement/element';
 import { PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
 import { staleCurrencyClaimPatterns } from './check-strategic-docs.ts';
 import { MOJIBAKE_CHARS } from './lib/text.ts';
@@ -119,9 +120,7 @@ export function findIntegrationSpecifierFailures(
   } catch (error) {
     return [{
       file: packageSurfaceDoc,
-      message: `cannot read package surface: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      message: `cannot read package surface: ${formatError(error)}`,
     }];
   }
   for (const file of integrationDocs) {
@@ -131,7 +130,7 @@ export function findIntegrationSpecifierFailures(
     } catch (error) {
       failures.push({
         file,
-        message: `cannot read file: ${error instanceof Error ? error.message : String(error)}`,
+        message: `cannot read file: ${formatError(error)}`,
       });
       continue;
     }
