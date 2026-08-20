@@ -4,7 +4,7 @@
 > Current npm registry line: `v0.43.0` (published 2026-08-15, dist-tag `alpha`)\
 > Latest landed train: `v0.43.0` (admission visibility, on main)\
 > Active release target: `v0.43.0`\
-> Next planned train: `v0.43.0`\
+> Next planned train: `v0.44.0-alpha.1`\
 > In-flight work: close the alpha.2 Gate 0 correctness set and release
 > evidence while the fullstack production plan proceeds under #1002\
 > Planning release target: `v0.43.0` (Universal WC SSR — this plan)\

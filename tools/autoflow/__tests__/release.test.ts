@@ -31,7 +31,11 @@ import {
   writeReleaseEvidence,
   writeReleaseNote,
 } from '../release.ts';
-import { buildVersionAnchorReplacements, bumpProjectConstantsText } from '../version-anchors.ts';
+import {
+  buildVersionAnchorReplacements,
+  bumpProjectConstantsText,
+  nextPrereleaseTag,
+} from '../version-anchors.ts';
 import { commitIfStaged } from '../../lib/git.ts';
 import {
   ACTIVE_EXECUTION_VERSION,
@@ -72,8 +76,13 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
         text.includes(PREVIOUS_PACKAGE_VERSION_TAG),
       `${path} must contain anchor or already be at target: ${from}`,
     );
+    // Stable cuts keep the human-set next-train anchor instead of targeting
+    // the release tag (nextPrereleaseTag cannot derive a post-stable train).
+    const stableNextTrain = from.startsWith('Next planned train:') &&
+      nextPrereleaseTag(version) === tag;
     assert(
-      to.includes(version) || to.includes(tag),
+      to.includes(version) || to.includes(tag) ||
+        (stableNextTrain && to.startsWith(`Next planned train: \`${NEXT_EXECUTION_VERSION}\``)),
       `to must target ${version}: ${to}`,
     );
     seen.add(path);
@@ -512,7 +521,10 @@ Deno.test('buildVersionAnchorReplacements: bump updates the VERSION_PLAN head li
   assert(updated.includes(`Current npm registry line: \`v${version}\``));
   assert(updated.includes(`Latest landed train: \`v${version}\``));
   assert(updated.includes(`Active release target: \`v${version}\``));
-  assert(updated.includes(`Next planned train: \`v${version}\``));
+  // 9.9.9 is a stable cut: the next train is not derivable mechanically, so
+  // the bump leaves the human-set NEXT_EXECUTION_VERSION anchor untouched
+  // (rewriting it to the just-cut stable broke the 0.43.0 prepare).
+  assert(updated.includes(`Next planned train: \`${NEXT_EXECUTION_VERSION}\``));
   assert(!updated.includes(`Current source package line: \`${PACKAGE_VERSION_TAG}\``));
 });
 

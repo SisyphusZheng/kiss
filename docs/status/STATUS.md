@@ -5,7 +5,7 @@
 > npm registry line: `v0.43.0` (published 2026-08-15, dist-tag `alpha`)\
 > Latest landed train: `v0.43.0`\
 > Active release target: `v0.43.0`\
-> Next planned train: `v0.43.0`\
+> Next planned train: `v0.44.0-alpha.1`\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Product graph: five packages\
 > Current maturity stage: stable (0.42.0, WC light fullstack under ADR-0122)
