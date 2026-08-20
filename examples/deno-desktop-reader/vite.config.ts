@@ -41,6 +41,13 @@ export default defineConfig({
               input: 'index.html',
               output: {
                 entryFileNames: 'assets/reader-[hash].js',
+                // cssCodeSplit is off, so the whole app emits exactly one
+                // stylesheet; give it a stable name that server-side code can
+                // reference without knowing the content hash.
+                assetFileNames: (assetInfo) =>
+                  assetInfo.names.some((name) => name.endsWith('.css'))
+                    ? 'assets/reader.css'
+                    : 'assets/[name]-[hash][extname]',
               },
             },
           },
@@ -48,7 +55,6 @@ export default defineConfig({
       },
     },
   ],
-  // TODO(#980): predictable css output name for server-side reference
   build: {
     cssCodeSplit: false,
     target: 'esnext',

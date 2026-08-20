@@ -23,10 +23,9 @@ export default function Home() {
         <h1>openElement + Fresh 0.42.0-alpha.11</h1>
         <p>
           This page renders <code>&lt;open-button&gt;</code> and <code>&lt;open-card&gt;</code>{' '}
-          as standard HTML custom elements, registered inline by the <code>OpenElements</code>{' '}
-          island. A full <code>@openelement/ui</code>{' '}
-          integration is unblocked — the stubs here only keep this example dependency-light (see
-          README).
+          as standard HTML custom elements, registered by the <code>OpenElements</code>{' '}
+          island from the real <code>@openelement/ui</code>{' '}
+          package (published npm artifact with pre-transpiled <code>jsx()</code> output).
         </p>
 
         <h2>open-button</h2>

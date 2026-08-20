@@ -10,9 +10,10 @@ the current framework source line (`0.43.0-alpha.2`).
    standard HTML custom element tags in the Fresh server-side route. No special JSX, no wrapper
    components needed.
 
-2. **Third-party framework boot** — The `OpenElements.tsx` island defines inline custom element
-   stubs (`<open-button>`, `<open-card>`) using the native `customElements.define` API. This proves
-   openElement-compatible registrations can be shipped from within Preact islands.
+2. **Third-party framework boot** — The `OpenElements.tsx` island imports the published
+   `@openelement/ui` npm package and registers the real `<open-button>` / `<open-card>` custom
+   elements via `registerOpenUi()`. This proves openElement registrations can be shipped from within
+   Preact islands.
 
 3. **Bilateral interop** — The same page hosts both openElement custom elements and a Preact counter
    island (`PreactCounter.tsx`). Each owns its lifecycle independently. The Preact island uses
@@ -52,9 +53,9 @@ examples/open-element-in-fresh/
    serialized as an interactive island marker (Fresh handles this automatically).
 
 2. **Client Hydration** — When the page loads in the browser:
-   - `OpenElements.tsx` island activates → defines inline custom element classes via
-     `customElements.define` → browser upgrades the `<open-button>` and `<open-card>` tags already
-     in the DOM.
+   - `OpenElements.tsx` island activates → `registerOpenUi()` defines the `@openelement/ui` custom
+     element classes → the browser upgrades the `<open-button>` and `<open-card>` tags already in
+     the DOM.
    - `PreactCounter.tsx` island activates → Preact mounts the counter component independently.
 
 3. **Interop Guarantee** — openElement custom elements are standard Web Components. They use shadow
@@ -71,14 +72,10 @@ examples/open-element-in-fresh/
 - `$fresh/` imports → `fresh` (via `jsr:@fresh/core`)
 - Tasks: `vite` / `vite build` / `deno serve -A _fresh/server.js`
 
-## Known Limitation
+## @openelement/ui Integration
 
-The `OpenElements` island uses inline custom element stubs instead of `@openelement/ui`. The
-original blocker — `deno pack` not applying JSX transformation when publishing `packages/ui` to
-npm, leaving raw JSX in the output `.js` files that Vite cannot transpile — is **resolved**: with
-the repo-pinned Deno toolchain the packed `.js` output contains transpiled `jsx()` calls (verified
-by packing `packages/ui` locally), and `compilerOptions.jsx` is already set in
-`packages/ui/deno.json`.
-
-The stubs remain only to keep this example dependency-light. Replacing them with
-`import "@openelement/ui"` is now unblocked follow-up work, not a blocked one.
+The `OpenElements` island imports the published `@openelement/ui` npm package. The historical
+blocker — `deno pack` not applying JSX transformation when publishing `packages/ui` to npm, leaving
+raw JSX in the output `.js` files that Vite cannot transpile — is resolved: the packed `.js` output
+contains transpiled `jsx()` calls, so the package runs through the Fresh/Preact Vite pipeline
+unchanged.
