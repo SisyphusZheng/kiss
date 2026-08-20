@@ -97,8 +97,8 @@ go/no-go point.
   runbook, honestly labeled, and does not block the line.
 - **Later in the line**: #613/#614/#615 mid-line; streaming SSR candidate
   review (#626) only with its own design; #620 MemoryDataAdapter paired
-  with the #629 recipe; #907 remaining extraction axes; #980 examples
-  cleanup.
+  with the #629 recipe; #907 remaining extraction axes. (#980 examples
+  polish landed ahead of the stable cut, #1084.)
 
 ## References and gates
 
