@@ -12,7 +12,9 @@ import {
   decideTagAction,
   evidenceCurrentVersion,
   finalizeReleaseOnReleaseBranch,
+  foldStarterLockfileIntoBumpCommit,
   githubReleaseUrl,
+  type MainCiRun,
   mergeClosureSection,
   planFinalizeBranch,
   planStartBranches,
@@ -24,6 +26,7 @@ import {
   renderClosureSection,
   renderReleaseNote,
   resumeEvidenceFromPrior,
+  verifyMainCiSuccessForHead,
   verifyPrepareRecord,
   writeReleaseEvidence,
   writeReleaseNote,
@@ -1030,4 +1033,198 @@ Deno.test('finalize failure keeps the release completed and only warns (resume b
     Deno.chdir(previousCwd);
     await Deno.remove(root, { recursive: true });
   }
+});
+
+// ─── #1083: main-CI walk past evidence commits + starter lockfile fold ──────
+
+/** Minimal repo on main for the CI-walk tests (no origin needed). */
+async function initCiWalkRepo(): Promise<{ root: string; work: string }> {
+  const root = await Deno.makeTempDir({ prefix: 'main-ci-walk-test-' });
+  const work = `${root}/work`;
+  await git(root, ['init', '-b', 'main', work]);
+  await git(work, ['config', 'user.email', 'release-test@example.com']);
+  await git(work, ['config', 'user.name', 'Release Test']);
+  return { root, work };
+}
+
+/** A commit touching a real (non-evidence) path; returns its sha. */
+async function commitRealChange(work: string, name: string): Promise<string> {
+  await Deno.writeTextFile(`${work}/${name}`, `${name}\n`);
+  await git(work, ['add', name]);
+  await git(work, ['commit', '-m', `code: ${name}`]);
+  return await git(work, ['rev-parse', 'HEAD']);
+}
+
+/** A commit touching docs/release/** only, like the workflow's evidence push. */
+async function commitEvidence(work: string, version: string): Promise<string> {
+  await Deno.mkdir(`${work}/docs/release/autoflow3`, { recursive: true });
+  await Deno.writeTextFile(`${work}/docs/release/autoflow3/v${version}.json`, '{}\n');
+  await Deno.writeTextFile(`${work}/docs/release/v${version}.md`, `# v${version}\n`);
+  await git(work, ['add', 'docs/release']);
+  await git(work, ['commit', '-m', `docs(release): record v${version} evidence`]);
+  return await git(work, ['rev-parse', 'HEAD']);
+}
+
+function greenRun(sha: string): MainCiRun {
+  return {
+    headSha: sha,
+    status: 'completed',
+    conclusion: 'success',
+    url: `https://github.com/open-element/openelement/actions/runs/for-${sha.slice(0, 7)}`,
+  };
+}
+
+async function withRepo(
+  setup: (work: string) => Promise<void>,
+  body: () => Promise<void>,
+): Promise<void> {
+  const { root, work } = await initCiWalkRepo();
+  const previousCwd = Deno.cwd();
+  try {
+    await setup(work);
+    Deno.chdir(work);
+    await body();
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+}
+
+Deno.test('verifyMainCiSuccessForHead: HEAD with a green run is accepted unchanged (#1083)', async () => {
+  let head = '';
+  await withRepo(
+    async (work) => {
+      head = await commitRealChange(work, 'source.ts');
+    },
+    async () => {
+      const url = await verifyMainCiSuccessForHead(() => Promise.resolve([greenRun(head)]));
+      assertEquals(
+        url,
+        `https://github.com/open-element/openelement/actions/runs/for-${head.slice(0, 7)}`,
+      );
+    },
+  );
+});
+
+Deno.test('verifyMainCiSuccessForHead: evidence-commit HEAD walks to the green parent (#1083)', async () => {
+  let parent = '';
+  await withRepo(
+    async (work) => {
+      parent = await commitRealChange(work, 'source.ts');
+      // The failed attempt's evidence push: GITHUB_TOKEN pushes trigger no CI.
+      await commitEvidence(work, '9.9.9');
+    },
+    async () => {
+      // No run exists for the evidence HEAD; the parent's green run is used
+      // and its URL is what the closure record stores as successfulReleaseRun.
+      const url = await verifyMainCiSuccessForHead(() => Promise.resolve([greenRun(parent)]));
+      assertEquals(
+        url,
+        `https://github.com/open-element/openelement/actions/runs/for-${parent.slice(0, 7)}`,
+      );
+    },
+  );
+});
+
+Deno.test('verifyMainCiSuccessForHead: a non-evidence commit between HEAD and the green run refuses (#1083)', async () => {
+  let greenAncestor = '';
+  await withRepo(
+    async (work) => {
+      greenAncestor = await commitRealChange(work, 'source.ts');
+      // A real code commit whose CI never went green, then evidence on top.
+      await commitRealChange(work, 'other.ts');
+      await commitEvidence(work, '9.9.9');
+    },
+    async () => {
+      // The green ancestor must NOT be reached: the walk stops at the real
+      // commit and stays fail-closed.
+      await assertRejects(
+        () => verifyMainCiSuccessForHead(() => Promise.resolve([greenRun(greenAncestor)])),
+        Error,
+        'main CI is not successful',
+      );
+    },
+  );
+});
+
+Deno.test('verifyMainCiSuccessForHead: an evidence-only chain to a CI-less ancestor refuses (#1083)', async () => {
+  await withRepo(
+    async (work) => {
+      await commitRealChange(work, 'source.ts'); // root, no CI run
+      await commitEvidence(work, '9.9.8');
+      await commitEvidence(work, '9.9.9');
+    },
+    async () => {
+      await assertRejects(
+        () => verifyMainCiSuccessForHead(() => Promise.resolve([])),
+        Error,
+        'main CI is not successful',
+      );
+    },
+  );
+});
+
+Deno.test('two-phase release: prepare folds the regenerated starter lockfile into the bump commit (#1083)', () => {
+  const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
+  const names = steps.map((step) => step.name);
+  const gates = names.indexOf('run release gates after bump');
+  const fold = names.indexOf('fold starter lockfile into bump commit');
+  // The gates rewrite the starter lockfile; the fold runs after them and
+  // before the prepare-record amend, so both land in the bump commit.
+  assert(gates !== -1);
+  assert(fold > gates);
+  assert(fold < names.indexOf('record prepare evidence'));
+  assert(steps[fold].run !== undefined);
+});
+
+Deno.test('foldStarterLockfileIntoBumpCommit: folds gate dirt into the bump commit, idempotent on resume (#1083)', async () => {
+  const lockPath = 'examples/supabase-cloudflare-starter/deno.lock';
+  await withRepo(
+    async (work) => {
+      await Deno.mkdir(`${work}/examples/supabase-cloudflare-starter`, { recursive: true });
+      await Deno.writeTextFile(`${work}/${lockPath}`, '{"version":"5"}\n');
+      await git(work, ['add', lockPath]);
+      await git(work, ['commit', '-m', 'chore(release): v9.9.9']);
+    },
+    async () => {
+      // The release gates rebuilt the starter and rewrote its lock.
+      await Deno.writeTextFile(lockPath, '{"version":"5","specifiers":{}}\n');
+      const bump = await git('.', ['rev-parse', 'HEAD']);
+
+      // Regenerate is injected: the temp repo has no real starter to resolve.
+      await foldStarterLockfileIntoBumpCommit(() => Promise.resolve());
+
+      // Folded into the bump commit by amend; the worktree is clean again.
+      const folded = await git('.', ['rev-parse', 'HEAD']);
+      assert(folded !== bump);
+      assertEquals(await git('.', ['log', '-1', '--format=%s']), 'chore(release): v9.9.9');
+      assertEquals(
+        await git('.', ['show', `HEAD:${lockPath}`]),
+        '{"version":"5","specifiers":{}}',
+      );
+      assertEquals(await git('.', ['status', '--porcelain']), '');
+
+      // Resume idempotency: the bump commit already carries the regenerated
+      // lock, so a re-run stages nothing and leaves HEAD untouched.
+      await foldStarterLockfileIntoBumpCommit(() => Promise.resolve());
+      assertEquals(await git('.', ['rev-parse', 'HEAD']), folded);
+    },
+  );
+});
+
+Deno.test('foldStarterLockfileIntoBumpCommit: a clean lockfile is a no-op (#1083)', async () => {
+  const lockPath = 'examples/supabase-cloudflare-starter/deno.lock';
+  await withRepo(
+    async (work) => {
+      await Deno.mkdir(`${work}/examples/supabase-cloudflare-starter`, { recursive: true });
+      await Deno.writeTextFile(`${work}/${lockPath}`, '{"version":"5"}\n');
+      await git(work, ['add', lockPath]);
+      await git(work, ['commit', '-m', 'chore(release): v9.9.9']);
+    },
+    async () => {
+      const head = await git('.', ['rev-parse', 'HEAD']);
+      await foldStarterLockfileIntoBumpCommit(() => Promise.resolve());
+      assertEquals(await git('.', ['rev-parse', 'HEAD']), head);
+    },
+  );
 });

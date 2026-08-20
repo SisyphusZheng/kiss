@@ -426,6 +426,38 @@ const PREPARE_STEP_NAMES = new Set([
   'run release gates after bump',
 ]);
 
+/** Lockfile the release gates rewrite when they rebuild the reference starter. */
+export const STARTER_LOCKFILE = 'examples/supabase-cloudflare-starter/deno.lock';
+
+/**
+ * Re-resolve the starter's lockfile against the bumped workspace versions.
+ * The lock's workspace.links keys carry the package line, so the bump stale-
+ * mates them and the next deno invocation in the starter rewrites the lock;
+ * a bare `deno eval` is the cheapest such trigger (no graph fetch needed).
+ */
+async function regenerateStarterLockfile(): Promise<void> {
+  await runCaptured(
+    ['deno', 'eval', "console.log('re-resolved starter lockfile')"],
+    { cwd: 'examples/supabase-cloudflare-starter' },
+  );
+}
+
+/**
+ * Fold the regenerated starter lockfile into the bump commit (#1083). The
+ * release gates rebuild examples/supabase-cloudflare-starter, which rewrites
+ * its deno.lock against the bumped versions; left unstaged, that dirt fails
+ * the publish-existing clean-worktree assertion on the next run. Guarded like
+ * the prepare-record fold: a resume whose bump commit already carries the
+ * regenerated lock stages nothing, and the amend of a clean stage is skipped.
+ */
+export async function foldStarterLockfileIntoBumpCommit(
+  regenerate: () => Promise<void> = regenerateStarterLockfile,
+): Promise<void> {
+  await regenerate();
+  await runCaptured(['git', 'add', STARTER_LOCKFILE]);
+  await amendIfStaged();
+}
+
 /**
  * Prepare a reviewable release commit without publishing, tagging, or pushing.
  * The resulting commit must pass dev and main CI before publish-existing runs.
@@ -442,6 +474,15 @@ export function createPreparePlan(
       command: ['deno', 'task', 'autoflow:ci'],
     });
   }
+  // The gates rewrite the starter lockfile against the bumped versions; fold
+  // it into the bump commit before the prepare record amend so both travel in
+  // the same commit (#1083).
+  steps.push(
+    {
+      name: 'fold starter lockfile into bump commit',
+      run: () => foldStarterLockfileIntoBumpCommit(),
+    },
+  );
   // Durable prepare record (#684): proof that the bump commit came out of a
   // gated prepare run. Written only after the release gates passed, then
   // folded into the bump commit by amend (4→2, #869): publish-existing
@@ -619,8 +660,17 @@ async function verifyPublishedSourceVersion(targetVersion: string): Promise<void
   await assertCleanWorktree('Refusing release from a dirty worktree');
 }
 
-async function verifyMainCiSuccessForHead(): Promise<string | undefined> {
-  const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
+export interface MainCiRun {
+  headSha?: string;
+  status?: string;
+  conclusion?: string;
+  url?: string;
+}
+
+/** Fetch recent main-branch autoflow-ci runs; injectable for tests. */
+export type MainCiRunsQuery = () => Promise<MainCiRun[]>;
+
+async function ghMainCiRuns(): Promise<MainCiRun[]> {
   const raw = await runCaptured([
     'gh',
     'run',
@@ -636,18 +686,73 @@ async function verifyMainCiSuccessForHead(): Promise<string | undefined> {
     '--json',
     'headSha,status,conclusion,url',
   ]);
-  const runs = JSON.parse(raw) as Array<{
-    headSha?: string;
-    status?: string;
-    conclusion?: string;
-    url?: string;
-  }>;
-  const run = runs.find((candidate) => candidate.headSha === head);
-  if (!run || run.status !== 'completed' || run.conclusion !== 'success') {
-    throw new Error(`Refusing publish-existing: main CI is not successful for HEAD ${head}.`);
+  return JSON.parse(raw) as MainCiRun[];
+}
+
+/** Release-evidence commits touch only this prefix (evidence JSON + note). */
+const RELEASE_EVIDENCE_PREFIX = 'docs/release/';
+
+/**
+ * Paths a commit touched relative to its first parent, plus that parent.
+ * Undefined when the commit has no parent (the root): a root commit cannot be
+ * classified evidence-only, so the walk treats it as a real commit and stops.
+ */
+async function firstParentDiff(
+  sha: string,
+): Promise<{ parent: string; paths: string[] } | undefined> {
+  let parent: string;
+  try {
+    parent = (await runCaptured(['git', 'rev-parse', `${sha}^`])).trim();
+  } catch {
+    return undefined;
   }
-  console.log(`Verified main CI for ${head}: ${run.url ?? 'success'}`);
-  return run.url;
+  const raw = await runCaptured(['git', 'diff', '--name-only', parent, sha]);
+  return { parent, paths: raw.split('\n').map((line) => line.trim()).filter(Boolean) };
+}
+
+/**
+ * Require a successful main autoflow-ci run for HEAD and return its URL. A
+ * failed release attempt pushes its evidence commit with the workflow's
+ * GITHUB_TOKEN, and such pushes never trigger CI: HEAD then carries no run and
+ * a strict HEAD check refuses every retry — the α2 retry deadlock (#1083).
+ * Walk first-parent past evidence-only commits (diff touches docs/release/**
+ * only) and accept the nearest ancestor with a successful run. The walk stops
+ * at the first commit whose diff reaches outside docs/release/**: a real code
+ * commit must carry its own green run, so the gate stays fail-closed. An
+ * evidence-only commit that somehow has its own run is still judged by that
+ * run first — the walk only skips commits with no recorded success.
+ */
+export async function verifyMainCiSuccessForHead(
+  query: MainCiRunsQuery = ghMainCiRuns,
+): Promise<string | undefined> {
+  const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
+  const runs = await query();
+  let sha = head;
+  const skipped: string[] = [];
+  for (;;) {
+    const run = runs.find((candidate) => candidate.headSha === sha);
+    if (run?.status === 'completed' && run.conclusion === 'success') {
+      if (skipped.length > 0) {
+        console.log(
+          `HEAD ${head} is release-evidence only (${skipped.length} commit(s)); ` +
+            `using the CI run of ancestor ${sha}.`,
+        );
+      }
+      console.log(`Verified main CI for ${sha}: ${run.url ?? 'success'}`);
+      return run.url;
+    }
+    const diff = await firstParentDiff(sha);
+    if (
+      diff === undefined || !diff.paths.every((path) => path.startsWith(RELEASE_EVIDENCE_PREFIX))
+    ) {
+      const detail = skipped.length === 0
+        ? `HEAD ${head}`
+        : `${sha} (nearest non-evidence ancestor of HEAD ${head})`;
+      throw new Error(`Refusing publish-existing: main CI is not successful for ${detail}.`);
+    }
+    skipped.push(sha);
+    sha = diff.parent;
+  }
 }
 
 const PUBLISH_STEP_NAMES = new Set([

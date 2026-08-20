@@ -80,8 +80,11 @@ export async function runWithOutput(
  * failure. Kept distinct from lib/git.ts runGit, which throws stderr only —
  * the release flow's diagnostics rely on this exact error shape.
  */
-export async function runCaptured(command: string[]): Promise<string> {
-  const result = await runWithOutput(command[0], command.slice(1));
+export async function runCaptured(
+  command: string[],
+  options: RunWithOutputOptions = {},
+): Promise<string> {
+  const result = await runWithOutput(command[0], command.slice(1), options);
   if (!result.success) {
     throw new Error(
       `${command.join(' ')} failed with exit ${result.code}\n${result.stdout}${result.stderr}`,

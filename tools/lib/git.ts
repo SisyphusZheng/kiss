@@ -94,12 +94,13 @@ export async function commitIfStaged(message: string): Promise<void> {
 
 /**
  * Amend the HEAD commit only when the staged tree differs from it. Used to
- * fold the prepare record into the bump commit (4→2, #869); a re-run whose
- * record already landed stages nothing and must not rewrite history.
+ * fold generated files (prepare record 4→2, #869; starter lockfile, #1083)
+ * into the bump commit; a re-run whose file already landed stages nothing and
+ * must not rewrite history.
  */
 export async function amendIfStaged(): Promise<void> {
   if (!(await hasStagedChanges())) {
-    console.log('Nothing staged; skipping amend (prepare record already in HEAD).');
+    console.log('Nothing staged; skipping amend (already folded into HEAD).');
     return;
   }
   await runCaptured(['git', 'commit', '--amend', '--no-edit']);
