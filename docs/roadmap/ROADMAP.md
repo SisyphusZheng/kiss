@@ -5,10 +5,10 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Source package line: `v0.43.0`.\
-> npm registry line: `v0.43.0-alpha.2` (published 2026-08-15, dist-tag `alpha` — see Current release state).\
+> npm registry line: `v0.43.0` (published 2026-08-15, dist-tag `alpha` — see Current release state).\
 > Latest landed train: `v0.43.0`.\
 > Active execution target: `v0.43.0`.\
-> Next planned train: `v0.44.0-alpha.1`.\
+> Next planned train: `v0.43.0`.\
 > Current implementation state: alpha.2 admission visibility is on main;
 > Gate 0 correctness and the #1002 fullstack production plan are in flight.\
 > Planned line: `0.43.0` (Universal WC SSR) — `0.42.0` (WC light fullstack)
