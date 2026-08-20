@@ -334,10 +334,10 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.0-alpha.2',
-      theme: 'Universal WC admission + the Supabase × Cloudflare production closure',
+      version: 'v0.43.0',
+      theme: 'Universal WC SSR — stable',
       copy:
-        'The consolidated alpha.2 train ships the whole remaining 0.43 alpha scope in one cut. The SSR admission scan discovers and classifies every consumed foreign tag with machine-readable evidence (#979), and the Universal WC track extends proven admission to FAST and Stencil with a conformance matrix (#996). The OpenElement × Supabase × Cloudflare reference starter is qualified end-to-end against the real project — password and GitHub OAuth sign-in, RLS, insert-only Storage, Realtime, bounded Queue/DLQ/Cron, and one-time Stripe Checkout (#981–#985, #998–#1001) — with Tier 2/3 provider evidence automated and freshness-gated (#997, ADR-0134). Production mail runs on a verified domain; the scan engine is deferred to v0.44 with the lifecycle failing closed (#1070, ADR-0132); a pre-release sweep fixed two router guard-concurrency defects on the frozen path (ADR-0133).',
+        'The stable cut of the 0.43 line, frozen under ADR-0135. The SSR admission scan discovers and classifies every consumed foreign tag with a deterministic, machine-readable path and reason (#979); the Universal WC corpus pins proven admission forms across native, Lit, FAST, Stencil, Shoelace and Material Web (#996/#1020), with hydration-mismatch structured diagnostics (#631). The OpenElement × Supabase × Cloudflare reference starter is qualified end-to-end against the real project — password and GitHub OAuth sign-in, RLS, insert-only Storage, Realtime, bounded Queue/DLQ/Cron, and one-time Stripe Checkout (#981–#985, #998–#1001) — with Tier 2/3 provider evidence automated and freshness-gated (#997, ADR-0134). Production mail runs on a verified domain; the scan engine is deferred to v0.44 with the lifecycle failing closed (#1070, ADR-0132).',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -383,10 +383,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.43.0-alpha.2',
-      theme: 'Universal WC 准入 + Supabase × Cloudflare 生产闭环',
+      version: 'v0.43.0',
+      theme: 'Universal WC SSR — 稳定版',
       copy:
-        '合并后的 alpha.2 一次承载 0.43 线剩余的全部 alpha 范围。SSR 准入扫描现在能发现并分类每个被消费的外部标签,产出机器可读证据(#979);Universal WC 轨道把已证实的准入扩展到 FAST 与 Stencil,并给出一致性矩阵(#996)。OpenElement × Supabase × Cloudflare 参考栈已在真实项目上端到端验收——密码与 GitHub OAuth 登录、RLS、insert-only Storage、Realtime、有界 Queue/DLQ/Cron、一次性 Stripe Checkout(#981–#985、#998–#1001)——Tier 2/3 provider 证据自动化并受新鲜度门禁约束(#997、ADR-0134)。生产邮件跑在已认证域名上;扫描引擎延期至 v0.44,生命周期保持 fail-closed(#1070、ADR-0132);发布前清扫修复了冻结路径上的两个 router guard 并发缺陷(ADR-0133)。',
+        '0.43 线的稳定版,冻结于 ADR-0135。SSR 准入扫描发现并分类每个被消费的外部标签,给出确定性的机器可读路径与原因(#979);Universal WC 语料库钉死 native、Lit、FAST、Stencil、Shoelace、Material Web 的已证实准入形态(#996/#1020),并配备 hydration 不匹配结构化诊断(#631)。OpenElement × Supabase × Cloudflare 参考栈已在真实项目上端到端验收——密码与 GitHub OAuth 登录、RLS、insert-only Storage、Realtime、有界 Queue/DLQ/Cron、一次性 Stripe Checkout(#981–#985、#998–#1001)——Tier 2/3 provider 证据自动化并受新鲜度门禁约束(#997、ADR-0134)。生产邮件跑在已认证域名上;扫描引擎延期至 v0.44,生命周期保持 fail-closed(#1070、ADR-0132)。',
       state: 'stable',
       stamp: 'CURRENT',
     },

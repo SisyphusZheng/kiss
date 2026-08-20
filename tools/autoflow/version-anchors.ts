@@ -345,7 +345,15 @@ export function buildVersionAnchorReplacements(
       .replaceAll('$PREV_PVT', PREVIOUS_PACKAGE_VERSION_TAG)
       .replaceAll('$PREV_PV', PREVIOUS_PACKAGE_VERSION)
       .replaceAll('$NEXT_CURRENT', NEXT_EXECUTION_VERSION)
-      .replaceAll('$NEXT_TARGET', nextPrereleaseTag(version))
+      // For a stable target nextPrereleaseTag returns the release tag itself;
+      // the train after a stable cut is a deliberate human decision recorded
+      // in NEXT_EXECUTION_VERSION, so the bump must not rewrite the docs'
+      // next-train anchor to the just-cut stable (the 0.43.0 prepare clobbered
+      // v0.44.0-alpha.1 back to v0.43.0 and failed the anchor gate).
+      .replaceAll(
+        '$NEXT_TARGET',
+        nextPrereleaseTag(version) === tag ? NEXT_EXECUTION_VERSION : nextPrereleaseTag(version),
+      )
       .replaceAll('$LATEST', LATEST_LANDED_TRAIN)
       .replaceAll('$ACTIVE', ACTIVE_EXECUTION_VERSION)
       .replaceAll('$PVT', pvTag)
