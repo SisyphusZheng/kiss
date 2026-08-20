@@ -1,7 +1,7 @@
 # v0.43.0 — Universal WC SSR release plan
 
 > Current source package line: `v0.43.0`\
-> Current npm registry line: `v0.43.0` (published 2026-08-15, dist-tag `alpha`)\
+> Current npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
 > Latest landed train: `v0.43.0` (admission visibility, on main)\
 > Active release target: `v0.43.0`\
 > Next planned train: `v0.44.0-alpha.1`\
@@ -9,8 +9,8 @@
 > evidence while the fullstack production plan proceeds under #1002\
 > Planning release target: `v0.43.0` (Universal WC SSR — this plan)\
 > Next release line: `v0.44.0` (production runtime)\
-> Current maturity stage: stable (the 0.42 line, WC light fullstack frozen
-> under ADR-0122)
+> Current maturity stage: stable (the 0.43 line, Universal WC SSR frozen
+> under ADR-0135 on top of ADR-0122)
 
 The 0.42.0 plan (WC Application Loop, TP-0…TP-6) shipped complete; its
 task-package record lives in git history (03a6611d).

@@ -9,7 +9,7 @@ DOM 是默认服务端表示；交互区域按需升级。
 
 源码包行为 `0.43.0`（`v0.43.0`）——ADR-0119 范围化接口冻结下的
 在途五包源码行；已放弃的 beta 命名不再是当前版本线。
-npm registry 行为 `v0.43.0`——已发布的五包版本(dist-tag `alpha`,stable cut 发布前 `latest` 仍在 `v0.42.0`)；registry 行允许比
+npm registry 行为 `v0.43.0`——已发布的五包版本(dist-tag `latest`)；registry 行允许比
 源码行滞后一个 alpha。
 
 ## 当前产品
@@ -89,7 +89,7 @@ cd my-app
 deno task dev
 ```
 
-默认 dist-tag 即 0.42 稳定线；`--minimum-dependency-age 0` 是必须的，因为 Deno 默认的
+默认 dist-tag 即 0.43 稳定线；`--minimum-dependency-age 0` 是必须的，因为 Deno 默认的
 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。
 
 生成项目提供 `dev`、`check`、`test`、`build`、`start` 和 `preview`。

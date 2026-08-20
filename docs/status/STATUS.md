@@ -2,25 +2,28 @@
 
 > Updated: 2026-08-20\
 > Repository package line: `v0.43.0`\
-> npm registry line: `v0.43.0` (published 2026-08-15, dist-tag `alpha`)\
+> npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
 > Latest landed train: `v0.43.0`\
 > Active release target: `v0.43.0`\
 > Next planned train: `v0.44.0-alpha.1`\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Product graph: five packages\
-> Current maturity stage: stable (0.42.0, WC light fullstack under ADR-0122)
+> Current maturity stage: stable (0.43.0, Universal WC SSR + the Supabase × Cloudflare delivery path under ADR-0135)
 
 ## Current position
 
 OpenElement is a Web Components-native application framework, stable at
-`0.42.0` under ADR-0122: the 0.41.x static freeze (ADR-0119 — `defineElement`,
+`0.43.0` under ADR-0135: the 0.41.x static freeze (ADR-0119 — `defineElement`,
 `definePage`, `buildApp`, the five-package graph, the supported subpaths and
-the static/SPA semantics of `defineApp`) is untouched, and the request-time
-Application Loop is now frozen on top of it — loader/action signatures, the
+the static/SPA semantics of `defineApp`) and the request-time Application Loop
+freeze (ADR-0122 — loader/action signatures, the
 fail/redirect algebra and PRG revalidation, the action protocol and morph
-client contract, the CSRF default, and first-mile start semantics. Framework
+client contract, the CSRF default, and first-mile start semantics) carry
+forward untouched, and the 0.43 line adds the frozen Universal WC admission
+contract (deterministic per-tag render path + reason, unknown means
+client-only) with hydration-mismatch structured diagnostics. Framework
 session/flash, cache/ISR, streaming SSR and production runtime recovery stay
-unfrozen (0.43/0.44). Alpha.19 completed the third audit cleanup sweep (ADR-0118)
+unfrozen (0.44). Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha

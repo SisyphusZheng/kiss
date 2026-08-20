@@ -5,16 +5,17 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Source package line: `v0.43.0`.\
-> npm registry line: `v0.43.0` (published 2026-08-15, dist-tag `alpha` — see Current release state).\
+> npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest` — see Current release state).\
 > Latest landed train: `v0.43.0`.\
 > Active execution target: `v0.43.0`.\
 > Next planned train: `v0.44.0-alpha.1`.\
-> Current implementation state: alpha.2 admission visibility is on main;
-> Gate 0 correctness and the #1002 fullstack production plan are in flight.\
-> Planned line: `0.43.0` (Universal WC SSR) — `0.42.0` (WC light fullstack)
-> shipped 2026-08-15 under ADR-0120 and ADR-0122.\
-> Maturity stage: stable (0.42.0 — the 0.41.x interface freeze under
-> ADR-0119 plus the request-time loop freeze under ADR-0122); the
+> Current implementation state: the 0.43 line is shipped and frozen under
+> ADR-0135; the #1002 production closure is complete.\
+> Planned line: `0.44.0` (production runtime) — `0.43.0` (Universal WC SSR)
+> shipped 2026-08-20 under ADR-0135.\
+> Maturity stage: stable (0.43.0 — the 0.41.x interface freeze under
+> ADR-0119, the request-time loop freeze under ADR-0122, and the Universal
+> WC admission freeze under ADR-0135); the
 > abandoned beta naming is retired.
 
 ## Product direction
@@ -132,9 +133,10 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.43.0-alpha.1` is both the current source package line and the published npm
-line (2026-08-15). `0.43.0-alpha.2` is the latest train landed on main and the
-active release target; `0.43.0-alpha.3` is the next planned train. These are
+`0.43.0` is both the current source package line and the published npm
+line (2026-08-20, dist-tag `latest`), promoted from the `0.43.0-alpha.2`
+train (published 2026-08-15, dist-tag `alpha`) without further changes.
+`v0.44.0-alpha.1` is the next planned train. These are
 separate facts by design: landed work is not described as published until the
 registry and immutable release evidence prove it.
 npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn
