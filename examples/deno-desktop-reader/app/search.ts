@@ -8,6 +8,15 @@ export interface SearchResult {
 
 const indexWriteQueues = new Map<string, Promise<void>>();
 
+/**
+ * Rough chars-per-page assumption for page estimation. The search index
+ * stores each book as a single flat string (pdf-parse concatenates all
+ * pages, losing page boundaries), so hit positions can only be mapped to
+ * an approximate page number. ~3000 chars is a typical average for a
+ * text-dense PDF page.
+ */
+const APPROX_CHARS_PER_PAGE = 3000;
+
 function defaultIndexDir(): string {
   return (Deno.env.get('HOME') ?? Deno.env.get('USERPROFILE') ?? '/tmp') +
     '/.open-reader';
@@ -71,8 +80,9 @@ export function search(
       const start = Math.max(0, pos - 40);
       const end = Math.min(lowerText.length, pos + query.length + 40);
       const snippet = text.substring(start, end).trim();
-      // TODO(#980): rough page estimate — 3000 chars per page
-      const page = Math.floor(pos / 3000) + 1;
+      // Estimated page, not exact: the index has no page boundaries (see
+      // APPROX_CHARS_PER_PAGE).
+      const page = Math.floor(pos / APPROX_CHARS_PER_PAGE) + 1;
       results.push({
         bookId,
         page,

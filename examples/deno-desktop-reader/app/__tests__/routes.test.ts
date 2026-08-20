@@ -8,129 +8,23 @@ import { assert, assertEquals } from '@std/assert';
 import type { VNode } from '@openelement/element';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
-// TODO(#980): inline mock covering only the DOM APIs used by route components.
+// Covers only the DOM APIs the route components actually touch:
+// an HTMLElement base class for the OpenElement page classes, and an
+// in-memory customElements registry for the module-level
+// `customElements.define(tag, Page)` side effects (including Shoelace's
+// sl-button in wc-interop). Rendering is asserted on pure VNode output,
+// so no document/location/localStorage doubles are needed — lit-html
+// (Shoelace's renderer) uses its own SSR stub when `document` is
+// undefined.
 
-class MockNode {
-  childNodes: MockNode[] = [];
-  parentNode: MockNode | null = null;
-  textContent: string = '';
-
-  appendChild(child: MockNode): MockNode {
-    this.childNodes.push(child);
-    child.parentNode = this;
-    return child;
-  }
-  removeChild(child: MockNode): MockNode {
-    const i = this.childNodes.indexOf(child);
-    if (i >= 0) this.childNodes.splice(i, 1);
-    child.parentNode = null;
-    return child;
-  }
-  remove(): void {
-    this.parentNode?.removeChild(this);
-  }
-}
-
-class MockElement extends MockNode {
+class MockElement {
   tagName: string;
-  _attrs = new Map<string, string>();
-  _listeners = new Map<string, Array<(...args: unknown[]) => void>>();
-  _value = '';
-  _disabled = false;
-  className = '';
-  style = {
-    _props: {} as Record<string, string>,
-    setProperty(k: string, v: string) {
-      this._props[k] = v;
-    },
-    getProperty(k: string) {
-      return this._props[k] ?? '';
-    },
-  } as {
-    _props: Record<string, string>;
-    setProperty(k: string, v: string): void;
-    getProperty(k: string): string;
-  };
 
   constructor(tag = 'mock-element') {
-    super();
     this.tagName = tag.toUpperCase();
   }
-
-  getAttribute(name: string): string | null {
-    return this._attrs.get(name) ?? null;
-  }
-  setAttribute(name: string, value: string): void {
-    this._attrs.set(name, value);
-  }
-  addEventListener(type: string, fn: (...args: unknown[]) => void): void {
-    const list = this._listeners.get(type) ?? [];
-    list.push(fn);
-    this._listeners.set(type, list);
-  }
-  click(): void {
-    this._listeners.get('click')?.forEach((fn) => fn({ stopPropagation() {} }));
-  }
-  append(...children: (string | MockNode)[]): void {
-    for (const c of children) {
-      if (typeof c === 'string') {
-        this.appendChild(new MockText(c));
-      } else {
-        this.appendChild(c);
-      }
-    }
-  }
-  get value(): string {
-    return this._value;
-  }
-  set value(v: string) {
-    this._value = v;
-  }
-  get disabled(): boolean {
-    return this._disabled;
-  }
-  set disabled(v: boolean) {
-    this._disabled = v;
-  }
 }
 
-class MockText extends MockNode {
-  constructor(content: string) {
-    super();
-    this.textContent = content;
-  }
-}
-
-class MockDocumentFragment extends MockNode {}
-
-function mockDocument() {
-  const body = new MockElement('body');
-  const docEl = new MockElement('html');
-  return {
-    body,
-    documentElement: docEl,
-    createDocumentFragment(): MockDocumentFragment {
-      return new MockDocumentFragment();
-    },
-    createElement(tag: string): MockElement {
-      return new MockElement(tag);
-    },
-    createTextNode(content: string): MockText {
-      return new MockText(content);
-    },
-    querySelector(_selector: string): MockElement | null {
-      return null;
-    },
-    createTreeWalker() {
-      return { nextNode: () => null, currentNode: null };
-    },
-  };
-}
-
-// deno-lint-ignore no-explicit-any
-(globalThis as any).document = mockDocument();
-// deno-lint-ignore no-explicit-any
-(globalThis as any).DocumentFragment = MockDocumentFragment;
 // deno-lint-ignore no-explicit-any
 (globalThis as any).HTMLElement = MockElement;
 /** In-memory registry backing the customElements mock. */
@@ -142,35 +36,6 @@ const definedCustomElements = new Map<string, CustomElementConstructor>();
     definedCustomElements.set(tagName, ctor);
   },
 };
-
-// Mock localStorage
-// deno-lint-ignore no-explicit-any
-(globalThis as any).localStorage = {
-  _data: {} as Record<string, string>,
-  getItem(key: string) {
-    return this._data[key] ?? null;
-  },
-  setItem(key: string, value: string) {
-    this._data[key] = value;
-  },
-  removeItem(key: string) {
-    delete this._data[key];
-  },
-  clear() {
-    this._data = {};
-  },
-};
-
-// Mock window.location and history
-// deno-lint-ignore no-explicit-any
-(globalThis as any).location = { pathname: '/', search: '', href: '/' };
-// deno-lint-ignore no-explicit-any
-(globalThis as any).history = {
-  pushState: () => {},
-  replaceState: () => {},
-};
-// deno-lint-ignore no-explicit-any
-(globalThis as any).window = globalThis;
 
 Deno.test('Bookshelf route exports a function', async () => {
   const mod = await import('../../routes/index.tsx');

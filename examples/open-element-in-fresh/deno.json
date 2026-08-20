@@ -28,12 +28,13 @@
   ],
   "imports": {
     "@/": "./",
+    "@openelement/ui": "npm:@openelement/ui@^0.42.0",
     "fresh": "jsr:@fresh/core@^2.3.3",
     "fresh/runtime": "jsr:@fresh/core@^2.3.3/runtime",
     "preact": "npm:preact@^10.29.1",
     "@preact/signals": "npm:@preact/signals@^2.9.0",
     "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.1.2",
-    "vite": "npm:vite@^8.0.10",
+    "vite": "npm:vite@^7.1.4",
     "@types/babel__core": "npm:@types/babel__core@^7.20.5"
   },
   "compilerOptions": {
@@ -52,5 +53,6 @@
     "types": [
       "vite/client"
     ]
-  }
+  },
+  "workspace": []
 }
