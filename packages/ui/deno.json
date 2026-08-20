@@ -1,6 +1,6 @@
 {
   "name": "@openelement/ui",
-  "version": "0.43.0-alpha.2",
+  "version": "0.43.0",
   "exports": {
     ".": "./src/index.ts",
     "./open-button": "./src/open-button.tsx",

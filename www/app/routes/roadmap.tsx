@@ -334,7 +334,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.0-alpha.2',
+      version: 'v0.43.0',
       theme: 'Universal WC admission + the Supabase × Cloudflare production closure',
       copy:
         'The consolidated alpha.2 train ships the whole remaining 0.43 alpha scope in one cut. The SSR admission scan discovers and classifies every consumed foreign tag with machine-readable evidence (#979), and the Universal WC track extends proven admission to FAST and Stencil with a conformance matrix (#996). The OpenElement × Supabase × Cloudflare reference starter is qualified end-to-end against the real project — password and GitHub OAuth sign-in, RLS, insert-only Storage, Realtime, bounded Queue/DLQ/Cron, and one-time Stripe Checkout (#981–#985, #998–#1001) — with Tier 2/3 provider evidence automated and freshness-gated (#997, ADR-0134). Production mail runs on a verified domain; the scan engine is deferred to v0.44 with the lifecycle failing closed (#1070, ADR-0132); a pre-release sweep fixed two router guard-concurrency defects on the frozen path (ADR-0133).',

@@ -2,12 +2,12 @@
 // (packages/adapter-vite/__fixtures__/nitro-proof/nitro.config.ts) — keep it
 // free of jsr:/npm: imports.
 
-export const PACKAGE_VERSION = '0.43.0-alpha.2';
+export const PACKAGE_VERSION = '0.43.0';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
 // Release-train truth is intentionally separate from the package and registry
 // line: work may be landed on main before the next package is published.
-export const LATEST_LANDED_TRAIN = 'v0.43.0-alpha.2';
-export const ACTIVE_EXECUTION_VERSION = 'v0.43.0-alpha.2';
+export const LATEST_LANDED_TRAIN = 'v0.43.0';
+export const ACTIVE_EXECUTION_VERSION = 'v0.43.0';
 export const NEXT_EXECUTION_VERSION = 'v0.43.0-alpha.3';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
@@ -57,7 +57,7 @@ export const NITRO_COMPATIBILITY_DATE = '2026-06-12';
 // single source of truth for the "from" side of version-anchor replacements
 // (see buildVersionAnchorReplacements in tools/autoflow/release.ts). It is
 // kept in sync automatically by updateProjectConstants() during a bump.
-export const PREVIOUS_PACKAGE_VERSION = '0.43.0-alpha.1';
+export const PREVIOUS_PACKAGE_VERSION = '0.43.0-alpha.2';
 export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 
 // The theme the www roadmap current-line timeline entry carried immediately
@@ -70,7 +70,7 @@ export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 // re-records this constant from the pre-bump entry; bootstrap value
 // documents the incident.
 export const PREVIOUS_RELEASE_THEME =
-  'foundation train: hydration diagnostics, honest runtimes, WC SSR corpus';
+  'Universal WC admission + the Supabase × Cloudflare production closure';
 
 /**
  * Version strings that must never reappear in the head anchor zone of the

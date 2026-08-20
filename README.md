@@ -8,10 +8,10 @@ Element contract.** Custom Elements are the durable application contract;
 JSX and Basic Element are the authoring layer; Declarative Shadow DOM is the
 default server representation; interactive regions upgrade selectively.
 
-Source package line: `0.43.0-alpha.2` (`v0.43.0-alpha.2`) — the current
+Source package line: `0.43.0` (`v0.43.0`) — the current
 five-package source line; the request-time Application Loop froze under
 ADR-0122 on top of ADR-0119's untouched static freeze.
-npm registry line: `v0.43.0-alpha.2` — the published five-package release
+npm registry line: `v0.43.0` — the published five-package release
 (dist-tag `latest`). During alpha trains the registry line may lag the
 source line by one alpha; at stable cuts they are equal.
 
