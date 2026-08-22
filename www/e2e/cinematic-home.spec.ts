@@ -12,15 +12,6 @@ test.describe('Cinematic homepage', () => {
     ).toBeVisible();
   });
 
-  test('loads atmosphere as an optional enhancement', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('open-cinematic-atmosphere')).toHaveCount(1);
-    const canvasExists = await page.locator('open-cinematic-atmosphere').evaluate((element) =>
-      Boolean(element.shadowRoot?.querySelector('canvas'))
-    );
-    expect(canvasExists).toBe(true);
-  });
-
   test('renders a transparent theme-aware logo linked to the current locale home', async ({ page }) => {
     await page.goto('/zh/guide/getting-started');
     const logo = page.locator('open-layout').locator('a.logo');
@@ -47,7 +38,19 @@ test.describe('Cinematic homepage', () => {
   test('view-source hero and scroll scenes work without hijacking scroll', async ({ page }) => {
     await page.goto('/');
     const home = page.locator('open-home-page');
-    await expect(home.locator('.hero-ghost')).toHaveCount(1);
+    const dragon = home.locator('open-dragon-live-gaze');
+    await expect(dragon).toHaveCount(1);
+    await expect(dragon.locator('video')).toHaveCount(1);
+    const idleView = dragon.locator('video.idle-view');
+    await expect(idleView).toHaveAttribute('muted', '');
+    await expect(idleView).toHaveAttribute('playsinline', '');
+    await expect(idleView).toHaveAttribute('loop', '');
+    await expect(idleView).toHaveAttribute('preload', 'none');
+    await expect(idleView).not.toHaveAttribute('autoplay', /.*/);
+    const poster = dragon.locator('img.poster');
+    await expect(poster).toHaveCount(1);
+    await expect(poster).toHaveAttribute('src', /\/assets\/dragon-frames\/f27\.webp$/);
+    await expect(dragon.locator('canvas')).toHaveCount(1);
     await expect(home.locator('.marquee span').first()).toBeVisible();
     await expect(home.locator('.spec-strip .spec-cell')).toHaveCount(5);
     const strategies = home.locator('.strategy');
@@ -61,5 +64,69 @@ test.describe('Cinematic homepage', () => {
     await expect(rows).toHaveCount(3);
     await rows.nth(1).scrollIntoViewIfNeeded();
     await expect(rows.nth(1)).toHaveClass(/active/);
+  });
+
+  test('the dragon watches the cursor and stays alive when it parks', async ({ page }) => {
+    await page.goto('/');
+    const dragon = page.locator('open-dragon-live-gaze');
+    const readFrame = () =>
+      dragon.evaluate((element) => Number(element.getAttribute('data-frame') ?? -1));
+    // Live once the center frame is decoded and the first canvas paint lands.
+    await expect.poll(readFrame, { timeout: 20000 }).toBeGreaterThanOrEqual(0);
+
+    const viewport = page.viewportSize() ?? { width: 1280, height: 720 };
+    // Centered cursor → the frontal anchor frame (27 of 59).
+    await page.mouse.move(viewport.width / 2, viewport.height / 2);
+    await expect.poll(readFrame, { timeout: 15000 }).toBeGreaterThanOrEqual(24);
+    await expect.poll(readFrame, { timeout: 15000 }).toBeLessThanOrEqual(30);
+    // Cursor hard right → the head turns right (late frames).
+    await page.mouse.move(viewport.width * 0.98, viewport.height / 2);
+    await expect.poll(readFrame, { timeout: 15000 }).toBeGreaterThanOrEqual(54);
+    // Cursor hard left → the head turns left (early frames).
+    await page.mouse.move(viewport.width * 0.02, viewport.height / 2);
+    await expect.poll(readFrame, { timeout: 15000 }).toBeLessThanOrEqual(3);
+
+    // Parked inside the squint zone (frames 15-17, ~normX 0.296): fine while
+    // moving, but a resting dragon must slide to an open-eyed frame.
+    await page.mouse.move(viewport.width * 0.296, viewport.height / 2);
+    await expect.poll(readFrame, { timeout: 15000 }).toBeGreaterThanOrEqual(13);
+    // The park rule fires after 1.2s of stillness — poll for the snap-out.
+    await expect
+      .poll(async () => {
+        const f = await readFrame();
+        return f <= 14 || f >= 18;
+      }, { timeout: 15000 })
+      .toBe(true);
+
+    // Fully idle: the atlas glides to center and hands over to the filmed
+    // idle loop — real breathing and blinks, not a simulation.
+    await page.mouse.move(viewport.width / 2, viewport.height / 2);
+    const video = dragon.locator('video.idle-view');
+    await expect
+      .poll(
+        () =>
+          dragon.evaluate((element) => Boolean(element.shadowRoot?.querySelector('.stage.idling'))),
+        { timeout: 20000 },
+      )
+      .toBe(true);
+    await expect
+      .poll(() => video.evaluate((element) => (element as HTMLVideoElement).paused), {
+        timeout: 15000,
+      })
+      .toBe(false);
+    const t1 = await video.evaluate((element) => (element as HTMLVideoElement).currentTime);
+    await page.waitForTimeout(1200);
+    const t2 = await video.evaluate((element) => (element as HTMLVideoElement).currentTime);
+    expect(t2).toBeGreaterThan(t1);
+    // Moving the cursor again takes back control instantly.
+    await page.mouse.move(viewport.width * 0.98, viewport.height / 2);
+    await expect.poll(readFrame, { timeout: 15000 }).toBeGreaterThanOrEqual(54);
+    await expect
+      .poll(
+        () =>
+          dragon.evaluate((element) => Boolean(element.shadowRoot?.querySelector('.stage.idling'))),
+        { timeout: 15000 },
+      )
+      .toBe(false);
   });
 });

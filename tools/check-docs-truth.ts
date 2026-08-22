@@ -303,7 +303,10 @@ const wwwForbidden: Array<{ name: string; re: RegExp }> = [
 
 async function wwwCheckFile(file: string, issues: { file: string; text: string }[]): Promise<void> {
   const text = await Deno.readTextFile(file);
-  const isHistorySurface = /(?:routes\/guide\/migration\.tsx|CHANGELOG\.md)$/.test(file);
+  const isHistorySurface =
+    /(?:routes\/guide\/migration\.tsx|content\/guide\/migration(?:\.zh)?\.md|CHANGELOG\.md)$/.test(
+      file,
+    );
   for (const { name, re } of wwwForbidden) {
     if (isHistorySurface && name === 'retired prerelease current claim') continue;
     if (re.test(text)) issues.push({ file, text: name });
@@ -321,10 +324,18 @@ async function wwwCheckFile(file: string, issues: { file: string; text: string }
   ) {
     issues.push({ file, text: 'legacy per-page structural CSS' });
   }
-  if (file.startsWith('www/app/routes/guide/') && !/extends GuidePage\b/.test(text)) {
-    issues.push({ file, text: 'guide route does not build on the shared guide page shell' });
+  const isContentRoute = file.startsWith('www/app/routes/guide/') ||
+    file.startsWith('www/app/routes/architecture/');
+  if (isContentRoute && !/extends ArticlePage\b/.test(text)) {
+    issues.push({ file, text: 'content route does not build on the shared article shell' });
   }
-  if (file === 'www/app/site-ui/guide-page.tsx') {
+  if (isContentRoute && /const content\s*=\s*\{|Record<'en' \| 'zh'/.test(text)) {
+    issues.push({
+      file,
+      text: 'content route carries content records; content lives in www/content/<collection>/',
+    });
+  }
+  if (file === 'www/app/site-ui/article-page.tsx') {
     if (!/open-page-rail[^>]+items=/.test(text)) {
       issues.push({ file, text: 'guide shell lacks a declared SSR outline' });
     }
@@ -351,11 +362,13 @@ const wwwCheck: DocsTruthCheck = {
   run: async (opts) => {
     const issues: { file: string; text: string }[] = [];
 
-    if (await exists('www/content/guide')) {
-      issues.push({
-        file: 'www/content/guide',
-        text: 'second guide source of truth; guide content lives only in www/app/routes/guide/',
-      });
+    for (const collection of ['guide', 'architecture'] as const) {
+      if (!await exists(`www/content/${collection}`)) {
+        issues.push({
+          file: `www/content/${collection}`,
+          text: `content source missing; articles live in www/content/${collection}/`,
+        });
+      }
     }
 
     for (const root of sourceRoots) {
@@ -420,6 +433,8 @@ const textScanRoots = [
   'tools/',
   'www/app/routes/',
   'www/app/components/',
+  'www/content/guide/',
+  'www/content/architecture/',
 ];
 
 const textIgnoredPathParts = [
@@ -482,8 +497,8 @@ function isCurrentTruth(file: string): boolean {
     file === 'docs/roadmap/ROADMAP.md' ||
     file === 'docs/status/STATUS.md' ||
     file === 'docs/adr/ADR-0105-v040x-cleanup-train-exception.md' ||
-    file === 'www/app/routes/architecture/architecture.tsx' ||
-    file === 'www/app/routes/guide/architecture.tsx';
+    file.startsWith('www/content/architecture/architecture.') ||
+    file.startsWith('www/content/guide/architecture.');
 }
 
 const textCheck: DocsTruthCheck = {

@@ -1,8 +1,5 @@
 /** WWW supported API reference page. */
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import '@openelement/ui/open-button';
-import '@openelement/site-ui/open-page-hero.tsx';
-import '@openelement/site-ui/open-artifact-panel.tsx';
 import '@openelement/site-ui/open-section-frame.tsx';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
@@ -216,15 +213,9 @@ const packages: ApiPackage[] = [
 
 const content = {
   en: {
-    eyebrow: 'API Reference — surface registry',
-    title: 'FIVE-PACKAGE',
-    titleAccent: 'surface.',
+    pageTitle: 'API Reference',
     lede: (v: string) =>
       `The ${v} current line documents only the five consumer packages. Retired alpha packages and internal subpaths are not authoring surfaces.`,
-    artifactLabel: 'five-package surface',
-    artifactCopy:
-      'Element, App and Build interfaces stay small so authors do not need renderer, protocol, router or build-phase internals.',
-    startBuilding: 'Start building',
     s1Index: '01 / interface rule',
     s1Title: 'Authoring starts at product packages.',
     s1Copy:
@@ -242,15 +233,9 @@ const content = {
     footnoteCheckPost: '.',
   },
   zh: {
-    eyebrow: 'API 参考 —— 产品面注册表',
-    title: '五包',
-    titleAccent: '产品面。',
+    pageTitle: 'API 参考',
     lede: (v: string) =>
       `${v} 当前线只记录五个面向使用者的包。已退役的 alpha 包与内部子路径都不是创作面。`,
-    artifactLabel: '五包产品面',
-    artifactCopy:
-      'Element、App 与 Build 的接口保持小巧，作者无需了解 renderer、protocol、router 或构建阶段的内部实现。',
-    startBuilding: '开始构建',
     s1Index: '01 / 接口规则',
     s1Title: '创作从产品包开始。',
     s1Copy:
@@ -274,64 +259,67 @@ export class ApiCorePage extends OpenElement {
     const locale: Locale = contentLocale(this._getLocale('en'));
     const t = content[locale];
     const kinds = kindLabels[locale];
+    const railItems = JSON.stringify(
+      packages.map((pkg) => ({ id: pkg.id, label: pkg.name, level: 3 })),
+    );
     return (
       <main>
-        <open-page-hero variant='technical'>
-          <span slot='eyebrow'>{t.eyebrow}</span>
-          <span slot='title'>{t.title}</span>
-          <span slot='title-accent'>{t.titleAccent}</span>
-          <span slot='lede'>{t.lede(OPENELEMENT_VERSION)}</span>
-          <open-artifact-panel slot='artifact'>
-            <span slot='label'>{t.artifactLabel}</span>
-            <span slot='meta'>{OPENELEMENT_VERSION}</span>
-            <p>{t.artifactCopy}</p>
-            <open-button href='/guide/getting-started'>{t.startBuilding}</open-button>
-          </open-artifact-panel>
-        </open-page-hero>
-        <open-section-frame>
-          <span slot='index'>{t.s1Index}</span>
-          <span slot='title'>{t.s1Title}</span>
-          <span slot='copy'>{t.s1Copy}</span>
-        </open-section-frame>
-        <open-section-frame>
-          <span slot='index'>{t.s2Index}</span>
-          <span slot='title'>{t.s2Title}</span>
-          <span slot='copy'>{t.s2Copy}</span>
-          <div class='registry'>
-            <div class='registry-head' aria-hidden='true'>
-              <span>{t.headPackage}</span>
-              <span>{t.headSubpaths}</span>
-              <span>{t.headKind}</span>
-            </div>
-            {packages.map((pkg) => (
-              <div class='pkg-row' id={pkg.id} data-kind={pkg.kind}>
-                <div>
-                  <span class='pkg-name'>{pkg.name}</span>
-                  <span class='pkg-path'>{pkg.importPath}</span>
-                  <p class='pkg-copy'>{pkg.copy[locale]}</p>
-                  {pkg.notes[locale].map((note) => <span class='pkg-note' key={note}>{note}</span>)}
-                </div>
-                <div class='pkg-chips'>
-                  {pkg.exports.map((entry) => (
-                    <span class='chip' key={entry}>
-                      {entry}
-                      {pkg.internalExports?.includes(entry) ? '※' : ''}
-                    </span>
-                  ))}
-                </div>
-                <span class={`kind kind-${pkg.kind}`}>{kinds[pkg.kind]}</span>
+        <open-reading-shell
+          rail
+          footer
+          metadata={JSON.stringify({
+            breadcrumb: 'Reference',
+            title: t.pageTitle,
+            lede: t.lede(OPENELEMENT_VERSION),
+          })}
+        >
+          <open-page-rail slot='rail' items={railItems}></open-page-rail>
+          <open-section-frame>
+            <span slot='index'>{t.s1Index}</span>
+            <span slot='title'>{t.s1Title}</span>
+            <span slot='copy'>{t.s1Copy}</span>
+          </open-section-frame>
+          <open-section-frame>
+            <span slot='index'>{t.s2Index}</span>
+            <span slot='title'>{t.s2Title}</span>
+            <span slot='copy'>{t.s2Copy}</span>
+            <div class='registry'>
+              <div class='registry-head' aria-hidden='true'>
+                <span>{t.headPackage}</span>
+                <span>{t.headSubpaths}</span>
+                <span>{t.headKind}</span>
               </div>
-            ))}
-            <footer class='footnote'>
-              <p>{t.footnote(OPENELEMENT_VERSION)}</p>
-              <p>
-                {t.footnoteCheckPre}
-                <code>deno task package-surface:check</code>
-                {t.footnoteCheckPost}
-              </p>
-            </footer>
-          </div>
-        </open-section-frame>
+              {packages.map((pkg) => (
+                <div class='pkg-row' id={pkg.id} data-kind={pkg.kind}>
+                  <div>
+                    <span class='pkg-name'>{pkg.name}</span>
+                    <span class='pkg-path'>{pkg.importPath}</span>
+                    <p class='pkg-copy'>{pkg.copy[locale]}</p>
+                    {pkg.notes[locale].map((note) => <span class='pkg-note' key={note}>{note}
+                    </span>)}
+                  </div>
+                  <div class='pkg-chips'>
+                    {pkg.exports.map((entry) => (
+                      <span class='chip' key={entry}>
+                        {entry}
+                        {pkg.internalExports?.includes(entry) ? '※' : ''}
+                      </span>
+                    ))}
+                  </div>
+                  <span class={`kind kind-${pkg.kind}`}>{kinds[pkg.kind]}</span>
+                </div>
+              ))}
+              <footer class='footnote'>
+                <p>{t.footnote(OPENELEMENT_VERSION)}</p>
+                <p>
+                  {t.footnoteCheckPre}
+                  <code>deno task package-surface:check</code>
+                  {t.footnoteCheckPost}
+                </p>
+              </footer>
+            </div>
+          </open-section-frame>
+        </open-reading-shell>
       </main>
     );
   }

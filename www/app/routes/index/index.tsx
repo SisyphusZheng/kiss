@@ -3,8 +3,9 @@
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../../data/version.ts';
 import '@openelement/ui/open-code-block';
-import '../../islands/cinematic-atmosphere.tsx';
-import '../../islands/cinematic-scroll.tsx';
+import '../../islands/open-cinematic-scroll.tsx';
+import '../../islands/open-dragon-live-gaze.tsx';
+import '../../islands/open-hero-polish.tsx';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 export const tagName = 'open-home-page';
@@ -16,29 +17,57 @@ sheet.replaceSync(`
   h1,h2,h3,p { margin:0; }
   .home { overflow:clip; background:var(--bg-base); }
 
-  /* ── hero: kinetic type, spec strip, standards marquee ── */
-  .hero { position:relative; min-height:calc(100svh - var(--nav-height)); display:grid; align-content:end; padding:clamp(3rem,8vh,6rem) clamp(1.5rem,5vw,4.5rem) 0; background:radial-gradient(circle at 62% 78%, color-mix(in srgb,var(--violet-5) 20%,transparent), transparent 55%), var(--bg-base); isolation:isolate; }
-  .hero::before { content:""; position:absolute; inset:0; z-index:-1; background-image:linear-gradient(color-mix(in srgb,var(--violet-6) 7%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--violet-6) 7%,transparent) 1px,transparent 1px); background-size:72px 72px; }
-  .hero-ghost { position:absolute; right:-0.12em; top:-0.25em; z-index:-1; font-family:var(--font-mono); font-size:clamp(14rem,29vw,26rem); font-weight:800; letter-spacing:-0.06em; color:transparent; -webkit-text-stroke:1.5px color-mix(in srgb,var(--violet-6) 22%,transparent); user-select:none; pointer-events:none; }
-  .eyebrow { display:flex; align-items:center; gap:.75rem; color:var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:var(--font-weight-8); letter-spacing:.29em; text-transform:uppercase; }
-  .eyebrow::before { content:""; width:2rem; height:2px; background:var(--brand); }
-  .hero-stamp { position:absolute; top:clamp(3rem,8vh,6rem); right:clamp(1.5rem,5vw,4.5rem); color:var(--text-muted); font-size:var(--font-size-caption); letter-spacing:.08em; }
-  h1 { margin:clamp(1.5rem,4vh,3rem) 0 0; font-weight:800; line-height:.92; letter-spacing:-.045em; }
-  h1 .mono-line { display:block; font-size:clamp(3.4rem,10.4vw,9.4rem); color:var(--text-primary); }
-  h1 .serif-line { display:block; margin-inline-start:clamp(2rem,24vw,22rem); font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(4.2rem,15vw,13.5rem); letter-spacing:-.02em; color:var(--violet-8); }
-  .lede { max-width:38rem; margin:clamp(1.5rem,3.5vh,2.5rem) 0 0; color:var(--text-secondary); font-size:clamp(1rem,1.2vw,1.1rem); line-height:1.75; }
+  /* ── hero: mascot-first — the dragon is the interface ── */
+  .hero { position:relative; overflow:clip; background:var(--bg-base); isolation:isolate; }
+  .hero-main { position:relative; min-height:calc(100svh - var(--nav-height)); display:grid; grid-template-rows:auto minmax(0,1fr) auto; justify-items:center; text-align:center; background:var(--hero-ink); color:var(--hero-paper); }
+  .hero-main::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(to bottom, rgba(0,0,0,.6), transparent 30%, transparent 52%, rgba(0,0,0,.78)), radial-gradient(115% 88% at 50% 44%, transparent 56%, rgba(0,0,0,.52)); pointer-events:none; }
+  /* Film grain over the whole hero — monochrome, ~4%, steps() so it crackles
+     like film rather than sliding like noise. Overscanned so the jitter
+     never reveals an edge. */
+  .hero-main::after { content:""; position:absolute; inset:-60%; z-index:3; pointer-events:none; opacity:.045; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation:hero-grain 1.1s steps(4) infinite; }
+  @keyframes hero-grain { 0%{transform:translate(0,0)} 25%{transform:translate(-1.8%,1.2%)} 50%{transform:translate(1.4%,-.9%)} 75%{transform:translate(-.9%,-1.6%)} 100%{transform:translate(0,0)} }
+  @media (prefers-reduced-motion: reduce) { .hero-main::after { animation:none; } }
+  .eyebrow { display:flex; align-items:center; justify-content:center; gap:.75rem; color:var(--hero-gold-muted); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:var(--font-weight-8); letter-spacing:.29em; text-transform:uppercase; text-shadow:0 1px 18px rgba(0,0,0,.6); }
+  .eyebrow::before { content:""; width:2rem; height:2px; background:var(--hero-gold-line); }
+  .hero-stamp { position:absolute; z-index:2; top:clamp(1.75rem,5vh,3rem); right:clamp(1.5rem,5vw,4.5rem); color:rgba(244,241,234,.35); font-size:var(--font-size-caption); letter-spacing:.08em; opacity:calc(1 - var(--hero-exit, 0) * 1.4); animation:hero-rise 1.1s .2s ease both; }
+  h1 { margin:clamp(1rem,2.5vh,1.75rem) 0 0; font-weight:800; line-height:.92; letter-spacing:-.045em; text-shadow:0 2px 40px rgba(0,0,0,.65); }
+  h1 .mono-line { display:block; font-family:var(--font-mono); font-size:clamp(2.6rem,6.4vw,5.6rem); color:var(--hero-paper); animation:line-mask 1.05s .45s cubic-bezier(.16,.84,.3,1) both; }
+  h1 .serif-line { display:block; margin-block-start:-.04em; font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(3.2rem,8.8vw,7.4rem); letter-spacing:-.02em; color:var(--hero-gold); animation:line-mask 1.05s .62s cubic-bezier(.16,.84,.3,1) both; }
+  /* Masked line reveal — the headline lifts out of a clip, not a fade. */
+  @keyframes line-mask { from { opacity:0; clip-path:inset(-8% -3% 96% -3%); transform:translateY(.38em); } to { opacity:1; clip-path:inset(-8% -3% -14% -3%); transform:none; } }
+  .hero-stage { position:absolute; inset:0; z-index:0; transform:translateY(calc(var(--hero-exit, 0) * 6%)) scale(calc(1 + var(--hero-exit, 0) * .07)); opacity:calc(1 - var(--hero-exit, 0) * .5); }
+  .hero-copy { grid-row:1; position:relative; z-index:2; padding:clamp(2rem,6vh,4rem) clamp(1.5rem,5vw,4.5rem) 0; transform:translateY(calc(var(--hero-exit, 0) * -64px)); opacity:calc(1 - var(--hero-exit, 0) * 1.15); }
+  .hero-foot { grid-row:3; display:grid; justify-items:center; position:relative; z-index:2; padding:0 clamp(1.5rem,5vw,4.5rem) clamp(1.5rem,5vh,3rem); transform:translateY(calc(var(--hero-exit, 0) * -32px)); opacity:calc(1 - var(--hero-exit, 0)); }
+  .hero-foot .lede { animation:hero-rise 1s .95s ease both; }
+  .hero-foot .actions { animation:hero-rise 1s 1.1s ease both; }
+  @keyframes hero-rise { from { opacity:0; transform:translateY(14px); } }
+  /* Scroll cue — a hairline drip under the fold, almost subliminal. */
+  .scroll-cue { position:absolute; left:50%; bottom:clamp(.85rem,2.2vh,1.5rem); z-index:2; display:grid; justify-items:center; gap:.5rem; color:rgba(244,241,234,.42); font-family:var(--font-mono); font-size:var(--font-size-micro); letter-spacing:.34em; text-transform:uppercase; text-indent:.34em; animation:hero-rise 1.2s 1.6s ease both; }
+  .scroll-cue::after { content:""; width:1px; height:2.4rem; background:linear-gradient(rgba(227,207,159,.8), transparent); transform-origin:top; animation:cue-drip 2.2s ease-in-out infinite; }
+  @keyframes cue-drip { 0% { transform:scaleY(0); opacity:1; } 48% { transform:scaleY(1); opacity:1; } 100% { transform:scaleY(1); opacity:0; } }
+  @media (max-height:760px), (max-width:520px) { .scroll-cue { display:none; } }
+  @media (max-height:940px) and (min-width:700px) {
+    h1 .mono-line { font-size:clamp(2.6rem,5.6vw,4.8rem); }
+    h1 .serif-line { font-size:clamp(3.2rem,7.6vw,6.4rem); }
+  }
+  .hero-foot .actions { justify-content:center; margin:var(--size-3) 0 0; }
+  .hero-foot .action { border-color:rgba(244,241,234,.24); color:var(--hero-paper); }
+  .hero-foot .action:hover { border-color:var(--hero-gold); }
+  .hero-foot .action.primary { background:var(--brand); border-color:var(--brand); color:var(--on-brand); }
+  .hero-foot .action.primary:hover { background:var(--brand-hover); border-color:var(--brand-hover); }
+  .lede { max-width:36rem; margin:0; color:rgba(244,241,234,.6); font-size:clamp(1rem,1.2vw,1.1rem); line-height:1.75; text-shadow:0 1px 18px rgba(0,0,0,.6); }
   .actions { display:flex; flex-wrap:wrap; gap:var(--size-3); margin:var(--size-6) 0 clamp(2rem,6vh,4rem); }
   .action { display:inline-flex; align-items:center; padding:var(--size-2) var(--size-5); border:var(--border-size-1) solid var(--border-strong); border-radius:var(--btn-radius); color:var(--text-primary); font-weight:var(--font-weight-7); text-decoration:none; transition:border-color .15s ease,background .15s ease; }
   .action:hover { border-color:var(--brand); }
   .action.primary { background:var(--brand); border-color:var(--brand); color:var(--on-brand); }
   .action.primary:hover { background:var(--brand-hover); }
-  .spec-strip { display:grid; grid-template-columns:repeat(5,1fr); border-block-start:1px solid var(--border); margin-inline:calc(clamp(1.5rem,5vw,4.5rem) * -1); }
+  .spec-strip { display:grid; grid-template-columns:repeat(5,1fr); border-block-start:1px solid var(--border); }
   .spec-cell { padding:var(--size-4) clamp(1rem,2.5vw,2rem); border-inline-start:1px solid var(--border); }
   .spec-cell:first-child { border-inline-start:0; }
   .spec-cell small { display:block; color:var(--text-muted); font-size:var(--font-size-micro); letter-spacing:.16em; text-transform:uppercase; }
   .spec-cell strong { display:block; margin-block-start:var(--size-1); font-size:var(--font-size-1); font-weight:var(--font-weight-8); }
   .spec-cell strong.accent { color:var(--violet-8); }
-  .marquee { overflow:hidden; white-space:nowrap; border-block:1px solid var(--border); background:var(--surface-1); margin-inline:calc(clamp(1.5rem,5vw,4.5rem) * -1); }
+  .marquee { overflow:hidden; white-space:nowrap; border-block:1px solid var(--border); background:var(--surface-1); }
   .marquee span { display:inline-block; padding:var(--size-3) 0; color:var(--brand); font-size:var(--font-size-0); font-weight:var(--font-weight-5); letter-spacing:.12em; animation:marquee 36s linear infinite; }
   @keyframes marquee { to { transform:translateX(-50%); } }
 
@@ -55,7 +84,12 @@ sheet.replaceSync(`
   .badge { padding:2px var(--size-2); border:var(--border-size-1) solid var(--border-strong); border-radius:var(--badge-radius); color:var(--violet-8); font-size:var(--font-size-00); font-weight:var(--font-weight-7); letter-spacing:.06em; }
 
   /* ── §2 DSD: violet flood ── */
-  .flood { background:linear-gradient(135deg,var(--violet-5),var(--violet-6)); color:var(--violet-0); }
+  .flood { position:relative; isolation:isolate; overflow:clip; background:linear-gradient(135deg,var(--violet-5),var(--violet-6)); color:var(--violet-0); }
+  /* Light theater: a soft bloom sweeps down-stage as you scroll while a
+     counter-shadow rises to meet it — the flood feels lit, not painted. */
+  .flood::before, .flood::after { content:""; position:absolute; inset:-32%; z-index:-1; pointer-events:none; }
+  .flood::before { background:radial-gradient(42% 55% at 24% 18%, rgba(255,255,255,.17), transparent 70%); }
+  .flood::after { background:radial-gradient(38% 50% at 78% 86%, rgba(23,10,64,.38), transparent 72%); }
   .flood .scene-index { color:var(--violet-1); }
   .flood h2 { color:var(--violet-0); }
   .flood h2 .accent { color:var(--violet-11); }
@@ -113,7 +147,18 @@ sheet.replaceSync(`
 
   @supports (animation-timeline:view()) {
     .scene-copy,.scene-art,.strategy,.output-row { animation:scene-in linear both; animation-timeline:view(); animation-range:entry 8% cover 32%; }
+    .scene > h2 { animation:scene-in linear both; animation-timeline:view(); animation-range:entry 6% cover 30%; }
+    .flood::before { animation:flood-light linear both; animation-timeline:view(); animation-range:entry 0% exit 100%; }
+    .flood::after { animation:flood-shade linear both; animation-timeline:view(); animation-range:entry 0% exit 100%; }
+    .flood-panel { animation:scene-in linear both; animation-timeline:view(); animation-range:entry 10% cover 36%; }
+    .flood-panel.solid { animation-range:entry 20% cover 46%; }
+    @media (min-width:901px) {
+      .flood-arrow { animation:arrow-in linear both; animation-timeline:view(); animation-range:entry 16% cover 40%; }
+    }
   }
+  @keyframes flood-light { from { transform:translate(-13%,-9%); } to { transform:translate(13%,9%); } }
+  @keyframes flood-shade { from { transform:translate(11%,8%); } to { transform:translate(-11%,-8%); } }
+  @keyframes arrow-in { from { opacity:.15; transform:translateX(-14px); } to { opacity:1; transform:none; } }
   @keyframes scene-in { from { opacity:.12; transform:translateY(8vh); } to { opacity:1; transform:none; } }
   @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; scroll-behavior:auto!important; } }
 
@@ -129,7 +174,7 @@ sheet.replaceSync(`
     .links a:nth-child(2) { border-inline-end:0; }
   }
   @media (max-width:520px) {
-    h1 .serif-line { margin-inline-start:0; }
+    .eyebrow { letter-spacing:.16em; }
     .hero-stamp { display:none; }
     .output-row { grid-template-columns:1fr; gap:var(--size-2); }
     .links { grid-template-columns:1fr; }
@@ -242,21 +287,30 @@ export class HomePage extends OpenElement {
     return (
       <main class='home'>
         <open-cinematic-scroll></open-cinematic-scroll>
+        <open-hero-polish></open-hero-polish>
         <section class='hero'>
-          <open-cinematic-atmosphere></open-cinematic-atmosphere>
-          <span class='hero-ghost' aria-hidden='true'>&lt;/&gt;</span>
-          <span class='hero-stamp'>EST. 2026 / SPEC-042</span>
-          <p class='eyebrow'>OpenElement — Web Standards Lab</p>
-          <h1>
-            <span class='mono-line'>THE WEB,</span>
-            <span class='serif-line'>composed.</span>
-          </h1>
-          <p class='lede'>
-            {t.lede}
-          </p>
-          <div class='actions'>
-            <a class='action primary' href='/guide/getting-started'>{t.startBuilding}</a>
-            <a class='action' href='#element'>{t.watchUnfold}</a>
+          <div class='hero-main'>
+            <span class='hero-stamp'>EST. 2026 / SPEC-042</span>
+            <span class='scroll-cue' aria-hidden='true'>Scroll</span>
+            <div class='hero-copy'>
+              <p class='eyebrow'>OpenElement — Web Standards Lab</p>
+              <h1>
+                <span class='mono-line'>THE WEB,</span>
+                <span class='serif-line'>composed.</span>
+              </h1>
+            </div>
+            <div class='hero-stage'>
+              <open-dragon-live-gaze></open-dragon-live-gaze>
+            </div>
+            <div class='hero-foot'>
+              <p class='lede'>
+                {t.lede}
+              </p>
+              <div class='actions'>
+                <a class='action primary' href='/guide/getting-started'>{t.startBuilding}</a>
+                <a class='action' href='#element'>{t.watchUnfold}</a>
+              </div>
+            </div>
           </div>
           <div class='spec-strip'>
             <div class='spec-cell'>

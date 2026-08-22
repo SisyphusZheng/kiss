@@ -91,6 +91,7 @@ pageSheet.replaceSync(`
   }
 
   .lede {
+    max-width: 34rem;
     margin-block-start: clamp(1.25rem, 3vh, 2rem);
     color: var(--text-secondary);
     font-family: var(--font-mono);
@@ -100,8 +101,10 @@ pageSheet.replaceSync(`
 
   .sidenote {
     position: absolute;
-    inset-inline-end: clamp(0.5rem, 1.5vw, 1.5rem);
-    inset-block-start: 55%;
+    /* physical insets: with vertical-rl the element's own writing mode
+       rotates logical insets — right/bottom is unambiguous. */
+    right: clamp(0.5rem, 1.5vw, 1.5rem);
+    bottom: clamp(1rem, 4vh, 2.5rem);
     writing-mode: vertical-rl;
     color: var(--text-muted);
     font-family: var(--font-mono);

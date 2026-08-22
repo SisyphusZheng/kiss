@@ -57,3 +57,38 @@ Deno.test('serveStatic rejects NUL with 403, returns 404 when nothing matches', 
     await Deno.remove(root, { recursive: true });
   }
 });
+
+Deno.test('serveStatic answers single-range requests with 206 and advertises accept-ranges', async () => {
+  const root = await Deno.makeTempDir();
+  await Deno.writeFile(`${root}/clip.mp4`, new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+
+  const server = serveStatic(root);
+  try {
+    const plain = await fetch(`${server.origin}/clip.mp4`);
+    assertEquals(plain.status, 200);
+    assertEquals(plain.headers.get('content-type'), 'video/mp4');
+    assertEquals(plain.headers.get('accept-ranges'), 'bytes');
+    await plain.body?.cancel();
+
+    const partial = await fetch(`${server.origin}/clip.mp4`, {
+      headers: { range: 'bytes=2-5' },
+    });
+    assertEquals(partial.status, 206);
+    assertEquals(partial.headers.get('content-range'), 'bytes 2-5/10');
+    assertEquals(new Uint8Array(await partial.arrayBuffer()), new Uint8Array([2, 3, 4, 5]));
+
+    const open = await fetch(`${server.origin}/clip.mp4`, { headers: { range: 'bytes=8-' } });
+    assertEquals(open.status, 206);
+    assertEquals(open.headers.get('content-range'), 'bytes 8-9/10');
+    await open.body?.cancel();
+
+    const unsatisfiable = await fetch(`${server.origin}/clip.mp4`, {
+      headers: { range: 'bytes=42-' },
+    });
+    assertEquals(unsatisfiable.status, 416);
+    await unsatisfiable.body?.cancel();
+  } finally {
+    await server.close();
+    await Deno.remove(root, { recursive: true });
+  }
+});

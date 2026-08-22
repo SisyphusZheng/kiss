@@ -106,6 +106,9 @@ const allowedLargeBinaryDirs = [
   /^www\/design\/mockups\//,
   /^www\/e2e\/visual-baselines\.spec\.ts-snapshots\//,
   /^examples\/[^/]+\/fixtures\//,
+  // Homepage cinematic hero media (dragon video/stills): shipped site assets,
+  // served from www/public — intentional design payload, not stray binaries.
+  /^www\/public\/assets\/dragon-/,
 ];
 
 const failures: Failure[] = [];

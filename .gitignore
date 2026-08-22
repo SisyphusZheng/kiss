@@ -28,6 +28,8 @@ packages/adapter-vite/__fixtures__/nitro-proof/node_modules/
 packages/adapter-vite/__fixtures__/request-time/.output-*/
 packages/adapter-vite/__fixtures__/request-time/.nitro/
 www/app/data/_generated-blog-data.ts
+www/app/data/_generated-guide-data.ts
+www/app/data/_generated-architecture-data.ts
 .openElement/
 www/.openElement/
 

@@ -56,10 +56,11 @@ test.describe('Unified page structure', () => {
     });
   }
 
-  test('changelog carries a timeline hero and a railed reading surface', async ({ page }) => {
+  test('changelog renders content-first with a railed reading surface', async ({ page }) => {
     await page.goto('/changelog');
-    await expect(page.locator('open-page-hero[variant="timeline"]')).toHaveCount(1);
+    await expect(page.locator('open-page-hero')).toHaveCount(0);
     await expect(page.locator('open-reading-shell[rail]')).toHaveCount(1);
+    await expect(page.locator('open-reading-shell h1')).toBeVisible();
   });
 
   test('404 remains a compact recovery scene without WebGL', async ({ page }) => {
@@ -95,7 +96,9 @@ test.describe('Unified page structure', () => {
     expect(await page.locator('page-contributing .help-row').count()).toBe(3);
   });
 
-  test('entry pages use the shared hero and inspectable artifact panel', async ({ page }) => {
+  test('former hero pages render content-first, without a mega hero', async ({ page }) => {
+    // The editorial mega hero pushed all content below the fold; these pages
+    // now lead with the compact reading-shell/article header (#1087 cleanup).
     for (
       const route of [
         '/apilist',
@@ -105,32 +108,20 @@ test.describe('Unified page structure', () => {
       ]
     ) {
       await page.goto(route);
-      await expect(page.locator('open-page-hero')).toHaveCount(1);
-      await expect(page.locator('open-page-hero open-artifact-panel')).toHaveCount(1);
+      await expect(page.locator('open-page-hero')).toHaveCount(0);
+      await expect(page.locator('h1')).toBeVisible();
     }
   });
 
-  test('entry pages compose their body with shared section frames', async ({ page }) => {
+  test('data-driven entry pages compose their body with shared section frames', async ({ page }) => {
     for (
       const route of [
         '/apilist',
         '/roadmap',
-        '/architecture/architecture',
-        '/architecture/design-system',
       ]
     ) {
       await page.goto(route);
       expect(await page.locator('open-section-frame').count()).toBeGreaterThan(0);
-    }
-  });
-
-  test('design-system lab components render non-empty shadow roots', async ({ page }) => {
-    await page.goto('/architecture/design-system');
-    for (const tag of ['open-lab-stage', 'open-lab-panel', 'open-standards-visual']) {
-      const rendered = await page.locator(tag).evaluateAll(
-        (els) => els.filter((el) => (el.shadowRoot?.childElementCount ?? 0) > 0).length,
-      );
-      expect(rendered).toBeGreaterThan(0);
     }
   });
 

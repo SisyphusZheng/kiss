@@ -13,6 +13,11 @@ const CHECK_SCRIPT = new URL('./check-docs-truth.ts', import.meta.url);
 async function writeFixture(root: string, routeSource: string): Promise<void> {
   await Deno.mkdir(`${root}/www/app/routes`, { recursive: true });
   await Deno.mkdir(`${root}/www/app/site-ui`, { recursive: true });
+  // The www gate requires the article content sources (ADR-0136 pilot);
+  // version-form fixtures must satisfy that precondition to isolate the
+  // retired-version rule under test.
+  await Deno.mkdir(`${root}/www/content/guide`, { recursive: true });
+  await Deno.mkdir(`${root}/www/content/architecture`, { recursive: true });
   await Deno.writeTextFile(`${root}/www/vite.config.ts`, 'export default {};\n');
   await Deno.writeTextFile(`${root}/www/app/routes/fixture.tsx`, routeSource);
 }

@@ -1,0 +1,133 @@
+/** @jsxImportSource @openelement/element */
+/**
+ * article-page.tsx — shared article shell for www content sections
+ * (www/app/routes/guide/, www/app/routes/architecture/).
+ *
+ * Every content page is a linear, Markdown-authored article
+ * (www/content/<collection>/*.md) rendered with the same treatment as blog
+ * posts — open-reading-shell metadata header, auto-extracted rail outline,
+ * open-code-block code fences, order-driven prev/next pager within the
+ * collection. Route modules keep only their `meta` export (nav contract) and
+ * a one-line `static article = { collection, slug }` binding.
+ *
+ * The content pipeline is www-local (www/build-content-data.ts) as the pilot
+ * for framework content collections (#1087, ADR-0136, v0.44).
+ */
+import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { pageStyles } from '../components/page-styles.js';
+import { serializeOutline } from './page-contract.ts';
+import { contentLocale } from './locale.ts';
+import { localizePath } from './link.ts';
+import { articleContentStyles, prepareArticle } from './article-body.ts';
+import { getPage as getGuidePage, pages as guidePages } from '../data/_generated-guide-data.ts';
+import {
+  getPage as getArchitecturePage,
+  pages as architecturePages,
+} from '../data/_generated-architecture-data.ts';
+import { OPENELEMENT_VERSION } from '../data/version.ts';
+import '@openelement/ui/open-code-block';
+
+export type ArticleBinding = Readonly<{ collection: 'guide' | 'architecture'; slug: string }>;
+
+/** Per-collection shell copy: breadcrumb label and pager base path. */
+const COLLECTION_SHELL = {
+  guide: { breadcrumb: { en: 'Guide', zh: '指南' }, basePath: '/guide' },
+  architecture: { breadcrumb: { en: 'Architecture', zh: '架构' }, basePath: '/architecture' },
+} as const;
+
+const COLLECTION_DATA = {
+  guide: { pages: guidePages, getPage: getGuidePage },
+  architecture: { pages: architecturePages, getPage: getArchitecturePage },
+};
+
+/**
+ * Article-specific additions on top of the shared prose block: in docs a
+ * blockquote is an admonition (note/warning), not an editorial pull-quote,
+ * so it takes a quiet sidenote treatment instead of the blog's display style.
+ */
+const articleExtras = `
+  .article-content blockquote {
+    margin: var(--size-4) 0;
+    padding: var(--size-1) var(--size-4);
+    border: 0;
+    border-inline-start: var(--border-size-2) solid var(--violet-8);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: var(--font-size-0);
+    line-height: 1.7;
+    text-align: start;
+  }
+
+  .article-content blockquote p {
+    margin: 0;
+  }
+`;
+
+/** Route stylesheet for an article page: shared docs styles plus prose. */
+export function articlePageStyles(options: { extra?: string } = {}): StyleSheetLike {
+  const sheet = new StyleSheet();
+  sheet.replaceSync(
+    pageStyles + articleContentStyles('.article-content') + articleExtras + (options.extra ?? ''),
+  );
+  return sheet;
+}
+
+/**
+ * Base class for article routes. Subclasses provide `static article` (the
+ * collection + slug binding); everything else — locale selection, outline,
+ * pager — derives from the generated content data modules.
+ */
+export class ArticlePage extends OpenElement {
+  declare static article: ArticleBinding;
+
+  override render() {
+    const locale = contentLocale(this._getLocale('en'));
+    const binding = (this.constructor as typeof ArticlePage).article;
+    const shell = COLLECTION_SHELL[binding.collection];
+    const data = COLLECTION_DATA[binding.collection];
+    const page = data.getPage(binding.slug, locale) ?? data.getPage(binding.slug, 'en');
+    if (!page) {
+      return (
+        <div class='container'>
+          <h1>404</h1>
+          <p>{locale === 'en' ? 'Page not found' : '未找到页面'}: {binding.slug}</p>
+        </div>
+      );
+    }
+    const article = prepareArticle(
+      page.html.replaceAll('{{OPENELEMENT_VERSION}}', OPENELEMENT_VERSION),
+    );
+    // Pager order comes from the canonical English records; labels localize,
+    // falling back to English when a translation has not landed yet.
+    const ordered = data.pages
+      .filter((candidate) => candidate.locale === 'en')
+      .sort((a, b) => a.frontmatter.order - b.frontmatter.order);
+    const index = ordered.findIndex((candidate) => candidate.slug === binding.slug);
+    const localizedTitle = (s: string) =>
+      (data.getPage(s, locale) ?? data.getPage(s, 'en'))?.frontmatter.title ?? s;
+    const previous = index > 0 ? ordered[index - 1] : undefined;
+    const next = index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : undefined;
+    const navHref = (s: string | undefined) =>
+      s ? localizePath(`${shell.basePath}/${s}`, locale) : undefined;
+    return (
+      <open-reading-shell
+        rail
+        footer
+        metadata={JSON.stringify({
+          breadcrumb: shell.breadcrumb[locale],
+          title: page.frontmatter.title,
+          lede: page.frontmatter.lede,
+        })}
+        previous={navHref(previous?.slug)}
+        previous-label={previous ? localizedTitle(previous.slug) : undefined}
+        next={navHref(next?.slug)}
+        next-label={next ? localizedTitle(next.slug) : undefined}
+      >
+        <open-page-rail slot='rail' items={serializeOutline(article.outline)}></open-page-rail>
+        <div class='article-content' innerHTML={article.html} trustedHtml>
+        </div>
+      </open-reading-shell>
+    );
+  }
+}

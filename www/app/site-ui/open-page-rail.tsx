@@ -4,6 +4,23 @@ import { DATA_SSR_PROPS, defineCustomElement, OpenElement, StyleSheet } from '@o
 import type { PageOutlineItem } from './page-contract.ts';
 
 export const tagName = 'open-page-rail';
+
+/**
+ * Outline targets live inside the host page's shadow root, which
+ * document-level fragment navigation (and `document.getElementById`) cannot
+ * reach. Walk the root chain upward so rail links resolve their headings.
+ */
+function findById(start: Node, id: string): HTMLElement | null {
+  let root: Node | null = start;
+  while (root) {
+    if (root instanceof Document || root instanceof ShadowRoot) {
+      const found = root.getElementById(id);
+      if (found) return found;
+    }
+    root = root instanceof ShadowRoot ? root.host.getRootNode() : null;
+  }
+  return null;
+}
 const sheet = new StyleSheet();
 sheet.replaceSync(`
   :host{display:block}details{display:block}summary{display:none}.links{display:grid;gap:var(--size-1);counter-reset:rail-item}a{display:block;padding:var(--size-1) 0 var(--size-1) var(--size-3);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);line-height:1.45;text-decoration:none;border-inline-start:var(--border-size-2) solid transparent}a::before{counter-increment:rail-item;content:"§" counter(rail-item) "  ";color:color-mix(in srgb,var(--text-muted) 70%,transparent)}a[data-depth="3"]{padding-inline-start:var(--size-5);font-size:calc(var(--font-size-00) * .94)}a:hover,a:focus-visible{color:var(--text-primary)}a[aria-current="location"]{color:var(--text-primary);font-weight:var(--font-weight-8);border-inline-start-color:var(--brand)}a[aria-current="location"]::before{color:var(--brand)}@media(max-width:900px){details{padding:var(--size-3);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface)}summary{display:block;cursor:pointer;color:var(--brand);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.12em;text-transform:uppercase}details:not([open]) .links{display:none}.links{padding-block-start:var(--size-3)}}
@@ -25,14 +42,40 @@ export default class OpenPageRail extends OpenElement {
     this.#observer?.disconnect();
     super.disconnectedCallback();
   }
+  #setCurrent(id: string): void {
+    for (const link of this.#links) {
+      if (link.hash === `#${id}`) {
+        link.setAttribute('aria-current', 'location');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    }
+  }
   #activate(): void {
     this.#links = [
       ...this.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
       ...(this.shadowRoot?.querySelectorAll<HTMLAnchorElement>('a[href^="#"]') ?? []),
     ];
-    const targets = this.#links.map((link) => document.getElementById(link.hash.slice(1))).filter((
-      target,
-    ): target is HTMLElement => Boolean(target));
+    for (const link of this.#links) {
+      link.addEventListener('click', (event) => {
+        const target = findById(this.getRootNode(), link.hash.slice(1));
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.pushState(null, '', link.hash);
+        this.#setCurrent(target.id);
+      });
+    }
+    // Inbound deep links (/guide/x#section opened directly) hit the same
+    // shadow-DOM wall as in-page clicks: the browser's fragment lookup never
+    // reaches the heading, so scroll manually once on load.
+    if (location.hash.length > 1) {
+      findById(this.getRootNode(), location.hash.slice(1))?.scrollIntoView();
+    }
+    const targets = this.#links.map((link) => findById(this.getRootNode(), link.hash.slice(1)))
+      .filter((
+        target,
+      ): target is HTMLElement => Boolean(target));
     if (!targets.length || !('IntersectionObserver' in window)) return;
     this.#observer = new IntersectionObserver((entries) => {
       const visible = entries.filter((entry) =>
@@ -41,13 +84,7 @@ export default class OpenPageRail extends OpenElement {
       if (!visible?.target.id) {
         return;
       }
-      for (const link of this.#links) {
-        if (link.hash === `#${visible.target.id}`) {
-          link.setAttribute('aria-current', 'location');
-        } else {
-          link.removeAttribute('aria-current');
-        }
-      }
+      this.#setCurrent(visible.target.id);
     }, { rootMargin: '-18% 0px -70% 0px', threshold: 0 });
     for (const target of targets) this.#observer.observe(target);
   }

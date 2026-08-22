@@ -1,6 +1,8 @@
 import { openElement } from '@openelement/adapter-vite';
 import { openPropsTokenSheet, registerOpenUi } from '@openelement/ui';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
+import { contentDataPlugin } from './build-content-data.ts';
 
 // www/ is an npm-first consumer; local workspace resolution during dev, npm
 // tarballs in production. No resolve.alias needed.
@@ -63,6 +65,19 @@ html[data-theme="light"],
   --font-size-display-lg: 2.625rem;
   --font-weight-medium: var(--font-weight-5);
   --font-weight-semibold: var(--font-weight-7);
+  /* Cinematic hero palette: the homepage hero is always dark, independent of
+     the site theme. Defined once here (the alias layer) so components never
+     carry raw hex literals (www theme-token gate). */
+  --hero-ink: #000;
+  --hero-paper: #f4f1ea;
+  --hero-gold: #e3cf9f;
+  --hero-gold-muted: #b9ad93;
+  --hero-gold-line: #d8c49a;
+  /* www override: real sans for prose. The shared token sheet maps
+     --font-sans to JetBrains Mono (brand choice for the component layer);
+     long-form reading on this site needs a true sans. Mono stays on
+     --font-mono (code, labels, eyebrows, nav) — nothing else changes. */
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 html[data-theme="dark"],
 :host([data-theme="dark"]),
@@ -102,7 +117,7 @@ body {
     var(--bg-canvas);
   background-size: auto, auto, 220px 128px, 220px 128px, auto;
   color: var(--text-primary);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   line-height: 1.7;
 }
 ::view-transition-old(open-brand-mark),
@@ -112,7 +127,28 @@ body {
   color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-regular.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-italic.woff2') format('woff2')}${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
+  `<style>@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-regular.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-italic.woff2') format('woff2')}@font-face{font-family:'Inter Variable';font-style:normal;font-weight:100 900;font-display:swap;src:url('/assets/fonts/inter-latin-variable.woff2') format('woff2')}${rootCSS}body{font-family:var(--font-sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
+
+// Critical-path hardening (#1088 site-level findings):
+// - The two text fonts (prose Inter, code JetBrains Mono) are preloaded so the
+//   swap resolves before first paint — measured CLS 0.195 → ~0. Serif accents
+//   are intentionally not preloaded (not used above the fold on most pages).
+// - theme-init.js stays an external sync script: the framework deliberately
+//   rejects <script> in headFragments (H-04) and has no inline-script channel
+//   — tracked as a framework gap in #1088.
+// - The Prism theme CSS is inlined: it was a render-blocking stylesheet on a
+//   third-party origin (cdnjs) — a slow-network FCP stall and a SPOF.
+const fontPreloads = [
+  '/assets/fonts/inter-latin-variable.woff2',
+  '/assets/fonts/jetbrains-mono-latin-variable.woff2',
+].map((href) =>
+  // crossorigin needs an explicit value: the head-fragment sanitizer strips
+  // the bare form, and a no-cors preload would fetch the font twice.
+  `<link rel="preload" href="${href}" as="font" type="font/woff2" crossorigin="anonymous" />`
+).join('');
+const prismThemeStyle = `<style>${
+  readFileSync(new URL('./public/assets/vendor/prism/prism.min.css', import.meta.url), 'utf-8')
+}</style>`;
 
 const openElementPlugins = openElement({
   routesDir: 'app/routes',
@@ -135,61 +171,25 @@ const openElementPlugins = openElement({
   viewTransition: true,
   speculation: true,
   inject: {
-    // H-05 fix: Use structured stylesheets with SRI for CDN CSS
-    stylesheets: [
-      {
-        href: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css',
-        integrity: 'sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2',
-      },
-    ],
-    // H-04 fix: All CDN scripts now have SRI integrity hashes
+    // No external stylesheets: the Prism theme is inlined (see prismThemeStyle
+    // below) — nothing render-blocking may be served from a third-party origin.
+    stylesheets: [],
+    // All scripts are same-origin. Prism is vendored under
+    // public/assets/vendor/prism/ (pinned 1.29.0, SRI-verified against the
+    // former cdnjs hashes at vendor time — see #1088); theme-init is inlined
+    // instead of requested; goatcounter was removed (unreachable from CN
+    // networks, cost a console error + best-practices points on every page).
     scripts: [
       { src: '/theme-init.js' },
       { src: '/logo-home.js', defer: true },
-      {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js',
-        defer: true,
-        integrity: 'sha384-06z5D//U/xpvxZHuUz92xBvq3DqBBFi7Up53HRrbV7Jlv7Yvh/MZ7oenfUe9iCEt',
-      },
-      {
-        src:
-          'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js',
-        defer: true,
-        integrity: 'sha384-D44bgYYKvaiDh4cOGlj1dbSDpSctn2FSUj118HZGmZEShZcO2v//Q5vvhNy206pp',
-      },
-      {
-        src:
-          'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js',
-        defer: true,
-        integrity: 'sha384-PeOqKNW/piETaCg8rqKFy+Pm6KEk7e36/5YZE5XO/OaFdO+/Aw3O8qZ9qDPKVUgx',
-      },
-      {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js',
-        defer: true,
-        integrity: 'sha384-RhrmFFMb0ZCHImjFMpR/UE3VEtIVTCtNrtKQqXCzqXZNJala02N3UbVhi+qzw3CY',
-      },
-      {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js',
-        defer: true,
-        integrity: 'sha384-9WmlN8ABpoFSSHvBGGjhvB3E/D8UkNB9HpLJjBQFC2VSQsM1odiQDv4NbEo+7l15',
-      },
-      {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js',
-        defer: true,
-        integrity: 'sha384-0mV13Neu0xhJFylI+HV43C+XiR13bGSeL7D0/7e6hK7sJgvyvK6HVjeQwmvXTstY',
-      },
-      {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js',
-        defer: true,
-        integrity: 'sha384-HkMr0bZB9kBW4iVtXn6nd35kO/L/dQtkkUBkL9swzTEDMdIe5ExJChVDSnC79aNA',
-      },
+      { src: '/assets/vendor/prism/prism.min.js', defer: true },
+      { src: '/assets/vendor/prism/prism-javascript.min.js', defer: true },
+      { src: '/assets/vendor/prism/prism-typescript.min.js', defer: true },
+      { src: '/assets/vendor/prism/prism-json.min.js', defer: true },
+      { src: '/assets/vendor/prism/prism-bash.min.js', defer: true },
+      { src: '/assets/vendor/prism/prism-css.min.js', defer: true },
+      { src: '/assets/vendor/prism/prism-markup.min.js', defer: true },
       { src: '/prism-init.js', defer: true },
-      {
-        src: 'https://gc.zgo.at/count.js',
-        async: true,
-        integrity: 'sha384-2UjvVpptg4JlEVgJI2PdscrjOjPcil/4F1ZvIMJ81CShQnEDSlPI+l4PfogvTLYi',
-        attrs: { 'data-goatcounter': 'https://openelement.goatcounter.com/count' },
-      },
     ],
     headFragments: [
       '<meta property="og:site_name" content="OpenElement">',
@@ -201,9 +201,11 @@ const openElementPlugins = openElement({
       '<meta name="twitter:card" content="summary_large_image">',
       '<meta name="description" content="OpenElement is a Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
       '<style>html{visibility:visible!important;}body{background:var(--bg-base);color:var(--text-primary);}</style>',
+      fontPreloads,
       '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
       '<link rel="apple-touch-icon" href="/assets/open-avatar.svg" />',
       colorTokensStyle,
+      prismThemeStyle,
     ],
   },
   content: {
@@ -248,6 +250,6 @@ export default defineConfig({
     jsx: 'automatic',
     jsxImportSource: '@openelement/element',
   },
-  plugins: [...openElementPlugins],
+  plugins: [...openElementPlugins, contentDataPlugin()],
 });
 registerOpenUi();
