@@ -96,7 +96,8 @@ export default class HeroPolish extends OpenElement {
       let cursorRaf = 0;
 
       // Magnetic state lives per-CTA: current offset chases target offset.
-      const magnets: Array<{ el: HTMLElement; cx: number; cy: number; tx: number; ty: number }> = [];
+      const magnets: Array<{ el: HTMLElement; cx: number; cy: number; tx: number; ty: number }> =
+        [];
       for (const el of hero.querySelectorAll<HTMLElement>('.hero-foot .action')) {
         magnets.push({ el, cx: 0, cy: 0, tx: 0, ty: 0 });
       }
@@ -132,7 +133,8 @@ export default class HeroPolish extends OpenElement {
         tx = event.clientX;
         ty = event.clientY;
         const rect = hero.getBoundingClientRect();
-        const nowInside = tx >= rect.left && tx <= rect.right && ty >= rect.top && ty <= rect.bottom;
+        const nowInside = tx >= rect.left && tx <= rect.right && ty >= rect.top &&
+          ty <= rect.bottom;
         if (nowInside !== inside) {
           inside = nowInside;
           cursor.classList.toggle('on', inside);

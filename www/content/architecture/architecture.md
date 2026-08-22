@@ -8,13 +8,13 @@ order: 10
 
 Dependency direction — consumers point at what they use.
 
-| Package | Role | Depends on |
-| --- | --- | --- |
-| `@openelement/element` | runtime · zero framework deps | — |
-| `@openelement/app` | pages · routing | uses `@openelement/element` |
-| `@openelement/adapter-vite` | the only host side | builds on `@openelement/app` |
-| `@openelement/ui` | optional primitives | optional |
-| `@openelement/create` | starter · build time | — |
+| Package                     | Role                          | Depends on                   |
+| --------------------------- | ----------------------------- | ---------------------------- |
+| `@openelement/element`      | runtime · zero framework deps | —                            |
+| `@openelement/app`          | pages · routing               | uses `@openelement/element`  |
+| `@openelement/adapter-vite` | the only host side            | builds on `@openelement/app` |
+| `@openelement/ui`           | optional primitives           | optional                     |
+| `@openelement/create`       | starter · build time          | —                            |
 
 > Retired: `core` · `signal` · `router` · `protocol` · `content` · `ssg`.
 
@@ -22,12 +22,12 @@ Dependency direction — consumers point at what they use.
 
 Authors use product interfaces. Renderer, router, signal, content and build-phase details stay internal until real variation proves a public seam.
 
-| Layer | Package | Scope |
-| --- | --- | --- |
-| element | `@openelement/element` | One authoring surface for Custom Elements, JSX, DSD, hydration and signals. |
-| application | `@openelement/app` | Pages, routes, islands and render semantics for complete applications. |
-| build | `@openelement/adapter-vite` | Vite integration, content, static generation and deployable Nitro output behind one build boundary. |
-| adoption | `@openelement/create`, optional `@openelement/ui` | Starter-first adoption and optional primitives; neither exposes retired implementation packages. |
+| Layer       | Package                                           | Scope                                                                                               |
+| ----------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| element     | `@openelement/element`                            | One authoring surface for Custom Elements, JSX, DSD, hydration and signals.                         |
+| application | `@openelement/app`                                | Pages, routes, islands and render semantics for complete applications.                              |
+| build       | `@openelement/adapter-vite`                       | Vite integration, content, static generation and deployable Nitro output behind one build boundary. |
+| adoption    | `@openelement/create`, optional `@openelement/ui` | Starter-first adoption and optional primitives; neither exposes retired implementation packages.    |
 
 ## Web Components are the application architecture.
 
@@ -49,9 +49,9 @@ Node and Workers output is verified from packed public artifacts; cache intent a
 
 Package surface, docs truth, artifacts, critical paths and browser tests reject a return to the retired product graph.
 
-| Gate | Requirement |
-| --- | --- |
-| 5 packages | Current consumer surface, starter and docs agree. |
-| ADR-0122 | 0.42.0 frozen (ACCEPTED); the 0.41.x static freeze under ADR-0119 is untouched. |
-| 3 browsers | Candidate releases require Chromium, Firefox and WebKit proof. |
-| packed proof | Consumers build from public artifacts, not workspace aliases. |
+| Gate         | Requirement                                                                     |
+| ------------ | ------------------------------------------------------------------------------- |
+| 5 packages   | Current consumer surface, starter and docs agree.                               |
+| ADR-0122     | 0.42.0 frozen (ACCEPTED); the 0.41.x static freeze under ADR-0119 is untouched. |
+| 3 browsers   | Candidate releases require Chromium, Firefox and WebKit proof.                  |
+| packed proof | Consumers build from public artifacts, not workspace aliases.                   |

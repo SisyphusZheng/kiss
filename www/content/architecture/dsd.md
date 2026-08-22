@@ -11,7 +11,11 @@ Declarative Shadow DOM uses a template with `shadowrootmode` so HTML can carry s
 ```html
 <my-card>
   <template shadowrootmode="open">
-    <style>:host { display: block; }</style>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
     <p>Visible before client JavaScript.</p>
   </template>
 </my-card>

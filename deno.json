@@ -156,6 +156,7 @@
       "www/content/blog/",
       "www/content/guide/",
       "www/app/data/",
+      "www/public/assets/vendor/",
       "custom-dist/",
       "dist-test-ssg-render/",
       "**/.nitro/"

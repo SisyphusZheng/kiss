@@ -466,9 +466,9 @@ export default class DragonLiveGaze extends OpenElement {
         // never visibly repeating) plus small saccade darts.
         this.#idleAmp = Math.min(1, this.#idleAmp + dt / 2.5);
         const t = now / 1000;
-        const wander = 0.55 * Math.sin(2 * Math.PI * 0.043 * t)
-          + 0.3 * Math.sin(2 * Math.PI * 0.117 * t + 1.7)
-          + 0.15 * Math.sin(2 * Math.PI * 0.231 * t + 4.2);
+        const wander = 0.55 * Math.sin(2 * Math.PI * 0.043 * t) +
+          0.3 * Math.sin(2 * Math.PI * 0.117 * t + 1.7) +
+          0.15 * Math.sin(2 * Math.PI * 0.231 * t + 4.2);
         if (this.#idleAmp > 0.6 && now >= this.#nextSaccade) {
           this.#saccade = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2);
           this.#nextSaccade = now + 1200 + Math.random() * 2300;
@@ -582,14 +582,21 @@ export default class DragonLiveGaze extends OpenElement {
         <video
           class='idle-view'
           src={IDLE_VIDEO_URL}
-          muted={true}
-          loop={true}
-          playsinline={true}
+          muted
+          loop
+          playsinline
           preload='none'
           aria-hidden='true'
-        ></video>
-        <i class='mote'></i><i class='mote'></i><i class='mote'></i><i class='mote'></i>
-        <i class='mote'></i><i class='mote'></i><i class='mote'></i><i class='mote'></i>
+        >
+        </video>
+        <i class='mote'></i>
+        <i class='mote'></i>
+        <i class='mote'></i>
+        <i class='mote'></i>
+        <i class='mote'></i>
+        <i class='mote'></i>
+        <i class='mote'></i>
+        <i class='mote'></i>
       </figure>
     );
   }

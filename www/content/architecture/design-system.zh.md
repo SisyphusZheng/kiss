@@ -14,14 +14,14 @@ order: 15
 
 原始的 Open Props 值止步于经过审计的 token 边界；页面与原语只消费语义角色。
 
-| 角色 | Token | 用途 |
-| --- | --- | --- |
-| Canvas | `--bg-base` | 页面背景与网格底场。 |
-| Surface | `--bg-card` / `--bg-elevated` | 阅读表面与浮层面板。 |
-| Artifact | `--bg-code` / `--code-border` | 代码、devtools、路由与包结构图。 |
-| Text | `--text-primary` / `--text-secondary` | 明暗两套主题下都可读的文本层级。 |
-| Action | `--brand` / `--on-brand` | 主要命令与链接强调。 |
-| State | `--success` / `--warning` / `--info` / `--error` | 路线图、标准、参考与失败状态。 |
+| 角色     | Token                                            | 用途                             |
+| -------- | ------------------------------------------------ | -------------------------------- |
+| Canvas   | `--bg-base`                                      | 页面背景与网格底场。             |
+| Surface  | `--bg-card` / `--bg-elevated`                    | 阅读表面与浮层面板。             |
+| Artifact | `--bg-code` / `--code-border`                    | 代码、devtools、路由与包结构图。 |
+| Text     | `--text-primary` / `--text-secondary`            | 明暗两套主题下都可读的文本层级。 |
+| Action   | `--brand` / `--on-brand`                         | 主要命令与链接强调。             |
+| State    | `--success` / `--warning` / `--info` / `--error` | 路线图、标准、参考与失败状态。   |
 
 ## 本站 dogfood 可选的 UI 原语
 

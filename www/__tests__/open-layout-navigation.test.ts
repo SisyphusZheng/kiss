@@ -63,7 +63,10 @@ Deno.test('open-layout navigation labels the nameless generated group as Project
     'Project',
     'Reference',
   ]);
-  assertEquals(filterNavSections(sections, '/roadmap').map((s) => s.section), ['History', 'Project']);
+  assertEquals(filterNavSections(sections, '/roadmap').map((s) => s.section), [
+    'History',
+    'Project',
+  ]);
   assertEquals(filterNavSections(sections, '/blog').map((s) => s.section), ['History']);
   assertEquals(filterNavSections(sections, '/apilist').map((s) => s.section), ['Reference']);
 });

@@ -272,10 +272,22 @@ export default class DragonGaze extends OpenElement {
     gl.enableVertexAttribArray(aUV);
     gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, 0, 0);
 
-    for (const name of [
-      'uGaze', 'uGazeSlow', 'uGazeLazy', 'uEye', 'uLift', 'uBlink', 'uEar',
-      'uBreath', 'uDroop', 'uTail', 'uTilt', 'uTime',
-    ]) {
+    for (
+      const name of [
+        'uGaze',
+        'uGazeSlow',
+        'uGazeLazy',
+        'uEye',
+        'uLift',
+        'uBlink',
+        'uEar',
+        'uBreath',
+        'uDroop',
+        'uTail',
+        'uTilt',
+        'uTime',
+      ]
+    ) {
       this.#u[name] = gl.getUniformLocation(program, name);
     }
     const texLocation = gl.getUniformLocation(program, 'uTex');

@@ -103,12 +103,16 @@ test.describe('Cinematic homepage', () => {
     await page.mouse.move(viewport.width / 2, viewport.height / 2);
     const video = dragon.locator('video.idle-view');
     await expect
-      .poll(async () => dragon.evaluate((element) =>
-        Boolean(element.shadowRoot?.querySelector('.stage.idling')),
-      ), { timeout: 20000 })
+      .poll(
+        () =>
+          dragon.evaluate((element) => Boolean(element.shadowRoot?.querySelector('.stage.idling'))),
+        { timeout: 20000 },
+      )
       .toBe(true);
     await expect
-      .poll(() => video.evaluate((element) => (element as HTMLVideoElement).paused), { timeout: 15000 })
+      .poll(() => video.evaluate((element) => (element as HTMLVideoElement).paused), {
+        timeout: 15000,
+      })
       .toBe(false);
     const t1 = await video.evaluate((element) => (element as HTMLVideoElement).currentTime);
     await page.waitForTimeout(1200);
@@ -118,9 +122,11 @@ test.describe('Cinematic homepage', () => {
     await page.mouse.move(viewport.width * 0.98, viewport.height / 2);
     await expect.poll(readFrame, { timeout: 15000 }).toBeGreaterThanOrEqual(54);
     await expect
-      .poll(async () => dragon.evaluate((element) =>
-        Boolean(element.shadowRoot?.querySelector('.stage.idling')),
-      ), { timeout: 15000 })
+      .poll(
+        () =>
+          dragon.evaluate((element) => Boolean(element.shadowRoot?.querySelector('.stage.idling'))),
+        { timeout: 15000 },
+      )
       .toBe(false);
   });
 });

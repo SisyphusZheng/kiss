@@ -8,25 +8,25 @@ order: 20
 
 **openElement — WC 原生应用框架**
 
-| 方面 | 描述 |
-| --- | --- |
-| 架构 | Custom Elements + Declarative Shadow DOM 是一等公民；标准 Custom Elements 即应用契约；App 掌管路由与渲染；Vite 和 Nitro 是官方构建路径。 |
-| 渲染 | 默认 SSG、默认 DSD/shadow、按需升级元素；无需交互时输出不含任何框架 JavaScript 的纯静态内容。 |
-| DX | JSX + Basic Element，`defineElement` / `definePage` / `defineApp` / `buildApp`。 |
-| 适用 | 以 Web Components 为原生组件契约、static-first 的应用框架，用于以标准 Custom Element 契约交付 DSD-first 应用；当前范围是 static-first，而非与 Next.js、Nuxt 或 SvelteKit 的泛全栈对齐。 |
+| 方面     | 描述                                                                                                                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 架构     | Custom Elements + Declarative Shadow DOM 是一等公民；标准 Custom Elements 即应用契约；App 掌管路由与渲染；Vite 和 Nitro 是官方构建路径。                                                  |
+| 渲染     | 默认 SSG、默认 DSD/shadow、按需升级元素；无需交互时输出不含任何框架 JavaScript 的纯静态内容。                                                                                             |
+| DX       | JSX + Basic Element，`defineElement` / `definePage` / `defineApp` / `buildApp`。                                                                                                          |
+| 适用     | 以 Web Components 为原生组件契约、static-first 的应用框架，用于以标准 Custom Element 契约交付 DSD-first 应用；当前范围是 static-first，而非与 Next.js、Nuxt 或 SvelteKit 的泛全栈对齐。   |
 | 全栈路径 | OpenElement × Supabase × Cloudflare：OpenElement 负责应用 UX，Supabase 负责数据/Auth/RLS/Storage/Realtime，Cloudflare 负责边缘/安全/缓存/异步执行。它们是服务提供方，绝不是框架内建功能。 |
 
-| 框架 | 架构 | 渲染 | DX | 锁定 / 适用 |
-| --- | --- | --- | --- | --- |
-| **Next.js** — React 元框架 | 文件路由、React Server Components、app router、server action。 | SSR / SSG / ISR、RSC 流式渲染，client component 在客户端 hydration。 | React/JSX，生态庞大，在 Vercel 上是一等公民。 | React 运行时加 Next.js 抽象；与 Vercel 平台亲和。 |
-| **Nuxt** — Vue 元框架 | 文件路由、Vue 单文件组件、Nitro 服务端引擎。 | SSR / SSG / ISR、混合渲染、客户端 hydration。 | Vue SFC、自动导入、约定驱动。 | Vue 运行时加 Nuxt 与 Nitro 约定。 |
-| **SvelteKit** — Svelte 元框架 | 文件路由、Svelte 组件、Vite、基于 adapter 的部署。 | SSR / SSG / CSR、渐进 hydration、无虚拟 DOM。 | Svelte 编译器、语法简洁、运行时小。 | Svelte 编译器/运行时；部署 adapter 可替换（锁定程度低于 Next.js）。 |
-| **Astro** — Islands / 内容引擎 | 文件路由、多框架 island、内容集合。 | Static-first、island hydration、server island、View Transitions。 | `.astro` 组件、框架无关的 island、Markdown/MDX。 | 低——island 可以用任何框架；有少量 Astro 特有的组件语法。 |
-| **Fresh** — Deno + Preact | 文件路由、Preact island、Deno 原生、零构建步骤。 | SSR 加 Preact island；默认客户端 JavaScript 极少。 | Preact/TypeScript、Deno 运行时、无需配置 bundler。 | Deno 运行时加 Preact；island 即 Preact 组件。 |
-| **Lit** — Web Components 基座 | 带响应式属性的 Custom Elements 基类；应用路由被刻意留在组件模型之外。 | Lit 提供 SSR 工具链，但有服务端特有的编写约束。 | TypeScript、decorator、tagged-template 渲染。 | 低——纯标准 Web Components；自身不带框架。 |
-| **Enhance** — HTML-first 的 Web Components 全栈 | Custom Elements、文件路由与服务端 Custom Elements。 | SSR 输出 Web Components、默认零 JS、渐进增强。 | HTML-first、单文件组件、抽象极少。 | 低——标准 Web Components；Enhance 只加 helper，不加运行时。 |
-| **Stencil** — Web Components 编译器 | 输出标准 Web Components 的编译器；产物框架无关。 | 客户端 Web Components，带预渲染、懒加载和内部虚拟 DOM。 | TSX、decorator、面向设计系统的工具链。 | 产物是无锁定的 Web Components；编写时使用 Stencil 工具链。 |
-| **FAST / Web Awesome** — 组件体系 | FAST 提供 Web Component 编写基础设施；Web Awesome 分发组件库与设计资产。 | — | — | 当你的首要需求是组件体系时任选其一。openElement 并不替代成熟的设计系统，应作为围绕组件的应用框架来评估。 |
+| 框架                                            | 架构                                                                     | 渲染                                                                 | DX                                                 | 锁定 / 适用                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Next.js** — React 元框架                      | 文件路由、React Server Components、app router、server action。           | SSR / SSG / ISR、RSC 流式渲染，client component 在客户端 hydration。 | React/JSX，生态庞大，在 Vercel 上是一等公民。      | React 运行时加 Next.js 抽象；与 Vercel 平台亲和。                                                        |
+| **Nuxt** — Vue 元框架                           | 文件路由、Vue 单文件组件、Nitro 服务端引擎。                             | SSR / SSG / ISR、混合渲染、客户端 hydration。                        | Vue SFC、自动导入、约定驱动。                      | Vue 运行时加 Nuxt 与 Nitro 约定。                                                                        |
+| **SvelteKit** — Svelte 元框架                   | 文件路由、Svelte 组件、Vite、基于 adapter 的部署。                       | SSR / SSG / CSR、渐进 hydration、无虚拟 DOM。                        | Svelte 编译器、语法简洁、运行时小。                | Svelte 编译器/运行时；部署 adapter 可替换（锁定程度低于 Next.js）。                                      |
+| **Astro** — Islands / 内容引擎                  | 文件路由、多框架 island、内容集合。                                      | Static-first、island hydration、server island、View Transitions。    | `.astro` 组件、框架无关的 island、Markdown/MDX。   | 低——island 可以用任何框架；有少量 Astro 特有的组件语法。                                                 |
+| **Fresh** — Deno + Preact                       | 文件路由、Preact island、Deno 原生、零构建步骤。                         | SSR 加 Preact island；默认客户端 JavaScript 极少。                   | Preact/TypeScript、Deno 运行时、无需配置 bundler。 | Deno 运行时加 Preact；island 即 Preact 组件。                                                            |
+| **Lit** — Web Components 基座                   | 带响应式属性的 Custom Elements 基类；应用路由被刻意留在组件模型之外。    | Lit 提供 SSR 工具链，但有服务端特有的编写约束。                      | TypeScript、decorator、tagged-template 渲染。      | 低——纯标准 Web Components；自身不带框架。                                                                |
+| **Enhance** — HTML-first 的 Web Components 全栈 | Custom Elements、文件路由与服务端 Custom Elements。                      | SSR 输出 Web Components、默认零 JS、渐进增强。                       | HTML-first、单文件组件、抽象极少。                 | 低——标准 Web Components；Enhance 只加 helper，不加运行时。                                               |
+| **Stencil** — Web Components 编译器             | 输出标准 Web Components 的编译器；产物框架无关。                         | 客户端 Web Components，带预渲染、懒加载和内部虚拟 DOM。              | TSX、decorator、面向设计系统的工具链。             | 产物是无锁定的 Web Components；编写时使用 Stencil 工具链。                                               |
+| **FAST / Web Awesome** — 组件体系               | FAST 提供 Web Component 编写基础设施；Web Awesome 分发组件库与设计资产。 | —                                                                    | —                                                  | 当你的首要需求是组件体系时任选其一。openElement 并不替代成熟的设计系统，应作为围绕组件的应用框架来评估。 |
 
 ## 如何阅读本页
 

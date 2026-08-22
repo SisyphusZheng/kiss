@@ -8,13 +8,13 @@ order: 10
 
 依赖方向——使用方指向其依赖。
 
-| 包 | 角色 | 依赖 |
-| --- | --- | --- |
-| `@openelement/element` | 运行时 · 零框架依赖 | — |
-| `@openelement/app` | 页面 · 路由 | 使用 `@openelement/element` |
-| `@openelement/adapter-vite` | 唯一的宿主侧 | 构建于 `@openelement/app` |
-| `@openelement/ui` | 可选原语 | 可选 |
-| `@openelement/create` | starter · 构建期 | — |
+| 包                          | 角色                | 依赖                        |
+| --------------------------- | ------------------- | --------------------------- |
+| `@openelement/element`      | 运行时 · 零框架依赖 | —                           |
+| `@openelement/app`          | 页面 · 路由         | 使用 `@openelement/element` |
+| `@openelement/adapter-vite` | 唯一的宿主侧        | 构建于 `@openelement/app`   |
+| `@openelement/ui`           | 可选原语            | 可选                        |
+| `@openelement/create`       | starter · 构建期    | —                           |
 
 > 已退役：`core` · `signal` · `router` · `protocol` · `content` · `ssg`。
 
@@ -22,12 +22,12 @@ order: 10
 
 作者使用产品接口。renderer、router、signal、content 与构建期细节保持内部化，直到真实的变体需求证明需要公开接缝。
 
-| 层 | 包 | 职责 |
-| --- | --- | --- |
-| element | `@openelement/element` | Custom Elements、JSX、DSD、hydration 与 signals 的统一创作界面。 |
-| application | `@openelement/app` | 面向完整应用的页面、路由、islands 与渲染语义。 |
-| build | `@openelement/adapter-vite` | Vite 集成、content、静态生成与可部署的 Nitro 输出，收敛在一个构建边界之内。 |
-| adoption | `@openelement/create`，可选 `@openelement/ui` | 以 starter 为先的采用路径与可选原语；两者都不暴露已退役的实现包。 |
+| 层          | 包                                            | 职责                                                                        |
+| ----------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| element     | `@openelement/element`                        | Custom Elements、JSX、DSD、hydration 与 signals 的统一创作界面。            |
+| application | `@openelement/app`                            | 面向完整应用的页面、路由、islands 与渲染语义。                              |
+| build       | `@openelement/adapter-vite`                   | Vite 集成、content、静态生成与可部署的 Nitro 输出，收敛在一个构建边界之内。 |
+| adoption    | `@openelement/create`，可选 `@openelement/ui` | 以 starter 为先的采用路径与可选原语；两者都不暴露已退役的实现包。           |
 
 ## Web Components 就是应用架构。
 
@@ -49,9 +49,9 @@ Node 与 Workers 输出从打包后的公开产物验证；缓存意图与部署
 
 包表面、文档真相、产物、关键路径与浏览器测试，共同拒绝退回已退役的产品图。
 
-| 门禁 | 要求 |
-| --- | --- |
-| 5 个包 | 当前消费面、starter 与文档保持一致。 |
-| ADR-0122 | 0.42.0 已冻结（ACCEPTED）；0.41.x 静态冻结（ADR-0119）未被触动。 |
-| 3 个浏览器 | 候选版本发布需要 Chromium、Firefox 与 WebKit 的验证。 |
-| 打包产物验证 | 消费方从公开产物构建，而不是 workspace 别名。 |
+| 门禁         | 要求                                                             |
+| ------------ | ---------------------------------------------------------------- |
+| 5 个包       | 当前消费面、starter 与文档保持一致。                             |
+| ADR-0122     | 0.42.0 已冻结（ACCEPTED）；0.41.x 静态冻结（ADR-0119）未被触动。 |
+| 3 个浏览器   | 候选版本发布需要 Chromium、Firefox 与 WebKit 的验证。            |
+| 打包产物验证 | 消费方从公开产物构建，而不是 workspace 别名。                    |

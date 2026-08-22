@@ -14,14 +14,14 @@ order: 15
 
 Raw Open Props values stop at the audited token boundary; pages and primitives consume semantic roles.
 
-| Role | Tokens | Purpose |
-| --- | --- | --- |
-| Canvas | `--bg-base` | Page background and grid field. |
-| Surface | `--bg-card` / `--bg-elevated` | Reading surfaces and raised panels. |
-| Artifact | `--bg-code` / `--code-border` | Code, devtools, route, and package diagrams. |
-| Text | `--text-primary` / `--text-secondary` | Readable hierarchy in both themes. |
-| Action | `--brand` / `--on-brand` | Primary command and link emphasis. |
-| State | `--success` / `--warning` / `--info` / `--error` | Roadmap, standards, reference, and failure states. |
+| Role     | Tokens                                           | Purpose                                            |
+| -------- | ------------------------------------------------ | -------------------------------------------------- |
+| Canvas   | `--bg-base`                                      | Page background and grid field.                    |
+| Surface  | `--bg-card` / `--bg-elevated`                    | Reading surfaces and raised panels.                |
+| Artifact | `--bg-code` / `--code-border`                    | Code, devtools, route, and package diagrams.       |
+| Text     | `--text-primary` / `--text-secondary`            | Readable hierarchy in both themes.                 |
+| Action   | `--brand` / `--on-brand`                         | Primary command and link emphasis.                 |
+| State    | `--success` / `--warning` / `--info` / `--error` | Roadmap, standards, reference, and failure states. |
 
 ## The site dogfoods optional UI primitives
 

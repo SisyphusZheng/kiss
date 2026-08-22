@@ -11,7 +11,11 @@ Declarative Shadow DOM 通过带 `shadowrootmode` 的 template，让 HTML 在客
 ```html
 <my-card>
   <template shadowrootmode="open">
-    <style>:host { display: block; }</style>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
     <p>Visible before client JavaScript.</p>
   </template>
 </my-card>

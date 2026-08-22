@@ -6,20 +6,20 @@ order: 100
 
 ## Build Performance
 
-| Metric | Value |
-| --- | --- |
-| SSG build (www) | 30 route modules, 205 sitemap URLs |
-| Dev cold start | Measured by CI performance evidence |
-| Vite dev start | Measured by CI performance evidence |
-| Client bundle | Budgeted island chunks; no mandatory page runtime |
+| Metric          | Value                                             |
+| --------------- | ------------------------------------------------- |
+| SSG build (www) | 30 route modules, 205 sitemap URLs                |
+| Dev cold start  | Measured by CI performance evidence               |
+| Vite dev start  | Measured by CI performance evidence               |
+| Client bundle   | Budgeted island chunks; no mandatory page runtime |
 
 ## Rendering
 
-| Metric | Value |
-| --- | --- |
-| DSD SSR | Zero JS parse cost (browser native) |
-| Island hydrate | Per-component, strategy-gated |
-| Navigation | Browser-native navigation with optional View Transitions |
+| Metric         | Value                                                    |
+| -------------- | -------------------------------------------------------- |
+| DSD SSR        | Zero JS parse cost (browser native)                      |
+| Island hydrate | Per-component, strategy-gated                            |
+| Navigation     | Browser-native navigation with optional View Transitions |
 
 ## Bundle Size
 
