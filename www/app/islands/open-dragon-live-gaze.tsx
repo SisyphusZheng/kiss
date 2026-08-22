@@ -55,7 +55,7 @@ sheet.replaceSync(`
   :host { display: block; width: 100%; height: 100%; }
   .stage {
     position: relative; margin: 0; width: 100%; height: 100%;
-    background: #000; overflow: hidden; transform-origin: 46% 56%;
+    background: var(--hero-ink); overflow: hidden; transform-origin: 46% 56%;
     animation: dragon-enter 2.2s cubic-bezier(.22,.61,.21,1) both, dragon-breathe 6.5s ease-in-out 2.3s infinite alternate;
   }
   /* Emerge from the dark — a slow settle, not a fade-in. */
@@ -425,7 +425,9 @@ export default class DragonLiveGaze extends OpenElement {
     const parkedMs = this.#lastPointer ? now - this.#lastPointer : Number.POSITIVE_INFINITY;
     const idle = parkedMs > IDLE_AFTER_MS;
 
-    let target: number;
+    // Assigned in every branch below; initialized to the parked target so the
+    // compiler can prove it (TS2454) even through the #idleBlink flag chain.
+    let target = this.#target;
     let rate = FOLLOW_RATE;
     let blinking = false;
     if (idle) {

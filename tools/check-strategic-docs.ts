@@ -49,9 +49,12 @@ const currentDocs = [
   'docs/status/STATUS.md',
   'www/app/routes/index/index.tsx',
   'www/app/routes/roadmap.tsx',
-  'www/app/routes/guide/getting-started.tsx',
+  // Guide/architecture routes are thin ArticlePage shells since the ADR-0136
+  // content pilot; the version anchor lives in the markdown body, which
+  // substitutes {{OPENELEMENT_VERSION}} at render time.
+  'www/content/guide/getting-started.md',
   'www/app/routes/apilist.tsx',
-  'www/app/routes/architecture/architecture.tsx',
+  'www/content/architecture/architecture.md',
 ];
 
 /**
@@ -109,7 +112,9 @@ export function strategicChecks(): Check[] {
       required: [PACKAGE_VERSION_TAG],
       accept: (text: string, file: string) =>
         text.includes(PACKAGE_VERSION_TAG) ||
-        (file.endsWith('.tsx') &&
+        // .tsx routes reference the version symbol; content markdown carries
+        // the {{OPENELEMENT_VERSION}} placeholder (substituted at render).
+        ((file.endsWith('.tsx') || file.endsWith('.md')) &&
           (text.includes('OPENELEMENT_VERSION') ||
             text.includes('PUBLISHED_PACKAGE_VERSION'))),
     },

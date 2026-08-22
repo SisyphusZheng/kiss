@@ -4,6 +4,8 @@ lede: 'OpenElement is a Web Components-native, static-first application framewor
 order: 10
 ---
 
+> Applies to {{OPENELEMENT_VERSION}}.
+
 ## Package graph
 
 Dependency direction — consumers point at what they use.

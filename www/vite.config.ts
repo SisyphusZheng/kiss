@@ -65,6 +65,14 @@ html[data-theme="light"],
   --font-size-display-lg: 2.625rem;
   --font-weight-medium: var(--font-weight-5);
   --font-weight-semibold: var(--font-weight-7);
+  /* Cinematic hero palette: the homepage hero is always dark, independent of
+     the site theme. Defined once here (the alias layer) so components never
+     carry raw hex literals (www theme-token gate). */
+  --hero-ink: #000;
+  --hero-paper: #f4f1ea;
+  --hero-gold: #e3cf9f;
+  --hero-gold-muted: #b9ad93;
+  --hero-gold-line: #d8c49a;
   /* www override: real sans for prose. The shared token sheet maps
      --font-sans to JetBrains Mono (brand choice for the component layer);
      long-form reading on this site needs a true sans. Mono stays on

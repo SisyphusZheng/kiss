@@ -19,7 +19,7 @@ sheet.replaceSync(`
 
   /* ── hero: mascot-first — the dragon is the interface ── */
   .hero { position:relative; overflow:clip; background:var(--bg-base); isolation:isolate; }
-  .hero-main { position:relative; min-height:calc(100svh - var(--nav-height)); display:grid; grid-template-rows:auto minmax(0,1fr) auto; justify-items:center; text-align:center; background:#000; color:#f4f1ea; }
+  .hero-main { position:relative; min-height:calc(100svh - var(--nav-height)); display:grid; grid-template-rows:auto minmax(0,1fr) auto; justify-items:center; text-align:center; background:var(--hero-ink); color:var(--hero-paper); }
   .hero-main::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(to bottom, rgba(0,0,0,.6), transparent 30%, transparent 52%, rgba(0,0,0,.78)), radial-gradient(115% 88% at 50% 44%, transparent 56%, rgba(0,0,0,.52)); pointer-events:none; }
   /* Film grain over the whole hero — monochrome, ~4%, steps() so it crackles
      like film rather than sliding like noise. Overscanned so the jitter
@@ -27,12 +27,12 @@ sheet.replaceSync(`
   .hero-main::after { content:""; position:absolute; inset:-60%; z-index:3; pointer-events:none; opacity:.045; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation:hero-grain 1.1s steps(4) infinite; }
   @keyframes hero-grain { 0%{transform:translate(0,0)} 25%{transform:translate(-1.8%,1.2%)} 50%{transform:translate(1.4%,-.9%)} 75%{transform:translate(-.9%,-1.6%)} 100%{transform:translate(0,0)} }
   @media (prefers-reduced-motion: reduce) { .hero-main::after { animation:none; } }
-  .eyebrow { display:flex; align-items:center; justify-content:center; gap:.75rem; color:#b9ad93; font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:var(--font-weight-8); letter-spacing:.29em; text-transform:uppercase; text-shadow:0 1px 18px rgba(0,0,0,.6); }
-  .eyebrow::before { content:""; width:2rem; height:2px; background:#d8c49a; }
+  .eyebrow { display:flex; align-items:center; justify-content:center; gap:.75rem; color:var(--hero-gold-muted); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:var(--font-weight-8); letter-spacing:.29em; text-transform:uppercase; text-shadow:0 1px 18px rgba(0,0,0,.6); }
+  .eyebrow::before { content:""; width:2rem; height:2px; background:var(--hero-gold-line); }
   .hero-stamp { position:absolute; z-index:2; top:clamp(1.75rem,5vh,3rem); right:clamp(1.5rem,5vw,4.5rem); color:rgba(244,241,234,.35); font-size:var(--font-size-caption); letter-spacing:.08em; opacity:calc(1 - var(--hero-exit, 0) * 1.4); animation:hero-rise 1.1s .2s ease both; }
   h1 { margin:clamp(1rem,2.5vh,1.75rem) 0 0; font-weight:800; line-height:.92; letter-spacing:-.045em; text-shadow:0 2px 40px rgba(0,0,0,.65); }
-  h1 .mono-line { display:block; font-family:var(--font-mono); font-size:clamp(2.6rem,6.4vw,5.6rem); color:#f4f1ea; animation:line-mask 1.05s .45s cubic-bezier(.16,.84,.3,1) both; }
-  h1 .serif-line { display:block; margin-block-start:-.04em; font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(3.2rem,8.8vw,7.4rem); letter-spacing:-.02em; color:#e3cf9f; animation:line-mask 1.05s .62s cubic-bezier(.16,.84,.3,1) both; }
+  h1 .mono-line { display:block; font-family:var(--font-mono); font-size:clamp(2.6rem,6.4vw,5.6rem); color:var(--hero-paper); animation:line-mask 1.05s .45s cubic-bezier(.16,.84,.3,1) both; }
+  h1 .serif-line { display:block; margin-block-start:-.04em; font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(3.2rem,8.8vw,7.4rem); letter-spacing:-.02em; color:var(--hero-gold); animation:line-mask 1.05s .62s cubic-bezier(.16,.84,.3,1) both; }
   /* Masked line reveal — the headline lifts out of a clip, not a fade. */
   @keyframes line-mask { from { opacity:0; clip-path:inset(-8% -3% 96% -3%); transform:translateY(.38em); } to { opacity:1; clip-path:inset(-8% -3% -14% -3%); transform:none; } }
   .hero-stage { position:absolute; inset:0; z-index:0; transform:translateY(calc(var(--hero-exit, 0) * 6%)) scale(calc(1 + var(--hero-exit, 0) * .07)); opacity:calc(1 - var(--hero-exit, 0) * .5); }
@@ -51,8 +51,8 @@ sheet.replaceSync(`
     h1 .serif-line { font-size:clamp(3.2rem,7.6vw,6.4rem); }
   }
   .hero-foot .actions { justify-content:center; margin:var(--size-3) 0 0; }
-  .hero-foot .action { border-color:rgba(244,241,234,.24); color:#f4f1ea; }
-  .hero-foot .action:hover { border-color:#e3cf9f; }
+  .hero-foot .action { border-color:rgba(244,241,234,.24); color:var(--hero-paper); }
+  .hero-foot .action:hover { border-color:var(--hero-gold); }
   .hero-foot .action.primary { background:var(--brand); border-color:var(--brand); color:var(--on-brand); }
   .hero-foot .action.primary:hover { background:var(--brand-hover); border-color:var(--brand-hover); }
   .lede { max-width:36rem; margin:0; color:rgba(244,241,234,.6); font-size:clamp(1rem,1.2vw,1.1rem); line-height:1.75; text-shadow:0 1px 18px rgba(0,0,0,.6); }
