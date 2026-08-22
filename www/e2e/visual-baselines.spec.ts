@@ -48,54 +48,14 @@ const viewports = [
   { name: 'mobile', width: 390, height: 844 },
 ] as const;
 
-// These locale pairs were byte-identical when #993 was audited. Both locale
-// journeys still execute; they intentionally compare against one reviewed
-// image so a future layout difference in either language fails the same gate.
-const sharedLocaleBaselines = new Set([
-  'dark-desktop-404',
-  'dark-desktop-apilist',
-  'dark-desktop-architecture-architecture',
-  'dark-desktop-architecture-benchmark',
-  'dark-desktop-architecture-comparison',
-  'dark-desktop-architecture-design-system',
-  'dark-desktop-architecture-dsd',
-  'dark-desktop-architecture-islands',
-  'dark-desktop-architecture-islands-deep',
-  'dark-desktop-architecture-package-compatibility',
-  'dark-desktop-architecture-standards-registry',
-  'dark-desktop-blog-0001-keep-hono-vite-dev-server',
-  'dark-desktop-changelog',
-  'dark-desktop-contributing',
-  'dark-desktop-docs',
-  'dark-mobile-404',
-  'dark-mobile-architecture-dsd',
-  'dark-mobile-architecture-islands',
-  'dark-mobile-architecture-islands-deep',
-  'dark-mobile-architecture-package-compatibility',
-  'dark-mobile-blog-0001-keep-hono-vite-dev-server',
-  'dark-mobile-contributing',
-  'dark-mobile-docs',
-  'light-desktop-404',
-  'light-desktop-apilist',
-  'light-desktop-architecture-architecture',
-  'light-desktop-architecture-benchmark',
-  'light-desktop-architecture-comparison',
-  'light-desktop-architecture-design-system',
-  'light-desktop-architecture-dsd',
-  'light-desktop-architecture-islands',
-  'light-desktop-architecture-islands-deep',
-  'light-desktop-architecture-package-compatibility',
-  'light-desktop-architecture-standards-registry',
-  'light-desktop-blog-0001-keep-hono-vite-dev-server',
-  'light-desktop-changelog',
-  'light-desktop-contributing',
-  'light-desktop-docs',
-  'light-mobile-architecture-islands',
-  'light-mobile-architecture-islands-deep',
-  'light-mobile-blog-0001-keep-hono-vite-dev-server',
-  'light-mobile-contributing',
-  'light-mobile-docs',
-]);
+// These locale pairs were byte-identical when #993 was audited; both locale
+// journeys still execute and intentionally compared against one reviewed
+// image. That premise is dead: zh translations now ship per-route (a 2026-08
+// audit of dist HTML found every formerly-shared route rendering distinct
+// zh content — docs ~11%, comparison ~65%), so each locale owns its own
+// reviewed baseline. A route whose en/zh renders ever converge again can
+// rejoin a shared set deliberately, not by tolerance accident.
+const sharedLocaleBaselines = new Set<string>();
 
 for (const locale of ['en', 'zh'] as const) {
   for (const theme of ['dark', 'light'] as const) {

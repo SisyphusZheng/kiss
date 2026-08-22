@@ -25,6 +25,8 @@ const contentTypes: Record<string, string> = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8',
 };
@@ -35,7 +37,45 @@ export function contentType(path: string): string {
   return contentTypes[ext] ?? 'application/octet-stream';
 }
 
-async function readCandidate(root: string, pathname: string): Promise<Response | null> {
+/**
+ * Single-range `Range: bytes=a-b` support. Media scrubbing (video.currentTime
+ * seeks) requires a seekable resource: without 206 responses the browser
+ * media stack reports `seekable.length === 0` and ignores every seek. Real
+ * static hosts all support ranges — the test server must match them.
+ */
+function respondWithRange(
+  body: Uint8Array<ArrayBuffer>,
+  path: string,
+  rangeHeader: string | null,
+): Response {
+  const headers: Record<string, string> = {
+    'content-type': contentType(path),
+    'accept-ranges': 'bytes',
+  };
+  const match = rangeHeader?.match(/^bytes=(\d*)-(\d*)$/);
+  if (!match || (match[1] === '' && match[2] === '')) {
+    return new Response(body, { headers });
+  }
+  const size = body.byteLength;
+  const start = match[1] === '' ? Math.max(0, size - Number(match[2])) : Number(match[1]);
+  const end = match[1] !== '' && match[2] !== '' ? Math.min(Number(match[2]), size - 1) : size - 1;
+  if (start > end || start >= size) {
+    return new Response('Range not satisfiable', {
+      status: 416,
+      headers: { 'content-range': `bytes */${size}` },
+    });
+  }
+  return new Response(body.subarray(start, end + 1), {
+    status: 206,
+    headers: { ...headers, 'content-range': `bytes ${start}-${end}/${size}` },
+  });
+}
+
+async function readCandidate(
+  root: string,
+  pathname: string,
+  rangeHeader: string | null,
+): Promise<Response | null> {
   const safePath = decodeURIComponent(pathname);
   if (safePath.includes('..') || safePath.includes('\0')) {
     return new Response('Forbidden', { status: 403 });
@@ -53,7 +93,7 @@ async function readCandidate(root: string, pathname: string): Promise<Response |
   for (const candidate of candidates) {
     try {
       const body = await Deno.readFile(candidate);
-      return new Response(body, { headers: { 'content-type': contentType(candidate) } });
+      return respondWithRange(body, candidate, rangeHeader);
     } catch {
       // Try the next candidate.
     }
@@ -87,7 +127,11 @@ export function serveStatic(root: string, options: ServeStaticOptions = {}): Sta
   const server = Deno.serve(
     { port: options.port ?? 0, hostname: '127.0.0.1' },
     async (request) => {
-      const response = await readCandidate(root, new URL(request.url).pathname);
+      const response = await readCandidate(
+        root,
+        new URL(request.url).pathname,
+        request.headers.get('range'),
+      );
       return response ?? new Response('Not found', { status: 404 });
     },
   );

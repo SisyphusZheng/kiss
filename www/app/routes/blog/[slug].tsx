@@ -15,6 +15,7 @@ import '@openelement/site-ui/open-page-rail.tsx';
 import { serializeOutline } from '@openelement/site-ui/page-contract.ts';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { localizePath } from '@openelement/site-ui/link.ts';
+import { articleContentStyles, prepareArticle } from '@openelement/site-ui/article-body.ts';
 
 export const tagName = 'page-blog-slug';
 
@@ -22,67 +23,18 @@ export function getStaticPaths(): Array<Record<string, string>> {
   return posts.map((post) => ({ slug: post.slug }));
 }
 
-type ArticleOutline = Readonly<{ id: string; label: string; level: 2 | 3 }>;
-
-function prepareArticle(html: string): { html: string; outline: ArticleOutline[] } {
-  const outline: ArticleOutline[] = [];
-  const seen = new Map<string, number>();
-  const withIds = html.replace(
-    /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi,
-    (_match, depth, attrs, body) => {
-      const label = String(body).replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
-      const stem = label.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '-').replace(
-        /(^-|-$)/g,
-        '',
-      ) || 'section';
-      const count = seen.get(stem) ?? 0;
-      seen.set(stem, count + 1);
-      const id = count ? `${stem}-${count + 1}` : stem;
-      outline.push({ id, label, level: Number(depth) as 2 | 3 });
-      const cleanAttrs = String(attrs).replace(/\s+id=(?:"[^"]*"|'[^']*')/i, '');
-      return `<h${depth}${cleanAttrs} id="${id}">${body}</h${depth}>`;
-    },
-  );
-  // Code display goes through open-code-block (copy button + highlighting).
-  const withCodeBlocks = withIds.replace(
-    /(<pre[\s\S]*?<\/pre>)/gi,
-    '<open-code-block>$1</open-code-block>',
-  );
-  return { html: withCodeBlocks, outline };
-}
-
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
-  pageStyles + `
+  pageStyles + articleContentStyles('.blog-content') + `
 
     .crumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--size-2); margin: 0 0 var(--size-4); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-8); letter-spacing: 0.1em; text-transform: uppercase; }
     .crumb a { color: var(--text-muted); text-decoration: none; }
     .crumb a:hover { color: var(--brand); }
     .crumb .crumb-sep { color: color-mix(in srgb, var(--text-muted) 55%, transparent); }
     .crumb .crumb-current { color: var(--violet-8); }
-    .post-title { margin: 0; color: var(--text-primary); font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: clamp(2.4rem, 5.5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.01em; overflow-wrap: break-word; }
+    .post-title { margin: 0; color: var(--text-primary); font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: clamp(2.4rem, 5.5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.01em; overflow-wrap: break-word; text-wrap: balance; }
     .post-lede { max-width: 640px; margin: var(--size-4) 0 0; color: var(--text-secondary); font-size: clamp(var(--font-size-1), 1.4vw, var(--font-size-2)); line-height: 1.65; }
     .post-meta { display: flex; flex-wrap: wrap; gap: var(--size-2); margin: var(--size-4) 0 0; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); letter-spacing: 0.06em; text-transform: uppercase; }
-
-    .blog-content { font-family: var(--font-mono); font-size: var(--font-size-0); line-height: 1.9; color: var(--text-secondary); }
-    .blog-content h2 { margin-top: var(--size-10); color: var(--text-primary); font-family: var(--font-mono); font-size: var(--font-size-4); font-weight: var(--font-weight-8); letter-spacing: -0.02em; }
-    .blog-content h3 { margin-top: var(--size-8); color: var(--text-primary); font-family: var(--font-mono); font-size: var(--font-size-2); font-weight: var(--font-weight-8); }
-    .blog-content p { margin: var(--size-4) 0; }
-    .blog-content ul, .blog-content ol { padding-left: var(--size-6); margin: var(--size-4) 0; }
-    .blog-content li { margin: 0.375rem 0; }
-    .blog-content strong { color: var(--text-primary); }
-    .blog-content code { background: var(--bg-surface); padding: 0.125rem 0.375rem; border-radius: var(--radius-1); font-size: var(--font-size-0); font-family: var(--font-mono); }
-    .blog-content pre { background: var(--surface-code); border: 0.5px solid var(--border); border-radius: var(--radius-2); padding: var(--size-4); overflow-x: auto; margin: var(--size-4) 0; }
-    .blog-content pre code { background: none; padding: 0; font-size: var(--font-size-0); line-height: 1.6; }
-    .blog-content open-code-block { margin: var(--size-5) 0; }
-    .blog-content table { width: 100%; border-collapse: collapse; margin: var(--size-4) 0; font-size: var(--font-size-1); }
-    .blog-content th, .blog-content td { padding: var(--size-2) var(--size-3); text-align: left; border-bottom: 0.5px solid var(--border); }
-    .blog-content th { background: var(--bg-surface); color: var(--text-secondary); font-weight: var(--font-weight-6); font-size: var(--font-size-overline); text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); }
-    .blog-content a { color: var(--brand); text-decoration: none; }
-    .blog-content a:hover { text-decoration: underline; }
-    .blog-content hr { border: none; border-top: 0.5px solid var(--border); margin: var(--size-8) 0; }
-    .blog-content blockquote { margin: var(--size-8) 0; padding: var(--size-6) var(--size-4); border: 0; border-block: 1.5px solid color-mix(in srgb, var(--violet-5) 55%, transparent); color: var(--violet-8); font-family: var(--font-serif); font-style: italic; font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.35; text-align: center; }
-    .blog-content blockquote p { margin: 0; }
 
     .next-dispatch { display: grid; gap: var(--size-3); margin-top: var(--size-11); padding-top: var(--size-6); border-top: 1px solid var(--border); }
     .next-label { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-8); letter-spacing: 0.16em; text-transform: uppercase; }

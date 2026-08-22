@@ -177,6 +177,7 @@ git history.
 | 0132 | Defer Real Scan-Engine Evidence to v0.44 — Attachment Scanning Is Optional Hardening                                                 | Accepted                                         |
 | 0133 | 2026-08-20 Client-Router Guard Concurrency Fixes Preserve ADR-0122 Contracts                                                         | Accepted                                         |
 | 0134 | Manual workflow_dispatch Greens Count as Release Evidence — Freshness Gate Evaluation Fix                                            | Accepted                                         |
+| 0136 | Content Collections — Generalize the Blog Content Pipeline                                                                           | Proposed (v0.44, #1087)                          |
 
 ## Superseded / Historical
 

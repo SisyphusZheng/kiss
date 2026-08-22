@@ -33,7 +33,7 @@ export const navSections = [
       {
         "path": "/architecture/design-system",
         "label": "Design System",
-        "order": 10
+        "order": 15
       },
       {
         "path": "/architecture/standards-registry",

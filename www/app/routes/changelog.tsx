@@ -10,7 +10,6 @@ import { pageStyles } from '../components/page-styles.js';
 import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
 import sanitizeHtml from 'sanitize-html';
-import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
@@ -19,8 +18,13 @@ const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
   :host { display: block; }
-  .title-serif { display: block; color: var(--violet-8); font-family: var(--font-serif); font-size: calc(1em * 1.12); font-style: italic; font-weight: 400; letter-spacing: -.02em; }
-  .title-mono { display: block; }
+  .crumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--size-2); margin: 0 0 var(--size-4); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-8); letter-spacing: 0.1em; text-transform: uppercase; }
+  .crumb .crumb-sep { color: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+  .crumb .crumb-current { color: var(--violet-8); }
+  .page-title { margin: 0; color: var(--text-primary); font-family: var(--font-sans); font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: var(--font-weight-8); letter-spacing: -.035em; line-height: 1.05; overflow-wrap: break-word; text-wrap: balance; }
+  .lede { max-width: 640px; margin: var(--size-4) 0 0; color: var(--text-secondary); font-size: clamp(var(--font-size-1), 1.4vw, var(--font-size-2)); line-height: 1.65; }
+  .version-line { margin: var(--size-4) 0 0; color: var(--text-muted); font-size: var(--font-size-0); }
+  .version-line code { font-family: var(--font-mono); background: var(--bg-surface); padding: var(--size-1) var(--size-2); border-radius: var(--radius-1); font-size: var(--font-size-00); }
 
   /* release register: current line highlighted, history on hairlines */
   .register { margin: var(--size-8) 0 var(--size-10); border-block-start: var(--border-size-1) solid var(--border); }
@@ -48,11 +52,8 @@ routeSheet.replaceSync(
 const content = {
   en: {
     eyebrow: 'Changelog — release registry',
-    titleSerif: 'Every line,',
-    titleMono: 'EVIDENCED.',
+    pageTitle: 'Every line, evidenced.',
     lede: 'Published, candidate, withdrawn and historical release evidence for OpenElement.',
-    readRoadmap: 'Read roadmap',
-    metaLabel: 'Current truth',
     metaPrefix: 'The currently published package line is',
     metaSuffix: '.',
     railItems:
@@ -79,11 +80,8 @@ const content = {
   },
   zh: {
     eyebrow: 'Changelog — 发布登记册',
-    titleSerif: '每一行，',
-    titleMono: '皆有证据。',
+    pageTitle: '每一行，皆有证据。',
     lede: 'openElement 已发布、候选、已撤回与历史版本的发布证据。',
-    readRoadmap: '阅读 Roadmap',
-    metaLabel: '当前真相',
     metaPrefix: '当前发布的包线版本为',
     metaSuffix: '。',
     railItems:
@@ -130,7 +128,9 @@ export class ChangelogPage extends OpenElement {
     let html: string;
     try {
       if (!changelogPath) throw new Error('CHANGELOG.md not found');
-      const md = Deno.readTextFileSync(changelogPath);
+      // The page header already carries the h1 — drop the document-level
+      // '# Changelog' line so the historical archive starts at h2 sections.
+      const md = Deno.readTextFileSync(changelogPath).replace(/^#\s+Changelog\s*\n/, '');
       const raw = marked.parse(md, { async: false }) as string;
       html = sanitizeHtml(raw, {
         allowedTags: sanitizeHtml.defaults.allowedTags.concat([
@@ -147,23 +147,16 @@ export class ChangelogPage extends OpenElement {
 
     return (
       <main>
-        <open-page-hero variant='timeline'>
-          <span slot='eyebrow'>{t.eyebrow}</span>
-          <span slot='title'>
-            <span class='title-serif'>{t.titleSerif}</span>
-            <span class='title-mono'>{t.titleMono}</span>
-          </span>
-          <span slot='lede'>
-            {t.lede}
-          </span>
-          <div slot='artifact'>
-            <open-button href='/roadmap'>{t.readRoadmap}</open-button>
-          </div>
-        </open-page-hero>
         <open-reading-shell meta rail footer>
           <div slot='meta'>
-            <p class='section-label'>{t.metaLabel}</p>
-            <p class='subtitle'>
+            <p class='crumb'>
+              <span>Project</span>
+              <span class='crumb-sep'>/</span>
+              <span class='crumb-current'>{t.eyebrow.split('—')[0].trim()}</span>
+            </p>
+            <h1 class='page-title'>{t.pageTitle}</h1>
+            <p class='lede'>{t.lede}</p>
+            <p class='version-line'>
               {t.metaPrefix} <code>{PUBLISHED_PACKAGE_VERSION}</code>
               {t.metaSuffix}
             </p>

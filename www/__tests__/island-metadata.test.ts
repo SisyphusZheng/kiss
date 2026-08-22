@@ -11,8 +11,10 @@ const REPO_ROOT = fromFileUrl(new URL('../..', import.meta.url));
 const WWW_ISLANDS_DIR = join(REPO_ROOT, 'www', 'app', 'islands');
 
 const REQUIRED_LOCAL_ISLANDS = {
-  'cinematic-atmosphere': { hydrate: 'idle', ssr: true, dsd: true },
-  'cinematic-scroll': { hydrate: 'load', ssr: true, dsd: true },
+  'open-cinematic-atmosphere': { hydrate: 'idle', ssr: true, dsd: true },
+  'open-cinematic-scroll': { hydrate: 'load', ssr: true, dsd: true },
+  'open-dragon-gaze': { hydrate: 'idle', ssr: true, dsd: true },
+  'open-dragon-live-gaze': { hydrate: 'idle', ssr: true, dsd: true },
   'open-search': { hydrate: 'load', ssr: true, dsd: true },
 } as const;
 

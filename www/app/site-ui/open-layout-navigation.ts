@@ -3,10 +3,17 @@ import { normalizeLocalePath } from '@openelement/app/i18n';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
 const LOCALE_LABELS: Record<string, string> = { en: '中文', zh: 'English' };
 const SECTION_MAP: Readonly<Record<string, readonly string[]>> = {
-  '/guide': ['Quick Start', 'Core', 'Production'],
-  '/architecture': ['Principles', 'Compatibility', 'Reference'],
+  '/guide': ['Quick Start', 'Guide', 'Core', 'Production'],
+  '/architecture': ['Principles', 'Reference'],
   '/blog': ['History'],
+  '/apilist': ['Reference'],
+  '/roadmap': ['History', 'Project'],
+  '/changelog': ['History', 'Project'],
+  '/contributing': ['History', 'Project'],
 };
+
+/** Generated nav data leaves the project-links group nameless; label it. */
+const FALLBACK_SECTION = 'Project';
 
 export interface NavItem {
   path?: string;
@@ -87,12 +94,15 @@ export function localeSwitchScopeNote(currentLocale: string): string {
 }
 
 export function filterNavSections(items: NavSection[], currentPath: string): NavSection[] {
+  const named = items.map((section) =>
+    section.section ? section : { ...section, section: FALLBACK_SECTION }
+  );
   for (const [prefix, sections] of Object.entries(SECTION_MAP)) {
     if (currentPath.startsWith(prefix)) {
-      return items.filter((section) => sections.includes(section.section));
+      return named.filter((section) => sections.includes(section.section));
     }
   }
-  return items;
+  return named;
 }
 
 export function mobileSectionRoot(href: string, locales: string[]): string {

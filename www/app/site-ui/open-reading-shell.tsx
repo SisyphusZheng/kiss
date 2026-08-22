@@ -11,16 +11,17 @@ export const tagName = 'open-reading-shell';
 const sheet = new StyleSheet();
 sheet.replaceSync(`
   :host{display:block}
-  .shell{width:min(1180px,calc(100% - 3rem));margin:auto;padding:clamp(2rem,5vh,4rem) 0 clamp(4rem,9vh,7rem);display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(2rem,6vw,6rem)}
+  .shell{width:min(1180px,calc(100% - 3rem));margin:auto;padding:clamp(2rem,5vh,4rem) 0 clamp(4rem,9vh,7rem);display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(1.5rem,4vw,3rem)}
   :host([rail]) .shell{grid-template-columns:minmax(0,1fr) 220px}
   .main{min-width:0;max-width:760px;line-height:1.7}
+  :host([rail]) .main{max-width:880px}
   :host(:not([rail])) .main{margin-inline:auto}
   .meta{display:none;margin-block-end:var(--size-7);padding-block-end:var(--size-5);border-block-end:1px solid var(--border)}
   :host([meta]) .meta,:host([metadata]) .meta{display:block}
   .breadcrumb{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--size-2);margin:0 0 var(--size-4);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.1em;text-transform:uppercase}
   .breadcrumb .crumb-sep{color:color-mix(in srgb,var(--text-muted) 55%,transparent)}
   .breadcrumb .crumb-current{color:var(--violet-8)}
-  .title{margin:0;color:var(--text-primary);font-family:var(--font-mono);font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:var(--font-weight-8);letter-spacing:-.03em;line-height:1.05;overflow-wrap:break-word}
+  .title{margin:0;color:var(--text-primary);font-family:var(--font-sans);font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:var(--font-weight-8);letter-spacing:-.035em;line-height:1.05;overflow-wrap:break-word;text-wrap:balance}
   .title-accent{display:block;color:var(--violet-8);font-family:var(--font-serif);font-style:italic;font-weight:400;font-size:calc(1em * 1.08);letter-spacing:-.01em}
   .lede{max-width:640px;margin:var(--size-4) 0 0;color:var(--text-secondary);font-size:clamp(var(--font-size-1),1.4vw,var(--font-size-2));line-height:1.65}
   .meta-row{display:flex;flex-wrap:wrap;gap:var(--size-2);margin:var(--size-4) 0 0;color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00)}

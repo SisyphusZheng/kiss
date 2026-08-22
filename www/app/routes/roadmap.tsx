@@ -9,9 +9,10 @@ import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../data/ver
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-standards-visual.tsx';
-import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '@openelement/site-ui/open-section-frame.tsx';
+import '@openelement/site-ui/open-reading-shell.tsx';
+import '@openelement/site-ui/open-page-rail.tsx';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const pageSheet = new StyleSheet();
@@ -32,18 +33,26 @@ pageSheet.replaceSync(`
     margin-block-start: 0;
   }
 
-  .title-serif {
-    display: block;
-    color: var(--violet-8);
-    font-family: var(--font-serif);
-    font-size: calc(1em * 1.12);
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -.02em;
+  .now-callout {
+    margin: var(--size-5) 0 var(--size-6);
+    padding: var(--size-4) var(--size-5);
+    border: var(--border-size-1) solid var(--border);
+    border-inline-start: var(--size-1) solid var(--brand);
+    border-radius: var(--radius-2);
   }
 
-  .title-mono {
-    display: block;
+  .now-callout .now-title {
+    margin: var(--size-3) 0 var(--size-2);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-7);
+    line-height: 1.3;
+  }
+
+  .now-callout .now-copy {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
   }
 
   .metric-label,
@@ -55,20 +64,6 @@ pageSheet.replaceSync(`
     font-weight: var(--font-weight-8);
     letter-spacing: 0;
     text-transform: uppercase;
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--size-3);
-    margin-block-end: var(--size-6);
-  }
-
-  .now h2 {
-    margin-block: var(--size-3) var(--size-3);
-    font-size: var(--font-size-3);
-    line-height: 1.08;
-    letter-spacing: 0;
   }
 
   .now p,
@@ -433,14 +428,11 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
 
 const content = {
   en: {
-    heroEyebrow: 'Roadmap — where the stable line goes',
-    heroTitleSerif: 'Forward,',
-    heroTitleMono: 'VERSIONED.',
+    pageTitle: 'Roadmap',
     heroLede:
       'OpenElement roadmap labels describe the public product surface, tied to package truth, docs truth and CI evidence rather than a wish list.',
-    currentLabel: 'current',
-    publishedMeta: 'published → stable line',
-    readChangelog: 'Read changelog',
+    railItems:
+      '[{"id":"release-line","label":"Release line"},{"id":"product-boundary","label":"Product boundary"},{"id":"decision-matrix","label":"Decision matrix"},{"id":"system-visual","label":"System visual"}]',
     architecture: 'Architecture',
     freezeBadge: 'ADR-0122 freeze accepted',
     nowTitle: '0.42.0 is stable under the ADR-0122 freeze; 0.41.x stays frozen under ADR-0119.',
@@ -514,14 +506,11 @@ const content = {
     deployment: 'Deployment',
   },
   zh: {
-    heroEyebrow: 'Roadmap——稳定线将走向何方',
-    heroTitleSerif: '向前，',
-    heroTitleMono: '以版本为证。',
+    pageTitle: 'Roadmap',
     heroLede:
       'OpenElement 的 roadmap 标签描述的是公开产品面，锚定包真相、文档真相与 CI 证据，而不是愿望清单。',
-    currentLabel: '当前',
-    publishedMeta: '已发布 → 稳定线',
-    readChangelog: '阅读更新日志',
+    railItems:
+      '[{"id":"release-line","label":"发布线"},{"id":"product-boundary","label":"产品边界"},{"id":"decision-matrix","label":"决策矩阵"},{"id":"system-visual","label":"系统图示"}]',
     architecture: '架构',
     freezeBadge: 'ADR-0122 冻结已接受',
     nowTitle: '0.42.0 在 ADR-0122 冻结下发布；0.41.x 静态冻结（ADR-0119）未被触动。',
@@ -599,180 +588,185 @@ export class RoadmapPage extends OpenElement {
     const timeline = entries[locale];
     return (
       <main>
-        <open-page-hero variant='timeline'>
-          <span slot='eyebrow'>{t.heroEyebrow}</span>
-          <span slot='title'>
-            <span class='title-serif'>{t.heroTitleSerif}</span>
-            <span class='title-mono'>{t.heroTitleMono}</span>
-          </span>
-          <span slot='lede'>
-            {t.heroLede}
-          </span>
-          <open-artifact-panel slot='artifact' class='now'>
-            <span slot='label'>{t.currentLabel}</span>
-            <span slot='meta'>{PUBLISHED_STABLE_VERSION} {t.publishedMeta}</span>
-            <div class='hero-actions'>
-              <open-button variant='primary' href='/changelog'>{t.readChangelog}</open-button>
-              <open-button href='/architecture/architecture'>{t.architecture}</open-button>
-            </div>
-            <open-badge tone='warning'>{t.freezeBadge}</open-badge>
-            <h2>
-              {t.nowTitle}
-            </h2>
-            <p>
-              {t.nowCopy(PUBLISHED_STABLE_VERSION)}
-            </p>
-          </open-artifact-panel>
-        </open-page-hero>
+        <open-reading-shell
+          rail
+          footer
+          metadata={JSON.stringify({
+            breadcrumb: 'Project',
+            title: t.pageTitle,
+            lede: t.heroLede,
+          })}
+        >
+          <open-page-rail slot='rail' items={t.railItems}></open-page-rail>
 
-        <open-section-frame>
-          <span slot='index'>{t.releaseLineIndex}</span>
-          <span slot='title'>{t.releaseLineTitle}</span>
-          <span slot='copy'>
-            {t.releaseLineCopy}
-          </span>
-          <div class='roadmap-grid'>
-            <div class='timeline' aria-label={t.timelineAria}>
-              {timeline.map((phase) => {
-                // The current-line stamp follows the bump-maintained anchor
-                // (PUBLISHED_PACKAGE_VERSION) so a release bump re-marks the
-                // timeline without manual edits.
-                const stamp = phase.version === PUBLISHED_PACKAGE_VERSION ? 'CURRENT' : phase.stamp;
-                return (
-                  <div class={`tl-row tl-${phase.state}`}>
-                    <span class='tl-node' aria-hidden='true'></span>
-                    <div class='tl-head'>
-                      <span class='tl-version'>{phase.version}</span>
-                      {stamp
-                        ? (
-                          <span class={`stamp stamp-${stamp.toLowerCase()}`}>
-                            {t.stamps[stamp]}
-                          </span>
-                        )
-                        : null}
-                      <span class='tl-theme'>{phase.theme}</span>
-                    </div>
-                    <p class='tl-copy'>{phase.copy}</p>
-                    {phase.status ? <span class='tl-status'>{phase.status}</span> : null}
-                  </div>
-                );
-              })}
-            </div>
-            <aside class='rule-callout'>
-              <p class='rule-title'>{t.designRuleTitle}</p>
-              <p class='rule-text'>
-                {t.designRuleText}
-              </p>
-            </aside>
-          </div>
-        </open-section-frame>
-
-        <open-section-frame>
-          <span slot='index'>{t.boundaryIndex}</span>
-          <span slot='title'>{t.boundaryTitle}</span>
-          <span slot='copy'>
-            {t.boundaryCopy}
-          </span>
-          <div class='truth-grid'>
-            <open-artifact-panel class='truth'>
-              <span slot='label'>{t.inProductLabel}</span>
-              <h2>{t.inProductTitle}</h2>
-              <ul>
-                {t.inProductItems.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </open-artifact-panel>
-
-            <open-artifact-panel class='truth'>
-              <span slot='label'>{t.outScopeLabel}</span>
-              <h2>{t.outScopeTitle}</h2>
-              <ul>
-                {t.outScopeItems.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </open-artifact-panel>
-
-            <open-artifact-panel class='truth'>
-              <span slot='label'>{t.siteRuleLabel}</span>
-              <h2>{t.siteRuleTitle}</h2>
-              <p>
-                {t.siteRuleText}
-              </p>
-            </open-artifact-panel>
-          </div>
-        </open-section-frame>
-
-        <open-section-frame>
-          <span slot='index'>{t.matrixIndex}</span>
-          <span slot='title'>{t.matrixTitle}</span>
-          <span slot='copy'>
-            {t.matrixCopy}
-          </span>
-          <div class='matrix'>
-            <div class='matrix-row'>
-              <span class='metric-label'>{t.shipLabel}</span>
-              <span class='matrix-copy'>
-                {t.shipCopy}
+          <section id='release-line'>
+            <open-section-frame>
+              <span slot='index'>{t.releaseLineIndex}</span>
+              <span slot='title'>{t.releaseLineTitle}</span>
+              <span slot='copy'>
+                {t.releaseLineCopy}
               </span>
-            </div>
-            <div class='matrix-row'>
-              <span class='metric-label'>{t.proveLabel}</span>
-              <span class='matrix-copy'>
-                {t.proveCopy}
-              </span>
-            </div>
-            <div class='matrix-row'>
-              <span class='metric-label'>{t.freezeLabel}</span>
-              <span class='matrix-copy'>
-                {t.freezeCopy}
-              </span>
-            </div>
-          </div>
-        </open-section-frame>
+              <div class='now-callout'>
+                <open-badge tone='warning'>{t.freezeBadge}</open-badge>
+                <p class='now-title'>
+                  {t.nowTitle}
+                </p>
+                <p class='now-copy'>
+                  {t.nowCopy(PUBLISHED_STABLE_VERSION)}
+                </p>
+              </div>
+              <div class='roadmap-grid'>
+                <div class='timeline' aria-label={t.timelineAria}>
+                  {timeline.map((phase) => {
+                    // The current-line stamp follows the bump-maintained anchor
+                    // (PUBLISHED_PACKAGE_VERSION) so a release bump re-marks the
+                    // timeline without manual edits.
+                    const stamp = phase.version === PUBLISHED_PACKAGE_VERSION
+                      ? 'CURRENT'
+                      : phase.stamp;
+                    return (
+                      <div class={`tl-row tl-${phase.state}`}>
+                        <span class='tl-node' aria-hidden='true'></span>
+                        <div class='tl-head'>
+                          <span class='tl-version'>{phase.version}</span>
+                          {stamp
+                            ? (
+                              <span class={`stamp stamp-${stamp.toLowerCase()}`}>
+                                {t.stamps[stamp]}
+                              </span>
+                            )
+                            : null}
+                          <span class='tl-theme'>{phase.theme}</span>
+                        </div>
+                        <p class='tl-copy'>{phase.copy}</p>
+                        {phase.status ? <span class='tl-status'>{phase.status}</span> : null}
+                      </div>
+                    );
+                  })}
+                </div>
+                <aside class='rule-callout'>
+                  <p class='rule-title'>{t.designRuleTitle}</p>
+                  <p class='rule-text'>
+                    {t.designRuleText}
+                  </p>
+                </aside>
+              </div>
+            </open-section-frame>
+          </section>
 
-        <open-section-frame>
-          <span slot='index'>{t.visualIndex}</span>
-          <span slot='title'>{t.visualTitle}</span>
-          <span slot='copy'>
-            {t.visualCopy}
-          </span>
-          <div class='visual-grid'>
-            <open-artifact-panel>
-              <span slot='label'>{t.packageMatrixLabel}</span>
-              <span slot='meta'>{t.productBoundaryMeta}</span>
-              <open-standards-visual variant='packages' emphasis='high' motion='auto'>
-              </open-standards-visual>
-            </open-artifact-panel>
-            <open-artifact-panel>
-              <span slot='label'>{t.releaseDisciplineLabel}</span>
-              <span slot='meta'>{t.v10PostureMeta}</span>
-              <ul class='rule-list'>
-                <li>
-                  <strong class='rule-label'>{t.noDriftLabel}</strong>
-                  <span class='rule-copy'>
-                    {t.noDriftCopy}
-                  </span>
-                </li>
-                <li>
-                  <strong class='rule-label'>{t.noGhostsLabel}</strong>
-                  <span class='rule-copy'>
-                    {t.noGhostsCopy}
-                  </span>
-                </li>
-                <li>
-                  <strong class='rule-label'>{t.noFogLabel}</strong>
-                  <span class='rule-copy'>
-                    {t.noFogCopy}
-                  </span>
-                </li>
-              </ul>
-            </open-artifact-panel>
-          </div>
-        </open-section-frame>
+          <section id='product-boundary'>
+            <open-section-frame>
+              <span slot='index'>{t.boundaryIndex}</span>
+              <span slot='title'>{t.boundaryTitle}</span>
+              <span slot='copy'>
+                {t.boundaryCopy}
+              </span>
+              <div class='truth-grid'>
+                <open-artifact-panel class='truth'>
+                  <span slot='label'>{t.inProductLabel}</span>
+                  <h2>{t.inProductTitle}</h2>
+                  <ul>
+                    {t.inProductItems.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </open-artifact-panel>
 
-        <nav class='nav-row'>
-          <open-button href='/architecture/architecture'>{t.architecture}</open-button>
-          <open-button href='/changelog'>{t.changelog}</open-button>
-          <open-button href='/guide/deployment'>{t.deployment}</open-button>
-        </nav>
+                <open-artifact-panel class='truth'>
+                  <span slot='label'>{t.outScopeLabel}</span>
+                  <h2>{t.outScopeTitle}</h2>
+                  <ul>
+                    {t.outScopeItems.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </open-artifact-panel>
+
+                <open-artifact-panel class='truth'>
+                  <span slot='label'>{t.siteRuleLabel}</span>
+                  <h2>{t.siteRuleTitle}</h2>
+                  <p>
+                    {t.siteRuleText}
+                  </p>
+                </open-artifact-panel>
+              </div>
+            </open-section-frame>
+          </section>
+
+          <section id='decision-matrix'>
+            <open-section-frame>
+              <span slot='index'>{t.matrixIndex}</span>
+              <span slot='title'>{t.matrixTitle}</span>
+              <span slot='copy'>
+                {t.matrixCopy}
+              </span>
+              <div class='matrix'>
+                <div class='matrix-row'>
+                  <span class='metric-label'>{t.shipLabel}</span>
+                  <span class='matrix-copy'>
+                    {t.shipCopy}
+                  </span>
+                </div>
+                <div class='matrix-row'>
+                  <span class='metric-label'>{t.proveLabel}</span>
+                  <span class='matrix-copy'>
+                    {t.proveCopy}
+                  </span>
+                </div>
+                <div class='matrix-row'>
+                  <span class='metric-label'>{t.freezeLabel}</span>
+                  <span class='matrix-copy'>
+                    {t.freezeCopy}
+                  </span>
+                </div>
+              </div>
+            </open-section-frame>
+          </section>
+
+          <section id='system-visual'>
+            <open-section-frame>
+              <span slot='index'>{t.visualIndex}</span>
+              <span slot='title'>{t.visualTitle}</span>
+              <span slot='copy'>
+                {t.visualCopy}
+              </span>
+              <div class='visual-grid'>
+                <open-artifact-panel>
+                  <span slot='label'>{t.packageMatrixLabel}</span>
+                  <span slot='meta'>{t.productBoundaryMeta}</span>
+                  <open-standards-visual variant='packages' emphasis='high' motion='auto'>
+                  </open-standards-visual>
+                </open-artifact-panel>
+                <open-artifact-panel>
+                  <span slot='label'>{t.releaseDisciplineLabel}</span>
+                  <span slot='meta'>{t.v10PostureMeta}</span>
+                  <ul class='rule-list'>
+                    <li>
+                      <strong class='rule-label'>{t.noDriftLabel}</strong>
+                      <span class='rule-copy'>
+                        {t.noDriftCopy}
+                      </span>
+                    </li>
+                    <li>
+                      <strong class='rule-label'>{t.noGhostsLabel}</strong>
+                      <span class='rule-copy'>
+                        {t.noGhostsCopy}
+                      </span>
+                    </li>
+                    <li>
+                      <strong class='rule-label'>{t.noFogLabel}</strong>
+                      <span class='rule-copy'>
+                        {t.noFogCopy}
+                      </span>
+                    </li>
+                  </ul>
+                </open-artifact-panel>
+              </div>
+            </open-section-frame>
+          </section>
+
+          <nav class='nav-row' slot='footer'>
+            <open-button href='/architecture/architecture'>{t.architecture}</open-button>
+            <open-button href='/changelog'>{t.changelog}</open-button>
+            <open-button href='/guide/deployment'>{t.deployment}</open-button>
+          </nav>
+        </open-reading-shell>
       </main>
     );
   }
