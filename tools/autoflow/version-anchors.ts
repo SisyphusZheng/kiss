@@ -340,6 +340,22 @@ export function buildVersionAnchorReplacements(
       "phase.version === '$TAG'",
     ],
   ];
+  // A stable release advances both the generic registry line and the stable
+  // dist-tag line. Prereleases must leave the stable line untouched.
+  if (!version.includes('-')) {
+    raw.push(
+      [
+        'www/app/data/version.ts',
+        "export const PUBLISHED_STABLE_VERSION = '$PVT';",
+        "export const PUBLISHED_STABLE_VERSION = '$TAG';",
+      ],
+      [
+        'www/app/data/version.ts',
+        "export const PUBLISHED_STABLE_VERSION = '$PREV_PVT';",
+        "export const PUBLISHED_STABLE_VERSION = '$TAG';",
+      ],
+    );
+  }
   const resolve = (s: string): string =>
     s
       .replaceAll('$PREV_PVT', PREVIOUS_PACKAGE_VERSION_TAG)

@@ -329,10 +329,10 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.0',
-      theme: 'Universal WC SSR — stable',
+      version: 'v0.43.1',
+      theme: 'cumulative audit closure — maintenance baseline',
       copy:
-        'The stable cut of the 0.43 line, frozen under ADR-0135. The SSR admission scan discovers and classifies every consumed foreign tag with a deterministic, machine-readable path and reason (#979); the Universal WC corpus pins proven admission forms across native, Lit, FAST, Stencil, Shoelace and Material Web (#996/#1020), with hydration-mismatch structured diagnostics (#631). The OpenElement × Supabase × Cloudflare reference starter is qualified end-to-end against the real project — password and GitHub OAuth sign-in, RLS, insert-only Storage, Realtime, bounded Queue/DLQ/Cron, and one-time Stripe Checkout (#981–#985, #998–#1001) — with Tier 2/3 provider evidence automated and freshness-gated (#997, ADR-0134). Production mail runs on a verified domain; the scan engine is deferred to v0.44 with the lifecycle failing closed (#1070, ADR-0132).',
+        'The cumulative patch for the frozen 0.43 line requalifies 33 earlier closures, remediates six Wave B findings, closes the Realtime reconciliation gap, and records an independent Wave C GO. Framework SSR, hydration, content and release boundaries are rechecked alongside the Supabase × Cloudflare starter; the hosted project converges at 23 ordered migrations with its ACL, RLS, recovery and Advisor evidence recorded. After this release ADR-0140 keeps 0.43.x in patch maintenance mode, with no 0.44 feature train scheduled.',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -378,10 +378,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.43.0',
-      theme: 'Universal WC SSR — 稳定版',
+      version: 'v0.43.1',
+      theme: '累计审计收敛 — 维护基线',
       copy:
-        '0.43 线的稳定版,冻结于 ADR-0135。SSR 准入扫描发现并分类每个被消费的外部标签,给出确定性的机器可读路径与原因(#979);Universal WC 语料库钉死 native、Lit、FAST、Stencil、Shoelace、Material Web 的已证实准入形态(#996/#1020),并配备 hydration 不匹配结构化诊断(#631)。OpenElement × Supabase × Cloudflare 参考栈已在真实项目上端到端验收——密码与 GitHub OAuth 登录、RLS、insert-only Storage、Realtime、有界 Queue/DLQ/Cron、一次性 Stripe Checkout(#981–#985、#998–#1001)——Tier 2/3 provider 证据自动化并受新鲜度门禁约束(#997、ADR-0134)。生产邮件跑在已认证域名上;扫描引擎延期至 v0.44,生命周期保持 fail-closed(#1070、ADR-0132)。',
+        '冻结后的 0.43 线累计补丁重新核验此前 33 项关闭结论，修复 Wave B 的六项发现，关闭 Realtime 对账缺口，并由独立 Wave C 给出 GO。框架 SSR、hydration、内容与发布边界连同 Supabase × Cloudflare starter 一并复核；托管项目收敛到 23 个有序 migration，并记录 ACL、RLS、恢复与 Advisor 证据。发布后按 ADR-0140 进入 0.43.x patch 维护模式，不预排 0.44 功能列车。',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -434,10 +434,10 @@ const content = {
     railItems:
       '[{"id":"release-line","label":"Release line"},{"id":"product-boundary","label":"Product boundary"},{"id":"decision-matrix","label":"Decision matrix"},{"id":"system-visual","label":"System visual"}]',
     architecture: 'Architecture',
-    freezeBadge: 'ADR-0122 freeze accepted',
-    nowTitle: '0.42.0 is stable under the ADR-0122 freeze; 0.41.x stays frozen under ADR-0119.',
+    freezeBadge: 'ADR-0140 maintenance mode',
+    nowTitle: '0.43.1 is the cumulative maintenance baseline for the frozen 0.43 line.',
     nowCopy: (version: string) =>
-      `${version} is the published stable line on the 0.42 track — the request-time surfaces froze at 0.42.0 (ADR-0122, accepted at TP-6); the #390 pilot requirement was retired by maintainer decision.`,
+      `${version} is the published stable maintenance line. ADR-0119, ADR-0122, and ADR-0135 keep the framework contracts frozen; ADR-0140 admits compatible patches and requires a new maintainer decision before any minor feature train.`,
     releaseLineIndex: '01 / release line',
     releaseLineTitle: 'From shipped evidence to v1.0 freeze.',
     releaseLineCopy:
@@ -512,10 +512,10 @@ const content = {
     railItems:
       '[{"id":"release-line","label":"发布线"},{"id":"product-boundary","label":"产品边界"},{"id":"decision-matrix","label":"决策矩阵"},{"id":"system-visual","label":"系统图示"}]',
     architecture: '架构',
-    freezeBadge: 'ADR-0122 冻结已接受',
-    nowTitle: '0.42.0 在 ADR-0122 冻结下发布；0.41.x 静态冻结（ADR-0119）未被触动。',
+    freezeBadge: 'ADR-0140 维护模式',
+    nowTitle: '0.43.1 是冻结后 0.43 线的累计维护基线。',
     nowCopy: (version: string) =>
-      `${version} 是 0.42 轨道上已发布的稳定线——请求时能力面已在 0.42.0 冻结（ADR-0122,于 TP-6 接受）；#390 试点要求已由维护者决定撤销。`,
+      `${version} 是已发布的稳定维护线。ADR-0119、ADR-0122 与 ADR-0135 继续冻结框架契约；ADR-0140 只准入兼容 patch，任何 minor 功能列车都必须重新经过维护者决策。`,
     releaseLineIndex: '01 / 发布线',
     releaseLineTitle: '从已交付证据，到 v1.0 冻结。',
     releaseLineCopy: '这条线刻意收窄：只有经得起文档、包导出与构建验证检验的表述，才会留在这里。',

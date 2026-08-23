@@ -316,7 +316,9 @@ export class HomePage extends OpenElement {
             <div class='spec-cell'>
               <small>{t.specVersion}</small>
               <strong>{PUBLISHED_STABLE_VERSION} — stable line</strong>
-              <small>{PUBLISHED_PACKAGE_VERSION} alpha — application loop frozen (ADR-0122)</small>
+              <small>
+                {PUBLISHED_PACKAGE_VERSION} — cumulative maintenance baseline (ADR-0140)
+              </small>
             </div>
             <div class='spec-cell'>
               <small>{t.specGraph}</small>

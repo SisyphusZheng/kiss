@@ -66,7 +66,7 @@ const content = {
     regGhostSummary: 'The eleven-package era — JSR-only, before the collapse. Historical record.',
     stableHeading: 'Stable line',
     stableBody:
-      'is the published stable line on the 0.42 track — the request-time surfaces froze at 0.42.0 under ADR-0122, on top of the untouched ADR-0119 static freeze. Patches on 0.42.x carry tooling and hygiene fixes only, and the frozen surface changes only with an amendment ADR.',
+      'is the published stable maintenance baseline on the 0.43 track. The static, request-time, and Universal WC SSR contracts remain frozen under ADR-0119, ADR-0122, and ADR-0135; ADR-0140 admits compatible bug, security, runtime, documentation, and release-truth patches without scheduling a 0.44 feature train.',
     withdrawnHeading: 'Withdrawn partial artifacts',
     withdrawnBody:
       'The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product lines or upgrade targets.',
@@ -93,7 +93,7 @@ const content = {
     regGhostSummary: '十一包时代——仅限 JSR，在收拢之前。历史记录。',
     stableHeading: '稳定线',
     stableBody:
-      '是 0.42 轨道上已发布的稳定线——请求时接口已在 0.42.0 按 ADR-0122 冻结，叠加在未被触动的 ADR-0119 静态冻结之上。0.42.x 的补丁只带工具与卫生性修复，冻结接口只有修正 ADR 才能变更。',
+      '是 0.43 轨道上已发布的稳定维护基线。静态、请求时与 Universal WC SSR 契约继续受 ADR-0119、ADR-0122 和 ADR-0135 冻结；ADR-0140 允许兼容的 bug、安全、运行时、文档与发布真值 patch，但不预排 0.44 功能列车。',
     withdrawnHeading: '已撤回的残缺产物',
     withdrawnBody:
       'npm 上的 beta.1–beta.3 产物是已撤回的残缺发布，不是受支持的产品线，也不是升级目标。',

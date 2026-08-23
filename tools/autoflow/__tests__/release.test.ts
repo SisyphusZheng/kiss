@@ -57,8 +57,9 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // files that currently carry the previous package line. Registry-line
   // anchors appear twice: once for the current-tag form and once for the
   // lag-state previous-tag form (#754). The interop example anchor likewise
-  // covers the source-line and lagging npm-published forms.
-  assertEquals(reps.length, 38);
+  // covers the source-line and lagging npm-published forms. Stable targets add
+  // the equivalent two forms for PUBLISHED_STABLE_VERSION.
+  assertEquals(reps.length, 40);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -144,6 +145,25 @@ Deno.test('buildVersionAnchorReplacements: registry anchors cover current and la
       `missing PUBLISHED_PACKAGE_VERSION replacement from ${fromTag}`,
     );
   }
+
+  // Stable cuts advance the stable-line constant from either accepted
+  // registry state; prereleases must never move the stable line.
+  for (const fromTag of [PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION_TAG]) {
+    assert(
+      reps.some(([p, f, t]) =>
+        p === 'www/app/data/version.ts' &&
+        f === `export const PUBLISHED_STABLE_VERSION = '${fromTag}';` &&
+        t === `export const PUBLISHED_STABLE_VERSION = '${tag}';`
+      ),
+      `missing PUBLISHED_STABLE_VERSION replacement from ${fromTag}`,
+    );
+  }
+  assert(
+    !buildVersionAnchorReplacements('9.9.9-alpha.1').some(([, from]) =>
+      from.includes('PUBLISHED_STABLE_VERSION')
+    ),
+    'prerelease bump must not advance PUBLISHED_STABLE_VERSION',
+  );
 
   // The interop example anchor joins the bump in both accepted states too
   // (source-line form and lagging npm-published form).

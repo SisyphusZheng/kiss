@@ -1,8 +1,8 @@
 # v0.43.1 — cumulative maintenance baseline
 
-> Current source package line: `v0.43.0`\
-> Current npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
-> Latest landed train: `v0.43.0`\
+> Current source package line: `v0.43.1`\
+> Current npm registry line: `v0.43.1` (published 2026-08-24, dist-tag `latest`)\
+> Latest landed train: `v0.43.1`\
 > Active release target: `v0.43.1`\
 > Next planned train: `not scheduled (maintenance mode)`\
 > Planning release target: `v0.43.1` (audit remediation and maintenance handoff)\
