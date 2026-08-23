@@ -9,7 +9,7 @@
  * Matching semantics are the WHATWG URLPattern standard (#856, ADR-0123):
  * patterns are translated to URLPattern (`:param{.+}` -> `:param(.+)`) and
  * matched through the native implementation, same as the generated server
- * matcher (ssg-helpers.ts routePatternToURLPatternPath, adapter-vite). The
+ * matcher through the shared element route normalizer. The
  * route trie survives purely as a candidate-narrowing performance index;
  * every candidate is confirmed by URLPattern, and the linear matcher remains
  * as the equivalence oracle in tests.
@@ -20,6 +20,7 @@
 // frozen semantics — types clarified, runtime unchanged).
 import type { SpaActionContext, SpaLoaderContext } from '@openelement/element';
 import { createLogger, ERROR_PREFIX } from '@openelement/element';
+import { normalizeRoutePatternForURLPattern } from '@openelement/element/build-utils';
 import { isDevMode } from '../dev-mode.ts';
 
 const log = createLogger('router');
@@ -91,21 +92,9 @@ function resolveMode(mode: RouterMode): 'history' | 'hash' {
  * emitted by the SSG route scanner (#812) needs rewriting to the URLPattern
  * `:name(regex)` form.
  *
- * Twin: ssg-helpers.ts routePatternToURLPatternPath (adapter-vite) is a
- * byte-identical body for the generated server matcher — keep them in sync
- * (the escapeAttr precedent: deliberate copy, cross-referenced).
+ * The syntax conversion is shared with adapter-vite through
+ * normalizeRoutePatternForURLPattern (#1103).
  */
-function routePathToURLPatternPath(path: string): string {
-  return path
-    .split('/')
-    .map((segment) => {
-      const brace = segment.startsWith(':') ? segment.indexOf('{') : -1;
-      if (brace === -1 || !segment.endsWith('}')) return segment;
-      return `${segment.slice(0, brace)}(${segment.slice(brace + 1, -1)})`;
-    })
-    .join('/');
-}
-
 const urlPatternCache = new Map<string, URLPattern>();
 
 function compiledPatternFor(pattern: string): URLPattern {
@@ -113,7 +102,7 @@ function compiledPatternFor(pattern: string): URLPattern {
   if (!compiled) {
     // An invalid pattern fails fast at construction instead of silently
     // never matching — same contract as the fallback compiler below.
-    compiled = new URLPattern({ pathname: routePathToURLPatternPath(pattern) });
+    compiled = new URLPattern({ pathname: normalizeRoutePatternForURLPattern(pattern) });
     urlPatternCache.set(pattern, compiled);
   }
   return compiled;
@@ -147,7 +136,7 @@ const linearPatternCache = new Map<string, LinearPattern>();
 function compiledLinearPatternFor(pattern: string): LinearPattern {
   let compiled = linearPatternCache.get(pattern);
   if (!compiled) {
-    compiled = compileLinearPattern(routePathToURLPatternPath(pattern));
+    compiled = compileLinearPattern(normalizeRoutePatternForURLPattern(pattern));
     linearPatternCache.set(pattern, compiled);
   }
   return compiled;

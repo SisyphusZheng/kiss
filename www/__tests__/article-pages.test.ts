@@ -1,11 +1,27 @@
 import { assert, assertEquals, assertExists, assertStringIncludes } from '@std/assert';
+import { loadCollectionData } from '@openelement/adapter-vite';
+import { fileURLToPath } from 'node:url';
+import { articleCollections } from '../content-collections.ts';
 
 const { ArticlePage } = await import('../app/site-ui/article-page.tsx');
-const { generateContentDataFiles, loadContentPages } = await import('../build-content-data.ts');
+type ArticleCollection = keyof typeof articleCollections;
+type ArticleContentPage = {
+  slug: string;
+  locale?: string;
+  frontmatter: { title: string; lede?: string; order: number; locale: string };
+  content: string;
+  html: string;
+};
+const wwwRoot = fileURLToPath(new URL('../', import.meta.url));
+const loadContentPages = (collection: ArticleCollection) =>
+  loadCollectionData(collection, {
+    ...articleCollections[collection],
+    contentDir: `${wwwRoot}/${articleCollections[collection].contentDir}`,
+  }) as Promise<ArticleContentPage[]>;
 
 // The content routes share the site-ui article shell: each route module is a
 // thin binding — meta (the nav contract) plus a content slug; the body lives
-// in www/content/<collection>/<slug>[.<locale>].md (#1087 pilot, ADR-0136).
+// in www/content/<collection>/<slug>[.<locale>].md (#1087, ADR-0136).
 const articleRoutes = [
   ['guide', 'api', 'GuideApiPage', 60],
   ['guide', 'architecture', 'GuideArchitecturePage', 20],
@@ -149,7 +165,9 @@ Deno.test('configuration keeps the middleware-use anchor target', async () => {
   assertStringIncludes(security.html, '/guide/configuration#middleware-use');
 });
 
-Deno.test('content data module generation succeeds for all collections', async () => {
-  const count = await generateContentDataFiles();
+Deno.test('content collection loading succeeds for all collections', async () => {
+  const count = (await Promise.all(
+    (Object.keys(articleCollections) as ArticleCollection[]).map(loadContentPages),
+  )).reduce((total, pages) => total + pages.length, 0);
   assertEquals(count, articleRoutes.length * 2, 'every route needs en + zh content');
 });

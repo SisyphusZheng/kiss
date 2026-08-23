@@ -31,7 +31,7 @@ export default class MyCounter extends OpenElement {
     return (
       <>
         <button type='button' onClick={() => this.#count.value--}>-</button>
-        <span data-signal='count'></span>
+        <span>{this.#count}</span>
         <button type='button' onClick={() => this.#count.value++}>+</button>
       </>
     );

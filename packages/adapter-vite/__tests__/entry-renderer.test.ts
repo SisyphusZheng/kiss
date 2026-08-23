@@ -11,7 +11,7 @@
 
 import { assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
 import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
-import { resetCorsOriginWarningForTests } from '../src/internal/ssg/entry-codegen.ts';
+import { resetCorsOriginWarningForTests } from '../src/internal/ssg/entry-server-codegen.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // Fixtures
@@ -836,7 +836,7 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
 
   // The action runs before the loader (revalidation invariant): a mutation
   // never renders stale loader data.
-  const actionIndex = code.indexOf('const __actionResult =');
+  const actionIndex = code.indexOf('const actionResult = await actionFn');
   const loaderIndex = code.indexOf('const __data =', actionIndex);
   assertEquals(actionIndex > 0, true, 'action execution must be emitted');
   assertEquals(loaderIndex > actionIndex, true, 'loader must run after the action on POST');
@@ -844,21 +844,21 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   // Real FormData (not parseBody objects), fail() 422 channel, PRG 303 on
   // success, named actions via ?/name, fetch-path ActionResult JSON.
   assertStringIncludes(code, 'await c.req.raw.formData()');
-  assertStringIncludes(code, '__isActionFailure(__actionResult)');
-  assertStringIncludes(code, 'return c.redirect(__prgTarget, 303)');
+  assertStringIncludes(code, '__isActionFailure(actionResult)');
+  assertStringIncludes(code, 'response: c.redirect(prgTarget, 303)');
   assertStringIncludes(code, "key.startsWith('/')");
-  assertStringIncludes(code, '__namedActions[__actionName]');
+  assertStringIncludes(code, 'namedActions[actionName]');
   // #743: generated code references the shared ACTION_FETCH_HEADER constant
   // (single source of truth in @openelement/element) instead of a literal.
   assertStringIncludes(code, 'ACTION_FETCH_HEADER as __actionFetchHeader');
   assertStringIncludes(code, 'c.req.header(__actionFetchHeader)');
   assertStringIncludes(
     code,
-    'try { JSON.stringify(__failureData); } catch { __failureData = null; }',
+    'try { JSON.stringify(data); } catch { data = null; }',
   );
   assertStringIncludes(
     code,
-    "{ type: 'failure', status: __actionResult.status, data: __failureData }",
+    "{ type: 'failure', status: actionResult.status, data }",
   );
   assertStringIncludes(code, ', __actionStatus)');
   // No action export on a route: POST is a defined 404, not a render.
@@ -876,20 +876,20 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   assertStringIncludes(code, 'cross-site');
   assertStringIncludes(code, 'OPEN_ELEMENT_DISABLE_CSRF');
   assertStringIncludes(code, 'Cross-site form submission rejected');
-  assertStringIncludes(code, '__loadContext.env');
+  assertStringIncludes(code, 'loadContext.env');
 
   // #542: named-action dispatch is own-key gated (prototype keys are 404).
-  assertStringIncludes(code, 'Object.prototype.hasOwnProperty.call(__namedActions, __actionName)');
+  assertStringIncludes(code, 'Object.prototype.hasOwnProperty.call(namedActions, actionName)');
   // #541: a returned Response is a contract violation, never a response.
   assertStringIncludes(code, 'Actions must not return a Response object');
   // #548: the default PRG target strips the ?/name action marker.
-  assertStringIncludes(code, '__prgParams.delete(key)');
-  assertStringIncludes(code, "{ type: 'redirect', status: 303, location: __prgTarget }");
+  assertStringIncludes(code, 'prgParams.delete(key)');
+  assertStringIncludes(code, "{ type: 'redirect', status: 303, location: prgTarget }");
   // #549 + #863: fetch callers receive an RFC 9457 problem+json 404, not an
   // HTML page.
   assertStringIncludes(
     code,
-    '{ type: \'about:blank\', title: "Not Found", status: 404, detail: __noActionMessage }',
+    "{ type: 'about:blank', title: 'Not Found', status: 404, detail: message }",
   );
   assertStringIncludes(code, "{ 'Content-Type': __problemJsonMediaType }");
   // #550: request-time responses are never cacheable; POST is negotiated.
@@ -904,6 +904,19 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   assertStringIncludes(code, '__bodyLimit({ maxSize: 10 * 1024 * 1024');
   // #572: non-GET/POST methods on page routes are a defined 405.
   assertStringIncludes(code, "c.text('Method Not Allowed', 405, { Allow: 'GET, POST' })");
+});
+
+Deno.test('renderEntry: action protocol is emitted once for many routes (#1098)', () => {
+  const routes: RouteEntry[] = Array.from({ length: 30 }, (_, index) => ({
+    path: `/page-${index}`,
+    filePath: `page-${index}.ts`,
+    type: 'page',
+    varName: `page${index}`,
+  }));
+  const code = renderEntry(buildEntryDescriptor(routes));
+  assertEquals(code.match(/async function __runActionProtocol/g)?.length, 1);
+  assertEquals(code.match(/const csrfOff =/g)?.length, 1);
+  assertEquals(code.match(/await __runActionProtocol\(/g)?.length, routes.length);
 });
 
 Deno.test('renderEntry: private,no-cache is emitted only after a successful render (#943 amendment)', () => {
@@ -1056,7 +1069,7 @@ Deno.test('renderEntry: /404 page route emits the styled notFound fallback (#923
   // Fallback renders with a forced 404 status and degrades to the plain
   // status page on failure — never a 500 from the fallback itself.
   assertStringIncludes(code, 'wrapInDocument(content, {');
-  assertStringIncludes(code, '}), 404)');
+  assertStringIncludes(code, '})), 404)');
   assertStringIncludes(code, '__statusHtml("404 Not Found", "Not Found")');
 });
 

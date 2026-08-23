@@ -16,20 +16,26 @@ export type OpenElementBaseProbe = { base: CustomElementConstructor } | { error:
 export type FindOpenElementBase = (tag: string) => OpenElementBaseProbe;
 
 /**
- * Browser-side: walk from a registered island component up the prototype
- * chain to the direct HTMLElement subclass — that is the OpenElement base
- * class. Must stay self-contained (no closure references): the source below
- * is injected into page.evaluate callbacks.
+ * Browser-side: walk from a registered island component up the constructor
+ * chain to the OpenElement runtime layer. The public class is deliberately
+ * split across runtime, configuration, and SSR-safe HTMLElement layers, so
+ * the direct HTMLElement subclass is not sufficient. Must stay self-contained
+ * (no closure references): the source below is injected into page.evaluate
+ * callbacks.
  */
 function findOpenElementBase(tag: string): OpenElementBaseProbe {
   let base = customElements.get(tag) as CustomElementConstructor;
-  for (let i = 0; i < 10 && Object.getPrototypeOf(base) !== HTMLElement; i++) {
+  for (let i = 0; i < 10 && base !== HTMLElement; i++) {
+    const prototype = base.prototype as Record<string, unknown>;
+    if (
+      Object.prototype.hasOwnProperty.call(prototype, 'connectedCallback') &&
+      Object.prototype.hasOwnProperty.call(prototype, 'registerSignal')
+    ) {
+      return { base };
+    }
     base = Object.getPrototypeOf(base) as CustomElementConstructor;
   }
-  if (Object.getPrototypeOf(base) !== HTMLElement) {
-    return { error: 'OpenElement base class not found' };
-  }
-  return { base };
+  return { error: 'OpenElement runtime class not found' };
 }
 
 /**

@@ -477,6 +477,31 @@ Deno.test({
           );
         }
       });
+
+      await t.step(
+        'dev SSR reloads an edited imported component on the next request (#1091)',
+        async () => {
+          const componentPath = join(fixtureDir, 'app/components/shared-enhanced-form.tsx');
+          const original = await Deno.readTextFile(componentPath);
+          const changed = original.replace('Shared submit', 'Fresh SSR dependency');
+          assert(changed !== original, 'fixture replacement sentinel was not found');
+          try {
+            await Deno.writeTextFile(componentPath, changed);
+            const deadline = Date.now() + 5000;
+            while (true) {
+              const response = await fetch(`${dev.base}/shared`);
+              const body = await response.text();
+              if (body.includes('Fresh SSR dependency')) break;
+              if (Date.now() > deadline) {
+                throw new Error('dev SSR kept serving the stale imported component after 5s');
+              }
+              await new Promise((resolve) => setTimeout(resolve, 50));
+            }
+          } finally {
+            await Deno.writeTextFile(componentPath, original);
+          }
+        },
+      );
     } finally {
       await dev.close();
       await build.close();

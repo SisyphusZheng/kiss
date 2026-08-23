@@ -55,6 +55,22 @@ exceptions are logged only in development. Route matching preserves declaration
 order while compiling static segments into a trie; named parameters, optional
 parameters, and wildcards remain supported.
 
+## Route execution contexts
+
+Server route modules use `LoaderContext<Env, Platform>` and
+`ActionContext<Env, Platform>`. Both derive from `ServerRouteContext` and
+receive `request`, `params`, `env`, `platform`, `responseHeaders`, and `route`;
+actions additionally receive `formData`. `Env` accepts concrete Worker binding
+interfaces, including Queue, KV, Service Binding, and Rate Limit objects. Write
+response metadata only through `responseHeaders`, which the generated server
+merges into its final `Response`.
+
+SPA handlers are a separate browser execution chain. Use `SpaLoaderContext`
+and `SpaActionContext`; they intentionally expose only route params (and SPA
+action form data). A server loader cannot be reused unchanged in SPA mode,
+because browsers do not receive server `Request`, environment, platform,
+response-header, or route-metadata capabilities.
+
 `OpenElement` remains the runtime primitive in `@openelement/element`, but application
 authors should start from this package.
 

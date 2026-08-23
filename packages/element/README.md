@@ -53,6 +53,13 @@ Static prop getters intentionally return a `Signal`, so read and write through
 `.value` (for example, `this.count.value`). Removing a reflected attribute
 restores the default declared in `static props`.
 
+For instance signals used in JSX, call `registerSignal(name, signal)` once in
+the component constructor. CSR and SSR then derive the same `data-signal`
+hydration markers automatically for signal text and attribute bindings; do not
+hand-write those internal marker attributes. Only signals created by
+openElement's `signal()`/`computed()` engine satisfy the reactive signal
+contract—plain `{ value, subscribe }` lookalikes are treated as ordinary data.
+
 `defineLayout` was removed during the alpha public-surface freeze. Replace
 `defineLayout(tagName, definition)` with the identical
 `defineElement(tagName, definition)` call.

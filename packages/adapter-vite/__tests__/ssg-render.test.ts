@@ -402,7 +402,8 @@ Deno.test('ssgRender - request-time routes skip prerender and emit server artifa
     requestTimeRoutes: [{ path: '/live', paramNames: [], hasAction: true }],
   });
   const serverEntry = await Deno.readTextFile(`${outDir}/server/index.js`);
-  assert(serverEntry.includes('createOpenElementNitroHandler'));
+  assert(serverEntry.includes('openElementHandler'));
+  assert(serverEntry.includes('const nitroHandler'));
   assert(serverEntry.includes("from './entry.js'"));
 
   // #959: the standalone server entry is emitted alongside the request-time

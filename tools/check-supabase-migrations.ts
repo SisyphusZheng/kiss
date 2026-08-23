@@ -14,6 +14,7 @@ async function sha256(text: string): Promise<string> {
 export async function checkSupabaseMigrations(
   root = ROOT,
   workflowUrl = WORKFLOW,
+  enforcePerformanceFloor = root.href === ROOT.href,
 ): Promise<number> {
   const migrations = new URL('migrations/', root);
   const names: string[] = [];
@@ -50,6 +51,103 @@ export async function checkSupabaseMigrations(
     }
   }
 
+  if (enforcePerformanceFloor) {
+    const performanceFloorName = names.find((name) =>
+      name.endsWith('_postgres_index_rls_performance_floor.sql')
+    );
+    if (!performanceFloorName) {
+      throw new Error('missing forward-only Postgres index/RLS performance migration');
+    }
+    const performanceFloor = await Deno.readTextFile(
+      new URL(`migrations/${performanceFloorName}`, root),
+    );
+    for (
+      const anchor of [
+        'notes_owner_created_id_idx',
+        'admin_audit_actor_created_id_idx',
+        'attachment_reservations_owner_state_created_id_idx',
+        'attachment_scan_dead_letters_owner_failed_id_idx',
+        'attachment_scan_dead_letters_replay_actor_idx',
+        'storage_audit_owner_created_id_idx',
+        'orders_owner_created_id_idx',
+        'orders_product_code_idx',
+        'stripe_events_order_created_id_idx',
+        'stripe_events_replay_actor_idx',
+        'stripe_events_processing_queue_idx',
+        'create policy "notes: owners or admins read rows"',
+        'using ((select auth.uid()) = user_id)',
+        'with check ((select auth.uid()) = user_id)',
+      ]
+    ) {
+      if (!performanceFloor.includes(anchor)) {
+        throw new Error(`${performanceFloorName} is missing ${anchor}`);
+      }
+    }
+    if (/\bauth\.(?:uid|jwt)\(\)(?!\s*\))/i.test(performanceFloor)) {
+      throw new Error(`${performanceFloorName} must wrap policy auth helpers in scalar subselects`);
+    }
+
+    const replayAtomicityName = names.find((name) => name.endsWith('_replay_audit_atomicity.sql'));
+    if (!replayAtomicityName) throw new Error('missing atomic replay audit migration');
+    const replayAtomicity = await Deno.readTextFile(
+      new URL(`migrations/${replayAtomicityName}`, root),
+    );
+    for (
+      const anchor of [
+        'create or replace function public.mark_attachment_scan_replayed',
+        'create or replace function public.mark_payment_event_replay_enqueued',
+        'insert into public.admin_audit',
+        'attachment_scan_replay_enqueued',
+        'payment_event_replay_enqueued',
+      ]
+    ) {
+      if (!replayAtomicity.includes(anchor)) {
+        throw new Error(`${replayAtomicityName} is missing ${anchor}`);
+      }
+    }
+
+    const reconciliationIndexName = names.find((name) =>
+      name.endsWith('_stripe_reconciliation_index.sql')
+    );
+    if (!reconciliationIndexName) throw new Error('missing Stripe reconciliation index fix');
+    const reconciliationIndex = await Deno.readTextFile(
+      new URL(`migrations/${reconciliationIndexName}`, root),
+    );
+    for (
+      const anchor of [
+        'drop index if exists public.stripe_events_processing_queue_idx',
+        'create index stripe_events_processing_queue_idx',
+        "where processing_state in ('received', 'replay_requested')",
+      ]
+    ) {
+      if (!reconciliationIndex.includes(anchor)) {
+        throw new Error(`${reconciliationIndexName} is missing ${anchor}`);
+      }
+    }
+
+    const workspaceName = names.find((name) => name.endsWith('_workspace_rls_qualification.sql'));
+    if (!workspaceName) throw new Error('missing workspace RLS qualification migration');
+    const workspace = await Deno.readTextFile(new URL(`migrations/${workspaceName}`, root));
+    for (
+      const anchor of [
+        'alter table public.workspaces enable row level security',
+        'alter table public.workspace_members enable row level security',
+        'alter table public.workspace_records enable row level security',
+        'workspace_members_user_workspace_idx',
+        'workspace_records_workspace_created_id_idx',
+        'workspace_records_workspace_status_created_id_idx',
+        'workspace_records_workspace_title_prefix_idx',
+        'create policy "workspace records: members read"',
+        'create policy "workspace records: members create"',
+        'create policy "workspace records: creators or admins update"',
+        'with check (',
+        'revoke all on public.workspaces, public.workspace_members, public.workspace_records from anon',
+      ]
+    ) {
+      if (!workspace.includes(anchor)) throw new Error(`${workspaceName} is missing ${anchor}`);
+    }
+  }
+
   const config = await Deno.readTextFile(new URL('config.toml', root));
   for (
     const anchor of [
@@ -73,6 +171,8 @@ export async function checkSupabaseMigrations(
       'SUPABASE_PROJECT_ID:',
       'migration_mode:',
       'supabase db push --linked --dry-run',
+      'tools/qualify-supabase-schema-parity.sh',
+      'fresh and upgraded projects converge',
     ]
   ) {
     if (!workflow.includes(anchor)) throw new Error(`migration workflow is missing ${anchor}`);

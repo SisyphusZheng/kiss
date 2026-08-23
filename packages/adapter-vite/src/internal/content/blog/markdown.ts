@@ -6,79 +6,17 @@
 
 import matter from 'gray-matter';
 import { marked } from 'marked';
-// @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml from 'sanitize-html';
 import { normalizeSeparators } from '@openelement/element/build-utils';
 import type { BlogPost, OpenElementBlogOptions } from './types.ts';
+import { sanitizeContentHtml } from '../sanitize.ts';
 
 /**
- * Allow-list HTML sanitizer using sanitize-html.
+ * Allow-list HTML sanitizer shared with the element trust boundary.
  * Only permits safe tags and attributes - all other HTML is stripped.
  * href/src/action only allow http/https/mailto/#/relative URLs.
  * This is a build-time defense-in-depth - content files are developer-controlled,
  * but sanitization prevents accidental or malicious XSS via raw HTML in markdown.
  */
-const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: [
-    'p',
-    'a',
-    'code',
-    'pre',
-    'ul',
-    'ol',
-    'li',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'blockquote',
-    'strong',
-    'em',
-    'b',
-    'i',
-    's',
-    'del',
-    'ins',
-    'table',
-    'thead',
-    'tbody',
-    'tr',
-    'th',
-    'td',
-    'br',
-    'hr',
-    'img',
-    'figure',
-    'figcaption',
-    'details',
-    'summary',
-    'sup',
-    'sub',
-    'abbr',
-    'input', // for task lists
-  ],
-  allowedAttributes: {
-    '*': ['class', 'id'],
-    a: ['href', 'title', 'target', 'rel'],
-    img: ['src', 'alt', 'title', 'width', 'height'],
-    td: ['colspan', 'rowspan'],
-    th: ['colspan', 'rowspan'],
-    code: ['language', 'data-language'],
-    input: ['type', 'disabled', 'checked'],
-    abbr: ['title'],
-  },
-  // Only allow safe URL schemes in href/src/action
-  allowedSchemes: ['http', 'https', 'mailto', '#', 'relative'],
-  // Strip tag content for disallowed tags (don't keep inner text of <script> etc.)
-  disallowedTagsMode: 'discard',
-  // Enforce rel=noopener on target=_blank links
-  transformTags: {
-    a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }),
-  },
-};
-
 /**
  * Parse a markdown file into a BlogPost.
  * Extracts frontmatter, renders markdown to HTML.
@@ -104,10 +42,10 @@ export async function parseMarkdownFile(
   if (options?.markdown) {
     // Custom renderer output crosses a content trust boundary and is always sanitized.
     const raw = await options.markdown(content);
-    html = sanitizeHtml(raw, SANITIZE_OPTIONS);
+    html = sanitizeContentHtml(raw);
   } else {
     const raw = await marked(content, { async: true });
-    html = sanitizeHtml(raw, SANITIZE_OPTIONS);
+    html = sanitizeContentHtml(raw);
   }
 
   return {

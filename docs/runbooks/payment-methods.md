@@ -1,59 +1,60 @@
-# Payment methods runbook
+# Stripe Checkout and payment methods runbook
 
-Card is the only enabled payment method. Checkout Session creation pins
-`payment_method_types[0] = card` (`lib/stripe-checkout.ts`), so no other method
-can be offered regardless of account eligibility. This runbook records the
-Alipay / WeChat Pay eligibility verification and when to re-evaluate.
+The reference uses hosted Checkout with Stripe's Dashboard-managed dynamic
+payment methods. Session creation deliberately omits `payment_method_types` and
+the Managed Payments override. Stripe chooses eligible methods using the
+account configuration, currency, customer and current API rules.
 
-## Verification procedure
+## Credentials and API contract
 
-Run against the secret key of the target mode (never print or persist the key):
+Create a dedicated restricted key for this service in each mode:
 
-```sh
-curl -s -u "$STRIPE_SECRET_KEY:" https://api.stripe.com/v1/account/capabilities
-```
+- grant **Checkout Sessions: Write**;
+- leave every unrelated resource at **None**;
+- add an IP access restriction when the deployment has stable egress;
+- store the key in the Cloudflare secret store as `STRIPE_SECRET_KEY`;
+- never put it in `wrangler.jsonc`, `.env.example`, logs, client code or build
+  artifacts.
 
-Read `data[].id` / `data[].status`. Stripe capability statuses are `active`,
-`pending`, `inactive`, and `unrequested`; a payment-method capability that was
-never requested does not appear in the listing at all.
+`rk_test_` and `rk_live_` keys are the recommended path. Mode-matching `sk_test_`
+and `sk_live_` keys remain a migration fallback only. Review Stripe Workbench
+request logs, move to the restricted key, then rotate the broad key.
 
-## 2026-08-17 verification (test-mode key, HK account)
+Every Checkout creation pins `Stripe-Version: 2026-07-29.dahlia` and sends an
+`integration_identifier` beginning `openelement_reference_` with an eight-letter
+suffix derived from the persisted random checkout-attempt UUID. The label stays
+identical across idempotent retries. Version changes require tests and a
+deliberate review.
 
-- `GET /v1/account` returned HTTP 200 with an empty `capabilities` object,
-  `charges_enabled = false`, `payouts_enabled = false`.
-- `GET /v1/account/capabilities` returned HTTP 200 with 16 capabilities, all
-  `unrequested`.
-- `card_payments`: `unrequested` (`disabled_reason: requirements.fields_needed`)
-  — account onboarding is incomplete, so live card charges are not possible yet.
-  Test mode is unaffected and remains the only exercised path.
-- `alipay_payments`: **not listed** — cannot be verified via the API; the
-  account has never requested it. Confirm eligibility in the Dashboard under
-  Settings → Payment methods.
-- `wechat_pay_payments`: **not listed** — same as above.
+## Payment-method policy
 
-Per Stripe's Alipay documentation, eligibility for a given account is shown in
-Dashboard payment-method settings, and platform-level `alipay_payments`
-capability requests are a private-preview feature requiring Stripe Support.
-There is no API-only path to confirm eligibility for an account that has not
-requested the capability.
+Enable or disable methods in Stripe Dashboard payment-method settings. If a
+business requirement needs a distinct set, use a payment method configuration;
+for a transaction-specific exception use Stripe's supported exclusion field.
+Do not add `payment_method_types` to non-Terminal requests.
 
-## When and how to re-evaluate
+Dynamic methods mean a Session can complete asynchronously. The durable webhook
+state machine therefore handles all three relevant events:
 
-Re-run the verification above when any of the following occurs:
+- `checkout.session.completed` grants paid state only when `payment_status` is
+  not `unpaid`;
+- `checkout.session.async_payment_succeeded` transitions the order to paid;
+- `checkout.session.async_payment_failed` transitions it to payment failed.
 
-1. Account onboarding completes and `card_payments` reaches `active`.
-2. A business requirement for Alipay / WeChat Pay (e.g. CNY-denominated
-   customers) appears.
-3. The Dashboard payment-methods settings show Alipay or WeChat Pay as
-   available for the account.
+The success return page never grants state. Raw-body signature verification,
+provider-event idempotency, Queue/DLQ durability and admin replay remain required.
 
-If a capability becomes available:
+## Verification and incident response
 
-1. Request / enable it in the Dashboard (or via Support where required).
-2. Re-run the API verification and record the new status and date here.
-3. Extend checkout creation beyond `card`, add the method's test-mode end-to-end
-   evidence (Checkout redirect → webhook → `paid` transition), and update the
-   release audit before enabling it in live mode.
+Before enabling a live method, exercise its test-mode Checkout redirect and
+webhook success/failure path. Confirm the resulting order state from the owner
+view, not from the return-page query parameter.
 
-Until then, do not add `payment_method_types` entries or enable automatic
-payment methods: an unverified method must never reach Checkout.
+If a key might be exposed, rotate or delete it immediately, inspect Stripe
+Workbench logs, and contact Stripe Support for unrecognized activity. During a
+Stripe incident, Checkout creation fails closed with a retryable application
+message; existing durable webhook events remain available to Queue/DLQ replay.
+
+References: [restricted API keys](https://docs.stripe.com/keys),
+[dynamic payment methods](https://docs.stripe.com/payments/payment-methods/dynamic-payment-methods),
+and [Checkout fulfillment](https://docs.stripe.com/payments/checkout/fulfillment).

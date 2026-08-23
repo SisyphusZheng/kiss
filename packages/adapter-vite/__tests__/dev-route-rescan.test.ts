@@ -28,6 +28,14 @@ export default definePage({
 });
 `;
 
+const ENHANCED_INDEX_ROUTE = `import { definePage } from '@openelement/app';
+export const tagName = 'test-index-page';
+export default definePage({
+  renderIntent: { mode: 'dynamic' },
+  render() { return <form method='post' data-open-enhance><button>save</button></form>; },
+});
+`;
+
 type Hooked = {
   buildStart?: () => Promise<void>;
   configureServer?: (server: unknown) => void;
@@ -129,6 +137,55 @@ Deno.test('openPlugin: dev watcher ignores non-route files outside routesDir (#1
     watcher.emit('add', join(routesDir, 'notes.md')); // not a route extension
     await new Promise((r) => setTimeout(r, 50));
     assertEquals(sent.length, 0);
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('openPlugin: route content changes rebuild descriptor once after a burst (#1102)', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'oe-route-change-rescan-' });
+  try {
+    const routesDir = join(dir, 'routes');
+    const routeFile = join(routesDir, 'index.tsx');
+    await Deno.mkdir(routesDir, { recursive: true });
+    await Deno.writeTextFile(routeFile, INDEX_ROUTE);
+
+    const plugins = createOpenPlugin({ routesDir }) as Hooked[];
+    const core = plugins.find((p) => (p as { name?: string }).name === 'open:core')!;
+    const virtualEntry = plugins.find((p) =>
+      (p as { name?: string }).name === 'open:virtual-entry'
+    )!;
+    await core.buildStart!();
+
+    const watcher = new EventEmitter() as EventEmitter & { add(path: string): void };
+    watcher.add = () => {};
+    const sent: unknown[] = [];
+    const invalidated: string[] = [];
+    core.configureServer!({
+      config: { root: dir },
+      watcher,
+      hot: { send: (payload: unknown) => sent.push(payload) },
+      moduleGraph: {
+        getModuleById: (id: string) => ({ id }),
+        getModulesByFile: () => new Set([{ id: routeFile }]),
+        invalidateModule: (mod: { id: string }) => invalidated.push(mod.id),
+      },
+      httpServer: null,
+    });
+
+    await Deno.writeTextFile(routeFile, ENHANCED_INDEX_ROUTE);
+    // Chokidar can coalesce or duplicate editor writes. Three rapid events
+    // must produce one serialized descriptor commit from the final file.
+    watcher.emit('change', routeFile);
+    watcher.emit('change', routeFile);
+    watcher.emit('change', routeFile);
+
+    await waitFor(() => sent.length === 1, 'debounced descriptor rescan');
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    assertEquals(sent.length, 1);
+    const entryAfter = String(virtualEntry.load!(RESOLVED_ENTRY_ID));
+    assertStringIncludes(entryAfter, 'import.meta.env.DEV && true');
+    assertEquals(invalidated.includes(RESOLVED_ENTRY_ID), true);
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }

@@ -7,8 +7,12 @@
 /** Unsubscribe function returned by subscriptions and effects. */
 export type Unsubscribe = () => void;
 
+/** Runtime/type brand for signals created by the configured reactive engine. */
+export const SIGNAL_BRAND: unique symbol = Symbol('openElement.signal');
+
 /** Minimal signal-like object accepted by renderers and bindings. */
 export interface SignalLike<T = unknown> {
+  readonly [SIGNAL_BRAND]: true;
   readonly value: T;
   subscribe(fn: (value: T) => void): Unsubscribe;
 }

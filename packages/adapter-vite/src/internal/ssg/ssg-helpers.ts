@@ -7,7 +7,10 @@
 
 import type { IsrManifestEntry } from '../protocol/framework.ts';
 import type { RouteInfoEntry } from '../protocol/ssg.ts';
-import { createIsrCacheKey } from '@openelement/element/build-utils';
+import {
+  createIsrCacheKey,
+  normalizeRoutePatternForURLPattern,
+} from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../html-files.ts';
 import { NODE_BRIDGE_EMBEDDED_FUNCTIONS } from '../node-bridge.ts';
 
@@ -137,20 +140,10 @@ interface RequestTimeRoutePattern {
  * instead of re-implementing pattern matching against the raw ':param'
  * strings in server-manifest.json.
  *
- * Twin: client-router.ts routePathToURLPatternPath (@openelement/app) is a
- * byte-identical body for the SPA router — keep them in sync (the
- * escapeAttr precedent: deliberate copy, cross-referenced).
+ * The implementation is shared with the app client router through
+ * @openelement/element/build-utils (#1103).
  */
-export function routePatternToURLPatternPath(path: string): string {
-  return path
-    .split('/')
-    .map((segment) => {
-      const brace = segment.startsWith(':') ? segment.indexOf('{') : -1;
-      if (brace === -1 || !segment.endsWith('}')) return segment;
-      return `${segment.slice(0, brace)}(${segment.slice(brace + 1, -1)})`;
-    })
-    .join('/');
-}
+export const routePatternToURLPatternPath = normalizeRoutePatternForURLPattern;
 
 /** Serialize the request-time route table embedded in the generated server entry. */
 function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string {
@@ -175,8 +168,8 @@ function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string 
  * prerendering SSR bundle (the same Hono app, with loaders/actions) on the
  * public `nitro-mount` seam; Nitro Node/Workers builds bundle it as the
  * server entry, and plain Node (>= 24 — the route table below builds
- * WHATWG URLPattern objects at module scope, #969) can run it directly
- * with adapter-vite installed.
+ * WHATWG URLPattern objects at module scope, #969) can run the portable
+ * dist artifact without workspace packages installed.
  *
  * The named `matchRequestTimeRoute` export (#556) is a self-contained
  * pathname matcher generated from the route table, so hosts dispatch
@@ -212,7 +205,6 @@ if (typeof globalThis.URLPattern === 'undefined') {
       'Node.js >= 24, Deno, or Bun.',
   );
 }
-import { createOpenElementNitroHandler } from '@openelement/adapter-vite/nitro-mount';
 import { openElementHandler } from './entry.js';
 import { clientScriptSrc } from './client-script.js';
 
@@ -220,9 +212,21 @@ import { clientScriptSrc } from './client-script.js';
 // carries the composed middleware.use fetch middleware chain when configured,
 // so the start CLI, the e2e fixture server, and Nitro run the same middleware
 // semantics as the dev server.
-const nitroHandler = createOpenElementNitroHandler({
-  handler: openElementHandler,
-});
+const nitroHandler = async (event) => {
+  const request = event.req;
+  const runtimeEnv = request.runtime?.cloudflare?.env;
+  return openElementHandler(request, {
+    env: runtimeEnv ?? event.env,
+    platform: event.platform,
+    params: event.context?.params,
+  });
+};
+
+function insertBeforeBodyClose(html, fragment) {
+  const match = /<\\/body\\s*>/i.exec(html);
+  if (!match || match.index === undefined) return html + fragment;
+  return html.slice(0, match.index) + fragment + '\\n' + html.slice(match.index);
+}
 
 // Request-time route table (#556): pathname -> { path, params }. Exact paths
 // first, then parameterized, then catch-alls; the first match wins. Matching
@@ -256,13 +260,11 @@ function withClientScript(response) {
   if (!type.includes('text/html')) return Promise.resolve(response);
   return response.text().then((html) => {
     if (html.includes(clientScriptSrc)) {
-      return new Response(html, { status: response.status, headers: response.headers });
+      return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
     }
     const tag = '<script type="module" src="' + clientScriptSrc + '"></script>';
-    const out = html.includes('</body>')
-      ? html.replace('</body>', '  ' + tag + '\\n</body>')
-      : html + tag;
-    return new Response(out, { status: response.status, headers: response.headers });
+    const out = insertBeforeBodyClose(html, '  ' + tag);
+    return new Response(out, { status: response.status, statusText: response.statusText, headers: response.headers });
   });
 }
 

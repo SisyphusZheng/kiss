@@ -1,12 +1,12 @@
 # OpenElement Status
 
-> Updated: 2026-08-20\
+> Updated: 2026-08-23\
 > Repository package line: `v0.43.0`\
 > npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
 > Latest landed train: `v0.43.0`\
-> Active release target: `v0.43.0`\
+> Active release target: `v0.43.1`\
 > Next planned train: `v0.44.0-alpha.1`\
-> Next release line: `v0.43.0` (Universal WC SSR)\
+> Next release line: `v0.43.1` (hardening closure)\
 > Product graph: five packages\
 > Current maturity stage: stable (0.43.0, Universal WC SSR + the Supabase × Cloudflare delivery path under ADR-0135)
 

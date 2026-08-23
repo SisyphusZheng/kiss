@@ -60,6 +60,30 @@ Deno.test('private scanner validates the reservation before downloading and scan
   assertEquals(new Headers(calls[2].init?.headers).get('apikey'), 'metadefender-secret');
 });
 
+Deno.test('scanner orchestration accepts a provider-neutral adapter without MetaDefender config', async () => {
+  const base = successfulFetch(0);
+  const scanned: Uint8Array[] = [];
+  const response = await createScannerWorker(base.fetchImpl, {
+    provider: {
+      name: 'test-provider',
+      scan(input) {
+        scanned.push(input.bytes);
+        assertEquals(input.contentType, 'application/pdf');
+        return Promise.resolve('clean');
+      },
+    },
+  }).fetch(request(), {
+    ...env,
+    METADEFENDER_CORE_URL: '',
+    METADEFENDER_API_KEY: '',
+  });
+
+  assertEquals(response.status, 200);
+  assertEquals(await response.json(), { verdict: 'clean' });
+  assertEquals(scanned, [new Uint8Array([1, 2, 3, 4])]);
+  assertEquals(base.calls.length, 2);
+});
+
 Deno.test('private scanner quarantines infected, suspicious, and blocklisted results', async () => {
   for (const code of [1, 2, 8]) {
     const response = await createScannerWorker(successfulFetch(code).fetchImpl).fetch(
@@ -149,4 +173,24 @@ Deno.test('private scanner converts upstream timeout into retryable failure', as
       init?.signal?.addEventListener('abort', () => reject(init.signal?.reason), { once: true });
     }), { timeoutMs: 1 }).fetch(request(), env);
   assertEquals(response.status, 503);
+});
+
+Deno.test('scanner orchestration times out a provider that ignores AbortSignal', async () => {
+  const base = successfulFetch(0);
+  let aborted = false;
+  const startedAt = performance.now();
+  const response = await createScannerWorker(base.fetchImpl, {
+    timeoutMs: 5,
+    provider: {
+      name: 'stalled-provider',
+      scan(_input, signal) {
+        signal.addEventListener('abort', () => aborted = true, { once: true });
+        return new Promise(() => {});
+      },
+    },
+  }).fetch(request(), env);
+
+  assertEquals(response.status, 503);
+  assertEquals(aborted, true);
+  assertEquals(performance.now() - startedAt < 500, true);
 });

@@ -14,7 +14,7 @@ import {
   renderMatchingRenderersFn,
   routeRevalidateExpr,
   routeTagNameExpr,
-} from './entry-codegen.ts';
+} from './entry-route-helpers.ts';
 
 /**
  * Render the SSG-specific section of the entry code.

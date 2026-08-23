@@ -4,9 +4,11 @@
  * This gate checks current source and current documentation only. Historical ADRs,
  * old release notes, generated data, fixtures, and tests are intentionally not
  * used as regressions for the active public contract.
+ *
+ * Permissions: --allow-read and --allow-run=git (tracked-file inventory).
  */
 
-import { extname } from '@std/path';
+import { dirname, extname, join, normalize } from '@std/path';
 import { formatError } from '@openelement/element';
 import { MOJIBAKE_CHARS, stripCommentsLine } from './lib/text.ts';
 import { gitTrackedFiles } from './lib/git.ts';
@@ -44,6 +46,8 @@ const TEXT_EXTENSIONS = new Set([
   '.toml',
   '.txt',
 ]);
+
+export const CURRENT_DOC_ROOTS = ['docs/current/', 'docs/status/', 'docs/roadmap/'] as const;
 
 const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   {
@@ -143,13 +147,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/internal/core/island.ts',
-    fragment: '} as unknown as typeof componentClass.prototype.connectedCallback',
-    reason: 'Preserve original connectedCallback signature after wrapping.',
-
-    revisitBy: '0.44.0',
-  },
-  {
     file: 'packages/element/src/internal/core/prop.ts',
     fragment: 'instance as unknown as {',
     reason: 'Static prop runtime writes element attributes and properties.',
@@ -157,10 +154,16 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/open-element-implementation.ts',
+    file: 'packages/element/src/open-element-base.ts',
     fragment: '} as unknown as typeof HTMLElement)',
     reason: 'SSR HTMLElement stub for environments without DOM.',
 
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'packages/element/src/open-element-implementation.ts',
+    fragment: 'return this as unknown as OpenElementRuntimeHost;',
+    reason: 'Cycle-free structural bridge to the extracted lifecycle runtime collaborator.',
     revisitBy: '0.44.0',
   },
   {
@@ -197,6 +200,13 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'injectPropsSafe writes element props by dynamic name across the DSD boundary.',
     revisitBy: '0.44.0',
   },
+  {
+    file: 'packages/element/src/internal/core/render-dsd-internals.ts',
+    fragment: 'instance as unknown as Record<string, unknown>',
+    reason:
+      'Error-boundary fallback calls the private capture hook after the boundary marker check.',
+    revisitBy: '0.44.0',
+  },
 ];
 
 function addIssue(
@@ -214,15 +224,26 @@ export function isTextPath(path: string): boolean {
 }
 
 export function isCurrentDocOrExample(path: string): boolean {
-  if (path.startsWith('docs/arch/')) return true;
-  if (path.startsWith('docs/reference/')) return true;
-  if (path.startsWith('docs/guide/')) return true;
+  if (CURRENT_DOC_ROOTS.some((root) => path.startsWith(root))) return true;
   if (path === 'README.md' || path === 'README.zh.md') return true;
   if (path === 'CONTRIBUTING.md') return true;
   if (path.startsWith('packages/') && path.endsWith('/README.md')) return true;
   if (path.startsWith('packages/') && path.includes('/src/')) return true;
   if (path.startsWith('www/app/routes/guide/')) return true;
   return false;
+}
+
+export function assertCurrentDocRoots(paths: string[], issues: Issue[]): void {
+  for (const root of CURRENT_DOC_ROOTS) {
+    if (!paths.some((path) => path.startsWith(root))) {
+      addIssue(
+        issues,
+        'doc-scan-root',
+        root,
+        'current documentation scan root is missing or contains no tracked files',
+      );
+    }
+  }
 }
 
 export function isProductionSource(path: string): boolean {
@@ -398,6 +419,33 @@ export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void 
   }
 }
 
+const RENDER_RESPONSIBILITY_MODULES = new Set([
+  'packages/element/src/open-element-implementation.ts',
+  'packages/element/src/internal/core/binding-activation.ts',
+  'packages/element/src/internal/core/hydration-scope.ts',
+  'packages/element/src/internal/core/jsx-render-dom.ts',
+  'packages/element/src/internal/core/render-dsd.ts',
+  'packages/element/src/internal/core/render-ir.ts',
+  'packages/adapter-vite/src/internal/ssg/entry-codegen.ts',
+]);
+
+/** Keep the top-level render/codegen orchestrators below the #1098 budget. */
+export function assertRenderResponsibilitySize(files: TextFile[], issues: Issue[]): void {
+  for (
+    const file of files.filter((candidate) => RENDER_RESPONSIBILITY_MODULES.has(candidate.path))
+  ) {
+    const lines = file.text.split(/\r?\n/).length - (/\r?\n$/.test(file.text) ? 1 : 0);
+    if (lines > 400) {
+      addIssue(
+        issues,
+        'render-responsibility-size',
+        file.path,
+        `top-level responsibility module has ${lines} lines; maximum is 400`,
+      );
+    }
+  }
+}
+
 export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): void {
   const scannerPaths = new Set(discoverScannerFiles(files.map((file) => file.path)));
   const scannerFiles = files.filter((file) => scannerPaths.has(file.path));
@@ -408,6 +456,107 @@ export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): vo
     'scanner metadata extraction must stay regex/lightweight (deliberate: route-scanner.ts header — AST parsing was evaluated and rejected); these exact tokens are banned because they re-introduce brittle hand-rolled value parsing',
     issues,
   );
+}
+
+/** Keep package entry points deliberate: public barrels may only name public facades. */
+export function assertPublicEntryBoundaries(files: TextFile[], issues: Issue[]): void {
+  const entryPaths = new Set([
+    'packages/create/src/cli.ts',
+    'packages/app/src/index.ts',
+    'packages/app/src/i18n.ts',
+    'packages/app/src/model.ts',
+    'packages/app/src/preact.ts',
+    'packages/app/src/spa.ts',
+    'packages/element/src/index.ts',
+    'packages/element/src/build-utils.ts',
+    'packages/element/src/jsx-dev-runtime.ts',
+    'packages/element/src/jsx-runtime.ts',
+    'packages/element/src/sanitize.ts',
+    'packages/adapter-vite/src/index.ts',
+    'packages/adapter-vite/src/cli/build.ts',
+    'packages/adapter-vite/src/cli/start.ts',
+    'packages/adapter-vite/src/nitro-mount.ts',
+    'packages/adapter-vite/src/sitemap.ts',
+    'packages/ui/src/index.ts',
+  ]);
+  for (const file of files.filter((candidate) => entryPaths.has(candidate.path))) {
+    failMatches(
+      'public-entry-boundary',
+      [file],
+      /export\s+(?:type\s+)?(?:\{|\*)[^;]*?from\s*['"][^'"]*\/internal\//s,
+      'package public entries must route supported APIs through named public modules',
+      issues,
+    );
+  }
+
+  const adapterFramework = files.find((file) =>
+    file.path === 'packages/adapter-vite/src/internal/protocol/framework.ts'
+  );
+  if (adapterFramework?.text.includes('export type *')) {
+    addIssue(
+      issues,
+      'public-entry-boundary',
+      adapterFramework.path,
+      'adapter framework compatibility must use an explicit type list',
+    );
+  }
+}
+
+/** Reject static import/export cycles inside the element source graph (#1095). */
+export function assertNoElementImportCycles(files: TextFile[], issues: Issue[]): void {
+  const source = files.filter((file) =>
+    file.path.startsWith('packages/element/src/') && /\.tsx?$/.test(file.path)
+  );
+  const known = new Set(source.map((file) => file.path));
+  const graph = new Map<string, string[]>();
+  const importRe = /\b(?:import|export)\s+(?:type\s+)?(?:[^'";]*?\s+from\s+)?['"](\.[^'"]+)['"]/g;
+  for (const file of source) {
+    const targets: string[] = [];
+    for (const match of file.text.matchAll(importRe)) {
+      const resolved = normalize(join(dirname(file.path), match[1])).replaceAll('\\', '/');
+      const target = known.has(resolved)
+        ? resolved
+        : known.has(`${resolved}.ts`)
+        ? `${resolved}.ts`
+        : known.has(`${resolved}.tsx`)
+        ? `${resolved}.tsx`
+        : null;
+      if (target) targets.push(target);
+    }
+    graph.set(file.path, targets);
+  }
+
+  const visited = new Set<string>();
+  const active = new Set<string>();
+  const stack: string[] = [];
+  const reported = new Set<string>();
+  const visit = (file: string): void => {
+    if (visited.has(file)) return;
+    active.add(file);
+    stack.push(file);
+    for (const target of graph.get(file) ?? []) {
+      if (active.has(target)) {
+        const start = stack.indexOf(target);
+        const cycle = [...stack.slice(start), target];
+        const key = [...new Set(cycle)].sort().join('\0');
+        if (!reported.has(key)) {
+          reported.add(key);
+          addIssue(
+            issues,
+            'element-import-cycle',
+            file,
+            `static import cycle: ${cycle.join(' -> ')}`,
+          );
+        }
+      } else {
+        visit(target);
+      }
+    }
+    stack.pop();
+    active.delete(file);
+    visited.add(file);
+  };
+  for (const file of graph.keys()) visit(file);
 }
 
 export function discoverScannerFiles(paths: string[]): string[] {
@@ -511,12 +660,12 @@ async function main(): Promise<void> {
     issues,
   );
   for (const file of adapterProtocol) {
-    if (!file.text.includes("export type * from '@openelement/element';")) {
+    if (!file.text.includes("from '../../framework.ts';")) {
       addIssue(
         issues,
         'protocol-seam',
         file.path,
-        'shared protocol seam must resolve through the @openelement/element root',
+        'shared protocol seam must resolve through the explicit adapter framework authority',
       );
     }
   }
@@ -537,6 +686,10 @@ async function main(): Promise<void> {
     issues,
   );
   assertDuplicateCounts(textFiles, issues);
+  assertRenderResponsibilitySize(textFiles, issues);
+  assertCurrentDocRoots(files, issues);
+  assertNoElementImportCycles(textFiles, issues);
+  assertPublicEntryBoundaries(textFiles, issues);
   assertStructuredMetadata(textFiles, issues);
   assertTypeEscapeAllowlistFiles(new Set(files), issues);
   assertMojibake(production.concat(currentDocs), issues);

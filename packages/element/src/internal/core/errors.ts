@@ -132,20 +132,8 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
 let _telemetryHook: ErrorTelemetryHook | undefined;
 
 export function setErrorTelemetryHook(hook: ErrorTelemetryHook): void {
-  // v0.42.0-alpha.9 (#644): the telemetry hook is a startup-time, single
-  // configuration. Re-setting it would create last-writer-wins behavior across
-  // requests/tenants (a concurrency hazard on shared runtimes). Rather than a
-  // per-request hook (which would require threading a context through every
-  // reportError call site), we keep the module-level singleton but guard it so
-  // an accidental second set surfaces immediately instead of silently
-  // overwriting the previous hook.
-  if (_telemetryHook) {
-    throw new OpenElementError(
-      '[openElement] setErrorTelemetryHook() was already called. ' +
-        'Configure the error telemetry hook exactly once at application startup.',
-      { code: 'TELEMETRY_HOOK_ALREADY_SET', phase: 'build' },
-    );
-  }
+  // Reconfiguration is intentional (#1099): tests, HMR, and multi-app pages
+  // must be able to replace a stale hook without restarting the process.
   _telemetryHook = hook;
 }
 

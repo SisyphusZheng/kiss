@@ -33,7 +33,27 @@ export default defineConfig({
 
 ## 生成的 blog-data 虚拟模块
 
-`content: { blog: { contentDir, basePath } }` 把每篇 markdown 文章编译进一个虚拟模块：`import { posts, getPostBySlug } from '@openelement/generated/blog-data'`。运行时模块在 build/dev 时生成；仓库内一份 `.d.ts` stub 加 import-map 条目保证 `deno task check` 通过。frontmatter 支持 `title`、`date`、`draft`、`tags`、`excerpt`、`type`。
+`content: { blog: { contentDir, basePath } }` 把每篇 markdown 文章编译进一个生成模块：`import { posts, getPostBySlug } from '@openelement/generated/blog-data'`。模块在 build/dev 时写入；仓库内一份 `.d.ts` stub 加 import-map 条目保证 `deno task check` 通过。frontmatter 支持 `title`、`date`、`draft`、`tags`、`excerpt`、`type`。
+
+命名 Markdown 内容区使用 `content.collections`。每个 collection 声明目录和可选的 frontmatter schema，并生成 `app/data/_generated-{name}-data.ts`。`content.blog` 是同一管线上的兼容别名，因此所有 collection 共用同一个 watcher 和 HTML sanitizer allow-list。
+
+```ts
+content: {
+  collections: {
+    guide: {
+      contentDir: 'content/guide',
+      basePath: '/guide',
+      schema: {
+        fields: {
+          title: { type: 'string', required: true },
+          order: { type: 'number', required: true },
+          lede: 'string',
+        },
+      },
+    },
+  },
+}
+```
 
 ### vite.config.ts —— blog-data 模块（#924）
 

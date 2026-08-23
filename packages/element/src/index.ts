@@ -15,7 +15,7 @@ export { ErrorBoundary } from './error-boundary.ts';
 
 export { defineElement } from './define-element.ts';
 export type { ElementDefinition } from './types.ts';
-export { collectPublicProps } from './internal/core/props-utils.ts';
+export { collectPublicProps } from './public-runtime.ts';
 
 // ─── Prop types ──────────────────────────────────────────
 
@@ -25,75 +25,70 @@ export type {
   PropDeclShorthand,
   PropsFrom,
   PropType,
-} from './internal/protocol/prop.ts';
+} from './public-runtime.ts';
 
 // ─── JSX runtime (re-export from core) ───────────────────
 
-export { For, Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
-export type { VNode } from './internal/protocol/vnode.ts';
+export { For, Fragment, jsx, jsxDEV, jsxs } from './public-runtime.ts';
+export type { VNode } from './public-runtime.ts';
 // Explicit type-only surface for build adapters (#488): no star seams, so the
 // public type surface is exactly the names listed here. SafeHtml, UnsafeHtml
 // and StyleSheetRule stay internal (#487).
-export type { RenderOutput, SsrAdmissionDecision } from './internal/protocol/render.ts';
-export { isVNode } from './internal/core/index.ts';
-export { assertValidTagName } from './internal/core/tag-utils.ts';
+export type { RenderOutput, SsrAdmissionDecision } from './public-runtime.ts';
+export { assertValidTagName, isVNode } from './public-runtime.ts';
 
 // ─── Renderers (re-export from core) ─────────────────────
 
-export { renderDsd, renderDsdTree, wrapInDocument } from './internal/core/index.ts';
+export { renderDsd, renderDsdTree, wrapInDocument } from './public-runtime.ts';
 
 // ─── Context (re-export from core) ───────────────────────
 
-export { consumeContext, createContext, provideContext } from './internal/core/index.ts';
-export type { Context } from './internal/core/index.ts';
+export { consumeContext, createContext, provideContext } from './public-runtime.ts';
+export type { Context } from './public-runtime.ts';
 
 // ─── Error types (re-export from core) ───────────────────
 
-export type { RenderError } from './internal/core/index.ts';
-export { ERROR_PREFIX } from './internal/protocol/errors.ts';
-export { reportError, setErrorTelemetryHook } from './internal/core/errors.ts';
-export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';
+export type { ErrorTelemetryHook, RenderError } from './public-runtime.ts';
+export { ERROR_PREFIX, reportError, setErrorTelemetryHook } from './public-runtime.ts';
 
 // ─── Signals (re-export) ─────────────────────────────────
 
-export { computed, effect, signal } from './internal/signal/index.ts';
-export type { Signal } from './internal/protocol/signal.ts';
+export { computed, effect, signal } from './public-runtime.ts';
+export type { Signal } from './public-runtime.ts';
 
 // ─── HTML utilities (re-export from core) ────────────────
 
-export { escapeAttr, escapeHtml } from './internal/core/index.ts';
+export { escapeAttr, escapeHtml } from './public-runtime.ts';
 
 // ─── Trusted HTML (re-export from core) ──────────────────────────
 
-export { trustedHtml } from './internal/core/index.ts';
+export { trustedHtml } from './public-runtime.ts';
 
 // ─── Security predicates (re-export from core) ───────────────────
 
-export { isSafeAttributeName } from './internal/core/security.ts';
+export { isSafeAttributeName } from './public-runtime.ts';
 
 // ─── Island utilities (re-export from core) ──────────────
 
-export {
-  bindSsrProps,
-  defineCustomElement,
-  defineIsland,
-  getSsrProps,
-} from './internal/core/index.ts';
-export type { IslandOptions } from './internal/protocol/island.ts';
+export { bindSsrProps, defineCustomElement, defineIsland, getSsrProps } from './public-runtime.ts';
+export type { IslandOptions } from './public-runtime.ts';
 
 // ─── Hydration markers (protocol) ───────────────────────
 
 // Shared by SSR writers (render-dsd) and client readers (island, app, www) so
 // the attribute name has a single typed source (#836).
-export { DATA_SSR_PROPS } from './internal/protocol/hydration-markers.ts';
+export { DATA_SSR_PROPS } from './public-runtime.ts';
 
 // ─── StyleSheet (re-export from core) ────────────────────
 
-export { StyleSheet } from './internal/core/style-sheet.ts';
-export { createLogger } from './internal/core/logger.ts';
-export { formatError, OpenElementError } from './internal/core/errors.ts';
-export { isValidTagName } from './internal/core/tag-utils.ts';
-export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
+export {
+  createLogger,
+  formatError,
+  isValidTagName,
+  OpenElementError,
+  StyleSheet,
+} from './public-runtime.ts';
+export type { StyleSheetLike } from './public-runtime.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.
 export type {
@@ -103,12 +98,14 @@ export type {
   Loader,
   LoaderContext,
   ProblemDetails,
+  ServerRouteContext,
+  ServerRouteMetadata,
   SpaAction,
   SpaActionContext,
   SpaLoader,
   SpaLoaderContext,
-} from './internal/protocol/data.ts';
-export { ACTION_FETCH_HEADER, PROBLEM_JSON_MEDIA_TYPE } from './internal/protocol/data.ts';
+} from './public-contracts.ts';
+export { ACTION_FETCH_HEADER, PROBLEM_JSON_MEDIA_TYPE } from './public-contracts.ts';
 export type {
   AppShellConfig,
   CompatibilityClassification,
@@ -119,18 +116,13 @@ export type {
   IsrManifestEntry,
   LocalePath,
   Middleware,
-  OpenElementBlogOptions,
-  OpenElementBuildContextLike,
-  OpenElementHeaderNavLink,
-  OpenElementI18nContextOptions,
-  OpenElementNavSection,
   RouteEntry,
   SpecialFileType,
-} from './internal/protocol/framework.ts';
+} from './public-contracts.ts';
 // Runtime export: canonical hydration strategy list consumed by app and build
 // adapters (#496). The HydrationStrategy type derives from this const.
-export { HYDRATION_STRATEGIES } from './internal/protocol/framework.ts';
-export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';
+export { HYDRATION_STRATEGIES } from './public-contracts.ts';
+export type { OpenElementRouteKind, OpenElementRouteNode } from './public-contracts.ts';
 /**
  * @experimental ISR cache contracts for self-build KV adapters
  * (docs/current/ISR_KV_ADAPTER.md). ISR is not wired into the 0.42
@@ -138,7 +130,7 @@ export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/prot
  * cross-instance invalidation. `tags` lives on `CacheEntry`, not on
  * `IsrCacheEntry`; KV adapters persist it alongside the entry.
  */
-export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';
+export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './public-contracts.ts';
 export type {
   OpenElementAttribute,
   OpenElementCssPart,
@@ -146,7 +138,7 @@ export type {
   OpenElementEvent,
   OpenElementPackageManifest,
   OpenElementSlot,
-} from './internal/protocol/manifest.ts';
+} from './public-contracts.ts';
 
 // ─── Client runtime (@experimental) ─────────────────────
 
@@ -169,7 +161,11 @@ export type {
  * meant for non-DSD browsers and for markup inserted without DSD processing
  * (e.g. innerHTML).
  */
-export { disposeOpenElement, hydrateOpenElement } from './internal/core/client-runtime.ts';
+export { disposeOpenElement, hydrateOpenElement } from './public-runtime.ts';
 // #942: click capture/replay across the pre-hydration window (generated client entry).
-export { ensurePreHydrationClickCapture } from './internal/core/pre-hydration-click.ts';
-export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';
+export {
+  deepGetElementById,
+  ensureDeepFragmentNavigation,
+  ensurePreHydrationClickCapture,
+} from './public-runtime.ts';
+export type { ClientRuntimeOptions } from './public-runtime.ts';

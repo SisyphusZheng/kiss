@@ -9,6 +9,8 @@ SUPABASE_DB_PASSWORD:
 SUPABASE_PROJECT_ID:
 migration_mode:
 supabase db push --linked --dry-run
+tools/qualify-supabase-schema-parity.sh
+fresh and upgraded projects converge
 `;
 const CONFIG = `
 project_id = "openelement-supabase-cloudflare-starter"

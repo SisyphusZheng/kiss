@@ -4,6 +4,7 @@ import { FOR_TAG } from '../src/internal/core/jsx-runtime.ts';
 import { renderDsdTree, serializeAttrs } from '../src/internal/core/render-ir.ts';
 import { isSafeAttributeName } from '../src/internal/core/security.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';
+import { signal } from '../src/internal/signal/framework.ts';
 import {
   isDepthLimitError,
   MAX_SSR_NESTING_DEPTH,
@@ -418,6 +419,26 @@ Deno.test('SSR render() failure fallback keeps the same bare-tag-with-props shap
   assertEquals(output.errors[0].recoverable, true);
   assertEquals(output.errors[0].severity, 'warning');
   assertEquals(output.html, '<x-broken-render label="hi"></x-broken-render>');
+});
+
+Deno.test('SSR emits hydration markers for registered signal-valued props (#1093)', async () => {
+  class SignalComponent {
+    readonly title = signal('first');
+    readonly signalRegistry = new Map([['title', this.title]]);
+
+    render() {
+      return jsx('span', { title: this.title, children: 'value' });
+    }
+  }
+
+  const output = await renderDsd('x-signal-prop', {
+    componentClass: SignalComponent as unknown as CustomElementConstructor,
+  });
+
+  assertStringIncludes(
+    output.html,
+    '<span title="first" data-signal="title" data-signal-attr="title">value</span>',
+  );
 });
 
 Deno.test('SSR unserializable public props degrade like a render() failure', async () => {

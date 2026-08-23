@@ -102,7 +102,7 @@ export type {
   PageIslandManifest,
 } from './island-manifest.ts';
 
-export { generateClientEntry } from './entry-codegen.ts';
+export { generateClientEntry } from './entry-client-codegen.ts';
 export { validateClientIslandEntry } from './entry-generators.ts';
 
 export { fsPathToModuleSpecifier } from './module-specifier.ts';

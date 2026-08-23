@@ -32,6 +32,18 @@ export interface SanitizeOptions {
   allowedSchemes?: readonly string[];
   /** 'keepText' (default) strips unknown tags but keeps their text; 'discard' drops both. */
   disallowedTagsMode?: 'keepText' | 'discard';
+  /**
+   * Explicitly permit a tag from the hard-dangerous set after it also passes
+   * `allowedTags`. Intended for tightly constrained framework policies such
+   * as task-list inputs or head metadata; never inferred from `allowedTags`.
+   */
+  allowDangerousTags?: readonly string[];
+  /** Rel tokens forced onto every surviving anchor. */
+  linkRel?: readonly string[];
+  /** Whether protocol-relative URL attributes (`//host/path`) survive. */
+  allowProtocolRelative?: boolean;
+  /** Serialization style for HTML void elements. */
+  voidElementStyle?: 'html' | 'xhtml';
 }
 
 const DEFAULT_ALLOWED_TAGS = [
@@ -137,7 +149,22 @@ const DANGEROUS_TAGS = new Set([
 const RAW_TEXT_TAGS = new Set(['script', 'style', 'textarea', 'title']);
 
 /** Elements that never have a close tag. */
-const VOID_TAGS = new Set(['br', 'hr', 'img']);
+const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
 
 const DEFAULT_SCHEMES = ['http', 'https', 'mailto', 'tel', 'sms'] as const;
 
@@ -321,6 +348,7 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
   const allowedTags = new Set(options.allowedTags ?? DEFAULT_ALLOWED_TAGS);
   const discard = options.disallowedTagsMode === 'discard';
   const allowedSchemes = new Set(options.allowedSchemes ?? DEFAULT_SCHEMES);
+  const allowedDangerousTags = new Set(options.allowDangerousTags ?? []);
   const attrPolicy: Record<string, ReadonlySet<string>> = {};
   for (const [tag, names] of Object.entries(DEFAULT_ALLOWED_ATTRIBUTES)) {
     attrPolicy[tag] = new Set(names);
@@ -382,8 +410,8 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
       continue;
     }
 
-    if (DANGEROUS_TAGS.has(tag.name)) {
-      if (RAW_TEXT_TAGS.has(tag.name) || !tag.selfClosing) {
+    if (DANGEROUS_TAGS.has(tag.name) && !allowedDangerousTags.has(tag.name)) {
+      if (!VOID_TAGS.has(tag.name) && (RAW_TEXT_TAGS.has(tag.name) || !tag.selfClosing)) {
         const close = findCloseTag(input, lt + tag.name.length + 1, tag.name);
         i = close === -1 ? n : close;
       } else {
@@ -408,6 +436,9 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
     // Allowed tag: emit with allow-listed attributes.
     let attrsOut = '';
     const blankTarget = tag.name === 'a' && tag.attrs.get('target') === '_blank';
+    const requiredRel = tag.name === 'a'
+      ? [...(options.linkRel ?? []), ...(blankTarget ? ['noopener', 'noreferrer'] : [])]
+      : [];
     let forcedRel: string | null = null;
     for (const [attrName, rawValue] of tag.attrs) {
       const lower = attrName.toLowerCase();
@@ -418,21 +449,25 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
         // data: URIs stay allowed only where browsers render them as images —
         // an <a href="data:..."> would otherwise be clickable content.
         if (!isSafeUrl(rawValue, allowedSchemes, tag.name === 'img' && lower === 'src')) continue;
+        if (options.allowProtocolRelative === false && rawValue.trimStart().startsWith('//')) {
+          continue;
+        }
       }
       if (lower === 'target' && rawValue !== '_blank') continue;
       // rel is allow-listed, so `rel="opener"` would survive verbatim and
       // defeat the forced noopener below; on _blank merge instead.
-      if (lower === 'rel' && blankTarget) {
+      if (lower === 'rel' && requiredRel.length) {
         const tokens = rawValue.split(/\s+/).filter(Boolean).filter((t) => t !== 'opener');
-        forcedRel = [...new Set([...tokens, 'noopener', 'noreferrer'])].join(' ');
+        forcedRel = [...new Set([...tokens, ...requiredRel])].join(' ');
         continue;
       }
       attrsOut += ` ${lower}="${escapeAttr(rawValue)}"`;
     }
-    if (blankTarget) {
-      attrsOut += ` rel="${forcedRel ?? 'noopener noreferrer'}"`;
+    if (requiredRel.length) {
+      attrsOut += ` rel="${forcedRel ?? [...new Set(requiredRel)].join(' ')}"`;
     }
-    out += `<${tag.name}${attrsOut}>`;
+    const voidClose = VOID_TAGS.has(tag.name) && options.voidElementStyle === 'xhtml' ? ' /' : '';
+    out += `<${tag.name}${attrsOut}${voidClose}>`;
     i = tag.end;
   }
 

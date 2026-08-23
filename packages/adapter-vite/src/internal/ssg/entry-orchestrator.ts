@@ -30,16 +30,12 @@
 
 import type { EntryDescriptor } from '../protocol/ssg.ts';
 import { validateIslandModuleSpecifier } from './entry-generators.ts';
-import {
-  renderActionRoute,
-  renderApiRoute,
-  renderImport,
-  renderMiddleware,
-  renderNotFoundRoute,
-  renderPageRoute,
-  routeTagNameExpr,
-} from './entry-codegen.ts';
+import { renderActionRoute, renderPageRoute } from './entry-codegen.ts';
+import { renderNotFoundRoute } from './entry-not-found-codegen.ts';
+import { renderImport, routeTagNameExpr } from './entry-route-helpers.ts';
+import { renderApiRoute, renderMiddleware } from './entry-server-codegen.ts';
 import { renderRuntimeHelpers } from './entry-render-runtime.ts';
+import { renderActionRuntime } from './entry-action-runtime.ts';
 import { renderSsgSection } from './entry-render-ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
@@ -96,9 +92,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push(
       `  const tag = '<script type="module" src="' + __devClientScriptSrc + '"></script>';`,
     );
-    lines.push(
-      `  return html.includes('</body>') ? html.replace('</body>', '  ' + tag + '\\n</body>') : html + tag;`,
-    );
+    lines.push(`  return __insertBeforeBodyClose(html, '  ' + tag);`);
     lines.push('}');
     lines.push('');
   }
@@ -107,7 +101,9 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { wrapInDocument } from '@openelement/element';`);
   lines.push(`import { jsx } from '@openelement/element';`);
   lines.push(`import { createLogger } from '@openelement/element';`);
-  lines.push(`import { createRuntimeAdapter } from '@openelement/element/build-utils';`);
+  lines.push(
+    `import { createRuntimeAdapter, insertBeforeBodyClose as __insertBeforeBodyClose } from '@openelement/element/build-utils';`,
+  );
   if (desc.fetchMiddleware?.length) {
     lines.push(`import { composeFetchMiddleware } from '@openelement/element/build-utils';`);
   }
@@ -267,6 +263,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   // --- Runtime helpers ---
   lines.push(renderRuntimeHelpers(desc.appShell));
   lines.push('');
+  if (desc.pageRoutes.length > 0) {
+    lines.push(renderActionRuntime());
+    lines.push('');
+  }
 
   // --- App creation + Middleware ---
   lines.push('const app = new Hono()');

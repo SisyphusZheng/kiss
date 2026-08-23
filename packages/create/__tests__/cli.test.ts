@@ -32,6 +32,7 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     '@openelement/adapter-vite/nitro-mount',
     '@openelement/app',
     '@openelement/element',
+    '@openelement/element/build-utils',
     '@openelement/element/jsx-dev-runtime',
     '@openelement/element/jsx-runtime',
     '@openelement/generated/blog-data',
@@ -181,23 +182,22 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
   assert(readTemplate('gitignore.tmpl').includes('dist/'));
 });
 
-Deno.test('starter island binds its signal through hydration markers', () => {
+Deno.test('starter island uses the registered signal child contract (#1092)', () => {
   const island = readTemplate('app/islands/my-counter.tsx');
-  // A plain `{count.value}` render output is static text: hydration only
-  // rewires data-signal markers, so the starter island must register its
-  // signal and reference it by name to stay interactive after load.
+  // Registered Signal children are serialized with the hydration marker by
+  // the renderer; starter code should not hand-author protocol attributes.
   assert(island.includes("registerSignal('count'"), island);
-  assert(island.includes("data-signal='count'"), island);
+  assert(island.includes('<span>{this.#count}</span>'), island);
+  assertFalse(island.includes("data-signal='count'"), island);
 });
 
-Deno.test('client-only starter island declares a data-signal marker (#939)', () => {
+Deno.test('client-only starter island uses the registered signal child contract (#939)', () => {
   const island = readTemplate('app/islands/only-ticker.tsx');
-  // hydrate:'only' ships no DSD template; the CSR render must still activate
-  // the manual data-signal marker, so the island must register its signal and
-  // reference it by name — same contract as the DSD path.
+  // hydrate:'only' uses the same renderer-owned marker contract as DSD.
   assert(island.includes("hydrate: 'only'"), island);
   assert(island.includes("registerSignal('tick'"), island);
-  assert(island.includes("data-signal='tick'"), island);
+  assert(island.includes('<span>{this.#tick}</span>'), island);
+  assertFalse(island.includes("data-signal='tick'"), island);
 });
 
 Deno.test('starter global style block scopes tokens under :root', () => {

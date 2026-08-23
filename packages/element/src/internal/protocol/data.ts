@@ -19,23 +19,57 @@
  * SPA-mode loaders are a different chain — see SpaLoaderContext. The names
  * are intentionally parallel; the contexts are not interchangeable (#570).
  */
-export interface LoaderContext {
-  request: Request;
-  params: Record<string, string>;
-  env: Record<string, string | undefined>;
-  platform?: unknown;
+export interface ServerRouteMetadata {
+  path: string;
+  filePath: string;
 }
 
+/** Canonical request-time/SSG server route context. */
+export interface ServerRouteContext<
+  Env extends object = Record<string, string | undefined>,
+  Platform = unknown,
+  Route extends ServerRouteMetadata = ServerRouteMetadata,
+> {
+  request: Request;
+  params: Record<string, string>;
+  env: Env;
+  platform: Platform | undefined;
+  /** Mutable response-only channel merged into the framework response. */
+  responseHeaders: Headers;
+  route: Route;
+}
+
+/** Context passed to a request-time ('dynamic') route loader. */
+export interface LoaderContext<
+  Env extends object = Record<string, string | undefined>,
+  Platform = unknown,
+  Route extends ServerRouteMetadata = ServerRouteMetadata,
+> extends ServerRouteContext<Env, Platform, Route> {}
+
 /** Context passed to a route action function (extends loader context). */
-export interface ActionContext extends LoaderContext {
+export interface ActionContext<
+  Env extends object = Record<string, string | undefined>,
+  Platform = unknown,
+  Route extends ServerRouteMetadata = ServerRouteMetadata,
+> extends LoaderContext<Env, Platform, Route> {
   formData: FormData;
 }
 
 /** Route loader: fetches data for a page route. */
-export type Loader<T = unknown> = (ctx: LoaderContext) => T | Promise<T>;
+export type Loader<
+  T = unknown,
+  Env extends object = Record<string, string | undefined>,
+  Platform = unknown,
+  Route extends ServerRouteMetadata = ServerRouteMetadata,
+> = (ctx: LoaderContext<Env, Platform, Route>) => T | Promise<T>;
 
 /** Route action: handles form submissions for a page route. */
-export type Action<T = unknown> = (ctx: ActionContext) => T | Promise<T>;
+export type Action<
+  T = unknown,
+  Env extends object = Record<string, string | undefined>,
+  Platform = unknown,
+  Route extends ServerRouteMetadata = ServerRouteMetadata,
+> = (ctx: ActionContext<Env, Platform, Route>) => T | Promise<T>;
 
 // ─── SPA route data types (ADR-0119 frozen semantics) ──────────────
 

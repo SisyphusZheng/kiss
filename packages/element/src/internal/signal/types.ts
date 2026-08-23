@@ -13,6 +13,7 @@ import type {
   Unsubscribe,
   WritableSignal,
 } from '../protocol/signal.ts';
+import { SIGNAL_BRAND } from '../protocol/signal.ts';
 
 export type { ReadonlySignal, Signal, SignalEngine, SignalLike, Unsubscribe, WritableSignal };
 
@@ -21,6 +22,7 @@ export function isSignalLike(value: unknown): value is SignalLike {
   return Boolean(
     value &&
       typeof value === 'object' &&
+      (value as Partial<SignalLike>)[SIGNAL_BRAND] === true &&
       'value' in value &&
       typeof (value as SignalLike).subscribe === 'function',
   );

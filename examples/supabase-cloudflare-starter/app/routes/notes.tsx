@@ -17,8 +17,10 @@
  * retries create one row each (the create path is not idempotent).
  */
 import {
+  type ActionContext,
   definePage,
   fail,
+  type LoaderContext,
   type OpenElementActionFailure,
   redirect,
   useActionData,
@@ -52,12 +54,6 @@ interface CreateNoteData {
   error?: string;
   title?: string;
   body?: string;
-}
-
-interface NotesContext {
-  request: Request;
-  env: Record<string, string>;
-  responseHeaders: Headers;
 }
 
 export interface NotesSupabaseClient {
@@ -95,7 +91,7 @@ export const MAX_NOTE_TITLE_LENGTH = 120;
 export const MAX_NOTE_BODY_LENGTH = 10_000;
 
 export function createNotesLoader(createClient: NotesClientFactory = createServerSupabase) {
-  return async function loader(ctx: NotesContext): Promise<NotesData> {
+  return async function loader(ctx: LoaderContext<Record<string, string>>): Promise<NotesData> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { denied: true };
@@ -121,7 +117,7 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
 
 export function createNoteAction(createClient: NotesClientFactory = createServerSupabase) {
   return async function create(
-    ctx: NotesContext & { formData: FormData },
+    ctx: ActionContext<Record<string, string>>,
   ): Promise<OpenElementActionFailure<CreateNoteData>> {
     const title = String(ctx.formData.get('title') ?? '').trim();
     const body = String(ctx.formData.get('body') ?? '').trim();

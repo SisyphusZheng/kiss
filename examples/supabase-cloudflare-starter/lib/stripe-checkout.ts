@@ -6,6 +6,9 @@ export interface CheckoutConfiguration {
   livemode: boolean;
 }
 
+export const STRIPE_API_VERSION = '2026-07-29.dahlia';
+export const STRIPE_INTEGRATION_PREFIX = 'openelement_reference_';
+
 function required(env: Record<string, unknown>, name: string): string {
   const value = env[name];
   if (typeof value !== 'string' || !value) throw new Error(`missing ${name}`);
@@ -23,9 +26,8 @@ export function checkoutConfiguration(env: Record<string, unknown>): CheckoutCon
   const livemode = required(env, 'STRIPE_LIVEMODE');
   if (!['true', 'false'].includes(livemode)) throw new Error('invalid STRIPE_LIVEMODE');
   const secretKey = required(env, 'STRIPE_SECRET_KEY');
-  if (
-    !(livemode === 'true' ? secretKey.startsWith('sk_live_') : secretKey.startsWith('sk_test_'))
-  ) {
+  const allowedPrefixes = livemode === 'true' ? ['rk_live_', 'sk_live_'] : ['rk_test_', 'sk_test_'];
+  if (!allowedPrefixes.some((prefix) => secretKey.startsWith(prefix))) {
     throw new Error('Stripe secret key mode mismatch');
   }
   const checkoutHost = typeof env.STRIPE_CHECKOUT_HOST === 'string' && env.STRIPE_CHECKOUT_HOST
@@ -46,15 +48,12 @@ export function checkoutConfiguration(env: Record<string, unknown>): CheckoutCon
 export function checkoutSessionBody(
   config: CheckoutConfiguration,
   orderId: string,
+  integrationSuffix: string,
 ): URLSearchParams {
+  if (!/^[a-z]{8}$/.test(integrationSuffix)) throw new Error('invalid integration suffix');
   const body = new URLSearchParams();
   body.set('mode', 'payment');
-  // Card-only is a code-owned invariant. Accounts with Managed Payments enabled
-  // by default reject explicit payment_method_types unless Managed Payments is
-  // disabled per request — otherwise the Dashboard, not this code, would decide
-  // which methods Checkout offers.
-  body.set('managed_payments[enabled]', 'false');
-  body.set('payment_method_types[0]', 'card');
+  body.set('integration_identifier', `${STRIPE_INTEGRATION_PREFIX}${integrationSuffix}`);
   body.set('line_items[0][price]', config.priceId);
   body.set('line_items[0][quantity]', '1');
   body.set('client_reference_id', orderId);
@@ -63,6 +62,22 @@ export function checkoutSessionBody(
   body.set('success_url', `${config.appOrigin}/checkout?result=success`);
   body.set('cancel_url', `${config.appOrigin}/checkout?result=cancelled`);
   return body;
+}
+
+export function checkoutIntegrationSuffix(attemptId: string): string {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(attemptId)) {
+    throw new Error('invalid checkout attempt id');
+  }
+  // The persisted v4 UUID already contains cryptographically random attempt
+  // entropy. Reducing it into base 26 keeps Stripe's eight-letter label while
+  // making every retry of one attempt serialize the exact same request body.
+  let value = BigInt(`0x${attemptId.replaceAll('-', '')}`);
+  let suffix = '';
+  for (let index = 0; index < 8; index++) {
+    suffix += String.fromCharCode(97 + Number(value % 26n));
+    value /= 26n;
+  }
+  return suffix;
 }
 
 export function verifiedCheckoutUrl(value: unknown, expectedHost: string): string {

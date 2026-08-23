@@ -104,5 +104,6 @@ route:
 - Trust boundary today: `security.ts:55-63`
 - Gate barring npm deps in element: `tools/check-deno-api-free.ts:20`
 - Subpath precedent: `packages/element/deno.json` exports map
-  (`./build-utils`); adapter-vite sanitize-html usage stays untouched
+  (`./build-utils`). As of v0.43.1, adapter-vite content and head policies
+  also use this engine with explicit constrained option sets (#1105).
   (`adapter-vite/src/head-injection.ts`)

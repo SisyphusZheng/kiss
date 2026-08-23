@@ -33,7 +33,31 @@ Apps that need the content (blog/nav/sitemap) or i18n modules use `openElement()
 
 ## The generated blog-data module
 
-`content: { blog: { contentDir, basePath } }` compiles every markdown post into a virtual module: `import { posts, getPostBySlug } from '@openelement/generated/blog-data'`. The runtime module is generated at build/dev time; a checked-in `.d.ts` stub plus an import-map entry keep `deno task check` green. frontmatter supports `title`, `date`, `draft`, `tags`, `excerpt`, `type`.
+`content: { blog: { contentDir, basePath } }` compiles every markdown post into a generated module: `import { posts, getPostBySlug } from '@openelement/generated/blog-data'`. The module is written at build/dev time; a checked-in `.d.ts` stub plus an import-map entry keep `deno task check` green. frontmatter supports `title`, `date`, `draft`, `tags`, `excerpt`, `type`.
+
+Named Markdown sections use `content.collections`. Each collection declares a
+directory and optional frontmatter schema, then generates
+`app/data/_generated-{name}-data.ts`. The blog option is a compatibility alias
+over this same pipeline, so all collections share one watcher and one HTML
+sanitizer allow-list.
+
+```ts
+content: {
+  collections: {
+    guide: {
+      contentDir: 'content/guide',
+      basePath: '/guide',
+      schema: {
+        fields: {
+          title: { type: 'string', required: true },
+          order: { type: 'number', required: true },
+          lede: 'string',
+        },
+      },
+    },
+  },
+}
+```
 
 ### vite.config.ts — the blog-data module (#924)
 

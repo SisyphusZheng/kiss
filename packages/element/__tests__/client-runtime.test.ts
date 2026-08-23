@@ -3,10 +3,14 @@ import { disposeOpenElement, hydrateOpenElement } from '../src/internal/core/cli
 import { HydrationScope, markSelfHydrated } from '../src/internal/core/hydration-scope.ts';
 import { signal } from '../src/internal/signal/index.ts';
 
-function hydrationFixture(marker?: Record<string, unknown>) {
+function hydrationFixture(marker?: Record<string, unknown>, eventMarker?: Record<string, unknown>) {
   const shadowRoot = {
     host: undefined as unknown,
-    querySelectorAll: (selector: string) => selector === '[data-signal]' && marker ? [marker] : [],
+    querySelectorAll: (selector: string) => {
+      if (selector === '[data-signal]' && marker) return [marker];
+      if (selector === '[data-eid]' && eventMarker) return [eventMarker];
+      return [];
+    },
     append: () => {},
   };
   const host = {
@@ -96,6 +100,22 @@ Deno.test('client runtime reports a clear custom-element upgrade failure', () =>
       ),
     Error,
     'Failed to upgrade <third-party-host>: registry rejected host',
+  );
+});
+
+Deno.test('client runtime rejects third-party event half-hydration (#1094)', () => {
+  const eventMarker = { getAttribute: () => 'e0' };
+  const { root } = hydrationFixture(undefined, eventMarker);
+  const registry = { get: () => class {}, upgrade: () => {} };
+
+  assertThrows(
+    () =>
+      hydrateOpenElement(
+        root as unknown as ParentNode,
+        { registry: registry as unknown as CustomElementRegistry },
+      ),
+    Error,
+    'Cannot hydrate events for third-party <third-party-host>',
   );
 });
 

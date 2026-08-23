@@ -8,8 +8,7 @@ import '@openelement/ui/open-button';
 import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../data/version.ts';
 import { pageStyles } from '../components/page-styles.js';
 import { marked } from 'marked';
-// @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml from 'sanitize-html';
+import { sanitizeHtml } from '@openelement/element/sanitize';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
@@ -132,15 +131,7 @@ export class ChangelogPage extends OpenElement {
       // '# Changelog' line so the historical archive starts at h2 sections.
       const md = Deno.readTextFileSync(changelogPath).replace(/^#\s+Changelog\s*\n/, '');
       const raw = marked.parse(md, { async: false }) as string;
-      html = sanitizeHtml(raw, {
-        allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-          'h2',
-          'h3',
-          'h4',
-          'img',
-        ]),
-        allowedAttributes: { a: ['href', 'target', 'rel'] },
-      });
+      html = sanitizeHtml(raw);
     } catch {
       html = t.loadError;
     }

@@ -1,13 +1,13 @@
-# v0.43.0 — Universal WC SSR release plan
+# v0.43.1 — hardening closure plan
 
 > Current source package line: `v0.43.0`\
 > Current npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
 > Latest landed train: `v0.43.0` (admission visibility, on main)\
-> Active release target: `v0.43.0`\
+> Active release target: `v0.43.1`\
 > Next planned train: `v0.44.0-alpha.1`\
-> In-flight work: close the alpha.2 Gate 0 correctness set and release
-> evidence while the fullstack production plan proceeds under #1002\
-> Planning release target: `v0.43.0` (Universal WC SSR — this plan)\
+> In-flight work: close the v0.43.1 security, architecture and release-truth
+> acceptance matrix without expanding the frozen 0.43 product claim\
+> Planning release target: `v0.43.1` (hardening patch — this plan)\
 > Next release line: `v0.44.0` (production runtime)\
 > Current maturity stage: stable (the 0.43 line, Universal WC SSR frozen
 > under ADR-0135 on top of ADR-0122)

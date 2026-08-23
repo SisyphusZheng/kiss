@@ -418,7 +418,7 @@ Deno.test('payment lifecycle logs correlate by event id and stay redacted', asyn
   }
 });
 
-Deno.test('Cron audits the attachment replay handoff with the requesting admin as actor', async () => {
+Deno.test('Cron delegates attachment replay state and audit to one atomic RPC', async () => {
   const originalFetch = globalThis.fetch;
   const operations: unknown[] = [];
   globalThis.fetch = (input, init) => {
@@ -438,11 +438,10 @@ Deno.test('Cron audits the attachment replay handoff with the requesting admin a
       }]));
     }
     if (url.endsWith('/rpc/mark_attachment_scan_replayed')) {
-      operations.push('marked');
-      return Promise.resolve(new Response(null, { status: 204 }));
-    }
-    if (url.endsWith('/rpc/log_admin_audit')) {
-      operations.push(JSON.parse(String(init?.body)));
+      operations.push({
+        rpc: 'mark_attachment_scan_replayed',
+        body: JSON.parse(String(init?.body)),
+      });
       return Promise.resolve(new Response(null, { status: 204 }));
     }
     throw new Error(`unexpected request: ${url}`);
@@ -452,15 +451,13 @@ Deno.test('Cron audits the attachment replay handoff with the requesting admin a
   } finally {
     globalThis.fetch = originalFetch;
   }
-  assertEquals(operations, ['marked', {
-    actor: 'admin-9',
-    action: 'attachment_scan_replay_enqueued',
-    target_type: 'attachment_scan_dead_letter',
-    target_id: 'dlq-1',
+  assertEquals(operations, [{
+    rpc: 'mark_attachment_scan_replayed',
+    body: { dead_letter_id: 'dlq-1' },
   }]);
 });
 
-Deno.test('payment Cron audits the replay handoff with the requesting admin as actor', async () => {
+Deno.test('payment Cron delegates replay state and audit to one atomic RPC', async () => {
   const originalFetch = globalThis.fetch;
   const operations: unknown[] = [];
   globalThis.fetch = (input, init) => {
@@ -473,11 +470,10 @@ Deno.test('payment Cron audits the replay handoff with the requesting admin as a
       }]));
     }
     if (url.endsWith('/rpc/mark_payment_event_replay_enqueued')) {
-      operations.push('marked');
-      return Promise.resolve(new Response(null, { status: 204 }));
-    }
-    if (url.endsWith('/rpc/log_admin_audit')) {
-      operations.push(JSON.parse(String(init?.body)));
+      operations.push({
+        rpc: 'mark_payment_event_replay_enqueued',
+        body: JSON.parse(String(init?.body)),
+      });
       return Promise.resolve(new Response(null, { status: 204 }));
     }
     throw new Error(`unexpected request: ${url}`);
@@ -487,39 +483,41 @@ Deno.test('payment Cron audits the replay handoff with the requesting admin as a
   } finally {
     globalThis.fetch = originalFetch;
   }
-  assertEquals(operations, ['marked', {
-    actor: 'admin-9',
-    action: 'payment_event_replay_enqueued',
-    target_type: 'payment_event',
-    target_id: 'evt_replay',
+  assertEquals(operations, [{
+    rpc: 'mark_payment_event_replay_enqueued',
+    body: { target_event_id: 'evt_replay' },
   }]);
 });
 
-Deno.test('payment Cron keeps the handoff when the audit append fails after the mark', async () => {
+Deno.test('payment Cron isolates an atomic replay mark failure and continues later rows', async () => {
   const originalFetch = globalThis.fetch;
   const operations: string[] = [];
-  globalThis.fetch = (input) => {
+  globalThis.fetch = (input, init) => {
     const url = String(input);
     if (url.endsWith('/rpc/list_pending_payment_events')) {
-      return Promise.resolve(Response.json([{
-        provider_event_id: 'evt_replay',
-        processing_state: 'replay_requested',
-        replay_requested_by: 'admin-9',
-      }]));
+      return Promise.resolve(Response.json([
+        { provider_event_id: 'evt_bad', processing_state: 'replay_requested' },
+        { provider_event_id: 'evt_good', processing_state: 'replay_requested' },
+      ]));
     }
     if (url.endsWith('/rpc/mark_payment_event_replay_enqueued')) {
-      operations.push('marked');
-      return Promise.resolve(new Response(null, { status: 204 }));
-    }
-    if (url.endsWith('/rpc/log_admin_audit')) {
-      return Promise.resolve(new Response(null, { status: 503 }));
+      const eventId = JSON.parse(String(init?.body)).target_event_id;
+      operations.push(`mark:${eventId}`);
+      return Promise.resolve(new Response(null, { status: eventId === 'evt_bad' ? 503 : 204 }));
     }
     throw new Error(`unexpected request: ${url}`);
   };
   try {
-    await reconcilePayments(env());
+    await reconcilePayments(env({
+      PAYMENT_EVENT_QUEUE: {
+        send: (message) => {
+          operations.push(`send:${message.eventId}`);
+          return Promise.resolve();
+        },
+      },
+    }));
   } finally {
     globalThis.fetch = originalFetch;
   }
-  assertEquals(operations, ['marked']);
+  assertEquals(operations, ['send:evt_bad', 'mark:evt_bad', 'send:evt_good', 'mark:evt_good']);
 });

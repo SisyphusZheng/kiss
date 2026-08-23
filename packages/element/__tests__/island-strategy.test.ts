@@ -16,6 +16,7 @@ class FakeIntersectionObserver {}
 
 interface Registry {
   defined: string[];
+  constructors: unknown[];
   get(tag: string): unknown;
   define(tag: string, ctor: unknown): void;
 }
@@ -27,9 +28,11 @@ function withBrowserGlobals<T>(fn: (registry: Registry) => T): T {
   const previousCE = globalThis.customElements;
   const registry: Registry = {
     defined: [],
+    constructors: [],
     get: () => undefined,
-    define(tag) {
+    define(tag, ctor) {
       this.defined.push(tag);
+      this.constructors.push(ctor);
     },
   };
   Object.defineProperty(globalThis, 'IntersectionObserver', {
@@ -58,6 +61,40 @@ function withBrowserGlobals<T>(fn: (registry: Registry) => T): T {
     }
   }
 }
+
+Deno.test('defineIsland subclasses without prototype mutation and restores props before connect (#1099)', () => {
+  withBrowserGlobals((registry) => {
+    const order: string[] = [];
+    class Component {
+      count = 0;
+      readonly attrs = new Map([['data-ssr-props', '{"count":7}']]);
+      tagName = 'X-SYNC-PROPS';
+      hasAttribute(name: string): boolean {
+        return this.attrs.has(name);
+      }
+      getAttribute(name: string): string | null {
+        return this.attrs.get(name) ?? null;
+      }
+      connectedCallback(): void {
+        order.push(`connected:${this.count}`);
+      }
+    }
+    const original = Component.prototype.connectedCallback;
+    const Island = defineIsland(
+      freshTag(),
+      Component as unknown as CustomElementConstructor,
+      { hydrate: 'load' },
+    );
+    assertEquals(Component.prototype.connectedCallback, original);
+    assertEquals(Island === (Component as unknown), false);
+
+    const instance = new Island() as HTMLElement & { count: number; connectedCallback(): void };
+    instance.connectedCallback();
+    assertEquals(instance.count, 7);
+    assertEquals(order, ['connected:7']);
+    assertEquals(registry.constructors[0], Island);
+  });
+});
 
 let counter = 0;
 function freshTag(): string {

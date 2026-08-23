@@ -96,6 +96,14 @@ promise and are not application-authoring surface.
 - The element root no longer carries `export type *` seams (alpha.19); the
   public type surface is an explicit export list in
   `packages/element/src/index.ts`.
+- v0.43.1 ownership correction (ADR-0137, #1097): adapter-specific blog,
+  navigation, i18n and build-context contracts are exported by
+  `@openelement/adapter-vite`, not `@openelement/element`. Migrate imports of
+  `OpenElementBlogOptions`, `OpenElementNavSection`,
+  `OpenElementHeaderNavLink`, `OpenElementI18nContextOptions`, and
+  `OpenElementBuildContextLike` to the adapter root. Package roots route
+  supported implementations through named public modules and never name an
+  `internal/` module specifier.
 - `@openelement/app/i18n` is the optional locale-expansion integration point.
 - App's router implementation (`internal/router`) is not exported; the router
   types (`RouteConfig`, `RouterInstance`, `RouterMode`) were removed from the
@@ -111,6 +119,12 @@ promise and are not application-authoring surface.
   (alpha.13, ADR-0123 item 4): the former standalone `cli/preview` subpath
   merged into it as preview mode. The module
   files remain inside the package for internal relative imports only.
+- The adapter root owns the content-collection authoring surface:
+  `CollectionOptions`, `CollectionSchema`, `createCollectionPlugin`,
+  `loadCollectionData`, and `writeCollectionDataModule`. Normal applications
+  configure named collections through `openElement({ content: { collections } })`;
+  `content.blog` remains the compatible blog alias and emits the unchanged
+  `_generated-blog-data.ts` module contract.
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
   `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,

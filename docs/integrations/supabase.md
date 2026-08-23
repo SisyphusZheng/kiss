@@ -177,7 +177,7 @@ protection.
 ```tsx
 // app/routes/notes.tsx
 export function createNotesLoader(createClient: NotesClientFactory = createServerSupabase) {
-  return async function loader(ctx: NotesContext): Promise<NotesData> {
+  return async function loader(ctx: LoaderContext<Record<string, string>>): Promise<NotesData> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { denied: true };
@@ -350,7 +350,7 @@ export function createUploadAction(
   createClient: UploadClientFactory = createServerSupabase,
 ) {
   return async function upload(
-    ctx: RequestContext & { formData: FormData },
+    ctx: ActionContext<Record<string, unknown>>,
   ): Promise<OpenElementActionFailure<UploadActionData>> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();

@@ -1,8 +1,12 @@
 import { assert, assertEquals } from '@std/assert';
 import {
   assertAllowedTypeEscapes,
+  assertCurrentDocRoots,
   assertDuplicateCounts,
   assertMojibake,
+  assertNoElementImportCycles,
+  assertPublicEntryBoundaries,
+  assertRenderResponsibilitySize,
   assertStructuredMetadata,
   failMatches,
   isAtOrAfter,
@@ -12,6 +16,73 @@ import {
   isTextPath,
   type TextFile,
 } from './check-architecture-contract.ts';
+
+Deno.test('arch: oversized render responsibility modules fail (#1098)', () => {
+  const files: TextFile[] = [{
+    path: 'packages/element/src/internal/core/render-ir.ts',
+    text: Array.from({ length: 401 }, () => 'x').join('\n'),
+  }];
+  const issues: Issue[] = [];
+  assertRenderResponsibilitySize(files, issues);
+  assertEquals(issues[0]?.check, 'render-responsibility-size');
+});
+
+Deno.test('arch: split render responsibility modules pass (#1098)', () => {
+  const files: TextFile[] = [{
+    path: 'packages/element/src/internal/core/render-ir.ts',
+    text: Array.from({ length: 400 }, () => 'x').join('\n'),
+  }];
+  const issues: Issue[] = [];
+  assertRenderResponsibilitySize(files, issues);
+  assertEquals(issues, []);
+});
+
+Deno.test('arch: package public entries reject internal module specifiers (#1097)', () => {
+  const files: TextFile[] = [{
+    path: 'packages/element/src/index.ts',
+    text: "export { render } from './internal/core/render.ts';",
+  }];
+  const issues: Issue[] = [];
+  assertPublicEntryBoundaries(files, issues);
+  assertEquals(issues[0]?.check, 'public-entry-boundary');
+});
+
+Deno.test('arch: public facades and explicit adapter protocol lists pass (#1097)', () => {
+  const files: TextFile[] = [
+    {
+      path: 'packages/element/src/index.ts',
+      text: "export { render } from './public-runtime.ts';",
+    },
+    {
+      path: 'packages/adapter-vite/src/internal/protocol/framework.ts',
+      text: "export type { FrameworkOptions } from '../../framework.ts';",
+    },
+  ];
+  const issues: Issue[] = [];
+  assertPublicEntryBoundaries(files, issues);
+  assertEquals(issues, []);
+});
+
+Deno.test('arch: element static import cycles are rejected (#1095)', () => {
+  const files: TextFile[] = [
+    { path: 'packages/element/src/a.ts', text: "import './b.ts';" },
+    { path: 'packages/element/src/b.ts', text: "export { x } from './a.ts';" },
+  ];
+  const issues: Issue[] = [];
+  assertNoElementImportCycles(files, issues);
+  assertEquals(issues.length, 1);
+  assertEquals(issues[0].check, 'element-import-cycle');
+});
+
+Deno.test('arch: element acyclic imports pass (#1095)', () => {
+  const files: TextFile[] = [
+    { path: 'packages/element/src/a.ts', text: "import './b.ts';" },
+    { path: 'packages/element/src/b.ts', text: 'export const x = 1;' },
+  ];
+  const issues: Issue[] = [];
+  assertNoElementImportCycles(files, issues);
+  assertEquals(issues, []);
+});
 import { normalizeSlashes } from './lib/path.ts';
 
 const REPLACEMENT_CHAR = String.fromCharCode(0xFFFD);
@@ -155,11 +226,29 @@ Deno.test('arch: isProductionSource classifies correctly', () => {
 Deno.test('arch: isCurrentDocOrExample classifies correctly', () => {
   assert(isCurrentDocOrExample('README.md'));
   assert(isCurrentDocOrExample('README.zh.md'));
-  assert(isCurrentDocOrExample('docs/guide/x.md'));
-  assert(isCurrentDocOrExample('docs/arch/x.md'));
+  assert(isCurrentDocOrExample('docs/current/x.md'));
+  assert(isCurrentDocOrExample('docs/status/STATUS.md'));
+  assert(isCurrentDocOrExample('docs/roadmap/ROADMAP.md'));
   assert(isCurrentDocOrExample('packages/core/README.md'));
   assert(!isCurrentDocOrExample('CHANGELOG.md'));
   assert(!isCurrentDocOrExample('packages/core/__tests__/x.test.ts'));
+});
+
+Deno.test('arch: vanished current-doc scan roots fail loudly (#1104)', () => {
+  const issues: Issue[] = [];
+  assertCurrentDocRoots(['docs/current/x.md', 'docs/status/STATUS.md'], issues);
+  assertEquals(issues.length, 1);
+  assertEquals(issues[0].file, 'docs/roadmap/');
+  assertEquals(issues[0].check, 'doc-scan-root');
+});
+
+Deno.test('arch: populated current-doc scan roots pass (#1104)', () => {
+  const issues: Issue[] = [];
+  assertCurrentDocRoots(
+    ['docs/current/x.md', 'docs/status/STATUS.md', 'docs/roadmap/ROADMAP.md'],
+    issues,
+  );
+  assertEquals(issues, []);
 });
 
 Deno.test('arch: normalizeSlashes converts backslashes to forward slashes', () => {

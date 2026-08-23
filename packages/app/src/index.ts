@@ -21,6 +21,8 @@ export type {
   Loader,
   LoaderContext,
   ProblemDetails,
+  ServerRouteContext,
+  ServerRouteMetadata,
   SpaAction,
   SpaActionContext,
   SpaLoader,
@@ -35,7 +37,7 @@ export type { ElementDefinition } from '@openelement/element';
 // SPA bootstrap
 export { defineApp } from './spa.ts';
 export type { SpaAppInstance } from './spa.ts';
-export { useActionData, useLoaderData } from './internal/router/data-context.ts';
+export { useActionData, useLoaderData } from './data-context.ts';
 
 // OpenElement-owned request context contract and convenience constructor.
 // This is the single canonical RequestContext authority. Adapters build it

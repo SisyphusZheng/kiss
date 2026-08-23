@@ -35,10 +35,11 @@ application layer.
 - [x] Stripe webhook ingress preserves and verifies the raw body before JSON
       parsing, enforces timestamp tolerance, durably deduplicates provider event
       ids, and applies only monotonic order-state transitions
-- [x] one-time card Checkout uses a server-owned catalog, retry-stable attempt
-      ids and Stripe idempotency keys; Session and PaymentIntent metadata carry
-      the order id, paid events must reconcile amount/currency, and the success
-      URL never grants payment state
+- [x] one-time Checkout uses Dashboard-managed dynamic payment methods, a
+      server-owned catalog, retry-stable attempt ids and Stripe idempotency
+      keys; Session and PaymentIntent metadata carry the order id, paid events
+      must reconcile amount/currency, and the success URL never grants payment
+      state
 - [x] verified Stripe events persist a minimal envelope before Queue handoff;
       the Queue consumer owns state transitions, exhausted delivery becomes a
       durable admin-visible DLQ row, and Cron safely re-enqueues received events
@@ -49,8 +50,9 @@ application layer.
 - Deno (workspace tasks), Node (Nitro `node` preset run),
 - Supabase CLI + Docker (local emulator; migrations), or a hosted project,
 - Cloudflare account for deployment (wrangler, secret-boundary runbook).
-- A self-hosted OPSWAT MetaDefender Core HTTPS endpoint and API key for real
-  attachment qualification; the scanner fails closed when these are absent.
+- An operator-selected malware scanner for production attachment scanning.
+  MetaDefender Core is a reference adapter; the scanner fails closed when no
+  provider is configured.
 
 ## Tasks
 
@@ -91,10 +93,9 @@ STRIPE_CHECKOUT_HOST
 APP_ORIGIN
 ```
 
-Optional scan-engine env (real-engine evidence deferred to v0.44, #1070 /
-ADR-0132). When unset, uploads stay `pending_scan` and remain undownloadable
-by everyone — fail-closed by design. When set, the private scanner Worker
-calls this `/file/sync`-compatible HTTPS endpoint:
+The scanner Worker uses a provider-neutral contract (ADR-0139). When no
+provider is configured, uploads stay `pending_scan` and remain undownloadable
+by everyone. The maintained MetaDefender reference adapter uses:
 
 ```
 METADEFENDER_CORE_URL
@@ -128,6 +129,6 @@ handlers and must never be rendered or prefixed with `VITE_`.
   verified (same evidence file, follow-ups 3/4). Known limitation: a fresh
   sender domain has zero reputation, so the first mail can land in spam on
   some providers — reputation ramps with volume; operational, not a defect.
-- Real scan-engine qualification stays deferred to v0.44 (#1070 / ADR-0132):
-  until `METADEFENDER_*` is configured, uploads remain `pending_scan` and
-  undownloadable by everyone — fail-closed by design.
+- Real scan-engine qualification is tracked for v0.44 (#1070 / ADR-0139).
+  v0.43.1 proves the provider-neutral fail-closed state machine without
+  requiring commercial credentials or paid container infrastructure.

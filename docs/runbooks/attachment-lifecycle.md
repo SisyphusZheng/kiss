@@ -18,20 +18,17 @@ only `fetch` implementation. The entry composes application-owned `queue` and
   recovery instead of silent deletion.
 - Service binding `ATTACHMENT_SCANNER` whose `POST /scan` response is exactly
   `{ "verdict": "clean" }` or `{ "verdict": "quarantined" }`.
-- The maintained scanner target is a private Cloudflare Worker backed by a
-  self-hosted OPSWAT MetaDefender Core HTTPS origin. It requires
-  `METADEFENDER_CORE_URL` and `METADEFENDER_API_KEY`; missing or malformed
-  configuration can never produce `clean`.
+- The scanner Worker consumes the provider-neutral `MalwareScannerProvider`
+  contract. MetaDefender Core is the maintained reference adapter, not
+  mandatory infrastructure. Missing or malformed provider configuration can
+  never produce `clean`.
 - A Cron Trigger for reconciliation. Five-minute cadence is the reference
   setting.
 
-> 0.43 status (ADR-0132, #1070): the real scan engine is deferred to v0.44.
-> Deployments without `METADEFENDER_CORE_URL` / `METADEFENDER_API_KEY` are
-> valid: the scanner Worker is not deployed, the async overlay omits the
-> `ATTACHMENT_SCANNER` binding, scan messages exhaust retries into the DLQ and
-> durable dead letters, and every attachment stays `pending_scan` — never
-> listed, never signed. This runbook describes the maintained target state;
-> the Tier 3 artifact records `not-configured` until an engine is provided.
+> v0.43.1 status (ADR-0139): deployments without a scan provider remain
+> runtime-safe. Provision mode records `not-configured`; attachments remain
+> `pending_scan`, never listed or signed. Real benign/EICAR provider
+> qualification is tracked by #1070 for v0.44.
 
 The safe base `wrangler.jsonc` intentionally contains no live Queue or Cron
 resources while database migrations are pending. Once `migration_mode=apply`
@@ -46,6 +43,43 @@ is green, dispatch `Fullstack deploy smoke (real providers)` with
 4. stores `SUPABASE_SERVICE_ROLE_KEY` as an encrypted application Worker secret;
 5. deploys with a three-retry, 30-second-delay consumer, DLQ, and five-minute Cron;
 6. records the selected mode in the redacted Tier 3 artifact.
+
+## Real-provider qualification (v0.44)
+
+Dispatch `Fullstack deploy smoke (real providers)` on the candidate SHA with
+`async_mode=provision`. A provider-qualified run must record both
+`attachment-scanner-real-clean-owner-download` and
+`attachment-scanner-real-eicar-quarantined` as `pass`. It must also record
+`attachment-scanner-real-retry-dlq` and
+`attachment-scanner-authenticated-admin-replay` as `pass`.
+
+The probe creates a short-lived confirmed Supabase user, signs into the real
+Worker, and uploads a benign text fixture plus EICAR through `/upload?/upload`.
+It polls the service-role view of the reservation state, requires `clean` and
+`quarantined` respectively, verifies the clean file's owner page produces a
+working signed URL, and verifies EICAR is absent from the owner listing. The
+cleanup trap removes the private Storage objects before deleting the Auth
+user. The archived JSON contains only check names/results and the candidate
+SHA; never add fixture contents, object keys, user ids, cookies, or provider
+responses.
+
+The failure probe deploys the same private scanner Worker with a reserved
+non-resolving `.invalid` engine origin, uploads a third benign fixture, and
+waits for bounded Queue retries plus durable DLQ persistence. A cleanup trap
+always restores the real engine origin. After restoration, the probe requests
+replay through the signed-in admin action and waits for Cron and Queue to
+produce a real `clean` verdict. If restoration fails, treat it as an incident:
+keep downloads fail-closed, restore the last known scanner deployment, and do
+not rerun or release until the service binding is healthy.
+
+Before dispatch with the reference adapter, verify the two MetaDefender
+secrets exist at repository scope and that the endpoint is private or strongly
+authenticated. Other adapters own equivalent secret and endpoint validation.
+Roll back by
+restoring the previous scanner deployment or removing the service binding;
+never return a synthetic clean verdict. A missing engine deliberately makes
+the release evidence workflow red while preserving the runtime fail-closed
+state.
 
 Do not commit a second hand-maintained Wrangler config. Do not run base mode
 after async provisioning: base mode intentionally removes async bindings and is
@@ -66,10 +100,9 @@ only the pre-migration deployment path.
    The scanner first calls `authorize_attachment_scan`, which requires the exact
    reservation id/object key pair in a pending state. It then downloads the
    private object with a server credential, enforces the database byte count and
-   10 MiB cap while reading, and sends only bounded bytes to MetaDefender Core.
-   Only result code 0 is clean; infected, suspicious, and blocklisted codes are
-   quarantined. Timeouts, skipped/failed scans, malformed output, and every
-   unknown code are retryable failures.
+   10 MiB cap while reading, then passes only bounded bytes to the configured
+   provider. The provider may return only `clean` or `quarantined`; timeouts,
+   malformed output, and every unknown verdict are retryable failures.
 5. `complete_attachment_scan` is idempotent for duplicate delivery. A conflicting
    second verdict is rejected, and every first transition appends an immutable
    owner-readable storage audit event.
@@ -95,11 +128,10 @@ only the pre-migration deployment path.
 - If pending scans accumulate, verify both bindings and service-role secret,
   invoke the scheduled handler in a non-production environment, then replay the
   DLQ. Do not mark Alpha 5 complete without a real at-least-once + DLQ replay run.
-- MetaDefender Core is deliberately self-hosted so file residency and retention
-  remain operator-owned. Pin an approved Core version/profile, disable external
-  sample sharing, document engine licenses and update cadence, and set Core's
-  retention cleanup before enabling production traffic. The reference cap is
-  10 MiB even if the licensed Core deployment accepts larger files.
+- Provider selection and operation belong to the deployer. Document file
+  residency, retention, sample-sharing, signature updates, licensing, cost,
+  and compliance before enabling production traffic. The reference cap is
+  10 MiB even if the selected engine accepts larger files.
 - Rotate `METADEFENDER_API_KEY` with overlapping Core credentials: install the
   new Worker secret, run clean and EICAR fixtures, then revoke the old key. On
   rollback, restore the previous scanner deployment; never bypass scanning or

@@ -2,27 +2,23 @@
  * entry-codegen.ts - Entry code string generation
  *
  * The codegen axis of the entry-* family (#901): shared code-generation
- * helpers used by entry-orchestrator.ts and entry-render-ssg.ts, plus the
- * client island entry emission (generateClientEntry, moved from
- * entry-generators.ts). Each function generates a fragment of a virtual
- * entry module (the Hono entry or the client entry). Runtime helper
+ * helpers used by entry-orchestrator.ts and entry-render-ssg.ts. Each
+ * function generates a fragment of the virtual Hono entry. Client entry
+ * emission lives in entry-client-codegen.ts. Runtime helper
  * emission lives in entry-render-runtime.ts; the descriptor data model
  * lives in protocol/ssg.ts and is constructed by entry-descriptor.ts.
  */
 
-import type {
-  ApiRouteDecl,
-  ClientIslandEntry,
-  CorsOriginConfig,
-  ImportDecl,
-  MiddlewareDecl,
-  PageRouteDecl,
-  RendererDecl,
-} from '../protocol/ssg.ts';
-import { ACTION_FETCH_HEADER } from '@openelement/element';
+import type { PageRouteDecl, RendererDecl } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
-import { validateClientIslandEntry, VIRTUAL_RUNTIME_SPECIFIERS } from './entry-generators.ts';
-import type { AdmittedIslandModuleSpecifier } from './entry-generators.ts';
+import {
+  documentWrapOptionsLines,
+  pageDefinitionExpr,
+  pagePropsExpr,
+  rendererScopeMatches,
+  routeMetaExpr,
+  routeTagNameExpr,
+} from './entry-route-helpers.ts';
 
 /**
  * #863 / ADR-0123 addendum item 13: the action error channel speaks RFC 9457
@@ -35,100 +31,6 @@ function problemJsonLine(status: number, title: string, detailExpr: string): str
   return `c.json({ type: 'about:blank', title: ${
     JSON.stringify(title)
   }, status: ${status}, detail: ${detailExpr} }, ${status}, { 'Content-Type': __problemJsonMediaType })`;
-}
-
-export function renderImport(imp: ImportDecl): string {
-  const names = imp.alias ? `${imp.names[0]} as ${imp.alias}` : imp.names.join(', ');
-  return `import { ${names} } from '${imp.from}'`;
-}
-
-export function routeTagNameExpr(varNameOrFallback: string, fallback?: string): string {
-  const tagName = fallback ?? varNameOrFallback;
-  return quoteGeneratedJavaScriptValue(tagName);
-}
-
-function pageDefinitionExpr(varName: string): string {
-  return `__pageDefinition(${varName})`;
-}
-
-function routeMetaExpr(varName: string): string {
-  return `__routeMeta(${varName})`;
-}
-
-export function routeRevalidateExpr(varName: string): string {
-  const pageDef = pageDefinitionExpr(varName);
-  return `(${pageDef}.renderIntent?.revalidate ?? false)`;
-}
-
-/**
- * Renderer scope matching, case-sensitive (URL paths are case-sensitive and
- * Hono routes match case-sensitively). Used at codegen time by
- * renderRouteHandler; the runtime __matchingRenderers function emitted by
- * renderMatchingRenderersFn() must mirror these semantics exactly.
- */
-function rendererScopeMatches(routePath: string, scope: string): boolean {
-  if (scope === '/') return true;
-  return routePath === scope || routePath.startsWith(scope + '/');
-}
-
-/**
- * Emit the runtime __matchingRenderers(routePath) function for the SSG
- * renderRoute. Semantics mirror rendererScopeMatches() — keep them in sync.
- */
-export function renderMatchingRenderersFn(lines: string[], renderers: RendererDecl[]): void {
-  lines.push('function __matchingRenderers(routePath) {');
-  lines.push('  const renderers = [];');
-  for (const renderer of renderers) {
-    if (renderer.scope === '/') {
-      lines.push(`  renderers.push(${renderer.varName}.default);`);
-    } else {
-      lines.push(
-        `  if (routePath === ${
-          quoteGeneratedJavaScriptValue(renderer.scope)
-        } || routePath.startsWith(${
-          quoteGeneratedJavaScriptValue(renderer.scope + '/')
-        })) renderers.push(${renderer.varName}.default);`,
-      );
-    }
-  }
-  lines.push('  return renderers;');
-  lines.push('}');
-}
-
-/** Props object passed to the page jsx() call (page GET, action POST and SSG renderRoute). */
-export function pagePropsExpr(options: {
-  paramsExpr: string;
-  dataExpr: string;
-  actionDataExpr: string;
-  requestExpr: string;
-  routeExpr: string;
-  metaExpr: string;
-}): string {
-  const { paramsExpr, dataExpr, actionDataExpr, requestExpr, routeExpr, metaExpr } = options;
-  return `{ ...${paramsExpr}, data: ${dataExpr}, __openElementActionData: ${actionDataExpr}, __openElementParams: ${paramsExpr}, __openElementRequest: ${requestExpr}, __openElementRoute: ${routeExpr}, __openElementMeta: ${metaExpr} }`;
-}
-
-/** wrapInDocument() options object shared by page handlers and the SSG renderRoute. */
-export function documentWrapOptionsLines(options: {
-  /** Expression yielding the page definition (head source), e.g. `__page`. */
-  pageExpr: string;
-  titleExpr: string;
-  langExpr: string;
-  headExtrasExpr: string;
-  allowHeadExtrasScripts: boolean;
-  /** Emit the per-request CSP nonce line (Hono handlers only). */
-  cspNonce?: boolean;
-}): string[] {
-  const lines = [
-    `title: ${options.titleExpr},`,
-    `lang: ${options.langExpr},`,
-    `meta: { description: ${options.pageExpr}.head?.description, tags: ${options.pageExpr}.head?.meta },`,
-    `headExtras: ${options.headExtrasExpr},`,
-    `dangerouslyHeadFragments: ${options.pageExpr}.head?.dangerouslyHeadFragments || [],`,
-    `allowHeadExtrasScripts: ${JSON.stringify(options.allowHeadExtrasScripts)},`,
-  ];
-  if (options.cspNonce) lines.push(`cspNonce: c.get('cspNonce'),`);
-  return lines;
 }
 
 interface RouteHandlerDocConfig {
@@ -201,7 +103,7 @@ function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContex
   if (isAction) {
     // Declared outside try so the catch can branch on the fetch path without
     // hitting a TDZ error when the action block never ran.
-    lines.push(`  let __isFetch = false;`);
+    lines.push(`  const __actionState = { isFetch: false };`);
   }
   lines.push(`  try {`);
   lines.push(`    __params = c.req.param() || {}`);
@@ -227,177 +129,24 @@ function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContex
  * floor, named-action dispatch, form body parsing, the PRG/fetch response
  * channels, and the 422 re-render data.
  */
+/** Emit only route-specific wiring; the protocol implementation is shared. */
 function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): void {
   const { route, docConfig, headExtrasExpr } = ctx;
-
-  // ADR-0120 action protocol (0.42.0-alpha.2), hardened by ADR-0121:
-  // - named actions: ?/name selects module.actions[name] (SvelteKit shape),
-  //   with an own-key lookup so prototype members are never callable;
-  // - the action runs BEFORE the loader so a mutation never renders stale
-  //   data (revalidation invariant);
-  // - fail() returns take the 422 re-render channel with the failure data
-  //   echoed; everything else succeeds;
-  // - a successful non-GET action never answers 200 with a rendered page:
-  //   303 back to the route (PRG, action marker stripped), or an
-  //   ActionResult for fetch callers; a returned Response is a contract
-  //   violation, not a response.
-  lines.push(`    const __url = new URL(c.req.url);`);
+  lines.push(`    const __actionExecution = await __runActionProtocol(`);
+  lines.push(`      c, ${route.varName}, __loadContext,`);
   lines.push(
-    `    const __actionName = (() => { for (const key of __url.searchParams.keys()) { if (key.startsWith('/')) return key.slice(1); } return undefined; })();`,
+    `      (title, message, status) => c.html(wrapInDocument(__statusHtml(title, message), {`,
   );
+  lines.push(`        title, lang: ${quoteGeneratedJavaScriptValue(docConfig.lang)},`);
+  lines.push(`        headExtras: ${headExtrasExpr},`);
   lines.push(
-    `    const __namedActions = (typeof ${route.varName}.actions === 'object' && ${route.varName}.actions !== null) ? ${route.varName}.actions : {};`,
+    `        allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
   );
-  // ADR-0121 (#542): own-key lookup — ?/constructor and other prototype
-  // members are never callable as actions.
-  lines.push(
-    `    const __actionFn = __actionName !== undefined ? (Object.prototype.hasOwnProperty.call(__namedActions, __actionName) ? __namedActions[__actionName] : undefined) : (typeof ${route.varName}.action === 'function' ? ${route.varName}.action : undefined);`,
-  );
-  // ADR-0121 section 1 (#540): one header, two values — 'true' selects the
-  // ActionResult JSON channel; 'enhance' marks the built-in morph client
-  // (HTML responses identical to the no-JS path).
-  lines.push(`    const __actionHeader = c.req.header(__actionFetchHeader);`);
-  lines.push(`    __isFetch = __actionHeader === 'true';`);
-  // #611 / ADR-0121 §12 (amended #938/#921/#937): the CSRF floor is a
-  // coherent origin policy matrix over (Sec-Fetch-Site × Origin):
-  //
-  //   SFS                Origin present  Origin 'null'  Origin missing
-  //   cross-site         reject          reject         reject (fail closed)
-  //   same-site          origin compare  reject (#921)  reject (#921)
-  //   same-origin        origin compare  allow (#938)   allow (non-browser)
-  //   none/absent        origin compare  allow          allow (non-browser)
-  //
-  // - origin compare: literal origin match, except loopback hostname aliases
-  //   (localhost / 127.0.0.1 / [::1]) on http: count as the same site — dev
-  //   servers bind one spelling while the browser may use another (#937).
-  //   The alias ignores the port and ships in the production entry too (this
-  //   generated server is not dev-only). That is safe: a browser post from a
-  //   non-loopback origin arrives with Sec-Fetch-Site: cross-site and is
-  //   rejected before the origin compare runs, so the alias only ever relaxes
-  //   requests that already claim a loopback Origin — and a non-browser
-  //   client can forge Origin regardless, with or without the alias.
-  // - Origin 'null' (no-referrer pages) with Sec-Fetch-Site same-origin is
-  //   the progressive-enhancement no-JS form post (#938) — allowed, because
-  //   only the browser can claim same-origin.
-  // - same-site without a usable Origin is a forged header (browsers always
-  //   send Origin on POST): reject so a compromised sibling subdomain cannot
-  //   pass (#921).
-  // Non-browser clients that omit both headers are allowed. Opt out via
-  // runtime env on the request context: c.env.OPEN_ELEMENT_DISABLE_CSRF === '1'
-  // (Workers/Node bindings).
-  lines.push(`    {`);
-  lines.push(
-    `      const __csrfOff = __loadContext.env && __loadContext.env.OPEN_ELEMENT_DISABLE_CSRF === '1';`,
-  );
-  lines.push(`      if (!__csrfOff) {`);
-  lines.push(`        const __origin = c.req.header('origin');`);
-  lines.push(`        const __sfs = (c.req.header('sec-fetch-site') || '').toLowerCase();`);
-  lines.push(`        let __cross = __sfs === 'cross-site';`);
-  lines.push(
-    `        if (!__cross && __origin && __origin !== 'null') { try {`,
-  );
-  lines.push(`          const __o1 = new URL(__origin);`);
-  lines.push(`          const __o2 = new URL(c.req.url);`);
-  lines.push(
-    `          const __loop = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';`,
-  );
-  lines.push(
-    `          __cross = __o1.origin !== __o2.origin && !(__o1.protocol === 'http:' && __o2.protocol === 'http:' && __loop(__o1.hostname) && __loop(__o2.hostname));`,
-  );
-  lines.push(
-    `        } catch { __cross = true; } } else if (!__cross && __sfs === 'same-site') { __cross = true; }`,
-  );
-  lines.push(`        if (__cross) {`);
-  lines.push(
-    `          if (__isFetch) return ${
-      problemJsonLine(403, 'Forbidden', `'Cross-site form submission rejected'`)
-    };`,
-  );
-  lines.push(`          return c.text('Forbidden', 403);`);
-  lines.push(`        }`);
-  lines.push(`      }`);
-  lines.push(`    }`);
-  lines.push(`    if (typeof __actionFn !== 'function') {`);
-  lines.push(
-    `      const __noActionMessage = __actionName !== undefined ? 'No action named "' + __actionName + '" on this route.' : 'This route does not accept submissions.';`,
-  );
-  // ADR-0121 section 5 (#549): fetch callers always receive a defined JSON
-  // answer (problem+json for errors) — the two channels never diverge in
-  // semantics.
-  lines.push(`      if (__isFetch) {`);
-  lines.push(
-    `        return ${problemJsonLine(404, 'Not Found', '__noActionMessage')};`,
-  );
-  lines.push(`      }`);
-  lines.push(
-    `      return c.html(wrapInDocument(__statusHtml('404 Not Found', __noActionMessage), { title: '404 Not Found', lang: ${
-      quoteGeneratedJavaScriptValue(docConfig.lang)
-    }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
-      JSON.stringify(docConfig.allowHeadExtrasScripts)
-    }, cspNonce: c.get('cspNonce') }), 404);`,
-  );
-  lines.push(`    }`);
-  lines.push(`    let __formData;`);
-  // ADR-0121 (#581): an unparseable body is a client error, not a 500.
-  lines.push(`    try {`);
-  lines.push(`      __formData = await c.req.raw.formData();`);
-  lines.push(`    } catch {`);
-  lines.push(`      if (__isFetch) {`);
-  lines.push(
-    `        return ${problemJsonLine(400, 'Bad Request', `'Could not parse the form body.'`)};`,
-  );
-  lines.push(`      }`);
-  lines.push(
-    `      return c.html(wrapInDocument(__statusHtml('400 Bad Request', 'Could not parse the form body.'), { title: '400 Bad Request', lang: ${
-      quoteGeneratedJavaScriptValue(docConfig.lang)
-    }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
-      JSON.stringify(docConfig.allowHeadExtrasScripts)
-    }, cspNonce: c.get('cspNonce') }), 400);`,
-  );
-  lines.push(`    }`);
-  lines.push(
-    `    const __actionResult = await __actionFn({ ...__loadContext, formData: __formData });`,
-  );
-  // ADR-0121 section 2 (#541): actions must not return a Response — the
-  // return channel is data or fail(), the redirect channel is redirect().
-  // A returned Response used to bypass every status rule; it is now a
-  // contract violation on both channels.
-  lines.push(`    if (__actionResult instanceof Response) {`);
-  lines.push(
-    `      throw new Error('[openElement] Actions must not return a Response object; return data, fail(status, data), or throw redirect() (ADR-0121).');`,
-  );
-  lines.push(`    }`);
-  // ADR-0121 section 4 (#548): the default PRG target strips the ?/name
-  // action marker; all other query parameters are preserved.
-  lines.push(`    const __prgParams = new URLSearchParams(__url.search);`);
-  lines.push(
-    `    for (const key of [...__prgParams.keys()]) { if (key.startsWith('/')) __prgParams.delete(key); }`,
-  );
-  lines.push(`    const __prgSearch = __prgParams.toString();`);
-  lines.push(
-    `    const __prgTarget = __url.pathname + (__prgSearch ? '?' + __prgSearch : '');`,
-  );
-  lines.push(`    if (__isFetch) {`);
-  lines.push(`      if (__isActionFailure(__actionResult)) {`);
-  // Unserializable fail() data (circular structure, BigInt, throwing
-  // getter): the native channel re-renders it fine, but the fetch channel
-  // must answer JSON — c.json would throw and the action failure would
-  // surface as a 500. Degrade the payload, keep status and body shape.
-  lines.push(`        let __failureData = __actionResult.data;`);
-  lines.push(`        try { JSON.stringify(__failureData); } catch { __failureData = null; }`);
-  lines.push(
-    `        return c.json({ type: 'failure', status: __actionResult.status, data: __failureData }, __actionResult.status);`,
-  );
-  lines.push(`      }`);
-  // ADR-0121 section 3: HTTP 200 carrying a data message, not an HTTP
-  // redirect (fetch would follow a 3xx and the JSON would be unreadable).
-  lines.push(
-    `      return c.json({ type: 'redirect', status: 303, location: __prgTarget });`,
-  );
-  lines.push(`    }`);
-  lines.push(`    if (!__isActionFailure(__actionResult)) {`);
-  lines.push(`      return c.redirect(__prgTarget, 303);`);
-  lines.push(`    }`);
+  lines.push(`        cspNonce: c.get('cspNonce')`);
+  lines.push(`      }), status), __actionState`);
+  lines.push(`    );`);
+  lines.push(`    if (__actionExecution.response) return __actionExecution.response;`);
+  lines.push(`    const __actionResult = __actionExecution.actionResult;`);
   lines.push(
     `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined;`,
   );
@@ -472,7 +221,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
       `      const __redirectStatus = 303;`,
     );
     lines.push(
-      `      if (__isFetch) return c.json({ type: 'redirect', status: __redirectStatus, location: err.location });`,
+      `      if (__actionState.isFetch) return c.json({ type: 'redirect', status: __redirectStatus, location: err.location });`,
     );
     lines.push(`      return c.redirect(err.location, __redirectStatus)`);
   } else {
@@ -497,7 +246,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   // matching the HTML channel. Fetch callers get RFC 9457 problem+json
   // (#863), never the boundary page.
   if (isAction) {
-    lines.push(`    if (__isFetch) {`);
+    lines.push(`    if (__actionState.isFetch) {`);
     lines.push(
       `      console.error('[openElement] Action POST failed for ' + ${pathLiteral} + ':', err)`,
     );
@@ -626,369 +375,3 @@ export function renderActionRoute(
  * /404 page with a 404 status. Any failure inside the fallback degrades to
  * the plain status page — the fallback itself never 500s.
  */
-export function renderNotFoundRoute(
-  lines: string[],
-  route: PageRouteDecl,
-  renderers: RendererDecl[],
-  docConfig: RouteHandlerDocConfig,
-  isSSG: boolean,
-): void {
-  const headExtrasExpr = isSSG
-    ? '__headExtras'
-    : quoteGeneratedJavaScriptValue(docConfig.headExtras);
-  lines.push('// Styled 404 (#923): unmatched paths render the /404 page with a 404 status');
-  lines.push('app.notFound(async (c) => {');
-  lines.push(`  const __responseHeaders = new Headers();`);
-  lines.push(`  return __mergeChannelHeaders(await (async () => {`);
-  lines.push(`  let __tag = ${routeTagNameExpr(route.tagName)};`);
-  lines.push(`  let __page = ${pageDefinitionExpr(route.varName)};`);
-  lines.push(`  let __params = {};`);
-  lines.push(`  let __routeMetaValue = ${routeMetaExpr(route.varName)};`);
-  lines.push(
-    `  const __routeContext = { path: ${quoteGeneratedJavaScriptValue(route.path)}, filePath: ${
-      quoteGeneratedJavaScriptValue(route.filePath)
-    } };`,
-  );
-  lines.push(`  c.header('Cache-Control', 'no-store');`);
-  lines.push(`  try {`);
-  lines.push(`    const __loadContext = {`);
-  lines.push(`      params: __params,`);
-  lines.push(`      request: c.req.raw,`);
-  lines.push(`      responseHeaders: __responseHeaders,`);
-  lines.push(`      env: c.env || {},`);
-  lines.push(
-    `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
-  );
-  lines.push(`      route: __routeContext,`);
-  lines.push(`    }`);
-  lines.push(
-    `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
-  );
-  lines.push(`    let node = jsx(__tag, ${
-    pagePropsExpr({
-      paramsExpr: '__params',
-      dataExpr: '__data',
-      actionDataExpr: 'undefined',
-      requestExpr: 'c.req.raw',
-      routeExpr: '__routeContext',
-      metaExpr: '__routeMetaValue',
-    })
-  })`);
-  lines.push('');
-  for (const renderer of renderers.filter((r) => rendererScopeMatches(route.path, r.scope))) {
-    lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
-  }
-  lines.push(
-    `    const content = await __renderAppShell(node, ${
-      quoteGeneratedJavaScriptValue(route.path)
-    }, { routeMeta: __routeMetaValue })`,
-  );
-  lines.push(`    return c.html(__withDevClientScript(wrapInDocument(content, {`);
-  for (
-    const optionLine of documentWrapOptionsLines({
-      pageExpr: '__page',
-      titleExpr: `__page.head?.title || ${quoteGeneratedJavaScriptValue(docConfig.title)}`,
-      langExpr: quoteGeneratedJavaScriptValue(docConfig.lang),
-      headExtrasExpr,
-      allowHeadExtrasScripts: docConfig.allowHeadExtrasScripts,
-      cspNonce: true,
-    })
-  ) {
-    lines.push(`      ${optionLine}`);
-  }
-  lines.push(`    })), 404)`);
-  lines.push(`  } catch (err) {`);
-  lines.push(`    if (__isOpenElementRedirect(err)) return c.redirect(err.location, err.status);`);
-  lines.push(`    console.error('[openElement] 404 page render failed:', err);`);
-  lines.push(
-    `    return c.html(__withDevClientScript(wrapInDocument(__statusHtml("404 Not Found", "Not Found"), { title: "404 Not Found", lang: ${
-      quoteGeneratedJavaScriptValue(docConfig.lang)
-    }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
-      JSON.stringify(docConfig.allowHeadExtrasScripts)
-    }, cspNonce: c.get('cspNonce') })), 404);`,
-  );
-  lines.push(`  }`);
-  // ADR-0129: close the IIFE and merge the 404-page loader's channel too.
-  lines.push(`})(), __responseHeaders);`);
-  lines.push(`});`);
-  lines.push('');
-}
-
-function renderCorsOrigin(origin: CorsOriginConfig): string {
-  if (typeof origin === 'object' && !Array.isArray(origin)) return origin.body;
-  if (Array.isArray(origin)) {
-    return `[${origin.map((o) => quoteGeneratedJavaScriptValue(o)).join(', ')}]`;
-  }
-  return quoteGeneratedJavaScriptValue(origin);
-}
-
-const CORS_ALLOW =
-  "allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400";
-
-// The entry is generated twice per process (configResolved placeholder pass
-// with empty routes, then buildStart with real routes). Warn once (#925).
-let corsOriginWarningShown = false;
-
-// Test-only reset: the flag is process-global by design, tests restore it
-// between cases (see entry-renderer.test.ts).
-export function resetCorsOriginWarningForTests(): void {
-  corsOriginWarningShown = false;
-}
-
-export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
-  if (mw.comment) {
-    lines.push(`// ${mw.comment}`);
-  }
-
-  switch (mw.kind) {
-    case 'requestId':
-      lines.push("app.use('*', requestId())");
-      break;
-
-    case 'logger':
-      lines.push("app.use('*', honoLogger())");
-      break;
-
-    case 'cors': {
-      const corsOrigin = mw.config?.corsOrigin;
-      if (corsOrigin === '*' || (Array.isArray(corsOrigin) && corsOrigin.includes('*'))) {
-        throw new Error(
-          'CORS misconfiguration: origin "*" with credentials: true is invalid. ' +
-            'Specify explicit origin(s) or set credentials: false.',
-        );
-      }
-      if (corsOrigin !== undefined) {
-        const originStr = renderCorsOrigin(corsOrigin);
-        lines.push(
-          `app.use('*', cors({ origin: ${originStr}, ${CORS_ALLOW} }))`,
-        );
-      } else {
-        if (!corsOriginWarningShown) {
-          corsOriginWarningShown = true;
-          console.warn(
-            '[openElement] middleware.corsOrigin is not configured. The generated server only ' +
-              'reflects localhost origins; configure middleware.corsOrigin in openElement() before ' +
-              'production deployment to avoid unintended cross-origin access.',
-          );
-        }
-        lines.push("app.use('*', cors({ origin: (origin) => {");
-        lines.push(
-          '  if (origin && /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(origin)) return origin',
-        );
-        lines.push('  // In production, set middleware.corsOrigin explicitly');
-        lines.push('  return undefined');
-        lines.push(`}, ${CORS_ALLOW} }))`);
-      }
-      break;
-    }
-
-    case 'securityHeaders':
-      lines.push("app.use('*', secureHeaders())");
-      break;
-
-    case 'csp': {
-      const cspConfig = mw.config?.csp;
-      if (cspConfig) {
-        const headerName = cspConfig.reportOnly
-          ? 'Content-Security-Policy-Report-Only'
-          : 'Content-Security-Policy';
-        if (cspConfig.nonce) {
-          const basePolicy: string = cspConfig.policy || '';
-          const hasScriptSrc = /script-src/i.test(basePolicy);
-          const policyTemplate = hasScriptSrc
-            ? basePolicy.replace(
-              /script-src\s+([^;]*)/i,
-              "script-src 'nonce-NONCE_PLACEHOLDER' $1",
-            )
-            : basePolicy + "; script-src 'nonce-NONCE_PLACEHOLDER'";
-          lines.push(
-            `// CSP with auto-nonce: generates a per-request nonce and adds it to script tags`,
-          );
-          lines.push(`app.use('*', async (c, next) => {`);
-          lines.push(`  const nonce = crypto.randomUUID().replace(/-/g, '')`);
-          lines.push(`  c.set('cspNonce', nonce)`);
-          lines.push(
-            `  const policy = ${
-              quoteGeneratedJavaScriptValue(policyTemplate)
-            }.replace('NONCE_PLACEHOLDER', nonce)`,
-          );
-          lines.push(`  await next()`);
-          lines.push(`  c.header('${headerName}', policy)`);
-          lines.push(`})`);
-        } else {
-          lines.push(`app.use('*', async (c, next) => {`);
-          lines.push(`  await next()`);
-          lines.push(
-            `  c.header('${headerName}', ${quoteGeneratedJavaScriptValue(cspConfig.policy ?? '')})`,
-          );
-          lines.push(`})`);
-        }
-      }
-      break;
-    }
-  }
-
-  lines.push('');
-}
-
-/**
- * Render an API route using Hono's standard app.route().
- */
-export function renderApiRoute(lines: string[], route: ApiRouteDecl): void {
-  const pathLiteral = quoteGeneratedJavaScriptValue(route.path);
-  lines.push(`// API: ${route.path} (${route.filePath})`);
-  lines.push(
-    `if (${route.varName}.default && typeof ${route.varName}.default.fetch === 'function') {`,
-  );
-  lines.push(`  app.route(${pathLiteral}, ${route.varName}.default)`);
-  lines.push(`} else if (typeof ${route.varName}.default === 'function') {`);
-  lines.push(`  app.all(${pathLiteral}, async (c) => {`);
-  lines.push(`    return await ${route.varName}.default({`);
-  lines.push(`      request: c.req.raw,`);
-  lines.push(`      params: c.req.param() || {},`);
-  lines.push(`      env: c.env || {},`);
-  lines.push(
-    `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
-  );
-  lines.push(`    })`);
-  lines.push(`  })`);
-  lines.push(`} else {`);
-  lines.push(
-    `  throw new Error('API route ' + ${pathLiteral} + ' must default-export a Hono app or a function (ctx) => Response')`,
-  );
-  lines.push(`}`);
-  lines.push('');
-}
-
-function islandImportFactory(
-  modulePath: AdmittedIslandModuleSpecifier,
-  tagName: string,
-  exportName?: string,
-): string {
-  const nameLiteral = exportName ? quoteGeneratedJavaScriptValue(exportName) : 'undefined';
-  return `() => import(${
-    quoteGeneratedJavaScriptValue(modulePath)
-  }).then(function(mod) { var _name = ${nameLiteral}; var Ctor = _name ? mod[_name] : mod.default; if (Ctor && !customElements.get(${
-    quoteGeneratedJavaScriptValue(tagName)
-  })) customElements.define(${quoteGeneratedJavaScriptValue(tagName)}, Ctor); return mod; })`;
-}
-
-interface GenerateClientEntryOptions {
-  /**
-   * True when any page route carries data-open-enhance (#569): emit the form
-   * enhancement layer even with zero islands, so enhanced forms are not
-   * silently left as plain no-JS posts.
-   */
-  enhancedForms?: boolean;
-}
-
-export function generateClientEntry(
-  islands: ClientIslandEntry[],
-  options: GenerateClientEntryOptions = {},
-): string {
-  const admittedIslands = islands.map(validateClientIslandEntry);
-
-  if (admittedIslands.length === 0 && options.enhancedForms !== true) {
-    return '// openElement Client Entry - No islands detected, zero client JS needed\n';
-  }
-
-  const islandMap = admittedIslands
-    .map((i) =>
-      `  ${quoteGeneratedJavaScriptValue(i.tagName)}: ${
-        islandImportFactory(i.modulePath, i.tagName, i.exportName)
-      }`
-    )
-    .join(',\n');
-
-  const tags = admittedIslands.map((i) => quoteGeneratedJavaScriptValue(i.tagName)).join(
-    ', ',
-  );
-  const loadTags = admittedIslands
-    .filter((i) => i.strategy === 'load')
-    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
-    .join(', ');
-  const visibleTags = admittedIslands
-    .filter((i) => i.strategy === 'visible')
-    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
-    .join(', ');
-  const idleTags = admittedIslands
-    .filter((i) => i.strategy === 'idle')
-    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
-    .join(', ');
-  const onlyTags = admittedIslands
-    .filter((i) => i.strategy === 'only')
-    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
-    .join(', ');
-
-  return `// openElement Client Entry (v0.21 - load/idle/visible/only)
-// load islands import immediately.
-// idle islands import during browser idle time.
-// visible islands import when their host enters the viewport.
-// only islands are client-only and import immediately (no DSD/SSR).
-// Zero DOM interaction - safe with DSD rendering.
-//
-// #606: island-scheduler.ts is the single owner of strategy scheduling
-// (defineIsland() registers on module evaluation). #868: both runtimes are
-// real modules bundled via the virtual:open-client-runtime specifiers — the
-// entry only wires them, there is no inline string copy.
-
-import { createLogger, ensurePreHydrationClickCapture } from '@openelement/element';
-import { createIslandScheduler } from '${VIRTUAL_RUNTIME_SPECIFIERS.scheduler}';
-${
-    options.enhancedForms === true
-      ? `import { createEnhanceClient } from '${VIRTUAL_RUNTIME_SPECIFIERS.enhance}';
-`
-      : ''
-  }
-var log = createLogger('openElement');
-
-// #942: install the pre-hydration click capture before any island module
-// loads — clicks landing in the hydration window are replayed after hydration.
-ensurePreHydrationClickCapture();
-
-var __map = {
-${islandMap}
-};
-var __tags = [${tags}];
-
-var __scheduler = createIslandScheduler({
-  log: log,
-  win: window,
-  doc: document,
-  map: __map,
-  strategies: {
-    load: [${loadTags}],
-    idle: [${idleTags}],
-    visible: [${visibleTags}],
-    only: [${onlyTags}],
-  },
-${
-    options.enhancedForms === true
-      ? `  // #584: late-hydrating islands create their shadow roots after the
-  // ready-time scan; rescan so enhanced forms inside them are heard.
-  onIslandLoaded: function () { __enhance.scanSubmitRoots(document); },`
-      : '  // #597: no enhance layer — no submit-root rescan after island loads.\n  onIslandLoaded: null,'
-  }
-});
-
-${
-    options.enhancedForms === true
-      ? `// Form enhancement (ADR-0120, hardened by ADR-0121 in 0.42.0-alpha.5):
-// forms marked data-open-enhance submit via fetch and the returned document
-// is morphed into the live tree — INSIDE the page element's shadow root,
-// which is where page content lives under DSD. Without JavaScript the same
-// form is a native POST (303/422 HTML), so behavior degrades to the browser
-// by construction. Runtime: enhance-client.ts (bundled via #868).
-var __enhance = createEnhanceClient({
-  log: log,
-  tags: __tags,
-  actionHeader: ${quoteGeneratedJavaScriptValue(ACTION_FETCH_HEADER)},
-  win: window,
-  doc: document,
-  observeVisible: __scheduler.observeVisible,
-});
-`
-      : '// No data-open-enhance forms: the form enhancement layer is omitted (#569 complement),\n// keeping the client bundle free of morph and popstate code.'
-  }
-`;
-}

@@ -1,6 +1,8 @@
 import {
+  type ActionContext,
   definePage,
   fail,
+  type LoaderContext,
   type OpenElementActionFailure,
   redirect,
   useActionData,
@@ -10,18 +12,14 @@ import { createServerSupabase } from '../../lib/supabase-server.ts';
 import { serviceRoleRpc } from '../../lib/service-role.ts';
 import {
   checkoutConfiguration,
+  checkoutIntegrationSuffix,
   checkoutSessionBody,
+  STRIPE_API_VERSION,
   verifiedCheckoutUrl,
 } from '../../lib/stripe-checkout.ts';
 
 export const tagName = 'page-checkout';
 const PRODUCT_CODE = 'starter-support';
-
-interface CheckoutContext {
-  request: Request;
-  env: Record<string, unknown>;
-  responseHeaders: Headers;
-}
 
 interface CheckoutData {
   denied: boolean;
@@ -66,7 +64,7 @@ function safeResult(request: Request): CheckoutData['result'] {
 }
 
 export function createCheckoutLoader(createClient: ClientFactory = createServerSupabase) {
-  return async function loader(ctx: CheckoutContext): Promise<CheckoutData> {
+  return async function loader(ctx: LoaderContext<Record<string, unknown>>): Promise<CheckoutData> {
     const client = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await client.auth.getUser();
     if (!user) return { denied: true };
@@ -88,7 +86,7 @@ export function createCheckoutAction(
   fetchImpl: Fetch = fetch,
 ) {
   return async function checkout(
-    ctx: CheckoutContext & { formData: FormData },
+    ctx: ActionContext<Record<string, unknown>>,
   ): Promise<OpenElementActionFailure<CheckoutActionData>> {
     const attemptId = String(ctx.formData.get('attempt_id') ?? '');
     // Deliberately stricter than the shared UUID_PATTERN (v1–v5): attempt ids
@@ -123,8 +121,9 @@ export function createCheckoutAction(
           authorization: `Bearer ${config.secretKey}`,
           'content-type': 'application/x-www-form-urlencoded',
           'idempotency-key': `checkout-${attemptId}`,
+          'stripe-version': STRIPE_API_VERSION,
         },
-        body: checkoutSessionBody(config, orderId),
+        body: checkoutSessionBody(config, orderId, checkoutIntegrationSuffix(attemptId)),
       });
       if (!response.ok) throw new Error('Stripe Checkout creation failed');
       const session = await response.json() as { id?: unknown; url?: unknown; livemode?: unknown };
@@ -184,7 +183,7 @@ const CheckoutPage = definePage<CheckoutData>({
           : null}
         {data.result === 'cancelled' ? <p id='checkout-result'>Checkout was cancelled.</p> : null}
         {actionData?.error ? <p id='action-error'>{actionData.error}</p> : null}
-        <p>Starter support — USD 5.00, one-time card payment.</p>
+        <p>Starter support — USD 5.00, one-time payment.</p>
         <form method='post' action='/checkout?/checkout'>
           <input type='hidden' name='attempt_id' value={attemptId} />
           <button type='submit'>Pay with Stripe</button>

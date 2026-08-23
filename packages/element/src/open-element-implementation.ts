@@ -48,58 +48,23 @@
  */
 
 import { formatError } from './internal/core/errors.ts';
-import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
-import {
-  declareObservedAttributes,
-  disposeStaticProps,
-  handleStaticPropAttributeChange,
-  initializeStaticProps,
-  resolveObservedAttributes,
-  syncStaticPropsFromAttributes,
-} from './internal/core/prop.ts';
+import { handleStaticPropAttributeChange, initializeStaticProps } from './internal/core/prop.ts';
 import type { VNode } from './internal/protocol/vnode.ts';
-import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import type { Signal } from './internal/protocol/signal.ts';
 import { createLogger } from './internal/core/logger.ts';
-import { flushPendingClicks, HydrationScope, markSelfHydrated } from './internal/core/index.ts';
-import {
-  findErrorBoundaryHost,
-  renderErrorFallback,
-  renderIntoLightDom,
-  renderIntoShadowRoot,
-} from './open-element-render.ts';
+import { HydrationScope } from './internal/core/index.ts';
 import { hydrateExistingDom } from './open-element-hydration.ts';
 import { themeManager } from './open-element-styles.ts';
 import { ElementParams } from './open-element-params.ts';
 import { ElementLifecycle } from './open-element-lifecycle.ts';
-import { attachFormInternals } from './open-element-form.ts';
-
-/**
- * SSR-safe base class for OpenElement.
- *
- * In browser: extends HTMLElement directly.
- * In SSR/no-DOM runtimes: extends a minimal stub that satisfies the
- * HTMLElement contract without mutating globalThis.
- *
- * NOTE: we intentionally do NOT assign globalThis.HTMLElement in SSR.
- * Runtime-agnostic modules should not mutate the host global scope.
- */
-const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
-  hasAttribute(_name: string): boolean {
-    return false;
-  }
-  getAttribute(_name: string): string | null {
-    return null;
-  }
-  setAttribute(_name: string, _value: string): void {}
-  removeAttribute(_name: string): void {}
-  get tagName(): string {
-    return '';
-  }
-  get isConnected(): boolean {
-    return false;
-  }
-} as unknown as typeof HTMLElement);
+import { OpenElementConfiguration } from './open-element-configuration.ts';
+import {
+  connectOpenElement,
+  disconnectOpenElement,
+  type OpenElementRuntimeHost,
+  registerOpenElementScope,
+  updateOpenElement,
+} from './open-element-runtime.ts';
 
 /**
  * Custom Element base class for DSD rendering with zero framework dependency.
@@ -109,119 +74,7 @@ const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
  *
  * Subclasses MUST override `render(): VNode | null`.
  */
-export class OpenElement extends _Base {
-  /** Component stylesheets (SSR-safe - StyleSheet delegates to native CSSStyleSheet in browser). */
-  static styles?: StyleSheetLike | StyleSheetLike[];
-
-  /**
-   * Register a stylesheet (or array of stylesheets) to be applied to
-   * **every** OpenElement shadow root, ahead of any component-level
-   * `static styles`.
-   *
-   * v0.41.0 (ADR-0061): Replaces the application-level pattern of
-   * hand-rolling a MutationObserver + `shadowRoot.adoptedStyleSheets`
-   * injection. Intended for shared design systems that must penetrate
-   * shadow boundaries (tokens, base typography, theme rules using
-   * `:host([data-theme='...'])`).
-   *
-   * Accepts both `StyleSheetLike` (openElement's SSR-safe abstraction)
-   * and native `CSSStyleSheet` instances — on real ShadowRoot, both
-   * work identically as `adoptedStyleSheets` entries.
-   *
-   * Idempotent: registering the same sheet twice is a no-op.
-   *
-   * @example
-   * ```ts
-   * const designSystem = new CSSStyleSheet();
-   * designSystem.replaceSync(`:host([data-theme='dark']) { --bg: #0b0b0b; }`);
-   * OpenElement.registerGlobalStyles(designSystem);
-   * ```
-   */
-  static registerGlobalStyles(
-    sheets: unknown | unknown[],
-  ): void {
-    themeManager.registerStyles(sheets);
-  }
-
-  /**
-   * Returns a snapshot of the globally-registered stylesheets.
-   * Primarily for testing and debugging.
-   */
-  static getGlobalStyles(): StyleSheetLike[] {
-    return themeManager.getStyles();
-  }
-
-  /**
-   * Clear all globally-registered stylesheets.
-   * Primarily for test isolation. Not intended for production use.
-   */
-  static _resetGlobalStyles(): void {
-    themeManager.resetStyles();
-  }
-
-  /** Rendering mode. Defaults to shadow/DSD; light DOM is explicit opt-in. */
-  static renderMode?: 'shadow' | 'light';
-
-  /**
-   * ADR-0053 Layer 2: mark this component as an error boundary. Render
-   * failures in its subtree bubble to it — SSR renders the boundary's
-   * fallback in place of the failed subtree; CSR/hydration failures call the
-   * boundary's catchError(). ErrorBoundary sets this to true.
-   */
-  static isErrorBoundary?: boolean;
-
-  /**
-   * Locale hint for the element, e.g. 'en' or 'zh-CN'.
-   * Set by SSR injectProps (camelCase JS property) or the `locale` HTML
-   * attribute; resolved by `_getLocale()`. Declared on the base class so the
-   * property is typed instead of cast through `Record<string, unknown>`.
-   */
-  locale?: string;
-
-  /** v0.25.0: Page head metadata. SSG reads this to inject <title> and <meta> tags. */
-  static head?: { title?: string; description?: string; ogImage?: string };
-
-  /** @internal — use openPipeline({ island: { upgradeStrategy } }) instead */
-  static client?: { hydrate?: 'load' | 'idle' | 'visible' | 'only' };
-
-  /**
-   * Attributes that trigger attributeChangedCallback.
-   *
-   * v0.41.0-alpha.16 (defect B2): implemented as an accessor pair because
-   * browsers read `observedAttributes` exactly once, at
-   * `customElements.define()`. The getter unions the attribute names declared
-   * by a subclass's `static props` with any hand-written list, so components
-   * that only declare `static props` get attribute→signal synchronization
-   * without maintaining a parallel list.
-   *
-   * Declaration forms:
-   *   - `static props = {...}` only → getter supplies the prop attributes.
-   *   - `Ctor.observedAttributes = [...]` (assignment) → stored via the setter
-   *     and unioned with `static props` on read.
-   *   - `static override observedAttributes = [...]` (class field) → shadows
-   *     this accessor entirely (class fields use [[Define]] semantics); the
-   *     hand-written list is used verbatim, exactly as before this change.
-   */
-  static get observedAttributes(): string[] {
-    return resolveObservedAttributes(this);
-  }
-
-  static set observedAttributes(value: string[] | undefined) {
-    declareObservedAttributes(this, value);
-  }
-
-  /**
-   * Whether to delegate focus within the shadow root.
-   * When true, attachShadow is called with `delegatesFocus: true`.
-   */
-  static delegatesFocus?: boolean;
-
-  /**
-   * Whether this element participates in form submission.
-   * When true, ElementInternals are attached in connectedCallback.
-   */
-  static formAssociated?: boolean;
-
+export class OpenElement extends OpenElementConfiguration {
   /**
    * Signal registry for attribute-based hydration (ADR-0065).
    * Maps signal names → signal objects. Built by registerSignal()
@@ -258,6 +111,11 @@ export class OpenElement extends _Base {
     this.#hydrationScope = new HydrationScope({
       signalRegistry: this.signalRegistry,
     });
+    registerOpenElementScope(this._runtimeHost(), this.#hydrationScope);
+    // Initialize static prop accessors during construction so SSR sees the
+    // same engine-backed, registered signals as CSR/hydration. The initializer
+    // is idempotent and reconnect only re-arms disposed reflection listeners.
+    initializeStaticProps(this);
   }
 
   /**
@@ -288,6 +146,11 @@ export class OpenElement extends _Base {
    */
   protected registerSignal(name: string, sig: Signal<unknown>): void {
     this.signalRegistry.set(name, sig);
+  }
+
+  /** Cycle-free structural view used by the lifecycle runtime collaborator. */
+  private _runtimeHost(): OpenElementRuntimeHost {
+    return this as unknown as OpenElementRuntimeHost;
   }
 
   /** Reactive route parameters. Updates automatically on SPA navigation. */
@@ -349,78 +212,9 @@ export class OpenElement extends _Base {
    * If formAssociated is true, ElementInternals are attached.
    */
   connectedCallback(): void {
-    const ctor = this.constructor as typeof OpenElement;
-
-    // v0.24.1 (ADR-0057): Initialize static props signals and accessors
-    initializeStaticProps(this);
-    syncStaticPropsFromAttributes(this);
-
-    const isLightDom = ctor.renderMode === 'light';
-
-    // Ensure render target exists and detect DSD pre-population
-    if (!this.shadowRoot && !isLightDom) {
-      this.createRenderRoot();
-    } else if (this.shadowRoot) {
-      // DSD path: shadow root already populated.
-      themeManager.applyStyles(this.shadowRoot, ctor.styles);
-    }
-
-    themeManager.connect(this);
-
-    // TG-01: Read route params from attribute if present.
-    // (SSR/SSG injects params as JS property via injectProps — setter handles it)
-    this.#params.syncFromAttribute(this);
-
-    // v0.25.0 (SOP-012): Unified render path — DSD and CSR both go through
-    // _renderOrHydrate(). The _dsdHydrated flag and _bindCurrentRenderTemplate()
-    // are removed. DSD pre-populated DOM is preserved; only events and signal
-    // subscriptions are added.
-    this._renderOrHydrate();
-
-    // v0.40.0: Client-side activation hook for framework hydration
-    this.clientActivate();
-
-    // Attach ElementInternals for form-associated custom elements
-    this._internals = attachFormInternals(this, ctor);
+    connectOpenElement(this._runtimeHost(), this.#params);
   }
 
-  /**
-   * v0.25.0 (SOP-012): Unified render path.
-   */
-  private _renderOrHydrate(): void {
-    try {
-      const ctor = this.constructor as typeof OpenElement;
-      if (ctor.renderMode === 'light') {
-        this._renderIntoLightDom();
-        // The element now owns its bindings; client-runtime must not stack a
-        // second HydrationScope onto it (double hydration, M4).
-        markSelfHydrated(this);
-        // #942: replay clicks that landed in the pre-hydration window.
-        flushPendingClicks(this);
-        this.onCsrRendered();
-        return;
-      }
-
-      const isDsd = hasPopulatedShadowRoot(this);
-      if (isDsd) {
-        // DSD: DOM already correct — bind events via VNode walk
-        this._hydrateExistingDom();
-        markSelfHydrated(this);
-        // #942: replay clicks that landed in the pre-hydration window.
-        flushPendingClicks(this);
-        this.onDsdHydrated();
-      } else if (this.shadowRoot) {
-        // CSR: full render from VNode
-        this._renderIntoShadowRoot();
-        markSelfHydrated(this);
-        // #942: replay clicks that landed in the pre-hydration window.
-        flushPendingClicks(this);
-        this.onCsrRendered();
-      }
-    } catch (err) {
-      this._renderErrorFallback(err);
-    }
-  }
   /**
    * Hydrate DSD DOM with signal and event bindings.
    *
@@ -480,38 +274,16 @@ export class OpenElement extends _Base {
     return null;
   }
 
-  private _renderErrorFallback(error: unknown): void {
-    // ADR-0053 Layer 2: bubble to the nearest ancestor error boundary
-    // (composed-tree walk). Without one, keep the per-element onRenderError
-    // fallback contract (#662).
-    const boundary = findErrorBoundaryHost(this);
-    if (boundary) {
-      createLogger('dsd').error(
-        `<${this.tagName.toLowerCase()}> render/hydrate failed: ${
-          formatError(error)
-        } — captured by nearest error boundary`,
-      );
-      boundary.catchError(error instanceof Error ? error : new Error(formatError(error)), this);
-      return;
-    }
-    renderErrorFallback(
-      this,
-      error,
-      this.#hydrationScope,
-      (err) => this.onRenderError(err),
-    );
-  }
-
   /**
    * Lifecycle: called when the element is disconnected from the DOM.
    * Aborts all hydration event listeners for cleanup.
    */
   disconnectedCallback(): void {
-    this.#hydrationScope.dispose();
-    disposeStaticProps(this);
-    this.#lifecycle.dispose();
-    // v0.41.0: Stop receiving theme broadcasts.
-    themeManager.disconnect(this);
+    disconnectOpenElement(
+      this._runtimeHost(),
+      this.#hydrationScope,
+      this.#lifecycle,
+    );
   }
 
   // Effect + event lifecycle managed by HydrationScope (ADR-0067).
@@ -557,16 +329,7 @@ export class OpenElement extends _Base {
    * on stale/partial DOM with no recovery path (#662).
    */
   update(): void {
-    const ctor = this.constructor as typeof OpenElement;
-    try {
-      if (ctor.renderMode === 'light') {
-        this._renderIntoLightDom();
-        return;
-      }
-      this._renderIntoShadowRoot();
-    } catch (err) {
-      this._renderErrorFallback(err);
-    }
+    updateOpenElement(this._runtimeHost());
   }
 
   /**
@@ -578,14 +341,6 @@ export class OpenElement extends _Base {
    */
   requestUpdate(): void {
     this.update();
-  }
-
-  private _renderIntoLightDom(): void {
-    renderIntoLightDom(this, this.#hydrationScope);
-  }
-
-  private _renderIntoShadowRoot(): void {
-    renderIntoShadowRoot(this, this.#hydrationScope);
   }
 
   /**

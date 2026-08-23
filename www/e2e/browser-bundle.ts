@@ -59,6 +59,10 @@ export function bundleModuleForBrowser(entry: URL): Promise<string> {
           // bundling JSX sources like open-button.tsx for #650).
           alias: [
             {
+              find: '@openelement/element/build-utils',
+              replacement: resolve(ELEMENT_DIR, 'build-utils.ts'),
+            },
+            {
               find: '@openelement/element/jsx-runtime',
               replacement: resolve(ELEMENT_DIR, 'jsx-runtime.ts'),
             },

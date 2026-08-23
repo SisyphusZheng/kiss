@@ -11,5 +11,5 @@
 
 export type { OpenElementI18nOptions } from './i18n-runtime.ts';
 export { loadI18nData } from './i18n-runtime.ts';
-export type { LocalePath } from './internal/router/i18n.ts';
-export { normalizeLocalePath } from './internal/router/i18n.ts';
+export type { LocalePath } from './i18n-runtime.ts';
+export { normalizeLocalePath } from './i18n-runtime.ts';

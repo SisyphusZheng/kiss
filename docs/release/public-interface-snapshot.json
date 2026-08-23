@@ -12,24 +12,23 @@
       },
       "declarations": {
         ".": {
-          "sha256": "61abf3fe6dbfdfc116c0e4a2f412d9f60211e615848ed7202ab3fdb4bd932c5f",
+          "sha256": "28c17b55b0d37943e52b9465c7e9e517b6b2ebb62d64ef0ed0f564b812db0517",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
-            "export type { VNode } from './internal/protocol/vnode.ts';",
-            "export type { RenderOutput, SsrAdmissionDecision } from './internal/protocol/render.ts';",
-            "export type { Context } from './internal/core/index.ts';",
-            "export type { RenderError } from './internal/core/index.ts';",
-            "export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';",
-            "export type { Signal } from './internal/protocol/signal.ts';",
-            "export type { IslandOptions } from './internal/protocol/island.ts';",
-            "export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';",
+            "export type { VNode } from './public-runtime.ts';",
+            "export type { RenderOutput, SsrAdmissionDecision } from './public-runtime.ts';",
+            "export type { Context } from './public-runtime.ts';",
+            "export type { ErrorTelemetryHook, RenderError } from './public-runtime.ts';",
+            "export type { Signal } from './public-runtime.ts';",
+            "export type { IslandOptions } from './public-runtime.ts';",
+            "export type { StyleSheetLike } from './public-runtime.ts';",
             "export type {",
             "export type {",
-            "export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';",
-            "export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';",
+            "export type { OpenElementRouteKind, OpenElementRouteNode } from './public-contracts.ts';",
+            "export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './public-contracts.ts';",
             "export type {",
-            "export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';"
+            "export type { ClientRuntimeOptions } from './public-runtime.ts';"
           ],
           "reExportedNames": [
             "ACTION_FETCH_HEADER",
@@ -63,15 +62,10 @@
             "Middleware",
             "OpenElement",
             "OpenElementAttribute",
-            "OpenElementBlogOptions",
-            "OpenElementBuildContextLike",
             "OpenElementCssPart",
             "OpenElementDeclaration",
             "OpenElementError",
             "OpenElementEvent",
-            "OpenElementHeaderNavLink",
-            "OpenElementI18nContextOptions",
-            "OpenElementNavSection",
             "OpenElementPackageManifest",
             "OpenElementRouteKind",
             "OpenElementRouteNode",
@@ -86,6 +80,8 @@
             "RenderError",
             "RenderOutput",
             "RouteEntry",
+            "ServerRouteContext",
+            "ServerRouteMetadata",
             "Signal",
             "SpaAction",
             "SpaActionContext",
@@ -103,11 +99,13 @@
             "consumeContext",
             "createContext",
             "createLogger",
+            "deepGetElementById",
             "defineCustomElement",
             "defineElement",
             "defineIsland",
             "disposeOpenElement",
             "effect",
+            "ensureDeepFragmentNavigation",
             "ensurePreHydrationClickCapture",
             "escapeAttr",
             "escapeHtml",
@@ -131,9 +129,9 @@
           ]
         },
         "./build-utils": {
-          "sha256": "9b69174f14bac84f567c3ab3e2ed6a9e65bb373099da1bf114cbbcfed165802c",
+          "sha256": "f1b898782c10f9a35e2ada3b72fa05914e2c552e19101ed1f7594264c5e3e0be",
           "publicDeclarations": [
-            "export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';"
+            "export type { OpenElementRequestHandler, RuntimeContext } from './public-build-runtime.ts';"
           ],
           "reExportedNames": [
             "OpenElementRequestHandler",
@@ -143,13 +141,15 @@
             "createIsrCacheKey",
             "createRuntimeAdapter",
             "formatJson",
+            "insertBeforeBodyClose",
+            "normalizeRoutePatternForURLPattern",
             "normalizeSeparators",
             "pathToTagName",
             "transformIslandSource"
           ]
         },
         "./jsx-dev-runtime": {
-          "sha256": "ae9015abe5fa2778f50efc675b5942420deb52811f816c2caf0986317a0aa983",
+          "sha256": "d636d829a9056ddf58680bc1c313a014eb63cc07b372f0c84e971b2c65d66292",
           "publicDeclarations": [],
           "reExportedNames": [
             "Fragment",
@@ -157,7 +157,7 @@
           ]
         },
         "./jsx-runtime": {
-          "sha256": "21a9bb273b909869aea2cb0eda45c985426c5d74b5e95a641a2afdce95d49d9a",
+          "sha256": "2ab8c7eb9581ee0680c920afe34be7ba04f091fe4d2cd58c8b0c3668913be6eb",
           "publicDeclarations": [],
           "reExportedNames": [
             "Fragment",
@@ -166,7 +166,7 @@
           ]
         },
         "./sanitize": {
-          "sha256": "e8d93e36882380bcee071edaa8743c7e043b3ff33c400bd4087714963af5912a",
+          "sha256": "3b6ee955ac3bb9ec476f7840d534d9459393790daab585759223ecead627489a",
           "publicDeclarations": [
             "export interface SanitizeOptions {",
             "export function isSafeUrl(",
@@ -187,7 +187,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "ec7899fa9bea137946773e0873cb389a828f121442c92f591dc15f494a7b6abb",
+          "sha256": "ff7b5db29e268222fe48e5155090b188b587d6f0a47f1086e3cb97ac857b22c6",
           "publicDeclarations": [
             "export type {",
             "export type { ElementDefinition } from '@openelement/element';",
@@ -209,6 +209,8 @@
             "OpenElementRequestContext",
             "PROBLEM_JSON_MEDIA_TYPE",
             "ProblemDetails",
+            "ServerRouteContext",
+            "ServerRouteMetadata",
             "SpaAction",
             "SpaActionContext",
             "SpaAppInstance",
@@ -231,10 +233,10 @@
           ]
         },
         "./i18n": {
-          "sha256": "c1f7c2c9c891b25e93e1775eecd5dadefecca84cb1dc55e82d892fa3664cd5ce",
+          "sha256": "467165300cd58939618fd1ee3959c028a53beef120520b13328ab312f0bf7f71",
           "publicDeclarations": [
             "export type { OpenElementI18nOptions } from './i18n-runtime.ts';",
-            "export type { LocalePath } from './internal/router/i18n.ts';"
+            "export type { LocalePath } from './i18n-runtime.ts';"
           ],
           "reExportedNames": [
             "LocalePath",
@@ -281,21 +283,35 @@
       },
       "declarations": {
         ".": {
-          "sha256": "d3a00f6ecff8b736709f51424c67a10e19389f0a85f89e24c81cef68ae51dd64",
+          "sha256": "33981ed0213f32f32cefd2503ed896ab98aaad4b7286425e06a48ce377f86482",
           "publicDeclarations": [
             "export interface OpenPipelineConfig {",
             "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
-            "export type { FrameworkOptions };",
+            "export type {",
             "export type { ArtifactInfo, BuildManifest } from './build-manifest.ts';",
-            "export type { SpeculationRulesOptions, SsgBehaviorOptions } from './internal/protocol/ssg.ts';",
+            "export type { SpeculationRulesOptions, SsgBehaviorOptions } from './ssg.ts';",
             "export type { HeadExtrasResult } from './head-injection.ts';",
-            "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';"
+            "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';",
+            "export type {"
           ],
           "reExportedNames": [
             "ArtifactInfo",
             "BuildManifest",
+            "CollectionEntry",
+            "CollectionFieldDefinition",
+            "CollectionFieldType",
+            "CollectionOptions",
+            "CollectionSchema",
+            "CollectionSchemaContext",
+            "CollectionSchemaResult",
+            "FrameworkOptions",
             "HeadExtrasResult",
+            "OpenElementBlogOptions",
             "OpenElementBuildContext",
+            "OpenElementBuildContextLike",
+            "OpenElementHeaderNavLink",
+            "OpenElementI18nContextOptions",
+            "OpenElementNavSection",
             "OpenElementOptions",
             "OpenMdxPluginOptions",
             "SpeculationRulesOptions",
@@ -303,6 +319,7 @@
             "buildHeadExtras",
             "buildIslandChunkMap",
             "buildSpeculationRulesJson",
+            "createCollectionPlugin",
             "extractCustomElementTags",
             "generateIslandManifests",
             "generateSitemap",
@@ -310,11 +327,13 @@
             "injectCspMeta",
             "injectSpeculationRules",
             "injectViewTransitionMeta",
+            "loadCollectionData",
             "mdxPlugin",
             "openElement",
             "printBuildManifest",
             "scanClientBuild",
             "scanSSGOutput",
+            "writeCollectionDataModule",
             "writeIslandManifests"
           ]
         },
@@ -324,7 +343,7 @@
           "reExportedNames": []
         },
         "./cli/start": {
-          "sha256": "99f7c87c074cff317011128ae4a3a18cf45f14b3b6d388ee5b697e33ab29f457",
+          "sha256": "9768baf51ffb8a865517344fe6db9b15e0e1af4ebb34e6e6e231c84918095bc8",
           "publicDeclarations": [
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
           ],
@@ -340,9 +359,9 @@
           "reExportedNames": []
         },
         "./sitemap": {
-          "sha256": "2c24151329624e9adde127f4762580ff3ac75fff4a66818fc83d7100d91a9135",
+          "sha256": "e6d996afbb50565b4954d19ed9504144b591fb3295624d7484718da6f8a7efbd",
           "publicDeclarations": [
-            "export type { SitemapOptions } from './internal/content/types.ts';"
+            "export type { SitemapOptions } from './content.ts';"
           ],
           "reExportedNames": [
             "SitemapOptions",
@@ -454,7 +473,7 @@
           "reExportedNames": []
         },
         "./open-props-tokens": {
-          "sha256": "39fce2d77e32faaff1d27c04fbe8e6d7ac10bc3c3bfe4ea1f66184dd4211f468",
+          "sha256": "e3c1ec40d3f5430fad407c5ec61e440cc4d1fc19831d27537b83d6005490b677",
           "publicDeclarations": [
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
             "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
@@ -462,7 +481,7 @@
           "reExportedNames": []
         },
         "./open-props-tokens.js": {
-          "sha256": "39fce2d77e32faaff1d27c04fbe8e6d7ac10bc3c3bfe4ea1f66184dd4211f468",
+          "sha256": "e3c1ec40d3f5430fad407c5ec61e440cc4d1fc19831d27537b83d6005490b677",
           "publicDeclarations": [
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
             "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"

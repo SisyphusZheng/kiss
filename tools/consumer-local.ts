@@ -103,6 +103,7 @@ const productImports = [
   '@openelement/adapter-vite/nitro-mount',
   '@openelement/app',
   '@openelement/element',
+  '@openelement/element/build-utils',
   '@openelement/element/jsx-dev-runtime',
   '@openelement/element/jsx-runtime',
   // The starter maps the app's virtual blog-data module to a local type stub.

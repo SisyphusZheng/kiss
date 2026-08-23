@@ -119,6 +119,8 @@ export type {
   ActionContext,
   Loader,
   LoaderContext,
+  ServerRouteContext,
+  ServerRouteMetadata,
   SpaAction,
   SpaActionContext,
   SpaLoader,
@@ -152,6 +154,11 @@ export {
   flushPendingClicks,
   isPreHydrationClickCaptureInstalled,
 } from './pre-hydration-click.ts';
+export {
+  deepGetElementById,
+  ensureDeepFragmentNavigation,
+  isDeepFragmentNavigationInstalled,
+} from './deep-fragment.ts';
 // static props runtime
 export {
   disposeStaticProps,

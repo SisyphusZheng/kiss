@@ -203,7 +203,7 @@ const OPEN_PROPS_TOKEN_CSS = `/**
      Dark mode overrides via :root[data-theme="dark"] in SSG
      ═══════════════════════════════════════════════ */
   --text-primary: var(--gray-9);
-  --text-secondary: var(--gray-6);
+  --text-secondary: var(--gray-8);
   --text-muted: var(--gray-5);
   --bg-base: color-mix(in srgb, var(--violet-0) 42%, var(--gray-0));
   --bg-surface: color-mix(in srgb, var(--violet-0) 32%, var(--gray-1));
@@ -317,7 +317,7 @@ const OPEN_PROPS_TOKEN_CSS = `/**
   --brand-glow: color-mix(in srgb, var(--brand) 22%, transparent);
   --on-brand: var(--gray-12);
   --text-primary: var(--gray-10);
-  --text-secondary: var(--gray-7);
+  --text-secondary: var(--gray-8);
   --text-muted: var(--gray-6);
   --bg-base: color-mix(in srgb, var(--violet-0) 18%, var(--gray-0));
   --bg-surface: color-mix(in srgb, var(--violet-1) 14%, var(--gray-1));

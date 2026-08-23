@@ -18,6 +18,7 @@ import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
+import { insertBeforeBodyClose } from '@openelement/element/build-utils';
 import { visitHtmlFiles } from '../html-files.ts';
 export { buildSpeculationRulesJson } from './speculation-rules.ts';
 
@@ -63,19 +64,6 @@ function insertAfterHead(html: string, content: string): string {
   }
   const headEnd = headMatch.index + headMatch[0].length;
   return html.slice(0, headEnd) + `\n  ${content}` + html.slice(headEnd);
-}
-
-/** Insert content immediately before </body> closing tag */
-function insertBeforeBodyClose(html: string, content: string): string {
-  const bodyCloseMatch = html.match(/<\/body\s*>/i);
-  if (!bodyCloseMatch) {
-    return html + `\n${content}\n`;
-  }
-  if (bodyCloseMatch.index === undefined) {
-    throw new Error('insertBeforeBodyClose: matched </body> but index is undefined');
-  }
-  const idx = bodyCloseMatch.index;
-  return html.slice(0, idx) + `${content}\n` + html.slice(idx);
 }
 
 // ─── Public API ────────────────────────────────────────────────────────

@@ -10,8 +10,10 @@
 import type { Signal } from '../protocol/signal.ts';
 import { hasSelfHydrated, HydrationScope } from './hydration-scope.ts';
 import { ensurePreHydrationClickCapture, flushPendingClicks } from './pre-hydration-click.ts';
+import { ensureDeepFragmentNavigation } from './deep-fragment.ts';
 import { hasPopulatedShadowRoot } from './dsd-shadow-root.ts';
 import { OpenElementError } from './errors.ts';
+import { DATA_EID } from '../protocol/hydration-markers.ts';
 
 const hostDisposers = new WeakMap<Element, () => void>();
 
@@ -154,6 +156,7 @@ export function hydrateOpenElement(
 ): () => void {
   // #942: install the pre-hydration click capture before hydrating any host.
   ensurePreHydrationClickCapture();
+  ensureDeepFragmentNavigation();
   const registry: CustomElementRegistry | undefined = options?.registry ??
     globalThis.customElements;
   const templates = collectDsdTemplates(root);
@@ -193,6 +196,18 @@ export function hydrateOpenElement(
     // Read signal registry from the upgraded element instance.
     // OpenElement sets signalRegistry in its constructor.
     const hostReg = getSignalRegistry(host);
+
+    // A third-party custom element has no OpenElement-owned cached VNode or
+    // render callback from which event handlers can be reconstructed. Binding
+    // its signals while leaving SSR data-eid controls inert is a dangerous
+    // half-hydration state, so reject it explicitly.
+    if (shadowRoot.querySelectorAll(`[${DATA_EID}]`).length > 0) {
+      throw new OpenElementError(
+        `Cannot hydrate events for third-party <${tagName}>: ` +
+          'hydrateOpenElement requires an OpenElement-owned render tree for data-eid markers.',
+        { code: 'THIRD_PARTY_EVENT_HYDRATION_UNSUPPORTED', phase: 'csr' },
+      );
+    }
 
     const scope = new HydrationScope({ signalRegistry: hostReg });
     scope.hydrate(shadowRoot, hostReg);

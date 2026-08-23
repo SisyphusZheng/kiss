@@ -185,9 +185,7 @@ export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
     }
   }
 
-  const replays = await rpc<
-    { id: string; reservation_id: string; object_key: string; replay_requested_by: string | null }[]
-  >(
+  const replays = await rpc<{ id: string; reservation_id: string; object_key: string }[]>(
     env,
     'list_requested_attachment_scan_replays',
     {},
@@ -200,19 +198,7 @@ export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
         objectKey: replay.object_key,
       });
       await rpc(env, 'mark_attachment_scan_replayed', { dead_letter_id: replay.id });
-      // admin_audit handoff row (#998): the actor is the admin who requested
-      // the replay, threaded through replay_requested_by. Rows requested
-      // before that column existed carry no actor and are skipped; a
-      // post-mark audit failure is swallowed below rather than double-
-      // enqueueing a handoff that already landed.
-      if (replay.replay_requested_by) {
-        await rpc(env, 'log_admin_audit', {
-          actor: replay.replay_requested_by,
-          action: 'attachment_scan_replay_enqueued',
-          target_type: 'attachment_scan_dead_letter',
-          target_id: replay.id,
-        });
-      }
+      // The RPC commits replay state, storage audit, and admin audit together.
     } catch {
       // Keep replay_requested durable; the next Cron run retries the handoff.
     }
@@ -220,9 +206,7 @@ export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
 }
 
 export async function reconcilePayments(env: WorkerEnv): Promise<void> {
-  const pending = await rpc<
-    { provider_event_id: string; processing_state: string; replay_requested_by: string | null }[]
-  >(
+  const pending = await rpc<{ provider_event_id: string; processing_state: string }[]>(
     env,
     'list_pending_payment_events',
     {},
@@ -240,15 +224,7 @@ export async function reconcilePayments(env: WorkerEnv): Promise<void> {
         await rpc(env, 'mark_payment_event_replay_enqueued', {
           target_event_id: event.provider_event_id,
         });
-        // Same admin_audit handoff channel as the attachment replay above.
-        if (event.replay_requested_by) {
-          await rpc(env, 'log_admin_audit', {
-            actor: event.replay_requested_by,
-            action: 'payment_event_replay_enqueued',
-            target_type: 'payment_event',
-            target_id: event.provider_event_id,
-          });
-        }
+        // The RPC commits replay state and admin audit together.
         replays += 1;
       }
     } catch {
