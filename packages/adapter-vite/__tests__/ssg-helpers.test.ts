@@ -51,14 +51,12 @@ Deno.test('routePatternToURLPatternPath covers exact, param and catch-all patter
   assertEquals(routePatternToURLPatternPath('/docs/:path{.+}'), '/docs/:path(.+)');
 });
 
-Deno.test('request-time client injection uses shared tolerant helper and preserves statusText (#1103)', () => {
+Deno.test('request-time client injection embeds portable tolerant helper and preserves statusText (#1103)', () => {
   const code = renderRequestTimeServerModule([]);
-  assertStringIncludes(
-    code,
-    "import { insertBeforeBodyClose } from '@openelement/element/build-utils';",
-  );
+  assertStringIncludes(code, 'function insertBeforeBodyClose(html, fragment)');
   assertStringIncludes(code, "insertBeforeBodyClose(html, '  ' + tag)");
   assertStringIncludes(code, 'statusText: response.statusText');
+  assertEquals(code.includes("from '@openelement/"), false);
 });
 
 Deno.test('parseRouteFilePath maps a catch-all segment to a named Hono regex param (#556)', () => {
@@ -72,7 +70,7 @@ Deno.test('renderRequestTimeServerModule mounts the entry openElementHandler (#8
   // export, which carries the composed middleware.use chain when configured —
   // no direct app.fetch bypass.
   assertStringIncludes(code, "import { openElementHandler } from './entry.js';");
-  assertStringIncludes(code, 'handler: openElementHandler,');
+  assertStringIncludes(code, 'return openElementHandler(request, {');
   assertEquals(code.includes('app.fetch'), false);
 });
 

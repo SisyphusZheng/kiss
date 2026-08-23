@@ -86,6 +86,28 @@ export async function checkSupabaseMigrations(
     if (/\bauth\.(?:uid|jwt)\(\)(?!\s*\))/i.test(performanceFloor)) {
       throw new Error(`${performanceFloorName} must wrap policy auth helpers in scalar subselects`);
     }
+
+    const workspaceName = names.find((name) => name.endsWith('_workspace_rls_qualification.sql'));
+    if (!workspaceName) throw new Error('missing workspace RLS qualification migration');
+    const workspace = await Deno.readTextFile(new URL(`migrations/${workspaceName}`, root));
+    for (
+      const anchor of [
+        'alter table public.workspaces enable row level security',
+        'alter table public.workspace_members enable row level security',
+        'alter table public.workspace_records enable row level security',
+        'workspace_members_user_workspace_idx',
+        'workspace_records_workspace_created_id_idx',
+        'workspace_records_workspace_status_created_id_idx',
+        'workspace_records_workspace_title_prefix_idx',
+        'create policy "workspace records: members read"',
+        'create policy "workspace records: members create"',
+        'create policy "workspace records: creators or admins update"',
+        'with check (',
+        'revoke all on public.workspaces, public.workspace_members, public.workspace_records from anon',
+      ]
+    ) {
+      if (!workspace.includes(anchor)) throw new Error(`${workspaceName} is missing ${anchor}`);
+    }
   }
 
   const config = await Deno.readTextFile(new URL('config.toml', root));

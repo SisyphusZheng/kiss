@@ -168,8 +168,8 @@ function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string 
  * prerendering SSR bundle (the same Hono app, with loaders/actions) on the
  * public `nitro-mount` seam; Nitro Node/Workers builds bundle it as the
  * server entry, and plain Node (>= 24 — the route table below builds
- * WHATWG URLPattern objects at module scope, #969) can run it directly
- * with adapter-vite installed.
+ * WHATWG URLPattern objects at module scope, #969) can run the portable
+ * dist artifact without workspace packages installed.
  *
  * The named `matchRequestTimeRoute` export (#556) is a self-contained
  * pathname matcher generated from the route table, so hosts dispatch
@@ -205,8 +205,6 @@ if (typeof globalThis.URLPattern === 'undefined') {
       'Node.js >= 24, Deno, or Bun.',
   );
 }
-import { createOpenElementNitroHandler } from '@openelement/adapter-vite/nitro-mount';
-import { insertBeforeBodyClose } from '@openelement/element/build-utils';
 import { openElementHandler } from './entry.js';
 import { clientScriptSrc } from './client-script.js';
 
@@ -214,9 +212,21 @@ import { clientScriptSrc } from './client-script.js';
 // carries the composed middleware.use fetch middleware chain when configured,
 // so the start CLI, the e2e fixture server, and Nitro run the same middleware
 // semantics as the dev server.
-const nitroHandler = createOpenElementNitroHandler({
-  handler: openElementHandler,
-});
+const nitroHandler = async (event) => {
+  const request = event.req;
+  const runtimeEnv = request.runtime?.cloudflare?.env;
+  return openElementHandler(request, {
+    env: runtimeEnv ?? event.env,
+    platform: event.platform,
+    params: event.context?.params,
+  });
+};
+
+function insertBeforeBodyClose(html, fragment) {
+  const match = /<\\/body\\s*>/i.exec(html);
+  if (!match || match.index === undefined) return html + fragment;
+  return html.slice(0, match.index) + fragment + '\\n' + html.slice(match.index);
+}
 
 // Request-time route table (#556): pathname -> { path, params }. Exact paths
 // first, then parameterized, then catch-alls; the first match wins. Matching
