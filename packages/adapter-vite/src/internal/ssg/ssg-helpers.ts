@@ -7,7 +7,10 @@
 
 import type { IsrManifestEntry } from '../protocol/framework.ts';
 import type { RouteInfoEntry } from '../protocol/ssg.ts';
-import { createIsrCacheKey } from '@openelement/element/build-utils';
+import {
+  createIsrCacheKey,
+  normalizeRoutePatternForURLPattern,
+} from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../html-files.ts';
 import { NODE_BRIDGE_EMBEDDED_FUNCTIONS } from '../node-bridge.ts';
 
@@ -137,20 +140,10 @@ interface RequestTimeRoutePattern {
  * instead of re-implementing pattern matching against the raw ':param'
  * strings in server-manifest.json.
  *
- * Twin: client-router.ts routePathToURLPatternPath (@openelement/app) is a
- * byte-identical body for the SPA router — keep them in sync (the
- * escapeAttr precedent: deliberate copy, cross-referenced).
+ * The implementation is shared with the app client router through
+ * @openelement/element/build-utils (#1103).
  */
-export function routePatternToURLPatternPath(path: string): string {
-  return path
-    .split('/')
-    .map((segment) => {
-      const brace = segment.startsWith(':') ? segment.indexOf('{') : -1;
-      if (brace === -1 || !segment.endsWith('}')) return segment;
-      return `${segment.slice(0, brace)}(${segment.slice(brace + 1, -1)})`;
-    })
-    .join('/');
-}
+export const routePatternToURLPatternPath = normalizeRoutePatternForURLPattern;
 
 /** Serialize the request-time route table embedded in the generated server entry. */
 function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string {
@@ -213,6 +206,7 @@ if (typeof globalThis.URLPattern === 'undefined') {
   );
 }
 import { createOpenElementNitroHandler } from '@openelement/adapter-vite/nitro-mount';
+import { insertBeforeBodyClose } from '@openelement/element/build-utils';
 import { openElementHandler } from './entry.js';
 import { clientScriptSrc } from './client-script.js';
 
@@ -256,13 +250,11 @@ function withClientScript(response) {
   if (!type.includes('text/html')) return Promise.resolve(response);
   return response.text().then((html) => {
     if (html.includes(clientScriptSrc)) {
-      return new Response(html, { status: response.status, headers: response.headers });
+      return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
     }
     const tag = '<script type="module" src="' + clientScriptSrc + '"></script>';
-    const out = html.includes('</body>')
-      ? html.replace('</body>', '  ' + tag + '\\n</body>')
-      : html + tag;
-    return new Response(out, { status: response.status, headers: response.headers });
+    const out = insertBeforeBodyClose(html, '  ' + tag);
+    return new Response(out, { status: response.status, statusText: response.statusText, headers: response.headers });
   });
 }
 

@@ -51,6 +51,16 @@ Deno.test('routePatternToURLPatternPath covers exact, param and catch-all patter
   assertEquals(routePatternToURLPatternPath('/docs/:path{.+}'), '/docs/:path(.+)');
 });
 
+Deno.test('request-time client injection uses shared tolerant helper and preserves statusText (#1103)', () => {
+  const code = renderRequestTimeServerModule([]);
+  assertStringIncludes(
+    code,
+    "import { insertBeforeBodyClose } from '@openelement/element/build-utils';",
+  );
+  assertStringIncludes(code, "insertBeforeBodyClose(html, '  ' + tag)");
+  assertStringIncludes(code, 'statusText: response.statusText');
+});
+
 Deno.test('parseRouteFilePath maps a catch-all segment to a named Hono regex param (#556)', () => {
   assertEquals(parseRouteFilePath('docs/[...path].ts'), '/docs/:path{.+}');
   assertEquals(parseRouteFilePath('item/[id].ts'), '/item/:id');
