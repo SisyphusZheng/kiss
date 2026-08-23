@@ -28,7 +28,7 @@
 
 - [low] **D1-6 unknown→string 错误格式化多处手写** — `packages/element/src/internal/core/errors.ts:27-38`(权威 `formatError`)vs `packages/adapter-vite/src/cli/build.ts:22`、`cli/start.ts:90`、`build-plan.ts:133`、`build-ssg.ts:475`。建议:CLI/构建错误出口统一走 `formatError`。
 
-合理并存(判断标准:交叉引用注释 + 契约明确不同,抽查 4 组确认):`sanitize.ts:166` vs `html-escape.ts:53` 两个 escapeAttr(两侧注释互指"同名不同契约");`packages/app/src/internal/router/client-router.ts:97-106` vs `ssg-helpers.ts:131-140` routePathToURLPatternPath(生成 server 入口必须自包含的 Twin 拷贝);SSR/水合双渲染平行遍历(架构性);`logo-home.js:16-19` vs open-layout `_homeHref`(public 静态脚本无法 import,注释互指)。
+合理并存(判断标准:交叉引用注释 + 契约明确不同,抽查 4 组确认):`packages/element/src/sanitize.ts:193` vs `packages/element/src/internal/core/html-escape.ts:53` 两个 escapeAttr(两侧注释互指"同名不同契约");`packages/app/src/internal/router/client-router.ts:97-106` vs `ssg-helpers.ts:131-140` routePathToURLPatternPath(生成 server 入口必须自包含的 Twin 拷贝);SSR/水合双渲染平行遍历(架构性);`logo-home.js:16-19` vs open-layout `_homeHref`(public 静态脚本无法 import,注释互指)。
 
 ## 维度 2:冗余文件 / 死代码
 

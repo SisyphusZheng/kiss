@@ -149,6 +149,27 @@ export async function consumePaymentEventDeadLetters(
 }
 
 export async function reconcileAttachments(env: WorkerEnv): Promise<void> {
+  const deleting = await rpc<{ id: string; object_key: string }[]>(
+    env,
+    'list_pending_attachment_deletions',
+    {},
+  );
+  for (const reservation of deleting) {
+    try {
+      const removed = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${ATTACHMENT_BUCKET}`, {
+        method: 'DELETE',
+        headers: headers(env),
+        body: JSON.stringify({ prefixes: [reservation.object_key] }),
+      });
+      if (!removed.ok) continue;
+      await rpc(env, 'complete_pending_attachment_delete', {
+        reservation_id: reservation.id,
+      });
+    } catch {
+      // The deleting tombstone remains durable for the next Cron run.
+    }
+  }
+
   const stale = await rpc<{ id: string; object_key: string }[]>(
     env,
     'list_stale_attachment_reservations',

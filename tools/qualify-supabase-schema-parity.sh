@@ -50,6 +50,26 @@ forward_dir="$qualification_root/forward"
 prepare_project "$fresh_workdir" oe-v0431-fresh
 start_project "$fresh_workdir"
 dump_schema "$fresh_workdir" "$fresh_dump"
+
+# Qualify the actual fresh database dump, not only migration source text. New
+# Supabase projects no longer receive implicit Data API table privileges.
+assert_table_grants() {
+  local table="$1"
+  shift
+  local line
+  line=$(grep -E "^GRANT .* ON TABLE public\.$table TO authenticated;" "$fresh_dump" || true)
+  [ -n "$line" ] || { echo "fresh schema has no authenticated grant for $table" >&2; exit 1; }
+  for privilege in "$@"; do
+    echo "$line" | grep -qw "$privilege" || {
+      echo "fresh schema is missing $privilege on $table for authenticated" >&2
+      exit 1
+    }
+  done
+}
+assert_table_grants notes SELECT INSERT UPDATE DELETE
+assert_table_grants orders SELECT
+assert_table_grants attachment_reservations SELECT
+assert_table_grants workspace_records SELECT INSERT UPDATE DELETE
 supabase stop --workdir "$fresh_workdir" --no-backup
 active_workdir=''
 
@@ -57,7 +77,13 @@ prepare_project "$upgrade_workdir" oe-v0431-upgrade
 mkdir -p "$forward_dir"
 for migration in \
   20260823030729_postgres_index_rls_performance_floor.sql \
-  20260823031500_workspace_rls_qualification.sql; do
+  20260823031500_workspace_rls_qualification.sql \
+  20260823094231_replay_audit_atomicity.sql \
+  20260823094232_stripe_reconciliation_index.sql \
+  20260823110000_explicit_data_api_privileges.sql \
+  20260823110100_replay_request_audit_atomicity.sql \
+  20260823110200_attachment_delete_reconciliation.sql \
+  20260823110300_notes_bounds.sql; do
   mv "$upgrade_workdir/supabase/migrations/$migration" "$forward_dir/$migration"
 done
 start_project "$upgrade_workdir"

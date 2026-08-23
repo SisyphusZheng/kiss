@@ -5,6 +5,7 @@
  */
 import { assertEquals, assertExists } from '@std/assert';
 import NotesLive, {
+  handoffRealtimeAuth,
   MAX_LIVE_EVENTS,
   MAX_RECONNECT_DELAY_MS,
   mergeLiveEvent,
@@ -47,4 +48,23 @@ Deno.test('notes-live reconnect delay is exponential, jittered and capped', () =
   assertEquals(reconnectDelayMs(0, () => 0.5), 500);
   assertEquals(reconnectDelayMs(3, () => 0.5), 4_000);
   assertEquals(reconnectDelayMs(99, () => 1), MAX_RECONNECT_DELAY_MS);
+});
+
+Deno.test('notes-live erases the SSR token only after handing it to Realtime', () => {
+  const calls: string[] = [];
+  const removed: string[] = [];
+  const client = {
+    setAuth: (token: string) => {
+      calls.push(token);
+      return Promise.resolve();
+    },
+  };
+  const host = { removeAttribute: (name: string) => removed.push(name) };
+
+  assertEquals(handoffRealtimeAuth(client, host, 'signed-user-jwt'), true);
+  assertEquals(calls, ['signed-user-jwt']);
+  assertEquals(removed, ['data-access-token']);
+
+  assertEquals(handoffRealtimeAuth(null, host, 'not-yet-consumed'), false);
+  assertEquals(removed, ['data-access-token']);
 });

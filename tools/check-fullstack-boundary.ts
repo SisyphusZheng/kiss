@@ -10,7 +10,10 @@
  * 1. Secret boundary — the browser-reachable build output (dist/index.html,
  *    dist/assets/**, dist/client/** when present; never dist/server/**)
  *    contains no service-role assignments, no `sb_secret_` key material, and no
- *    JWT-shaped tokens (`eyJ…`).
+ *    build-time JWT-shaped constants (`eyJ…`). Authenticated request HTML is a
+ *    separate dynamic contract: the user's short-lived token appears once on
+ *    the Realtime island, is `no-store`, and the island removes that attribute
+ *    immediately after `setAuth` (#1130).
  * 2. Cache boundary — in the generated server entry (dist/server/entry.js),
  *    every request-time route registered in dist/server/index.js's route
  *    table emits the ADR-0121 `Cache-Control: no-store` baseline, and no

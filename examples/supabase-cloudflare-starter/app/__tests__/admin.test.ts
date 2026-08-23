@@ -20,7 +20,6 @@ function client(options: {
   deadLetters?: unknown[];
   paymentDeadLetters?: unknown[];
   replayError?: { message: string } | null;
-  auditError?: { message: string } | null;
   calls?: { name: string; body?: Record<string, string> }[];
   inserts?: { table: string; row: Record<string, unknown> }[];
 } = {}) {
@@ -29,7 +28,6 @@ function client(options: {
     deadLetters = [],
     paymentDeadLetters = [],
     replayError = null,
-    auditError = null,
     calls = [],
     inserts = [],
   } = options;
@@ -39,7 +37,7 @@ function client(options: {
       select: () => Promise.resolve({ count: 2, error: null }),
       insert: (row: Record<string, unknown>) => {
         inserts.push({ table: name, row });
-        return Promise.resolve({ error: auditError });
+        return Promise.resolve({ error: null });
       },
     }),
     rpc: (name: string, body?: Record<string, string>) => {
@@ -98,26 +96,18 @@ Deno.test('payment replay validates provider id and requests one durable replay'
     name: 'request_payment_event_replay',
     body: { target_event_id: 'evt_dead_letter_1' },
   }]);
-  assertEquals(inserts, [{
-    table: 'admin_audit',
-    row: {
-      actor_id: 'admin-1',
-      action: 'payment_event_replay_requested',
-      target_type: 'payment_event',
-      target_id: 'evt_dead_letter_1',
-    },
-  }]);
+  assertEquals(inserts, []);
 });
 
-Deno.test('payment replay surfaces a failed admin_audit write instead of passing silently', async () => {
+Deno.test('payment replay surfaces the atomic request RPC failure', async () => {
   const valid = new FormData();
   valid.set('event_id', 'evt_dead_letter_1');
   const result = await createPaymentReplayAction(
-    client({ auditError: { message: 'admin_audit unavailable' } }) as never,
+    client({ replayError: { message: 'atomic request unavailable' } }) as never,
   )({ ...ctx(), formData: valid });
   assert(isActionFailure(result));
   assertEquals(result.status, 422);
-  assertEquals((result.data as { error: string }).error, 'admin_audit unavailable');
+  assertEquals((result.data as { error: string }).error, 'atomic request unavailable');
 });
 
 Deno.test('admin loader conceals the queue console from non-admin users', async () => {
@@ -149,23 +139,16 @@ Deno.test('replay action validates id and requests one durable replay', async ()
     name: 'request_attachment_scan_replay',
     body: { dead_letter_id: ID },
   }]);
-  assertEquals(inserts, [{
-    table: 'admin_audit',
-    row: {
-      actor_id: 'admin-1',
-      action: 'attachment_scan_replay_requested',
-      target_type: 'attachment_scan_dead_letter',
-      target_id: ID,
-    },
-  }]);
+  assertEquals(inserts, []);
 });
 
-Deno.test('replay action surfaces a failed admin_audit write instead of passing silently', async () => {
+Deno.test('attachment replay surfaces the atomic request RPC failure', async () => {
   const valid = new FormData();
   valid.set('id', ID);
   const result = await createReplayAction(
-    client({ auditError: { message: 'admin_audit unavailable' } }) as never,
+    client({ replayError: { message: 'atomic request unavailable' } }) as never,
   )({ ...ctx(), formData: valid });
   assert(isActionFailure(result));
   assertEquals(result.status, 422);
+  assertEquals((result.data as { error: string }).error, 'atomic request unavailable');
 });

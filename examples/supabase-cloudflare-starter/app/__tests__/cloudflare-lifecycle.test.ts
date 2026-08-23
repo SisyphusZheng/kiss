@@ -119,6 +119,9 @@ Deno.test('Cron removes stale objects before releasing quota and requeues pendin
   const queued: unknown[] = [];
   globalThis.fetch = (input, init) => {
     const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([]));
+    }
     if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
       return Promise.resolve(Response.json([{ id: 'stale-1', object_key: 'u/stale' }]));
     }
@@ -158,11 +161,85 @@ Deno.test('Cron removes stale objects before releasing quota and requeues pendin
   }]);
 });
 
+Deno.test('Cron converges an interrupted attachment deletion', async () => {
+  const originalFetch = globalThis.fetch;
+  const operations: string[] = [];
+  globalThis.fetch = (input, init) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([{ id: 'deleting-1', object_key: 'u/deleting' }]));
+    }
+    if (url.includes('/storage/v1/object/')) {
+      operations.push(`storage:${init?.method}`);
+      return Promise.resolve(Response.json({}));
+    }
+    if (url.endsWith('/rpc/complete_pending_attachment_delete')) {
+      operations.push('complete');
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (
+      url.endsWith('/rpc/list_stale_attachment_reservations') ||
+      url.endsWith('/rpc/list_pending_attachment_scans') ||
+      url.endsWith('/rpc/list_requested_attachment_scan_replays')
+    ) return Promise.resolve(Response.json([]));
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcileAttachments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(operations, ['storage:DELETE', 'complete']);
+});
+
+Deno.test('Cron retains a deletion tombstone across Storage failure and converges on retry', async () => {
+  const originalFetch = globalThis.fetch;
+  let completed = false;
+  let storageAttempts = 0;
+  globalThis.fetch = (input) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json(
+        completed ? [] : [{ id: 'deleting-retry', object_key: 'u/deleting-retry' }],
+      ));
+    }
+    if (url.includes('/storage/v1/object/')) {
+      storageAttempts++;
+      return Promise.resolve(
+        storageAttempts === 1
+          ? Response.json({ error: 'temporary outage' }, { status: 503 })
+          : Response.json({}),
+      );
+    }
+    if (url.endsWith('/rpc/complete_pending_attachment_delete')) {
+      completed = true;
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (
+      url.endsWith('/rpc/list_stale_attachment_reservations') ||
+      url.endsWith('/rpc/list_pending_attachment_scans') ||
+      url.endsWith('/rpc/list_requested_attachment_scan_replays')
+    ) return Promise.resolve(Response.json([]));
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcileAttachments(env());
+    await reconcileAttachments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(storageAttempts, 2);
+  assertEquals(completed, true);
+});
+
 Deno.test('Cron isolates one enqueue failure so later pending scans still run', async () => {
   const originalFetch = globalThis.fetch;
   const queued: string[] = [];
   globalThis.fetch = (input) => {
     const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([]));
+    }
     if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
       return Promise.resolve(Response.json([]));
     }
@@ -200,6 +277,9 @@ Deno.test('Cron marks replay only after Queue handoff succeeds', async () => {
   const operations: string[] = [];
   globalThis.fetch = (input) => {
     const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([]));
+    }
     if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
       return Promise.resolve(Response.json([]));
     }
@@ -239,6 +319,9 @@ Deno.test('Cron leaves a failed replay request durable and continues later rows'
   const marked: string[] = [];
   globalThis.fetch = (input, init) => {
     const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([]));
+    }
     if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
       return Promise.resolve(Response.json([]));
     }
@@ -423,6 +506,9 @@ Deno.test('Cron delegates attachment replay state and audit to one atomic RPC', 
   const operations: unknown[] = [];
   globalThis.fetch = (input, init) => {
     const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([]));
+    }
     if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
       return Promise.resolve(Response.json([]));
     }

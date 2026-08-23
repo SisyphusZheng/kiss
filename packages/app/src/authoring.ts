@@ -23,6 +23,7 @@ import {
   popData,
   pushActionData,
   pushLoaderData,
+  type RenderDataContext,
 } from './internal/router/data-context-store.ts';
 import type { HydrationStrategy } from '@openelement/element';
 import type { PageHostElement } from './internal/page-host-data.ts';
@@ -246,12 +247,32 @@ interface OpenElementPageDescriptor<
 
 abstract class ApplicationPageElement extends OpenElement implements PageHostElement {
   __openElementParams?: Record<string, string>;
+  __openElementData?: unknown;
   data?: unknown;
   __openElementActionData?: unknown;
   __openElementRequest?: Request;
   __openElementRoute?: PageRouteContext;
   __openElementMeta?: PageMeta;
   __openElementError?: unknown;
+  __openElementRenderDataContext?: RenderDataContext;
+
+  __openElementEvaluateRender<T>(render: () => T): T {
+    const context = this.__openElementRenderDataContext;
+    if (!context) return render();
+    __enterDataContext(context);
+    try {
+      return render();
+    } finally {
+      __exitDataContext();
+    }
+  }
+
+  __openElementDisposeRenderDataContext(): void {
+    const context = this.__openElementRenderDataContext;
+    if (!context) return;
+    popData(context);
+    this.__openElementRenderDataContext = undefined;
+  }
 }
 
 type PageConstructor<
@@ -332,23 +353,19 @@ export function definePage<
 
     override render(): VNode | null {
       // Provide loader/action data to hooks (useLoaderData / useActionData).
-      // The stack is request-scoped: a fresh RenderDataContext is created for
-      // this render and made active for the duration of the synchronous render
-      // so nested components read the current page's data, never a leaked or
-      // empty global stack (#632).
+      // The stack is request-scoped. The element renderer calls the evaluator
+      // below around every deferred function component / For callback, so the
+      // context covers complete VNode evaluation without staying globally
+      // active across an await (#1126).
+      this.__openElementDisposeRenderDataContext();
       const dataCtx = createRenderDataContext();
-      // Enter and the data pushes live inside the try: a throwing push must
-      // not strand a frame on the active-context bridge, so the finally
-      // exits the bridge only when the enter succeeded (#1067).
-      let entered = false;
+      const loaderData = this.__openElementData !== undefined ? this.__openElementData : this.data;
+      pushLoaderData(dataCtx, loaderData);
+      pushActionData(dataCtx, this.__openElementActionData);
+      this.__openElementRenderDataContext = dataCtx;
       try {
-        __enterDataContext(dataCtx);
-        entered = true;
-        pushLoaderData(dataCtx, this.data);
-        pushActionData(dataCtx, this.__openElementActionData);
-
         const params = (this.__openElementParams ?? this.params ?? {}) as Params;
-        const data = this.data as Data;
+        const data = loaderData as Data;
         const context = {
           data,
           params,
@@ -358,16 +375,14 @@ export function definePage<
           props: collectPublicProps(this),
         };
 
-        if (this.__openElementError !== undefined && definition.error) {
-          return definition.error({ ...context, error: this.__openElementError });
-        }
-
-        return definition.render(context);
-      } finally {
-        if (entered) {
-          popData(dataCtx);
-          __exitDataContext();
-        }
+        return this.__openElementEvaluateRender(() =>
+          this.__openElementError !== undefined && definition.error
+            ? definition.error({ ...context, error: this.__openElementError })
+            : definition.render(context)
+        );
+      } catch (error) {
+        this.__openElementDisposeRenderDataContext();
+        throw error;
       }
     }
   }

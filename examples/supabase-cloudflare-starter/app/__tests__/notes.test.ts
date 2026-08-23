@@ -1,5 +1,7 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
+import { renderDsd } from '@openelement/element';
+import { NOTES_HTML_BUDGET_BYTES, NOTES_PAGE_SIZE } from '../../lib/notes-pagination.ts';
 
 if (!('customElements' in globalThis)) {
   (globalThis as { customElements?: unknown }).customElements = {
@@ -9,6 +11,7 @@ if (!('customElements' in globalThis)) {
 }
 
 const {
+  default: NotesPage,
   createNoteAction,
   createNotesLoader,
   MAX_NOTE_BODY_LENGTH,
@@ -24,6 +27,8 @@ function stubClient(overrides: {
   selectError?: { message: string } | null;
   insertError?: { message: string } | null;
   onSelect?: (columns: string) => void;
+  onOr?: (expression: string) => void;
+  onLimit?: (count: number) => void;
   onInsert?: (values: { user_id: string; title: string; body: string }) => void;
 }): () => NotesSupabaseClient {
   const {
@@ -32,6 +37,8 @@ function stubClient(overrides: {
     selectError = null,
     insertError = null,
     onSelect,
+    onOr,
+    onLimit,
     onInsert,
   } = overrides;
   return () => ({
@@ -42,9 +49,27 @@ function stubClient(overrides: {
     from: () => ({
       select: (columns: string) => {
         onSelect?.(columns);
-        return {
-          order: () => Promise.resolve({ data: notes, error: selectError }),
+        const result = { data: notes, error: selectError };
+        const query = {
+          or(expression: string) {
+            onOr?.(expression);
+            return query;
+          },
+          order() {
+            return query;
+          },
+          limit(count: number) {
+            onLimit?.(count);
+            return query;
+          },
+          then<TResult1 = typeof result, TResult2 = never>(
+            onfulfilled?: ((value: typeof result) => TResult1 | PromiseLike<TResult1>) | null,
+            onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+          ) {
+            return Promise.resolve(result).then(onfulfilled, onrejected);
+          },
         };
+        return query;
       },
       insert: (values) => {
         onInsert?.(values);
@@ -84,6 +109,71 @@ Deno.test('notes loader returns the signed-in owner rows', async () => {
   assertEquals(result.denied, false);
   assertEquals(result.notes, notes);
   assertEquals(result.live?.userId, USER.id);
+});
+
+Deno.test('notes loader applies a fixed keyset page and emits a stable next cursor', async () => {
+  const notes = Array.from({ length: 11 }, (_, index) => ({
+    id: `123e4567-e89b-42d3-a456-${String(426614174000 + index).padStart(12, '0')}`,
+    title: `note-${index}`,
+    body: 'bounded',
+    created_at: new Date(Date.UTC(2026, 7, 23, 0, 0, 20 - index)).toISOString(),
+  }));
+  let limit = 0;
+  const first = await createNotesLoader(stubClient({ notes, onLimit: (value) => limit = value }))(
+    ctx(),
+  );
+  assertEquals(limit, 11);
+  assertEquals(first.notes?.length, 10);
+  assert(first.nextCursor);
+  assert(first.nextHref?.startsWith('/notes?cursor='));
+
+  let cursorFilter = '';
+  await createNotesLoader(stubClient({
+    notes: [],
+    onOr: (value) => cursorFilter = value,
+  }))({ ...ctx(), request: new Request(`http://localhost${first.nextHref}`) });
+  assert(cursorFilter.includes(`created_at.lt.${notes[9].created_at}`));
+  assert(cursorFilter.includes(`id.lt.${notes[9].id}`));
+});
+
+Deno.test('bounded Notes page stays under its SSR budget at database maxima', async () => {
+  const notes = Array.from({ length: NOTES_PAGE_SIZE }, (_, index) => ({
+    id: `123e4567-e89b-42d3-a456-${String(426614174000 + index).padStart(12, '0')}`,
+    title: 't'.repeat(MAX_NOTE_TITLE_LENGTH),
+    body: '&<>"'.repeat(MAX_NOTE_BODY_LENGTH / 4),
+    created_at: new Date(Date.UTC(2026, 7, 23, 0, 0, 20 - index)).toISOString(),
+  }));
+  const out = await renderDsd('bounded-notes-page', {
+    componentClass: NotesPage,
+    props: { __openElementData: { denied: false, notes } },
+  });
+  assertEquals(out.errors, []);
+  const bytes = new TextEncoder().encode(out.html).byteLength;
+  assert(bytes <= NOTES_HTML_BUDGET_BYTES, `${bytes} > ${NOTES_HTML_BUDGET_BYTES}`);
+});
+
+Deno.test('authenticated SSR places the user JWT only on the one-shot Realtime handoff', async () => {
+  const token =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsInJvbGUiOiJhdXRoZW50aWNhdGVkIn0.signature';
+  const out = await renderDsd('authenticated-notes-page', {
+    componentClass: NotesPage,
+    props: {
+      __openElementData: {
+        denied: false,
+        notes: [],
+        live: {
+          url: 'https://example.supabase.co',
+          anonKey: 'public-anon-key',
+          userId: USER.id,
+          accessToken: token,
+        },
+      },
+    },
+  });
+  assertEquals(out.errors, []);
+  assertEquals(out.html.split(token).length - 1, 1);
+  assert(out.html.includes(`data-access-token="${token}"`));
+  assertEquals(out.html.includes(`data-ssr-props="${token}`), false);
 });
 
 Deno.test('create note rejects anonymous writes with 401', async () => {

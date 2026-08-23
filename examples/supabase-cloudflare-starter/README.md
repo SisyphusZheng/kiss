@@ -28,8 +28,9 @@ application layer.
       replay is durable; no duplicate provider config is maintained
 - [x] notes-live island: Supabase Realtime INSERT subscription in the browser,
       RLS-scoped via the user's short-lived access token + a hard `user_id`
-      filter, with bounded/deduplicated state, reconnect recovery, token refresh,
-      and explicit unsubscribe on disconnect
+      filter, with bounded/deduplicated state, reconnect recovery, one-shot
+      token handoff (the SSR attribute is removed after `setAuth`), token
+      refresh, and explicit unsubscribe on disconnect
 - [x] admin authorization reads issuer-controlled `app_metadata.role` only;
       matching RLS and immutable append-only audit migration included
 - [x] Stripe webhook ingress preserves and verifies the raw body before JSON

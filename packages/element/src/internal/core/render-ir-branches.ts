@@ -118,9 +118,12 @@ export async function renderForBranch(
         forItemPathSegment(items[index], index, itemKeys?.[index]),
       )
       : renderPath;
+    const renderedItem = eventContext.evaluate
+      ? eventContext.evaluate(() => renderFn(items[index], index))
+      : renderFn(items[index], index);
     parts.push(
       await renderNode(
-        renderFn(items[index], index),
+        renderedItem,
         eventContext,
         depth,
         boundaryActive,
@@ -164,8 +167,11 @@ export async function renderComponentBranch(
     );
   }
   try {
+    const rendered = eventContext.evaluate
+      ? eventContext.evaluate(() => callComponent(tag, props ?? {}, children))
+      : callComponent(tag, props ?? {}, children);
     return await renderNode(
-      callComponent(tag, props ?? {}, children),
+      rendered,
       eventContext,
       depth,
       boundaryActive,

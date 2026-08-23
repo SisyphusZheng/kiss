@@ -201,10 +201,14 @@ export function createDeleteAction(
     if (!user) return fail(401, { error: 'sign-in required to delete' });
     const key = String(ctx.formData.get('key') ?? '');
     if (!ownsObjectKey(user.id, key)) return fail(403, { error: 'invalid object owner' });
+    const requested = await supabase.rpc('request_attachment_delete', { target_key: key });
+    if (requested.error) return fail(422, { error: requested.error.message });
     const removed = await supabase.storage.from(BUCKET).remove([key]);
-    if (removed.error) return fail(422, { error: removed.error.message });
-    const released = await supabase.rpc('release_attachment_by_key', { target_key: key });
-    if (released.error) throw new Error('object deleted but quota release failed');
+    if (removed.error) {
+      return fail(422, { error: `${removed.error.message}; deletion queued for retry` });
+    }
+    const completed = await supabase.rpc('complete_attachment_delete', { target_key: key });
+    if (completed.error) throw new Error('object deleted; quota reconciliation is pending');
     throw redirect('/upload');
   };
 }

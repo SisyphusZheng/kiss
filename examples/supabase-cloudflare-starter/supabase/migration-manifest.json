@@ -68,6 +68,22 @@
     {
       "file": "20260823094232_stripe_reconciliation_index.sql",
       "sha256": "b0ec3d93eaaae702d98235ab2878dd153e81f39ea620fabd1dadda788a8e57d3"
+    },
+    {
+      "file": "20260823110000_explicit_data_api_privileges.sql",
+      "sha256": "6ca40cae2d9d714c22b058b4c3afe8455d2366dc8406f8ad1f14ea689eda15f9"
+    },
+    {
+      "file": "20260823110100_replay_request_audit_atomicity.sql",
+      "sha256": "418d9ffd13ee28cf266aa7690bcff5c893feccf0649a80967f165ab42ceb268c"
+    },
+    {
+      "file": "20260823110200_attachment_delete_reconciliation.sql",
+      "sha256": "916683b39f8cb6784d9fc18fde4cf86e70ef5e164beec348192f1249327b5905"
+    },
+    {
+      "file": "20260823110300_notes_bounds.sql",
+      "sha256": "89f21e4c40f5ccfc93cfacf250a3c696655d8a7d387fb6ddee54362e58189c4a"
     }
   ]
 }

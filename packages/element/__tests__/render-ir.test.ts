@@ -441,6 +441,24 @@ Deno.test('SSR emits hydration markers for registered signal-valued props (#1093
   );
 });
 
+Deno.test('SSR does not duplicate data attributes in hydration props (#1130)', async () => {
+  class DataAttributeComponent {
+    render(): null {
+      return null;
+    }
+  }
+
+  const token = 'one-shot-user-token';
+  const output = await renderDsd('x-data-attribute', {
+    componentClass: DataAttributeComponent as unknown as CustomElementConstructor,
+    props: { 'data-access-token': token, count: 7 },
+  });
+
+  assertEquals(output.html.split(token).length - 1, 1);
+  assertStringIncludes(output.html, `data-access-token="${token}"`);
+  assertStringIncludes(output.html, 'data-ssr-props="{&quot;count&quot;:7}"');
+});
+
 Deno.test('SSR unserializable public props degrade like a render() failure', async () => {
   class NullRender {
     render(): null {

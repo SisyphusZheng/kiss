@@ -10,6 +10,7 @@ import {
   isOpenElementRedirect,
   notFound,
   redirect,
+  useActionData,
   useLoaderData,
 } from '../src/index.ts';
 import * as appSurface from '../src/index.ts';
@@ -30,6 +31,58 @@ Deno.test('definePage() returns a DsdElement-compatible constructor', async () =
 
   assertEquals(out.errors.length, 0);
   assertEquals(out.html.includes('<main>Hello OpenElement</main>'), true);
+});
+
+Deno.test('nested function components retain loader/action data through complete SSR', async () => {
+  function Grandchild() {
+    const loader = useLoaderData<{ label: string }>();
+    const action = useActionData<{ result: string }>();
+    return <span id='grandchild'>{loader?.label}:{action?.result}</span>;
+  }
+  function Child() {
+    return <Grandchild />;
+  }
+  const Page = definePage({
+    render: () => (
+      <main>
+        <Child />
+      </main>
+    ),
+  });
+  const out = await renderDsd('nested-data-page', {
+    componentClass: Page,
+    props: {
+      data: { label: 'loader-ok' },
+      __openElementActionData: { result: 'action-ok' },
+    },
+  });
+  assertEquals(out.errors, []);
+  assertEquals(out.html.includes('loader-ok:action-ok'), true, out.html);
+  assertEquals(useLoaderData(), undefined);
+  assertEquals(useActionData(), undefined);
+});
+
+Deno.test('concurrent nested page SSR never crosses request data contexts', async () => {
+  function Child() {
+    const data = useLoaderData<{ label: string }>();
+    return <span>{data?.label}</span>;
+  }
+  const Page = definePage({
+    render: () => (
+      <main>
+        <Child />
+        <Child />
+      </main>
+    ),
+  });
+  const [a, b] = await Promise.all([
+    renderDsd('concurrent-data-a', { componentClass: Page, props: { data: { label: 'A-only' } } }),
+    renderDsd('concurrent-data-b', { componentClass: Page, props: { data: { label: 'B-only' } } }),
+  ]);
+  assertEquals(a.html.includes('A-only'), true);
+  assertEquals(a.html.includes('B-only'), false);
+  assertEquals(b.html.includes('B-only'), true);
+  assertEquals(b.html.includes('A-only'), false);
 });
 
 Deno.test('definePage() rejects function-form pages', () => {

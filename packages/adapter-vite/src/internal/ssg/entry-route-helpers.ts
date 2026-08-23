@@ -70,7 +70,7 @@ export function pagePropsExpr(options: {
   metaExpr: string;
 }): string {
   const { paramsExpr, dataExpr, actionDataExpr, requestExpr, routeExpr, metaExpr } = options;
-  return `{ ...${paramsExpr}, data: ${dataExpr}, __openElementActionData: ${actionDataExpr}, __openElementParams: ${paramsExpr}, __openElementRequest: ${requestExpr}, __openElementRoute: ${routeExpr}, __openElementMeta: ${metaExpr} }`;
+  return `{ ...${paramsExpr}, __openElementData: ${dataExpr}, __openElementActionData: ${actionDataExpr}, __openElementParams: ${paramsExpr}, __openElementRequest: ${requestExpr}, __openElementRoute: ${routeExpr}, __openElementMeta: ${metaExpr} }`;
 }
 
 /** wrapInDocument() options object shared by page handlers and the SSG renderRoute. */

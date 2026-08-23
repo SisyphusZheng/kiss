@@ -49,6 +49,22 @@ export function reconnectDelayMs(attempt: number, random = Math.random): number 
   return Math.floor(random() * cap);
 }
 
+/**
+ * Move the short-lived SSR credential into Realtime and erase the DOM copy.
+ * A token observed before the client exists must stay in place so #connect can
+ * consume it later; removal is proof that setAuth was actually invoked.
+ */
+export function handoffRealtimeAuth(
+  client: Pick<RealtimeClient, 'setAuth'> | null,
+  host: Pick<Element, 'removeAttribute'>,
+  accessToken: string | null,
+): boolean {
+  if (!client || !accessToken) return false;
+  client.setAuth(accessToken);
+  host.removeAttribute('data-access-token');
+  return true;
+}
+
 export default class NotesLive extends OpenElement {
   #status = signal('idle');
   #events = signal<LiveNoteEvent[]>([]);
@@ -102,7 +118,10 @@ export default class NotesLive extends OpenElement {
     // short-lived access token the connection is `anon`, which has no
     // SELECT policy on notes and would receive nothing. setAuth upgrades
     // the realtime connection only — no session is persisted client-side.
-    if (accessToken) client.setAuth(accessToken);
+    // The SSR attribute is a one-shot handoff, not durable DOM state. The
+    // token remains inside the Realtime client after setAuth and is removed
+    // from the browser-readable element immediately (#1130).
+    handoffRealtimeAuth(client, this, accessToken);
     this.#client = client;
     this.#channel = client
       .channel('notes-live')
@@ -175,7 +194,7 @@ export default class NotesLive extends OpenElement {
   override attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
     super.attributeChangedCallback(name, oldValue, value);
     if (name === 'data-access-token' && value && value !== oldValue) {
-      this.#client?.setAuth(value);
+      handoffRealtimeAuth(this.#client, this, value);
     }
   }
 

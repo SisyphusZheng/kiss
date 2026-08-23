@@ -265,15 +265,60 @@ Deno.test('delete removes the owner object and releases quota', async () => {
   const error = await assertRejects(() => action({ ...ctx(), formData }));
   assert(isOpenElementRedirect(error));
   assertEquals(removed, [['user-123/opaque-a.txt']]);
-  assertEquals(calls, ['release_attachment_by_key']);
+  assertEquals(calls, ['request_attachment_delete', 'complete_attachment_delete']);
 });
 
-Deno.test('delete quota failure surfaces as a server error, not invalid fail(500)', async () => {
+Deno.test('duplicate owner deletes remain idempotent across intent and completion RPCs', async () => {
+  const calls: string[] = [];
+  const removed: string[][] = [];
   const action = createDeleteAction(stubClient({
-    rpcErrors: { release_attachment_by_key: { message: 'database unavailable' } },
+    onRemove: (paths) => removed.push(paths),
+    onRpc: (name) => calls.push(name),
+  }));
+  const formData = new FormData();
+  formData.set('key', 'user-123/opaque-a.txt');
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const error = await assertRejects(() => action({ ...ctx(), formData }));
+    assert(isOpenElementRedirect(error));
+  }
+
+  assertEquals(removed, [
+    ['user-123/opaque-a.txt'],
+    ['user-123/opaque-a.txt'],
+  ]);
+  assertEquals(calls, [
+    'request_attachment_delete',
+    'complete_attachment_delete',
+    'request_attachment_delete',
+    'complete_attachment_delete',
+  ]);
+});
+
+Deno.test('delete finalization failure leaves a recoverable tombstone', async () => {
+  const calls: string[] = [];
+  const action = createDeleteAction(stubClient({
+    rpcErrors: { complete_attachment_delete: { message: 'database unavailable' } },
+    onRpc: (name) => calls.push(name),
   }));
   const formData = new FormData();
   formData.set('key', 'user-123/opaque-a.txt');
   const error = await assertRejects(() => action({ ...ctx(), formData }), Error);
-  assertEquals(error.message, 'object deleted but quota release failed');
+  assertEquals(error.message, 'object deleted; quota reconciliation is pending');
+  assertEquals(calls, ['request_attachment_delete', 'complete_attachment_delete']);
+});
+
+Deno.test('delete Storage failure keeps the durable intent for Cron retry', async () => {
+  const calls: string[] = [];
+  const action = createDeleteAction(stubClient({
+    removeError: { message: 'storage unavailable' },
+    onRpc: (name) => calls.push(name),
+  }));
+  const formData = new FormData();
+  formData.set('key', 'user-123/opaque-a.txt');
+  const result = await action({ ...ctx(), formData });
+  assert(isActionFailure(result));
+  assertEquals(result.status, 422);
+  assertEquals(result.data?.error, 'storage unavailable; deletion queued for retry');
+  assertEquals(calls, ['request_attachment_delete']);
 });

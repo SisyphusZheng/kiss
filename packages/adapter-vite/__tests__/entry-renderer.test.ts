@@ -411,10 +411,10 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
     'const __data = typeof $pageIndex.loader === "function" ? await $pageIndex.loader(__loadContext) : undefined',
   );
   assertStringIncludes(code, '__openElementParams: __params');
-  assertStringIncludes(code, 'data: __data');
+  assertStringIncludes(code, '__openElementData: __data');
   assertFalse(
-    code.includes('__openElementData: __data'),
-    'Generated code should use `data` prop not `__openElementData`',
+    code.includes(', data: __data'),
+    'Request loader data must not serialize as a public host prop (#1129/#1130)',
   );
   assertStringIncludes(code, '__openElementRoute: __routeContext');
   assertStringIncludes(code, '__openElementMeta: __routeMetaValue');

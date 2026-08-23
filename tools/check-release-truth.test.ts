@@ -7,7 +7,7 @@ const state: ReleaseState = {
   publishedVersion: '0.43.0',
   latestLandedTrain: 'v0.43.0',
   activeTarget: 'v0.43.1',
-  nextPlannedTrain: 'v0.44.0-alpha.1',
+  nextPlannedTrain: 'not scheduled (maintenance mode)',
   maturity: 'stable',
 };
 

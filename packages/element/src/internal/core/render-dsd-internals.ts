@@ -18,6 +18,7 @@ import { serializeAttrs } from './render-ir.ts';
 import { isSignalLike } from '../signal/index.ts';
 import { BoundaryRenderError, isControlFlowThrow, isDepthLimitError } from './render-policy.ts';
 import { classifyError, dispatchRenderError } from './render-dsd-errors.ts';
+import { createEventMarkerContext } from './event-marker.ts';
 
 const log = createLogger('render-dsd');
 
@@ -188,7 +189,7 @@ export async function renderComponentContent(
       return {
         content: await renderDsdTree(
           addRegisteredSignalMarkers(result, signalRegistry),
-          undefined,
+          renderEventContext(instance),
           nestingDepth,
           subtreeScope,
           boundary.renderPath,
@@ -230,7 +231,17 @@ export async function renderComponentContent(
       nestingDepth,
     );
     return { content: '', hasError: true, earlyReturn: fallbackResult };
+  } finally {
+    instance.__openElementDisposeRenderDataContext?.();
   }
+}
+
+function renderEventContext(instance: DsdComponent) {
+  const context = createEventMarkerContext();
+  if (typeof instance.__openElementEvaluateRender === 'function') {
+    context.evaluate = instance.__openElementEvaluateRender.bind(instance);
+  }
+  return context;
 }
 
 /**
@@ -344,7 +355,13 @@ async function tryBoundaryFallback(
     if (result == null) return { content: '', hasError: true };
     if (isVNode(result)) {
       return {
-        content: await renderDsdTree(result, undefined, nestingDepth, false, renderPath),
+        content: await renderDsdTree(
+          result,
+          renderEventContext(instance),
+          nestingDepth,
+          false,
+          renderPath,
+        ),
         hasError: true,
       };
     }

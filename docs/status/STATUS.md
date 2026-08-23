@@ -5,10 +5,10 @@
 > npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
 > Latest landed train: `v0.43.0`\
 > Active release target: `v0.43.1`\
-> Next planned train: `v0.44.0-alpha.1`\
+> Next planned train: `not scheduled (maintenance mode)`\
 > Next release line: `v0.43.1` (hardening closure)\
 > Product graph: five packages\
-> Current maturity stage: stable (0.43.0, Universal WC SSR + the Supabase × Cloudflare delivery path under ADR-0135)
+> Current maturity stage: stable (0.43.x, Universal WC SSR + the Supabase × Cloudflare delivery path under ADR-0135; maintenance mode under ADR-0140)
 
 ## Current position
 
@@ -23,7 +23,10 @@ forward untouched, and the 0.43 line adds the frozen Universal WC admission
 contract (deterministic per-tag render path + reason, unknown means
 client-only) with hydration-mismatch structured diagnostics. Framework
 session/flash, cache/ISR, streaming SSR and production runtime recovery stay
-unfrozen (0.44). Alpha.19 completed the third audit cleanup sweep (ADR-0118)
+unfrozen and are not scheduled. `v0.43.1` is a cumulative maintenance baseline:
+Wave A requalifies the 33 earlier closures, Wave B remediates six confirmed
+findings, and Wave C independently decides release readiness. Alpha.19 completed
+the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha
@@ -75,8 +78,9 @@ the five-package responsibility table.
    CLI runtime, logger tags) and the alpha.9 cleanup train (#632–#644).
    TP-5.9 (alpha.13, standards-as-seams) followed, and alpha.14–16 were
    remediation trains closing it.
-5. Framework session and cache remain unfrozen until 0.44; login apps use
-   recipes (better-auth) and must not wait on framework session APIs.
+5. Framework session and cache remain unfrozen and unscheduled; login apps use
+   recipes and must not wait on framework session APIs. A future minor requires
+   the ADR-0140 re-entry decision.
 6. UI remains optional until v0.46 records its stable scope.
 7. Cross-runtime claim (Deno/Node/Bun) is partially unmet: the `start` CLI
    is cross-runtime since #622 (Node 18+/Deno/Bun via `node:http`), but the
@@ -115,7 +119,8 @@ recipes).
 | `0.42.0-alpha.17` | Registration decoupling (#960, ADR-0128) + architect final review        |
 | `0.42.0`          | WC light fullstack stable — Application Loop frozen (ADR-0122)           |
 | `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                     |
-| `0.44.0`          | Production runtime (session/cache/OTel/streaming)                        |
+| `0.43.1`          | Cumulative maintenance baseline: Wave A/B/C closure                      |
+| future minor      | Not scheduled; requires ADR-0140 re-entry evidence                       |
 | `1.0.0`           | Stable five-package product                                              |
 
 > **Version hole — `0.42.0-alpha.8` is skipped / npm-unpublished.** Its git tag

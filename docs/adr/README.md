@@ -9,22 +9,24 @@ The ADR directory is append-only project history. Not every accepted ADR is
 current product truth. For the v0.41 alpha line, start with these current
 documents:
 
-| Area               | Current ADR / doc                                                | Notes                                                                |
-| ------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Product doctrine   | ADR-0110, ADR-0113                                               | Two-product framing; five-package boundary.                          |
-| App ownership      | ADR-0111                                                         | OpenElement-owned app concepts; Vite/Hono/Nitro as drivers.          |
-| Protocol runtime   | ADR-0112                                                         | Contracts plus a tiny host-API-free runtime.                         |
-| Distribution       | ADR-0108                                                         | npm-primary distribution via `deno pack` for v0.41+.                 |
-| Alpha naming       | ADR-0114                                                         | Alpha line continues until external evidence justifies stable.       |
-| Authoring helper   | ADR-0115                                                         | Single element authoring helper; `defineLayout` removed.             |
-| Alpha.16 scope     | ADR-0116                                                         | Audit-driven correctness reset before stable freeze.                 |
-| Stable 0.41 freeze | ADR-0119                                                         | Scoped interface freeze for the 0.41.x line.                         |
-| 0.42 loop scope    | ADR-0120                                                         | WC Application Loop scope boundary and action protocol.              |
-| 0.42 protocol fix  | ADR-0121                                                         | Audit round 1 hardening amendment to the ADR-0120 protocol.          |
-| 0.42 stable freeze | ADR-0122                                                         | 0.42.0 stable scope freeze — light fullstack boundaries.             |
-| Seam standards     | ADR-0123                                                         | Standards-as-seams evolution plan (URLPattern, fetch mw, Cache API). |
-| Cleanup governance | ADR-0105, ADR-0106                                               | Approved cleanup train and audit-driven quality work.                |
-| Active stack truth | `docs/current/STACK_CONTRACT.md`, `docs/current/VERSION_PLAN.md` | Operational version and stack contract for current work.             |
+| Area                | Current ADR / doc                                                | Notes                                                                |
+| ------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Product doctrine    | ADR-0110, ADR-0113                                               | Two-product framing; five-package boundary.                          |
+| App ownership       | ADR-0111                                                         | OpenElement-owned app concepts; Vite/Hono/Nitro as drivers.          |
+| Protocol runtime    | ADR-0112                                                         | Contracts plus a tiny host-API-free runtime.                         |
+| Distribution        | ADR-0108                                                         | npm-primary distribution via `deno pack` for v0.41+.                 |
+| Release evolution   | ADR-0135, ADR-0140                                               | Stable 0.43.x maintenance; no next feature train is scheduled.       |
+| Authoring helper    | ADR-0115                                                         | Single element authoring helper; `defineLayout` removed.             |
+| Alpha.16 scope      | ADR-0116                                                         | Audit-driven correctness reset before stable freeze.                 |
+| Stable 0.41 freeze  | ADR-0119                                                         | Scoped interface freeze for the 0.41.x line.                         |
+| 0.42 loop scope     | ADR-0120                                                         | WC Application Loop scope boundary and action protocol.              |
+| 0.42 protocol fix   | ADR-0121                                                         | Audit round 1 hardening amendment to the ADR-0120 protocol.          |
+| 0.42 stable freeze  | ADR-0122                                                         | 0.42.0 stable scope freeze — light fullstack boundaries.             |
+| Seam standards      | ADR-0123                                                         | Standards-as-seams evolution plan (URLPattern, fetch mw, Cache API). |
+| Content collections | ADR-0136                                                         | Generic, sanitized generated-content collections.                    |
+| Package ownership   | ADR-0137                                                         | Public facades and five-package ownership boundaries.                |
+| Cleanup governance  | ADR-0105, ADR-0106                                               | Approved cleanup train and audit-driven quality work.                |
+| Active stack truth  | `docs/current/STACK_CONTRACT.md`, `docs/current/VERSION_PLAN.md` | Operational version and stack contract for current work.             |
 
 Older ADRs remain useful evidence, but they are historical when they conflict
 with ADR-0110 through ADR-0116, or docs under `docs/current/`.
@@ -172,12 +174,23 @@ git history.
 | 0121 | 0.42 Action Protocol Hardening Amendment (Audit Round 1)                                                                             | Accepted                                         |
 | 0122 | 0.42.0 Stable Scope Freeze — WC Light Fullstack                                                                                      | Proposed (TP-6)                                  |
 | 0123 | Standards as Seams — Evolution Plan                                                                                                  | Proposed (alpha.13)                              |
+| 0124 | Keyed List Reconciliation for `<For>`                                                                                                | Accepted                                         |
+| 0125 | Hydration Does Not Serialize or Cache the SSR Instance                                                                               | Accepted                                         |
+| 0126 | Built-in Allow-List HTML Sanitizer (`sanitizeHtml`)                                                                                  | Accepted                                         |
+| 0127 | Unify Island Hydration Option Name (`strategy` → `hydrate`)                                                                          | Accepted                                         |
+| 0128 | Decouple Page Registration from the `tagName` Export                                                                                 | Accepted                                         |
+| 0129 | Response-Header Channel for Loaders and Actions                                                                                      | Accepted                                         |
 | 0130 | Retire the Duplicate `/_data` Loader Endpoint                                                                                        | Accepted                                         |
 | 0131 | 2026-08-19 P3 Batch Touches to Frozen Paths Preserve ADR-0122 Contracts                                                              | Accepted                                         |
 | 0132 | Defer Real Scan-Engine Evidence to v0.44 — Attachment Scanning Is Optional Hardening                                                 | Accepted                                         |
 | 0133 | 2026-08-20 Client-Router Guard Concurrency Fixes Preserve ADR-0122 Contracts                                                         | Accepted                                         |
 | 0134 | Manual workflow_dispatch Greens Count as Release Evidence — Freshness Gate Evaluation Fix                                            | Accepted                                         |
-| 0136 | Content Collections — Generalize the Blog Content Pipeline                                                                           | Proposed (v0.44, #1087)                          |
+| 0135 | 0.43.0 Stable Scope Freeze — Universal WC SSR + Supabase × Cloudflare Delivery Path                                                  | Accepted                                         |
+| 0136 | Content Collections — Generalize the Blog Content Pipeline                                                                           | Accepted (v0.43.1, #1087)                        |
+| 0137 | Public Package Ownership Boundaries                                                                                                  | Accepted (v0.43.1, #1097)                        |
+| 0138 | Require Real Scanner Evidence for v0.43.1                                                                                            | Superseded by ADR-0139                           |
+| 0139 | Provider-Neutral Attachment Scanning and v0.44 Qualification                                                                         | Accepted                                         |
+| 0140 | 0.43.x Maintenance Mode and CRM-Driven Evolution                                                                                     | Accepted                                         |
 
 ## Superseded / Historical
 

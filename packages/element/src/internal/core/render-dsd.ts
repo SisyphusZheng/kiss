@@ -113,8 +113,15 @@ function wrapDsdOutput(params: {
 }): string {
   const { tagName, props, content, styleCss, layer, sourceStr, dsdOptions, lightDom } = params;
   const publicProps = collectPublicProps(props);
-  const ssrPropsAttr = Object.keys(publicProps).length > 0
-    ? ` ${DATA_SSR_PROPS}="${escapeAttrValue(JSON.stringify(publicProps))}"`
+  // data-* values are already serialized as host attributes and remain
+  // directly readable after custom-element upgrade. Copying them into the
+  // hydration payload duplicates the value in HTML and is especially unsafe
+  // for one-shot credential handoffs such as data-access-token (#1130).
+  const hydrationProps = Object.fromEntries(
+    Object.entries(publicProps).filter(([key]) => !key.toLowerCase().startsWith('data-')),
+  );
+  const ssrPropsAttr = Object.keys(hydrationProps).length > 0
+    ? ` ${DATA_SSR_PROPS}="${escapeAttrValue(JSON.stringify(hydrationProps))}"`
     : '';
 
   return serializeRenderNode(

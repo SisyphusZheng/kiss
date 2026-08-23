@@ -98,6 +98,10 @@ export interface DsdComponentConstructor extends CustomElementConstructor {
 export interface DsdComponent {
   render(): VNode | null;
   connectedCallback?(): void;
+  /** @internal Evaluate deferred function components in the page request scope. */
+  __openElementEvaluateRender?<T>(render: () => T): T;
+  /** @internal Release request-scoped render state after complete tree evaluation. */
+  __openElementDisposeRenderDataContext?(): void;
   layer?: ComponentLayer;
   [key: string]: unknown;
 }

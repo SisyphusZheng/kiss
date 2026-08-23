@@ -35,7 +35,9 @@ Three kinds of values, three different trust levels:
    enforces this on every PR: it scans all browser-reachable build output
    (`dist/index.html`, `dist/assets/**`; never `dist/server/**`) for
    `service_role` markers, `sb_secret_` key material, and JWT-shaped tokens,
-   and asserts `.env.example` carries placeholders only.
+   and asserts `.env.example` carries placeholders only. This is a static-build
+   guarantee; it does not claim that authenticated request-time HTML contains no
+   user JWT.
 3. **Per-request: the user's session JWT.** Transported in cookies written
    by the server client (below); the short-lived access token is rendered
    for the realtime island only, where it scopes the subscription through
@@ -181,16 +183,33 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { denied: true };
-    const { data: notes, error } = await supabase
-      .from('notes')
-      .select('id, title, body, created_at')
-      .order('created_at', { ascending: false });
+    const cursor = decodeNotesCursor(new URL(ctx.request.url).searchParams.get('cursor'));
+    let query = supabase.from('notes').select('id, title, body, created_at');
+    if (cursor) {
+      query = query.or(
+        `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+      );
+    }
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(NOTES_PAGE_SIZE + 1);
     if (error) return { denied: false, email: user.email, error: error.message };
+    const rows = data ?? [];
+    const notes = rows.slice(0, NOTES_PAGE_SIZE);
+    const last = notes.at(-1);
+    const nextCursor = rows.length > NOTES_PAGE_SIZE && last
+      ? encodeNotesCursor({ createdAt: last.created_at, id: last.id })
+      : undefined;
+    const nextUrl = new URL(ctx.request.url);
+    if (nextCursor) nextUrl.searchParams.set('cursor', nextCursor);
     const { data: { session } } = await supabase.auth.getSession();
     return {
       denied: false,
       email: user.email,
-      notes: notes ?? [],
+      notes,
+      nextCursor,
+      nextHref: nextCursor ? `${nextUrl.pathname}${nextUrl.search}` : undefined,
       live: {
         url: ctx.env.SUPABASE_URL ?? '',
         anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
@@ -202,7 +221,9 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
 }
 ```
 
-The page is a DSD/SSR `renderIntent: { mode: 'dynamic' }` route, so both
+The query is capped at 11 rows and renders 10, using `(created_at,id)` keyset
+pagination instead of an unbounded owner read. The page is a DSD/SSR
+`renderIntent: { mode: 'dynamic' }` route, so both
 branches render fully before any client JavaScript. The denial branch is
 source-backed below; signed-in users additionally receive the create form,
 their rows, the live island, and working no-JS sign-out:
@@ -424,10 +445,11 @@ One subtlety the reference island is deliberate about: **hosted Realtime
 scopes `postgres_changes` by RLS.** Without the user's short-lived access
 token the connection authenticates as `anon`, which has no SELECT policy on
 `notes` and would receive nothing. The loader therefore feeds the island
-the user's access token (rendered as a data attribute), the island calls
-`realtime.setAuth` with it — upgrading the realtime connection only, no
-session is persisted client-side — and adds a hard `user_id=eq.<uid>`
-filter on top.
+the user's access token as a one-shot `data-access-token` attribute. The page
+host's internal loader data is not serialized as a public prop, so this is the
+token's only HTML location. The island calls `realtime.setAuth`, immediately
+removes the attribute, persists no client-side session, and adds a hard
+`user_id=eq.<uid>` filter on top. The route is request-time and `no-store`.
 
 ```tsx
 // app/islands/notes-live.tsx
@@ -536,7 +558,8 @@ is what restores per-client-IP granularity; watch Auth logs for egress-IP
 
 - **Tier 1 (every PR, no credentials):** `deno task
   fullstack:boundary-check` builds the starter and asserts the secret
-  boundary (no service-role/JWT material in browser-reachable output), the
+  static boundary (no service-role, secret-key or build-time JWT material in
+  browser-reachable build output), the
   cache boundary (every request-time route emits the ADR-0121
   `Cache-Control: no-store` baseline; `private, no-cache` is the only
   permitted relaxation), and placeholder-only `.env.example`.

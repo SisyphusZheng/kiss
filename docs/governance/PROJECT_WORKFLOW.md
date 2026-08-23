@@ -11,15 +11,18 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: source package line `v0.43.0`,
-npm registry line `v0.43.0` (published); in-flight TP-5.9 work
-(TP-6 stable freeze preparation) runs on that line, and `0.42.0` WC light
-fullstack planning continues under ADR-0120 and
-`docs/current/VERSION_PLAN.md`.
+Current execution anchor:
+
+- source package line `v0.43.0`;
+- npm registry line `v0.43.0` (published);
+- active target `v0.43.1`.
+
+Waves A, B and C close the cumulative maintenance baseline under
+`docs/current/VERSION_PLAN.md`; no next minor is scheduled after this patch,
+per ADR-0140.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
-second product. The abandoned beta naming is retired; alpha releases
-continue until external adoption and interfaces justify stability.
+second product. The abandoned beta naming is retired.
 
 ## Required Reading Order
 

@@ -38,6 +38,8 @@ const EVENT_TYPE_ALIASES: Record<string, string> = {
 
 export interface EventMarkerContext {
   nextId(): string;
+  /** Request-scoped evaluator supplied by an App page host during SSR. */
+  evaluate?<T>(render: () => T): T;
 }
 
 export function createEventMarkerContext(): EventMarkerContext {

@@ -27,6 +27,11 @@ import {
   useLoaderData,
 } from '@openelement/app';
 import { createServerSupabase } from '../../lib/supabase-server.ts';
+import {
+  decodeNotesCursor,
+  encodeNotesCursor,
+  NOTES_PAGE_SIZE,
+} from '../../lib/notes-pagination.ts';
 import '../islands/notes-live.tsx';
 
 export const tagName = 'page-notes';
@@ -42,6 +47,8 @@ interface NotesData {
   denied: boolean;
   email?: string;
   notes?: NoteRow[];
+  nextCursor?: string;
+  nextHref?: string;
   error?: string;
   /** Public realtime wiring for the notes-live island (anon key is public
    * by design; events are hard-filtered to the owner's user_id). The
@@ -66,19 +73,21 @@ export interface NotesSupabaseClient {
     }>;
   };
   from(table: 'notes'): {
-    select(columns: string): {
-      order(
-        column: string,
-        options: { ascending: boolean },
-      ): PromiseLike<{
-        data: NoteRow[] | null;
-        error: { message: string } | null;
-      }>;
-    };
+    select(columns: string): NotesQuery;
     insert(values: { user_id: string; title: string; body: string }): PromiseLike<{
       error: { message: string } | null;
     }>;
   };
+}
+
+export interface NotesQuery extends
+  PromiseLike<{
+    data: NoteRow[] | null;
+    error: { message: string } | null;
+  }> {
+  or(expression: string): NotesQuery;
+  order(column: string, options: { ascending: boolean }): NotesQuery;
+  limit(count: number): NotesQuery;
 }
 
 export type NotesClientFactory = (
@@ -95,16 +104,33 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { denied: true };
-    const { data: notes, error } = await supabase
-      .from('notes')
-      .select('id, title, body, created_at')
-      .order('created_at', { ascending: false });
+    const cursor = decodeNotesCursor(new URL(ctx.request.url).searchParams.get('cursor'));
+    let query = supabase.from('notes').select('id, title, body, created_at');
+    if (cursor) {
+      query = query.or(
+        `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+      );
+    }
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(NOTES_PAGE_SIZE + 1);
     if (error) return { denied: false, email: user.email, error: error.message };
+    const rows = data ?? [];
+    const notes = rows.slice(0, NOTES_PAGE_SIZE);
+    const last = notes.at(-1);
+    const nextCursor = rows.length > NOTES_PAGE_SIZE && last
+      ? encodeNotesCursor({ createdAt: last.created_at, id: last.id })
+      : undefined;
+    const nextUrl = new URL(ctx.request.url);
+    if (nextCursor) nextUrl.searchParams.set('cursor', nextCursor);
     const { data: { session } } = await supabase.auth.getSession();
     return {
       denied: false,
       email: user.email,
-      notes: notes ?? [],
+      notes,
+      nextCursor,
+      nextHref: nextCursor ? `${nextUrl.pathname}${nextUrl.search}` : undefined,
       live: {
         url: ctx.env.SUPABASE_URL ?? '',
         anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
@@ -216,6 +242,7 @@ const NotesPage = definePage<NotesData>({
             </li>
           ))}
         </ul>
+        {data.nextHref ? <a id='next-notes-page' href={data.nextHref}>Next page</a> : null}
         {data.live
           ? (
             <notes-live

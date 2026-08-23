@@ -1,4 +1,8 @@
 import { WORKSPACE_HTML_BUDGET_BYTES } from '../lib/workspace-pagination.ts';
+import {
+  NOTES_HTML_BUDGET_BYTES,
+  NOTES_PAGE_SIZE,
+} from '../examples/supabase-cloudflare-starter/lib/notes-pagination.ts';
 
 const ROOT = new URL('../', import.meta.url);
 const STARTER = new URL('../examples/supabase-cloudflare-starter/', import.meta.url);
@@ -37,6 +41,26 @@ function workspaceRows(url: URL) {
       id,
       title,
       status: rowStatus,
+      created_at: new Date(Date.UTC(2026, 7, 23) + id * 1_000).toISOString(),
+    });
+  }
+  return rows;
+}
+
+function noteId(id: number): string {
+  return `123e4567-e89b-42d3-a456-${String(426614100000 + id).padStart(12, '0')}`;
+}
+
+function noteRows(url: URL) {
+  const limit = Math.min(Number(url.searchParams.get('limit') ?? NOTES_PAGE_SIZE + 1), 11);
+  const cursor = /id\.lt\.([0-9a-f-]+)/iu.exec(url.searchParams.get('or') ?? '');
+  const cursorId = cursor ? Number(cursor[1].slice(-12)) - 426614100000 : TOTAL_ROWS + 1;
+  const rows: { id: string; title: string; body: string; created_at: string }[] = [];
+  for (let id = cursorId - 1; id >= 1 && rows.length < limit; id--) {
+    rows.push({
+      id: noteId(id),
+      title: `qualification-note-${id}`,
+      body: '&<>"'.repeat(2_500),
       created_at: new Date(Date.UTC(2026, 7, 23) + id * 1_000).toISOString(),
     });
   }
@@ -82,7 +106,12 @@ function startSupabaseFixture(port: number) {
     'qualification-signature',
   ].join('.');
   const session = qualificationSession(accessToken);
-  const stats = { authRequests: 0, recordRequests: 0, rejectedWorkspaceFilters: 0 };
+  const stats = {
+    authRequests: 0,
+    recordRequests: 0,
+    noteRequests: 0,
+    rejectedWorkspaceFilters: 0,
+  };
   const server = Deno.serve({ hostname: '127.0.0.1', port, onListen() {} }, (request) => {
     const url = new URL(request.url);
     const authorization = request.headers.get('authorization');
@@ -103,10 +132,17 @@ function startSupabaseFixture(port: number) {
         headers: { 'content-range': rows.length ? `0-${rows.length - 1}/*` : '*/0' },
       });
     }
+    if (url.pathname === '/rest/v1/notes') {
+      stats.noteRequests++;
+      const rows = noteRows(url);
+      return Response.json(rows, {
+        headers: { 'content-range': rows.length ? `0-${rows.length - 1}/*` : '*/0' },
+      });
+    }
     return Response.json({ message: 'not found' }, { status: 404 });
   });
   const cookie = `sb-127-auth-token=base64-${base64Url(JSON.stringify(session))}`;
-  return { server, cookie, stats };
+  return { server, cookie, accessToken, stats };
 }
 
 interface CapturedProcess {
@@ -164,16 +200,23 @@ async function stopRuntime(runtime: CapturedProcess | undefined) {
   await runtime.drained;
 }
 
-function nextHref(html: string): string {
-  const anchor = /<a\b[^>]*\bid=["']next-page["'][^>]*>/i.exec(html)?.[0];
+function nextHref(html: string, id = 'next-page'): string {
+  const anchor = new RegExp(`<a\\b[^>]*\\bid=["']${id}["'][^>]*>`, 'iu').exec(html)?.[0];
   const href = anchor && /\bhref=["']([^"']+)["']/i.exec(anchor)?.[1];
   if (!href) throw new Error('qualification response omitted the next-page cursor');
   return href.replaceAll('&amp;', '&');
 }
 
-function assertPage(html: string, expected: string[], forbidden: string[] = []) {
+function assertPage(
+  html: string,
+  expectedRows: number,
+  expected: string[],
+  forbidden: string[] = [],
+) {
   const rows = html.match(/<li\b/g)?.length ?? 0;
-  if (rows !== 50) throw new Error(`qualification response rendered ${rows} rows instead of 50`);
+  if (rows !== expectedRows) {
+    throw new Error(`qualification response rendered ${rows} rows instead of ${expectedRows}`);
+  }
   for (const value of expected) {
     if (!html.includes(value)) throw new Error(`qualification response omitted ${value}`);
   }
@@ -186,6 +229,7 @@ async function qualifyRuntime(
   name: 'node-standalone' | 'wrangler-workerd',
   origin: string,
   cookie: string,
+  accessToken: string,
 ) {
   const firstUrl = `${origin}/workspace-records?workspace=${WORKSPACE_ID}`;
   const latencies: number[] = [];
@@ -193,6 +237,8 @@ async function qualifyRuntime(
   let stableSecond = '';
   let cacheControl: string | null = null;
   let contentType: string | null = null;
+  let stableNotesFirst = '';
+  let stableNotesSecond = '';
   for (let sample = 0; sample < SAMPLES; sample++) {
     const startedAt = performance.now();
     const first = await fetch(firstUrl, { headers: { cookie } });
@@ -204,25 +250,66 @@ async function qualifyRuntime(
       throw new Error(`${name} did not emit private cache control`);
     }
     if (!contentType?.includes('text/html')) throw new Error(`${name} did not emit HTML`);
-    assertPage(firstHtml, ['qualification-record-10001', 'qualification-record-9952']);
+    assertPage(firstHtml, 50, ['qualification-record-10001', 'qualification-record-9952']);
 
     const second = await fetch(new URL(nextHref(firstHtml), origin), { headers: { cookie } });
     const secondHtml = await second.text();
     if (second.status !== 200) throw new Error(`${name} second page returned ${second.status}`);
-    assertPage(secondHtml, ['qualification-record-9951', 'qualification-record-9902'], [
+    assertPage(secondHtml, 50, ['qualification-record-9951', 'qualification-record-9902'], [
       'qualification-record-10001',
     ]);
+
+    const notesFirst = await fetch(`${origin}/notes`, { headers: { cookie } });
+    const notesFirstHtml = await notesFirst.text();
+    if (notesFirst.status !== 200) {
+      throw new Error(`${name} Notes first page returned ${notesFirst.status}`);
+    }
+    if (!notesFirst.headers.get('cache-control')?.startsWith('private')) {
+      throw new Error(`${name} Notes did not emit private cache control`);
+    }
+    assertPage(notesFirstHtml, NOTES_PAGE_SIZE, [
+      'qualification-note-10001',
+      'qualification-note-9992',
+    ]);
+    if (notesFirstHtml.split(accessToken).length - 1 !== 1) {
+      throw new Error(`${name} Notes did not emit exactly one JWT handoff`);
+    }
+    const notesSecond = await fetch(
+      new URL(nextHref(notesFirstHtml, 'next-notes-page'), origin),
+      { headers: { cookie } },
+    );
+    const notesSecondHtml = await notesSecond.text();
+    assertPage(notesSecondHtml, NOTES_PAGE_SIZE, [
+      'qualification-note-9991',
+      'qualification-note-9982',
+    ], [
+      'qualification-note-10001',
+    ]);
+    if (notesSecondHtml.split(accessToken).length - 1 !== 1) {
+      throw new Error(`${name} Notes second page did not emit exactly one JWT handoff`);
+    }
     latencies.push(performance.now() - startedAt);
     if (stableFirst && (stableFirst !== firstHtml || stableSecond !== secondHtml)) {
       throw new Error(`${name} response changed across identical requests`);
     }
     stableFirst = firstHtml;
     stableSecond = secondHtml;
+    if (
+      stableNotesFirst &&
+      (stableNotesFirst !== notesFirstHtml || stableNotesSecond !== notesSecondHtml)
+    ) throw new Error(`${name} Notes response changed across identical requests`);
+    stableNotesFirst = notesFirstHtml;
+    stableNotesSecond = notesSecondHtml;
   }
   const firstBytes = new TextEncoder().encode(stableFirst).byteLength;
   const secondBytes = new TextEncoder().encode(stableSecond).byteLength;
   if (Math.max(firstBytes, secondBytes) > WORKSPACE_HTML_BUDGET_BYTES) {
     throw new Error(`${name} exceeded the ${WORKSPACE_HTML_BUDGET_BYTES}-byte HTML budget`);
+  }
+  const notesFirstBytes = new TextEncoder().encode(stableNotesFirst).byteLength;
+  const notesSecondBytes = new TextEncoder().encode(stableNotesSecond).byteLength;
+  if (Math.max(notesFirstBytes, notesSecondBytes) > NOTES_HTML_BUDGET_BYTES) {
+    throw new Error(`${name} Notes exceeded the ${NOTES_HTML_BUDGET_BYTES}-byte HTML budget`);
   }
   latencies.sort((a, b) => a - b);
   return {
@@ -234,6 +321,13 @@ async function qualifyRuntime(
     secondPageBytes: secondBytes,
     rowsPerPage: 50,
     datasetRows: TOTAL_ROWS,
+    notes: {
+      firstPageBytes: notesFirstBytes,
+      secondPageBytes: notesSecondBytes,
+      rowsPerPage: NOTES_PAGE_SIZE,
+      datasetRows: TOTAL_ROWS,
+      jwtHandoffs: 1,
+    },
     p50TwoPageMs: Number(latencies[Math.floor(SAMPLES * 0.5)].toFixed(3)),
     p95TwoPageMs: Number(latencies[Math.floor(SAMPLES * 0.95)].toFixed(3)),
     html: { first: stableFirst, second: stableSecond },
@@ -299,17 +393,20 @@ try {
     'node-standalone',
     `http://127.0.0.1:${nodePort}`,
     fixture.cookie,
+    fixture.accessToken,
   );
   const workers = await qualifyRuntime(
     'wrangler-workerd',
     `http://127.0.0.1:${workersPort}`,
     fixture.cookie,
+    fixture.accessToken,
   );
   if (node.html.first !== workers.html.first || node.html.second !== workers.html.second) {
     throw new Error('Node and workerd emitted different workspace HTML');
   }
   if (
-    fixture.stats.rejectedWorkspaceFilters !== 0 || fixture.stats.recordRequests !== SAMPLES * 4
+    fixture.stats.rejectedWorkspaceFilters !== 0 || fixture.stats.recordRequests !== SAMPLES * 4 ||
+    fixture.stats.noteRequests !== SAMPLES * 4
   ) {
     throw new Error(`unexpected Supabase fixture calls: ${JSON.stringify(fixture.stats)}`);
   }
@@ -325,7 +422,10 @@ try {
         workers: 'Wrangler 4.123.0 local workerd',
       },
       samplesPerRuntime: SAMPLES,
-      budgetBytes: WORKSPACE_HTML_BUDGET_BYTES,
+      budgetBytes: {
+        workspace: WORKSPACE_HTML_BUDGET_BYTES,
+        notes: NOTES_HTML_BUDGET_BYTES,
+      },
       fixture: { authenticated: true, datasetRows: TOTAL_ROWS, ...fixture.stats },
       results: [
         { ...node, html: undefined },
