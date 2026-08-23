@@ -194,6 +194,13 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'injectPropsSafe writes element props by dynamic name across the DSD boundary.',
     revisitBy: '0.44.0',
   },
+  {
+    file: 'packages/element/src/internal/core/render-dsd-internals.ts',
+    fragment: 'instance as unknown as Record<string, unknown>',
+    reason:
+      'Error-boundary fallback calls the private capture hook after the boundary marker check.',
+    revisitBy: '0.44.0',
+  },
 ];
 
 function addIssue(

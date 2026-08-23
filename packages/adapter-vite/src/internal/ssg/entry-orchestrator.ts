@@ -30,16 +30,12 @@
 
 import type { EntryDescriptor } from '../protocol/ssg.ts';
 import { validateIslandModuleSpecifier } from './entry-generators.ts';
-import {
-  renderActionRoute,
-  renderApiRoute,
-  renderImport,
-  renderMiddleware,
-  renderNotFoundRoute,
-  renderPageRoute,
-  routeTagNameExpr,
-} from './entry-codegen.ts';
+import { renderActionRoute, renderPageRoute } from './entry-codegen.ts';
+import { renderNotFoundRoute } from './entry-not-found-codegen.ts';
+import { renderImport, routeTagNameExpr } from './entry-route-helpers.ts';
+import { renderApiRoute, renderMiddleware } from './entry-server-codegen.ts';
 import { renderRuntimeHelpers } from './entry-render-runtime.ts';
+import { renderActionRuntime } from './entry-action-runtime.ts';
 import { renderSsgSection } from './entry-render-ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
@@ -267,6 +263,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   // --- Runtime helpers ---
   lines.push(renderRuntimeHelpers(desc.appShell));
   lines.push('');
+  if (desc.pageRoutes.length > 0) {
+    lines.push(renderActionRuntime());
+    lines.push('');
+  }
 
   // --- App creation + Middleware ---
   lines.push('const app = new Hono()');
