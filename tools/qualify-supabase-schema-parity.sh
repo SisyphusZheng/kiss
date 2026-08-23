@@ -83,18 +83,19 @@ active_workdir=''
 
 prepare_project "$upgrade_workdir" oe-v0431-upgrade
 mkdir -p "$forward_dir"
-for migration in \
-  20260823030729_postgres_index_rls_performance_floor.sql \
-  20260823031500_workspace_rls_qualification.sql \
-  20260823094231_replay_audit_atomicity.sql \
-  20260823094232_stripe_reconciliation_index.sql \
-  20260823110000_explicit_data_api_privileges.sql \
-  20260823110100_replay_request_audit_atomicity.sql \
-  20260823110200_attachment_delete_reconciliation.sql \
-  20260823110300_notes_bounds.sql \
-  20260823110400_replay_current_admin_authorization.sql; do
-  mv "$upgrade_workdir/supabase/migrations/$migration" "$forward_dir/$migration"
+baseline_last='20260819000000_attachments_insert_only.sql'
+forward_count=0
+for migration_path in "$upgrade_workdir"/supabase/migrations/*.sql; do
+  migration=$(basename "$migration_path")
+  if [[ "$migration" > "$baseline_last" ]]; then
+    mv "$migration_path" "$forward_dir/$migration"
+    forward_count=$((forward_count + 1))
+  fi
 done
+[ "$forward_count" -gt 0 ] || {
+  echo "upgrade qualification found no migrations after $baseline_last" >&2
+  exit 1
+}
 start_project "$upgrade_workdir"
 cp "$forward_dir"/*.sql "$upgrade_workdir/supabase/migrations/"
 supabase migration up --workdir "$upgrade_workdir" --local
