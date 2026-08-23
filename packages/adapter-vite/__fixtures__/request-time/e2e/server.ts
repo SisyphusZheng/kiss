@@ -18,12 +18,7 @@
  */
 
 import { join, resolve } from 'node:path';
-import {
-  importRequestTimeServer,
-  isMalformedUrlError,
-  type RequestTimeRouteMatch,
-  tryStatic,
-} from '../../../src/internal/static-serve.ts';
+import { dispatchRequest, importRequestTimeServer } from '../../../src/internal/static-serve.ts';
 
 const args: Record<string, string> = {};
 for (let i = 0; i < Deno.args.length; i += 2) {
@@ -34,33 +29,16 @@ const PORT = Number(args.port ?? '4180');
 const ROOT = resolve(Deno.cwd(), args.dir ?? '../dist');
 
 const serverEntry = await importRequestTimeServer(join(ROOT, 'server/index.js'));
-type RequestTimeEvent = { req: Request; env?: Record<string, string> };
-const handleRequestTime = serverEntry.default as (
-  event: RequestTimeEvent,
-) => Promise<Response>;
-// Generated dispatch (#556): matches concrete pathnames ('/item/42') against
-// the request-time route patterns ('/item/:id') baked into the server entry.
-const matchRequestTimeRoute = serverEntry.matchRequestTimeRoute as (
-  pathname: string,
-) => RequestTimeRouteMatch | null;
 
-Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
-  const url = new URL(request.url);
-  // #823: matchRequestTimeRoute decodes params internally — a malformed
-  // percent-encoded pathname (/%zz) is a client error, not a hung connection.
-  let match: RequestTimeRouteMatch | null;
-  try {
-    match = matchRequestTimeRoute(url.pathname);
-  } catch (err) {
-    if (isMalformedUrlError(err)) return new Response('Bad Request', { status: 400 });
-    throw err;
-  }
-  if (match !== null) {
-    return await handleRequestTime({ req: request, env: Deno.env.toObject() });
-  }
-  const staticResponse = tryStatic(ROOT, url.pathname);
-  if (staticResponse) return staticResponse;
-  return new Response('Not Found', { status: 404 });
-});
+Deno.serve(
+  { port: PORT, hostname: '127.0.0.1' },
+  (request) =>
+    dispatchRequest(request, {
+      distDir: ROOT,
+      serverMod: serverEntry,
+      env: Deno.env.toObject(),
+      onHandlerError: (error) => console.error('[fixture server] handler error:', error),
+    }),
+);
 
 console.log(`request-time fixture server -> http://127.0.0.1:${PORT} (root: ${ROOT})`);

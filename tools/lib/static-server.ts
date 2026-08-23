@@ -2,10 +2,15 @@
  * Shared static file server for smoke tooling (#788).
  *
  * Serves a built output directory over HTTP with content-type mapping and
- * candidate-path fallback (`.html` pretty URLs, directory index, SPA-style
- * root index fallback). Path traversal (`..`, NUL) is rejected with 403.
+ * production candidate-path fallback (`.html` pretty URLs and directory
+ * indexes). Path traversal (`..`, NUL) is rejected with 403.
  */
 
+import {
+  cacheControlFor,
+  contentTypeFor,
+  staticFileCandidates,
+} from '../../packages/adapter-vite/src/internal/static-serve.ts';
 import { join } from '@std/path';
 
 interface StaticServer {
@@ -13,28 +18,8 @@ interface StaticServer {
   close(): Promise<void>;
 }
 
-const contentTypes: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp',
-  '.ico': 'image/x-icon',
-  '.mp4': 'video/mp4',
-  '.webm': 'video/webm',
-  '.txt': 'text/plain; charset=utf-8',
-  '.xml': 'application/xml; charset=utf-8',
-};
-
 export function contentType(path: string): string {
-  const dot = path.lastIndexOf('.');
-  const ext = dot === -1 ? '' : path.slice(dot).toLowerCase();
-  return contentTypes[ext] ?? 'application/octet-stream';
+  return contentTypeFor(path);
 }
 
 /**
@@ -52,6 +37,8 @@ function respondWithRange(
     'content-type': contentType(path),
     'accept-ranges': 'bytes',
   };
+  const cacheControl = cacheControlFor(path);
+  if (cacheControl) headers['cache-control'] = cacheControl;
   const match = rangeHeader?.match(/^bytes=(\d*)-(\d*)$/);
   if (!match || (match[1] === '' && match[2] === '')) {
     return new Response(body, { headers });
@@ -76,19 +63,18 @@ async function readCandidate(
   pathname: string,
   rangeHeader: string | null,
 ): Promise<Response | null> {
-  const safePath = decodeURIComponent(pathname);
+  let safePath: string;
+  try {
+    safePath = decodeURIComponent(pathname);
+  } catch (error) {
+    if (error instanceof URIError) return new Response('Bad Request', { status: 400 });
+    throw error;
+  }
   if (safePath.includes('..') || safePath.includes('\0')) {
     return new Response('Forbidden', { status: 403 });
   }
 
-  const relativePath = safePath.replace(/^\/+/, '');
-  const base = relativePath === '' ? '' : relativePath;
-  const candidates = safePath.endsWith('/') ? [join(root, relativePath, 'index.html')] : [
-    join(root, relativePath),
-    join(root, `${base}.html`),
-    join(root, relativePath, 'index.html'),
-    join(root, 'index.html'),
-  ];
+  const candidates = staticFileCandidates(pathname).map((candidate) => join(root, candidate));
 
   for (const candidate of candidates) {
     try {

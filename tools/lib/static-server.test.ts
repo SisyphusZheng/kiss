@@ -6,13 +6,15 @@ Deno.test('contentType maps known extensions and falls back to octet-stream', ()
   assertEquals(contentType('/a/b.JS'), 'text/javascript; charset=utf-8');
   assertEquals(contentType('/a/b.css'), 'text/css; charset=utf-8');
   assertEquals(contentType('/a/b.svg'), 'image/svg+xml');
+  assertEquals(contentType('/a/font.woff2'), 'font/woff2');
   assertEquals(contentType('no-extension'), 'application/octet-stream');
 });
 
-Deno.test('serveStatic serves files, pretty URLs, directory index, and SPA fallback', async () => {
+Deno.test('serveStatic serves files and uses production candidate/cache semantics', async () => {
   const root = await Deno.makeTempDir();
   await Deno.writeTextFile(`${root}/index.html`, '<h1>root</h1>');
   await Deno.writeTextFile(`${root}/app.js`, 'console.log(1)');
+  await Deno.writeFile(`${root}/font.woff2`, new Uint8Array([119, 79, 70, 50]));
   await Deno.mkdir(`${root}/guide`);
   await Deno.writeTextFile(`${root}/guide/index.html`, '<h1>guide</h1>');
   await Deno.writeTextFile(`${root}/about.html`, '<h1>about</h1>');
@@ -28,9 +30,17 @@ Deno.test('serveStatic serves files, pretty URLs, directory index, and SPA fallb
     const js = await fetch(`${server.origin}/app.js`);
     assertEquals(js.headers.get('content-type'), 'text/javascript; charset=utf-8');
 
-    // SPA-style fallback: unknown path serves the root index.
-    const spa = await (await fetch(`${server.origin}/no/such/route`)).text();
-    assertStringIncludes(spa, 'root');
+    const font = await fetch(`${server.origin}/font.woff2`);
+    assertEquals(font.headers.get('content-type'), 'font/woff2');
+    await font.body?.cancel();
+
+    const home = await fetch(`${server.origin}/`);
+    assertEquals(home.headers.get('cache-control'), 'no-cache');
+    await home.body?.cancel();
+
+    const missing = await fetch(`${server.origin}/no/such/route`);
+    assertEquals(missing.status, 404);
+    await missing.body?.cancel();
   } finally {
     await server.close();
     await Deno.remove(root, { recursive: true });

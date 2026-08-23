@@ -38,10 +38,9 @@ import process from 'node:process';
 import { formatError } from '@openelement/element';
 import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 import {
+  dispatchRequest,
   importRequestTimeServer,
-  isMalformedUrlError,
   type RequestTimeServerModule,
-  tryStatic,
 } from '../internal/static-serve.ts';
 import { nodeRequestToWeb, writeWebResponse } from '../internal/node-bridge.ts';
 
@@ -164,7 +163,13 @@ async function runStart(): Promise<void> {
   const trustProxy = process.env.OPEN_ELEMENT_TRUST_PROXY === '1';
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const request = nodeRequestToWeb(req, { host: hostname, port, trustProxy });
-    const response = await handleRequest(request, serverMod);
+    const response = await dispatchRequest(request, {
+      distDir,
+      serverMod,
+      env: processEnv,
+      onHandlerError: (error) =>
+        console.error('[openElement start] request-time handler error:', error),
+    });
     writeWebResponse(response, res);
   });
 
@@ -187,57 +192,6 @@ const processEnv: Record<string, string> = {};
 for (const key of Object.keys(process.env)) {
   const value = process.env[key];
   if (value !== undefined) processEnv[key] = value;
-}
-
-async function handleRequest(
-  request: Request,
-  serverMod: RequestTimeServerModule | null,
-): Promise<Response> {
-  const url = new URL(request.url);
-
-  // #823: matchRequestTimeRoute decodes params internally, so a malformed
-  // percent-encoded pathname (/%zz) throws URIError here — outside the
-  // handler try/catch. That is a client error, not a server crash.
-  if (serverMod?.default) {
-    let match:
-      | ReturnType<NonNullable<RequestTimeServerModule['matchRequestTimeRoute']>>
-      | undefined;
-    try {
-      match = serverMod.matchRequestTimeRoute?.(url.pathname);
-    } catch (err) {
-      if (isMalformedUrlError(err)) {
-        return new Response('Bad Request', { status: 400 });
-      }
-      throw err;
-    }
-    const isMutating = request.method !== 'GET' && request.method !== 'HEAD';
-    if (match || isMutating) {
-      try {
-        // #857: the generated server entry takes the Nitro v3 event shape —
-        // `{ req }` wrapping the standard Request. Worker env reaches
-        // loaders through `env`; in the local start server that is the
-        // process env (mirrors the request-time fixture server, #981).
-        return await serverMod.default({ req: request, env: processEnv });
-      } catch (err) {
-        console.error('[openElement start] request-time handler error:', err);
-        return new Response('Internal Server Error', { status: 500 });
-      }
-    }
-  }
-
-  const staticResponse = tryStatic(distDir, url.pathname);
-  if (staticResponse) return staticResponse;
-
-  if (serverMod?.default) {
-    try {
-      return await serverMod.default({ req: request, env: processEnv });
-    } catch (err) {
-      console.error('[openElement start] request-time handler error:', err);
-      return new Response('Internal Server Error', { status: 500 });
-    }
-  }
-
-  return new Response('Not Found', { status: 404 });
 }
 
 // Cross-runtime entry detection (#622): Deno uses import.meta.main,

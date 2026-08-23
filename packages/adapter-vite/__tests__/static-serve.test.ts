@@ -5,14 +5,61 @@
  * cli/start.ts and the request-time fixture server cannot drift apart again.
  */
 
-import { assert, assertEquals, assertThrows } from '@std/assert';
+import { assert, assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { join } from '@std/path';
 import {
   contentTypeFor,
+  dispatchRequest,
   isMalformedUrlError,
   staticFileCandidates,
   tryStatic,
 } from '../src/internal/static-serve.ts';
+
+Deno.test('dispatchRequest shares mutating and styled-fallback production semantics (#1100)', async () => {
+  const root = await Deno.makeTempDir();
+  const seen: string[] = [];
+  try {
+    await Deno.writeTextFile(join(root, 'index.html'), '<h1>static home</h1>');
+    const serverMod = {
+      matchRequestTimeRoute: (pathname: string) =>
+        pathname === '/live' ? { path: '/live', params: {} } : null,
+      default: async ({ req }: { req: Request }) => {
+        seen.push(`${req.method} ${new URL(req.url).pathname}`);
+        if (new URL(req.url).pathname === '/missing') {
+          return new Response('<h1>styled not found</h1>', {
+            status: 404,
+            statusText: 'Styled Not Found',
+            headers: { 'content-type': 'text/html; charset=utf-8' },
+          });
+        }
+        return new Response('request-time', { status: req.method === 'PUT' ? 405 : 200 });
+      },
+    };
+
+    const home = await dispatchRequest(new Request('http://example.test/'), {
+      distDir: root,
+      serverMod,
+    });
+    assertEquals(await home.text(), '<h1>static home</h1>');
+
+    const mutation = await dispatchRequest(
+      new Request('http://example.test/form', { method: 'PUT', body: 'x=1' }),
+      { distDir: root, serverMod },
+    );
+    assertEquals(mutation.status, 405);
+
+    const missing = await dispatchRequest(new Request('http://example.test/missing'), {
+      distDir: root,
+      serverMod,
+    });
+    assertEquals(missing.status, 404);
+    assertEquals(missing.statusText, 'Styled Not Found');
+    assertStringIncludes(await missing.text(), 'styled not found');
+    assertEquals(seen, ['PUT /form', 'GET /missing']);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
 
 Deno.test('contentTypeFor covers the merged MIME table (#732)', () => {
   assertEquals(contentTypeFor('/d/index.html'), 'text/html; charset=utf-8');

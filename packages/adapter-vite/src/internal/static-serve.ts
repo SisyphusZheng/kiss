@@ -30,6 +30,8 @@ const MIME: Record<string, string> = {
   '.ico': 'image/x-icon',
   '.xml': 'application/xml; charset=utf-8',
   '.woff2': 'font/woff2',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
   '.txt': 'text/plain; charset=utf-8',
 };
 
@@ -127,6 +129,54 @@ export type RequestTimeRouteMatch = { path: string; params: Record<string, strin
 export interface RequestTimeServerModule {
   default?: (event: { req: Request; env?: Record<string, string> }) => Promise<Response>;
   matchRequestTimeRoute?: (pathname: string) => RequestTimeRouteMatch | null;
+}
+
+export interface DispatchRequestOptions {
+  distDir: string;
+  serverMod: RequestTimeServerModule | null;
+  env?: Record<string, string>;
+  onHandlerError?: (error: unknown) => void;
+}
+
+/**
+ * Canonical production request dispatch (#1100): request-time route hits and
+ * every mutating method reach the server first; GET/HEAD may use a static
+ * artifact; a static miss falls through to the server so its styled 404/error
+ * boundary is preserved.
+ */
+export async function dispatchRequest(
+  request: Request,
+  options: DispatchRequestOptions,
+): Promise<Response> {
+  const { distDir, serverMod, env, onHandlerError } = options;
+  const url = new URL(request.url);
+
+  const invokeServer = async (): Promise<Response> => {
+    try {
+      return await serverMod!.default!({ req: request, env });
+    } catch (error) {
+      onHandlerError?.(error);
+      return new Response('Internal Server Error', { status: 500 });
+    }
+  };
+
+  if (serverMod?.default) {
+    let match: RequestTimeRouteMatch | null | undefined;
+    try {
+      match = serverMod.matchRequestTimeRoute?.(url.pathname);
+    } catch (error) {
+      if (isMalformedUrlError(error)) return new Response('Bad Request', { status: 400 });
+      throw error;
+    }
+    if (match || (request.method !== 'GET' && request.method !== 'HEAD')) {
+      return await invokeServer();
+    }
+  }
+
+  const staticResponse = tryStatic(distDir, url.pathname);
+  if (staticResponse) return staticResponse;
+  if (serverMod?.default) return await invokeServer();
+  return new Response('Not Found', { status: 404 });
 }
 
 /** Import the generated request-time server entry from an absolute file path. */
