@@ -146,6 +146,64 @@ async function expectNoteConstraint(
   }
 }
 
+async function qualifyCheckoutDataApi(
+  env: QualificationEnv,
+  ownerToken: string,
+  otherToken: string,
+) {
+  const attemptId = crypto.randomUUID();
+  let orderId = '';
+  try {
+    const anonymous = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/create_checkout_order`, {
+      method: 'POST',
+      headers: { apikey: env.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_code: 'starter-support', checkout_attempt: attemptId }),
+    });
+    if (![401, 403].includes(anonymous.status)) {
+      throw new Error(`anonymous checkout RPC did not fail closed: HTTP ${anonymous.status}`);
+    }
+
+    const created = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/create_checkout_order`, {
+      method: 'POST',
+      headers: {
+        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${ownerToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ product_code: 'starter-support', checkout_attempt: attemptId }),
+    });
+    const createdText = await created.text();
+    if (!created.ok) throw new Error(`authenticated checkout RPC failed: HTTP ${created.status}`);
+    try {
+      orderId = JSON.parse(createdText) as string;
+    } catch {
+      throw new Error('authenticated checkout RPC returned a non-JSON order id');
+    }
+    requireUuid('checkout order id', orderId);
+
+    const readOrders = async (token: string) => {
+      const response = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=id`,
+        { headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) throw new Error(`checkout order read failed: HTTP ${response.status}`);
+      return await response.json() as { id: string }[];
+    };
+    const ownerRows = await readOrders(ownerToken);
+    const otherRows = await readOrders(otherToken);
+    if (ownerRows.length !== 1 || ownerRows[0]?.id !== orderId || otherRows.length !== 0) {
+      throw new Error('checkout order owner/cross-user RLS qualification failed');
+    }
+  } finally {
+    if (orderId) {
+      await managementQuery(
+        env,
+        `delete from public.orders where id = '${orderId}' and checkout_attempt_id = '${attemptId}';`,
+      );
+    }
+  }
+}
+
 function replayQualificationSql(adminId: string, ownerId: string): string {
   const suffix = crypto.randomUUID().replaceAll('-', '');
   const paymentNormal = `evt_oe_qual_normal_${suffix}`;
@@ -417,6 +475,7 @@ if (import.meta.main) {
   await record(env, 'post-apply-anonymous-notes-denied', { status: anonymous.status });
 
   const token = await signIn(env, env.B_EMAIL, env.B_PASSWORD);
+  const otherToken = await signIn(env, env.A_EMAIL, env.A_PASSWORD);
   await expectNoteConstraint(
     env,
     token,
@@ -431,6 +490,9 @@ if (import.meta.main) {
     'notes_body_length_check',
   );
   await record(env, 'direct-notes-body-constraint', { postgresCode: '23514' });
+
+  await qualifyCheckoutDataApi(env, token, otherToken);
+  await record(env, 'checkout-data-api-owner-and-cross-user');
 
   await managementQuery(env, aclQualificationSql());
   await record(env, 'post-apply-function-acl');
