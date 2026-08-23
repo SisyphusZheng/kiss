@@ -133,6 +133,8 @@ export async function checkSupabaseMigrations(
       'SUPABASE_PROJECT_ID:',
       'migration_mode:',
       'supabase db push --linked --dry-run',
+      'tools/qualify-supabase-schema-parity.sh',
+      'fresh and upgraded projects converge',
     ]
   ) {
     if (!workflow.includes(anchor)) throw new Error(`migration workflow is missing ${anchor}`);

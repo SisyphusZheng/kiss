@@ -37,6 +37,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  schema-parity:
+    name: Prove fresh and upgraded projects converge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      # v1, pinned 2026-08-17
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1
+        with:
+          version: 2.114.0
+
+      - name: Build fresh and upgraded schemas and compare them
+        run: tools/qualify-supabase-schema-parity.sh
+
+      # v4.6.2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: supabase-schema-parity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .smoke/supabase-schema-parity.json
+          if-no-files-found: error
+          retention-days: 14
+
   project-smoke:
     name: Qualify the reference starter against the real Supabase project
     runs-on: ubuntu-latest
