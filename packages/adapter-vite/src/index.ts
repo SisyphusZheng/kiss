@@ -24,13 +24,9 @@
 
 // Primary public API
 import { build as viteBuild, type InlineConfig, type Plugin } from 'vite';
-import type { FrameworkOptions } from './internal/protocol/framework.ts';
+import type { FrameworkOptions } from './framework.ts';
 import { createOpenPlugin } from './plugin.ts';
-import {
-  DEFAULT_COMPONENTS_DIR,
-  DEFAULT_ISLANDS_DIR,
-  DEFAULT_ROUTES_DIR,
-} from './internal/paths.ts';
+import { DEFAULT_COMPONENTS_DIR, DEFAULT_ISLANDS_DIR, DEFAULT_ROUTES_DIR } from './paths.ts';
 
 export interface OpenPipelineConfig {
   /** Build/dev mode. 'ssg' (default) enables SSR dev server + static generation. 'spa' produces a client-only app (no SSR). */
@@ -69,7 +65,14 @@ export async function buildApp(config: InlineConfig = {}): Promise<unknown> {
 
 export { openElement, type OpenElementOptions } from './app-vite.ts';
 
-export type { FrameworkOptions };
+export type {
+  FrameworkOptions,
+  OpenElementBlogOptions,
+  OpenElementBuildContextLike,
+  OpenElementHeaderNavLink,
+  OpenElementI18nContextOptions,
+  OpenElementNavSection,
+} from './framework.ts';
 
 // Build context
 export { OpenElementBuildContext } from './build-context.ts';
@@ -89,10 +92,10 @@ export {
   injectSpeculationRules,
   injectViewTransitionMeta,
   writeIslandManifests,
-} from './internal/ssg/index.ts';
+} from './ssg.ts';
 
 // Protocol type re-exports
-export type { SpeculationRulesOptions, SsgBehaviorOptions } from './internal/protocol/ssg.ts';
+export type { SpeculationRulesOptions, SsgBehaviorOptions } from './ssg.ts';
 
 // Head injection (public helpers)
 export { buildHeadExtras } from './head-injection.ts';
@@ -103,12 +106,9 @@ export { mdxPlugin } from './plugin-mdx.ts';
 export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
 // Content/build utilities owned by the adapter implementation.
-export { generateSitemap } from './internal/content/sitemap/generator.ts';
-export { createCollectionPlugin } from './internal/content/collection/plugin.ts';
-export {
-  loadCollectionData,
-  writeCollectionDataModule,
-} from './internal/content/collection/data.ts';
+export { generateSitemap } from './content.ts';
+export { createCollectionPlugin } from './content.ts';
+export { loadCollectionData, writeCollectionDataModule } from './content.ts';
 export type {
   CollectionEntry,
   CollectionFieldDefinition,
@@ -117,7 +117,7 @@ export type {
   CollectionSchema,
   CollectionSchemaContext,
   CollectionSchemaResult,
-} from './internal/content/collection/types.ts';
+} from './content.ts';
 
 // Default export
 export { openPipeline as default };

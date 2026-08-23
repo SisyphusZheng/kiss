@@ -418,6 +418,50 @@ export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): vo
   );
 }
 
+/** Keep package entry points deliberate: public barrels may only name public facades. */
+export function assertPublicEntryBoundaries(files: TextFile[], issues: Issue[]): void {
+  const entryPaths = new Set([
+    'packages/create/src/cli.ts',
+    'packages/app/src/index.ts',
+    'packages/app/src/i18n.ts',
+    'packages/app/src/model.ts',
+    'packages/app/src/preact.ts',
+    'packages/app/src/spa.ts',
+    'packages/element/src/index.ts',
+    'packages/element/src/build-utils.ts',
+    'packages/element/src/jsx-dev-runtime.ts',
+    'packages/element/src/jsx-runtime.ts',
+    'packages/element/src/sanitize.ts',
+    'packages/adapter-vite/src/index.ts',
+    'packages/adapter-vite/src/cli/build.ts',
+    'packages/adapter-vite/src/cli/start.ts',
+    'packages/adapter-vite/src/nitro-mount.ts',
+    'packages/adapter-vite/src/sitemap.ts',
+    'packages/ui/src/index.ts',
+  ]);
+  for (const file of files.filter((candidate) => entryPaths.has(candidate.path))) {
+    failMatches(
+      'public-entry-boundary',
+      [file],
+      /export\s+(?:type\s+)?(?:\{|\*)[^;]*?from\s*['"][^'"]*\/internal\//s,
+      'package public entries must route supported APIs through named public modules',
+      issues,
+    );
+  }
+
+  const adapterFramework = files.find((file) =>
+    file.path === 'packages/adapter-vite/src/internal/protocol/framework.ts'
+  );
+  if (adapterFramework?.text.includes('export type *')) {
+    addIssue(
+      issues,
+      'public-entry-boundary',
+      adapterFramework.path,
+      'adapter framework compatibility must use an explicit type list',
+    );
+  }
+}
+
 /** Reject static import/export cycles inside the element source graph (#1095). */
 export function assertNoElementImportCycles(files: TextFile[], issues: Issue[]): void {
   const source = files.filter((file) =>
@@ -576,12 +620,12 @@ async function main(): Promise<void> {
     issues,
   );
   for (const file of adapterProtocol) {
-    if (!file.text.includes("export type * from '@openelement/element';")) {
+    if (!file.text.includes("from '../../framework.ts';")) {
       addIssue(
         issues,
         'protocol-seam',
         file.path,
-        'shared protocol seam must resolve through the @openelement/element root',
+        'shared protocol seam must resolve through the explicit adapter framework authority',
       );
     }
   }
@@ -604,6 +648,7 @@ async function main(): Promise<void> {
   assertDuplicateCounts(textFiles, issues);
   assertCurrentDocRoots(files, issues);
   assertNoElementImportCycles(textFiles, issues);
+  assertPublicEntryBoundaries(textFiles, issues);
   assertStructuredMetadata(textFiles, issues);
   assertTypeEscapeAllowlistFiles(new Set(files), issues);
   assertMojibake(production.concat(currentDocs), issues);

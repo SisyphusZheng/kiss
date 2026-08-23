@@ -12,7 +12,7 @@ import {
   __enterDataContext,
   __exitDataContext,
 } from '../src/internal/router/data-context-store.ts';
-import { useActionData, useLoaderData } from '../src/internal/router/data-context.ts';
+import { useActionData, useLoaderData } from '../src/data-context.ts';
 
 Deno.test('data context enforces a depth of 50 without leaking the rejected frame', () => {
   const ctx = createRenderDataContext();

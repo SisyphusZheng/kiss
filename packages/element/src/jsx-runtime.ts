@@ -8,7 +8,7 @@
  * Keep in sync with internal/core/jsx-types.d.ts (used by the internal
  * runtime).
  */
-export { Fragment, jsx, jsxs } from './internal/core/jsx-runtime.ts';
+export { Fragment, jsx, jsxs } from './public-runtime.ts';
 
 /** JSX type interface consumed by TypeScript's automatic JSX transform. */
 export declare namespace JSX {
@@ -24,14 +24,14 @@ export declare namespace JSX {
   interface Element {
     tag:
       | string
-      | import('./internal/protocol/vnode.ts').ComponentFn
-      | import('./internal/protocol/vnode.ts').ComponentCtor
+      | import('./public-runtime.ts').ComponentFn
+      | import('./public-runtime.ts').ComponentCtor
       | symbol;
     props: Record<string, unknown>;
     children: (
       | string
-      | import('./internal/protocol/vnode.ts').VNode
-      | import('./internal/protocol/vnode.ts').RenderFn
+      | import('./public-runtime.ts').VNode
+      | import('./public-runtime.ts').RenderFn
     )[];
     key?: string | number;
     ref?: (el: globalThis.Element) => void;

@@ -5,6 +5,7 @@ import {
   assertDuplicateCounts,
   assertMojibake,
   assertNoElementImportCycles,
+  assertPublicEntryBoundaries,
   assertStructuredMetadata,
   failMatches,
   isAtOrAfter,
@@ -14,6 +15,32 @@ import {
   isTextPath,
   type TextFile,
 } from './check-architecture-contract.ts';
+
+Deno.test('arch: package public entries reject internal module specifiers (#1097)', () => {
+  const files: TextFile[] = [{
+    path: 'packages/element/src/index.ts',
+    text: "export { render } from './internal/core/render.ts';",
+  }];
+  const issues: Issue[] = [];
+  assertPublicEntryBoundaries(files, issues);
+  assertEquals(issues[0]?.check, 'public-entry-boundary');
+});
+
+Deno.test('arch: public facades and explicit adapter protocol lists pass (#1097)', () => {
+  const files: TextFile[] = [
+    {
+      path: 'packages/element/src/index.ts',
+      text: "export { render } from './public-runtime.ts';",
+    },
+    {
+      path: 'packages/adapter-vite/src/internal/protocol/framework.ts',
+      text: "export type { FrameworkOptions } from '../../framework.ts';",
+    },
+  ];
+  const issues: Issue[] = [];
+  assertPublicEntryBoundaries(files, issues);
+  assertEquals(issues, []);
+});
 
 Deno.test('arch: element static import cycles are rejected (#1095)', () => {
   const files: TextFile[] = [
