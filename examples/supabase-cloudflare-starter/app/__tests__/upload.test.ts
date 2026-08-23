@@ -86,8 +86,11 @@ function stubClient(overrides: {
 
 const ctx = () => ({
   request: new Request('http://localhost/upload'),
+  params: {},
   env: {} as Record<string, unknown>,
+  platform: undefined,
   responseHeaders: new Headers(),
+  route: { path: '/upload', filePath: 'app/routes/upload.tsx' },
 });
 
 Deno.test('sanitizeFilename strips path traversal and unsafe characters', () => {

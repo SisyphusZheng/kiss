@@ -119,6 +119,8 @@ export type {
   ActionContext,
   Loader,
   LoaderContext,
+  ServerRouteContext,
+  ServerRouteMetadata,
   SpaAction,
   SpaActionContext,
   SpaLoader,

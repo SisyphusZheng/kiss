@@ -1,6 +1,8 @@
 import {
+  type ActionContext,
   definePage,
   fail,
+  type LoaderContext,
   type OpenElementActionFailure,
   redirect,
   useActionData,
@@ -51,15 +53,13 @@ interface AdminClient {
     error: { message: string } | null;
   }>;
 }
-type AdminContext = { env: Record<string, string>; request: Request; responseHeaders: Headers };
-
 // The browser receives no service-role material. These calls use the signed-in
 // user's JWT; SQL independently requires issuer-controlled app_metadata.admin.
 export function createAdminLoader(
   createClient: (env: Record<string, string>, request: Request, headers: Headers) => AdminClient =
     createServerSupabase as never,
 ) {
-  return async function adminLoader(ctx: AdminContext): Promise<Data> {
+  return async function adminLoader(ctx: LoaderContext<Record<string, string>>): Promise<Data> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     requireAdmin(user);
@@ -83,7 +83,7 @@ export function createPaymentReplayAction(
     createServerSupabase as never,
 ) {
   return async function replayPayment(
-    ctx: AdminContext & { formData: FormData },
+    ctx: ActionContext<Record<string, string>>,
   ): Promise<OpenElementActionFailure<{ error: string }>> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
@@ -116,7 +116,7 @@ export function createReplayAction(
     createServerSupabase as never,
 ) {
   return async function replay(
-    ctx: AdminContext & { formData: FormData },
+    ctx: ActionContext<Record<string, string>>,
   ): Promise<OpenElementActionFailure<{ error: string }>> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();

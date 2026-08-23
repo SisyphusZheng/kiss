@@ -1,6 +1,8 @@
 import {
+  type ActionContext,
   definePage,
   fail,
+  type LoaderContext,
   type OpenElementActionFailure,
   redirect,
   useActionData,
@@ -16,12 +18,6 @@ import {
 
 export const tagName = 'page-checkout';
 const PRODUCT_CODE = 'starter-support';
-
-interface CheckoutContext {
-  request: Request;
-  env: Record<string, unknown>;
-  responseHeaders: Headers;
-}
 
 interface CheckoutData {
   denied: boolean;
@@ -66,7 +62,7 @@ function safeResult(request: Request): CheckoutData['result'] {
 }
 
 export function createCheckoutLoader(createClient: ClientFactory = createServerSupabase) {
-  return async function loader(ctx: CheckoutContext): Promise<CheckoutData> {
+  return async function loader(ctx: LoaderContext<Record<string, unknown>>): Promise<CheckoutData> {
     const client = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await client.auth.getUser();
     if (!user) return { denied: true };
@@ -88,7 +84,7 @@ export function createCheckoutAction(
   fetchImpl: Fetch = fetch,
 ) {
   return async function checkout(
-    ctx: CheckoutContext & { formData: FormData },
+    ctx: ActionContext<Record<string, unknown>>,
   ): Promise<OpenElementActionFailure<CheckoutActionData>> {
     const attemptId = String(ctx.formData.get('attempt_id') ?? '');
     // Deliberately stricter than the shared UUID_PATTERN (v1–v5): attempt ids

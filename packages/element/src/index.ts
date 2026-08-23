@@ -103,6 +103,8 @@ export type {
   Loader,
   LoaderContext,
   ProblemDetails,
+  ServerRouteContext,
+  ServerRouteMetadata,
   SpaAction,
   SpaActionContext,
   SpaLoader,

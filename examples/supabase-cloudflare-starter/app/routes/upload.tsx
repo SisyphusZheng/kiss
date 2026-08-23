@@ -15,8 +15,10 @@
  * official client behind lib/supabase-server.ts.
  */
 import {
+  type ActionContext,
   definePage,
   fail,
+  type LoaderContext,
   type OpenElementActionFailure,
   redirect,
   useActionData,
@@ -46,12 +48,6 @@ interface UploadLoaderData {
 
 interface UploadActionData {
   error?: string;
-}
-
-interface RequestContext {
-  request: Request;
-  env: Record<string, unknown>;
-  responseHeaders: Headers;
 }
 
 /** Minimal structural surface the route needs from the Supabase client. */
@@ -105,7 +101,9 @@ export function ownsObjectKey(userId: string, key: string): boolean {
 export function createUploadLoader(
   createClient: UploadClientFactory = createServerSupabase,
 ) {
-  return async function loader(ctx: RequestContext): Promise<UploadLoaderData> {
+  return async function loader(
+    ctx: LoaderContext<Record<string, unknown>>,
+  ): Promise<UploadLoaderData> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { denied: true };
@@ -134,7 +132,7 @@ export function createUploadAction(
   createClient: UploadClientFactory = createServerSupabase,
 ) {
   return async function upload(
-    ctx: RequestContext & { formData: FormData },
+    ctx: ActionContext<Record<string, unknown>>,
   ): Promise<OpenElementActionFailure<UploadActionData>> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
@@ -196,7 +194,7 @@ export function createDeleteAction(
   createClient: UploadClientFactory = createServerSupabase,
 ) {
   return async function remove(
-    ctx: RequestContext & { formData: FormData },
+    ctx: ActionContext<Record<string, unknown>>,
   ): Promise<OpenElementActionFailure<UploadActionData>> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();

@@ -56,8 +56,11 @@ function stubClient(overrides: {
 
 const ctx = () => ({
   request: new Request('http://localhost/notes'),
+  params: {},
   env: { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
+  platform: undefined,
   responseHeaders: new Headers(),
+  route: { path: '/notes', filePath: 'app/routes/notes.tsx' },
 });
 
 function form(title = 'First note', body = 'Hello'): FormData {

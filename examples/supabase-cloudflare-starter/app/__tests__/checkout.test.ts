@@ -39,7 +39,10 @@ function client(
 function context(url = 'https://app.test/checkout') {
   return {
     request: new Request(url),
+    params: {},
     responseHeaders: new Headers(),
+    platform: undefined,
+    route: { path: '/checkout', filePath: 'app/routes/checkout.tsx' },
     env: {
       APP_ORIGIN: 'https://app.test',
       STRIPE_SECRET_KEY: 'sk_test_server',

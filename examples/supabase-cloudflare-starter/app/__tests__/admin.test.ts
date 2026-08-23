@@ -57,8 +57,11 @@ function client(options: {
 
 const ctx = () => ({
   request: new Request('http://localhost/admin'),
+  params: {},
   env: {},
+  platform: undefined,
   responseHeaders: new Headers(),
+  route: { path: '/admin', filePath: 'app/routes/admin.tsx' },
 });
 
 Deno.test('admin loader lists durable scan dead letters', async () => {
