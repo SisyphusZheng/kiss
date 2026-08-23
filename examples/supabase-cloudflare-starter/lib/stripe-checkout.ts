@@ -65,8 +65,19 @@ export function checkoutSessionBody(
 }
 
 function randomIntegrationSuffix(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  return [...bytes].map((byte) => String.fromCharCode(97 + byte % 26)).join('');
+  const letters: string[] = [];
+  const bytes = new Uint8Array(16);
+  while (letters.length < 8) {
+    crypto.getRandomValues(bytes);
+    for (const byte of bytes) {
+      // 234 is the largest multiple of 26 below 256. Rejecting the tail avoids
+      // modulo bias while retaining a compact lowercase integration suffix.
+      if (byte >= 234) continue;
+      letters.push(String.fromCharCode(97 + byte % 26));
+      if (letters.length === 8) break;
+    }
+  }
+  return letters.join('');
 }
 
 export function verifiedCheckoutUrl(value: unknown, expectedHost: string): string {

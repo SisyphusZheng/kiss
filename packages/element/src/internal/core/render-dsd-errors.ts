@@ -85,9 +85,8 @@ export function instantiateComponent(
 }
 
 function isDsdComponent(value: unknown): value is DsdComponent {
-  return typeof value === 'object' &&
-    value !== null &&
-    typeof Reflect.get(value, 'render') === 'function';
+  if (value === null || typeof value !== 'object') return false;
+  return typeof Reflect.get(value, 'render') === 'function';
 }
 
 // ─── DSD Template Attributes ───────────────────────────────────

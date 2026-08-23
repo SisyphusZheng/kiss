@@ -161,7 +161,7 @@ test.describe('Unified page structure', () => {
     const hash = await first.getAttribute('href');
     expect(hash).toBeTruthy();
     await first.click();
-    await expect(page).toHaveURL(new RegExp(`${hash!.replace('#', '#')}$`));
+    await expect(page).toHaveURL((url) => url.hash === hash);
     await expect(page.locator(hash!)).toHaveAttribute('data-open-target', '');
 
     await page.goto(`/guide/getting-started${hash}`);
