@@ -285,8 +285,13 @@ try {
   await record('browser-app-metadata-admin-guard');
 
   await page.goto(`${baseUrl}/notes`);
-  const accessToken = await page.locator('notes-live').getAttribute('data-access-token');
-  if (!accessToken) throw new Error('Authenticated page did not expose a Realtime access token');
+  const refreshedLive = page.locator('notes-live');
+  await refreshedLive.locator('#live-status').getByText('realtime: subscribed', { exact: true })
+    .waitFor({ state: 'visible', timeout: 20_000 });
+  if (await refreshedLive.getAttribute('data-access-token') !== null) {
+    throw new Error('Realtime access token remained in the DOM after hydration');
+  }
+  await record('browser-realtime-jwt-erased-after-handoff');
   const demoted = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
     method: 'PUT',
     headers: {
@@ -305,7 +310,7 @@ try {
 
   const revoked = await fetch(`${supabaseUrl}/auth/v1/logout?scope=global`, {
     method: 'POST',
-    headers: { apikey: anonKey, authorization: `Bearer ${accessToken}` },
+    headers: { apikey: anonKey, authorization: `Bearer ${refreshedAccessToken}` },
   });
   if (!revoked.ok) throw new Error(`Global session revocation failed with HTTP ${revoked.status}`);
   await page.goto(`${baseUrl}/notes`);
