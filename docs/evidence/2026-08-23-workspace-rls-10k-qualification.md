@@ -75,3 +75,14 @@ Reproduction gates:
 - `deno task fullstack:workspace-qualification`
 - `deno test --allow-env examples/supabase-cloudflare-starter/app/__tests__/workspace-records.test.ts`
 - `deno task fullstack:migrations-check`
+
+## Final provider matrix
+
+GitHub Actions run
+[`32618824103`](https://github.com/open-element/openelement/actions/runs/32618824103)
+qualified commit `f85d9dcb`. The real-project job passed all 26 redacted Auth,
+RLS, Storage, Realtime, role-change, revocation and cross-user checks with
+successful throwaway-user cleanup. In parallel, a fresh 15-migration project
+and an upgraded 13-plus-2-migration project produced byte-identical normalized
+`public` and `storage` schema dumps (SHA-256
+`d8855cb4df639ec951c57f76f4f61b7eb305a20b81a7eada06f39991990d16ee`).

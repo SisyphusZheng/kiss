@@ -52,5 +52,20 @@ back to a sequential scan.
 - The existing browser/full-stack negative probes continue to own cross-user RLS
   verification; the milestone acceptance matrix records their final run.
 
+## Final fresh/upgraded and cross-user matrix
+
+GitHub Actions run
+[`32618824103`](https://github.com/open-element/openelement/actions/runs/32618824103)
+qualified commit `f85d9dcb` on 2026-08-23. Its credential-free project job built
+the schema once from all 15 migrations and once by applying the two v0.43.1
+forward migrations to the 13-migration baseline. The normalized `public` and
+`storage` dumps were byte-identical at SHA-256
+`d8855cb4df639ec951c57f76f4f61b7eb305a20b81a7eada06f39991990d16ee`.
+
+The parallel real-project job passed all 26 redacted Auth, RLS, Storage,
+Realtime, role-change, revocation and cross-user checks, then successfully
+removed both throwaway users. Its migration-manifest SHA-256 was
+`9527bb864d09cb8ec27b86836d3a65245dc133fe13bd70328c4cce205c896e56`.
+
 Supabase advisor remediation reference:
 [Database linter](https://supabase.com/docs/guides/database/database-linter).
