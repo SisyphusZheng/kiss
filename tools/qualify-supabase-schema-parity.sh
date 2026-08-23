@@ -51,25 +51,33 @@ prepare_project "$fresh_workdir" oe-v0431-fresh
 start_project "$fresh_workdir"
 dump_schema "$fresh_workdir" "$fresh_dump"
 
-# Qualify the actual fresh database dump, not only migration source text. New
-# Supabase projects no longer receive implicit Data API table privileges.
-assert_table_grants() {
-  local table="$1"
-  shift
-  local line
-  line=$(grep -E "^GRANT .* ON TABLE public\.$table TO authenticated;" "$fresh_dump" || true)
-  [ -n "$line" ] || { echo "fresh schema has no authenticated grant for $table" >&2; exit 1; }
-  for privilege in "$@"; do
-    echo "$line" | grep -qw "$privilege" || {
-      echo "fresh schema is missing $privilege on $table for authenticated" >&2
-      exit 1
-    }
-  done
+# Qualify the live fresh catalog, not migration source text. `supabase db dump`
+# intentionally normalizes ACL output and is not a reliable privilege oracle.
+# The migration already aborts on any unexpected table/sequence/function ACL;
+# this post-start probe independently proves that the reviewed table matrix
+# survived full service startup.
+fresh_privileges=$(docker exec supabase_db_oe-v0431-fresh \
+  psql -X -qAt -v ON_ERROR_STOP=1 -U postgres -d postgres -c "
+    select coalesce(
+      string_agg(
+        grantee || ':' || table_name || ':' || privilege_type,
+        ',' order by grantee, table_name, privilege_type
+      ),
+      ''
+    )
+    from information_schema.table_privileges
+    where table_schema = 'public'
+      and grantee in ('anon', 'authenticated', 'service_role')
+      and table_name in (
+        'notes', 'admin_audit', 'attachment_reservations', 'storage_audit',
+        'attachment_scan_dead_letters', 'orders', 'stripe_events',
+        'payment_products', 'workspaces', 'workspace_members', 'workspace_records'
+      );")
+expected_privileges='authenticated:admin_audit:SELECT,authenticated:attachment_reservations:SELECT,authenticated:notes:DELETE,authenticated:notes:INSERT,authenticated:notes:SELECT,authenticated:notes:UPDATE,authenticated:orders:SELECT,authenticated:storage_audit:SELECT,authenticated:workspace_members:SELECT,authenticated:workspace_records:DELETE,authenticated:workspace_records:INSERT,authenticated:workspace_records:SELECT,authenticated:workspace_records:UPDATE,authenticated:workspaces:SELECT,service_role:attachment_reservations:DELETE,service_role:attachment_reservations:SELECT,service_role:attachment_scan_dead_letters:SELECT,service_role:notes:INSERT,service_role:notes:SELECT'
+[ "$fresh_privileges" = "$expected_privileges" ] || {
+  echo 'fresh database has an unexpected Data API table privilege matrix' >&2
+  exit 1
 }
-assert_table_grants notes SELECT INSERT UPDATE DELETE
-assert_table_grants orders SELECT
-assert_table_grants attachment_reservations SELECT
-assert_table_grants workspace_records SELECT INSERT UPDATE DELETE
 supabase stop --workdir "$fresh_workdir" --no-backup
 active_workdir=''
 
