@@ -214,7 +214,6 @@ create trigger oe_fail_qualification_audit
 before insert on public.admin_audit
 for each row execute function pg_temp.oe_fail_qualification_audit();
 
-set local role authenticated;
 select set_config(
   'request.jwt.claims',
   jsonb_build_object(
