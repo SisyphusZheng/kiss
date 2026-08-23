@@ -242,6 +242,28 @@ export async function checkSupabaseMigrations(
         throw new Error(`${currentAdminName} is missing ${anchor}`);
       }
     }
+
+    const auditSearchPathName = names.find((name) =>
+      name.endsWith('_harden_reject_audit_mutation_search_path.sql')
+    );
+    if (!auditSearchPathName) {
+      throw new Error('missing reject_audit_mutation search_path hardening migration');
+    }
+    const auditSearchPath = await Deno.readTextFile(
+      new URL(`migrations/${auditSearchPathName}`, root),
+    );
+    for (
+      const anchor of [
+        'alter function public.reject_audit_mutation()',
+        "set search_path = ''",
+        'array[\'search_path=""\']::text[]',
+        'p.pronargs = 0',
+      ]
+    ) {
+      if (!auditSearchPath.includes(anchor)) {
+        throw new Error(`${auditSearchPathName} is missing ${anchor}`);
+      }
+    }
   }
 
   const config = await Deno.readTextFile(new URL('config.toml', root));
