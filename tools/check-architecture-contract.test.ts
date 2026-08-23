@@ -1,6 +1,7 @@
 import { assert, assertEquals } from '@std/assert';
 import {
   assertAllowedTypeEscapes,
+  assertCurrentDocRoots,
   assertDuplicateCounts,
   assertMojibake,
   assertNoElementImportCycles,
@@ -177,11 +178,29 @@ Deno.test('arch: isProductionSource classifies correctly', () => {
 Deno.test('arch: isCurrentDocOrExample classifies correctly', () => {
   assert(isCurrentDocOrExample('README.md'));
   assert(isCurrentDocOrExample('README.zh.md'));
-  assert(isCurrentDocOrExample('docs/guide/x.md'));
-  assert(isCurrentDocOrExample('docs/arch/x.md'));
+  assert(isCurrentDocOrExample('docs/current/x.md'));
+  assert(isCurrentDocOrExample('docs/status/STATUS.md'));
+  assert(isCurrentDocOrExample('docs/roadmap/ROADMAP.md'));
   assert(isCurrentDocOrExample('packages/core/README.md'));
   assert(!isCurrentDocOrExample('CHANGELOG.md'));
   assert(!isCurrentDocOrExample('packages/core/__tests__/x.test.ts'));
+});
+
+Deno.test('arch: vanished current-doc scan roots fail loudly (#1104)', () => {
+  const issues: Issue[] = [];
+  assertCurrentDocRoots(['docs/current/x.md', 'docs/status/STATUS.md'], issues);
+  assertEquals(issues.length, 1);
+  assertEquals(issues[0].file, 'docs/roadmap/');
+  assertEquals(issues[0].check, 'doc-scan-root');
+});
+
+Deno.test('arch: populated current-doc scan roots pass (#1104)', () => {
+  const issues: Issue[] = [];
+  assertCurrentDocRoots(
+    ['docs/current/x.md', 'docs/status/STATUS.md', 'docs/roadmap/ROADMAP.md'],
+    issues,
+  );
+  assertEquals(issues, []);
 });
 
 Deno.test('arch: normalizeSlashes converts backslashes to forward slashes', () => {

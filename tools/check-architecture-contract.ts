@@ -4,6 +4,8 @@
  * This gate checks current source and current documentation only. Historical ADRs,
  * old release notes, generated data, fixtures, and tests are intentionally not
  * used as regressions for the active public contract.
+ *
+ * Permissions: --allow-read and --allow-run=git (tracked-file inventory).
  */
 
 import { dirname, extname, join, normalize } from '@std/path';
@@ -44,6 +46,8 @@ const TEXT_EXTENSIONS = new Set([
   '.toml',
   '.txt',
 ]);
+
+export const CURRENT_DOC_ROOTS = ['docs/current/', 'docs/status/', 'docs/roadmap/'] as const;
 
 const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   {
@@ -207,15 +211,26 @@ export function isTextPath(path: string): boolean {
 }
 
 export function isCurrentDocOrExample(path: string): boolean {
-  if (path.startsWith('docs/arch/')) return true;
-  if (path.startsWith('docs/reference/')) return true;
-  if (path.startsWith('docs/guide/')) return true;
+  if (CURRENT_DOC_ROOTS.some((root) => path.startsWith(root))) return true;
   if (path === 'README.md' || path === 'README.zh.md') return true;
   if (path === 'CONTRIBUTING.md') return true;
   if (path.startsWith('packages/') && path.endsWith('/README.md')) return true;
   if (path.startsWith('packages/') && path.includes('/src/')) return true;
   if (path.startsWith('www/app/routes/guide/')) return true;
   return false;
+}
+
+export function assertCurrentDocRoots(paths: string[], issues: Issue[]): void {
+  for (const root of CURRENT_DOC_ROOTS) {
+    if (!paths.some((path) => path.startsWith(root))) {
+      addIssue(
+        issues,
+        'doc-scan-root',
+        root,
+        'current documentation scan root is missing or contains no tracked files',
+      );
+    }
+  }
 }
 
 export function isProductionSource(path: string): boolean {
@@ -587,6 +602,7 @@ async function main(): Promise<void> {
     issues,
   );
   assertDuplicateCounts(textFiles, issues);
+  assertCurrentDocRoots(files, issues);
   assertNoElementImportCycles(textFiles, issues);
   assertStructuredMetadata(textFiles, issues);
   assertTypeEscapeAllowlistFiles(new Set(files), issues);
