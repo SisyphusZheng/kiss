@@ -52,6 +52,10 @@
     {
       "file": "20260819000000_attachments_insert_only.sql",
       "sha256": "d5603692e97001a81f70233be70b153c55f73d32b8a726c6037948c0c3fed7a5"
+    },
+    {
+      "file": "20260823030729_postgres_index_rls_performance_floor.sql",
+      "sha256": "f52ad75a6ff9a2daf9ed6a476eb042bb6dfea1223c99881c1f78ebe656a8c375"
     }
   ]
 }

@@ -14,6 +14,7 @@ async function sha256(text: string): Promise<string> {
 export async function checkSupabaseMigrations(
   root = ROOT,
   workflowUrl = WORKFLOW,
+  enforcePerformanceFloor = root.href === ROOT.href,
 ): Promise<number> {
   const migrations = new URL('migrations/', root);
   const names: string[] = [];
@@ -47,6 +48,43 @@ export async function checkSupabaseMigrations(
       throw new Error(
         `${entry.file} changed after being recorded; add a forward migration instead`,
       );
+    }
+  }
+
+  if (enforcePerformanceFloor) {
+    const performanceFloorName = names.find((name) =>
+      name.endsWith('_postgres_index_rls_performance_floor.sql')
+    );
+    if (!performanceFloorName) {
+      throw new Error('missing forward-only Postgres index/RLS performance migration');
+    }
+    const performanceFloor = await Deno.readTextFile(
+      new URL(`migrations/${performanceFloorName}`, root),
+    );
+    for (
+      const anchor of [
+        'notes_owner_created_id_idx',
+        'admin_audit_actor_created_id_idx',
+        'attachment_reservations_owner_state_created_id_idx',
+        'attachment_scan_dead_letters_owner_failed_id_idx',
+        'attachment_scan_dead_letters_replay_actor_idx',
+        'storage_audit_owner_created_id_idx',
+        'orders_owner_created_id_idx',
+        'orders_product_code_idx',
+        'stripe_events_order_created_id_idx',
+        'stripe_events_replay_actor_idx',
+        'stripe_events_processing_queue_idx',
+        'create policy "notes: owners or admins read rows"',
+        'using ((select auth.uid()) = user_id)',
+        'with check ((select auth.uid()) = user_id)',
+      ]
+    ) {
+      if (!performanceFloor.includes(anchor)) {
+        throw new Error(`${performanceFloorName} is missing ${anchor}`);
+      }
+    }
+    if (/\bauth\.(?:uid|jwt)\(\)(?!\s*\))/i.test(performanceFloor)) {
+      throw new Error(`${performanceFloorName} must wrap policy auth helpers in scalar subselects`);
     }
   }
 
