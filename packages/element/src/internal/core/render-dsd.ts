@@ -49,9 +49,24 @@ import { DATA_SIGNAL, DATA_SIGNAL_ATTR } from '../protocol/hydration-markers.ts'
 import type { Signal } from '../protocol/signal.ts';
 import type { VNode } from '../protocol/vnode.ts';
 import { isSignalLike } from '../signal/index.ts';
+import {
+  BoundaryRenderError,
+  formatDepthPathSuffix,
+  isControlFlowThrow,
+  isDepthLimitError,
+  MAX_SSR_NESTING_DEPTH,
+} from './render-policy.ts';
+export {
+  appendRenderPathSegment,
+  BoundaryRenderError,
+  formatDepthPathSuffix,
+  isControlFlowThrow,
+  isDepthLimitError,
+  MAX_SSR_NESTING_DEPTH,
+  RENDER_PATH_TRACK_MIN_DEPTH,
+} from './render-policy.ts';
 
 const log = createLogger('render-dsd');
-export const MAX_SSR_NESTING_DEPTH = 50;
 
 // ─── Depth-Trip Render Path (#975) ─────────────────────────────
 
@@ -60,10 +75,6 @@ export const MAX_SSR_NESTING_DEPTH = 50;
  * to the limit, so the success path carries zero path-tracking overhead.
  * Segments recorded above this depth are honestly marked with a leading '…'.
  */
-export const RENDER_PATH_TRACK_MIN_DEPTH = MAX_SSR_NESTING_DEPTH - 12;
-
-/** Bounded window: at most this many path segments are retained. */
-const RENDER_PATH_WINDOW = 16;
 
 /**
  * Append one segment to the bounded render-path window. Returns a new array
@@ -71,27 +82,12 @@ const RENDER_PATH_WINDOW = 16;
  * bounded and rare); when the window is full the oldest segments drop behind
  * a leading '…' truncation marker.
  */
-export function appendRenderPathSegment(
-  path: readonly string[],
-  segment: string,
-): string[] {
-  if (path.length < RENDER_PATH_WINDOW) return [...path, segment];
-  return ['…', ...path.slice(-(RENDER_PATH_WINDOW - 2)), segment];
-}
 
 /**
  * `(path: … > blog-list > for-item[key=42] > x-d60)` suffix for the
  * depth-trip message, or '' when no path was tracked. The tripping tag is
  * always the last segment.
  */
-export function formatDepthPathSuffix(
-  path: readonly string[] | undefined,
-  tagName: string,
-): string {
-  if (!path || path.length === 0) return '';
-  const segments = path[path.length - 1] === tagName ? path : [...path, tagName];
-  return ` (path: ${segments.join(' > ')})`;
-}
 
 // ─── Error Classification ──────────────────────────────────────
 // RenderPhase and RenderErrorCode are imported from ../protocol/render.ts.
@@ -118,38 +114,6 @@ function classifyError(
 // element's render() must reach the request-time handler so it can answer
 // 404. Duck-typed here (same contract as app's isOpenElementRedirect /
 // isOpenElementNotFound) to avoid an element → app dependency.
-export function isControlFlowThrow(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) return false;
-  const name = (err as { name?: unknown }).name;
-  if (name === 'OpenElementNotFound') {
-    return (err as { status?: unknown }).status === 404;
-  }
-  if (name === 'OpenElementRedirect') {
-    const status = (err as { status?: unknown }).status;
-    return typeof status === 'number' && status >= 300 && status < 400;
-  }
-  return false;
-}
-
-// SSR_NESTING_DEPTH_EXCEEDED is a safety limit, not a render failure — an
-// error boundary scope must never swallow it.
-export function isDepthLimitError(err: unknown): boolean {
-  return err instanceof OpenElementError && err.code === 'SSR_NESTING_DEPTH_EXCEEDED';
-}
-
-/**
- * ADR-0053 Layer 2: thrown in place of the bare-tag fallback while an
- * ancestor error-boundary scope is active (`throwOnRenderError`), so the
- * nearest boundary can substitute its own fallback for the failed subtree.
- * Carries the already-classified (and already-dispatched) RenderError.
- */
-export class BoundaryRenderError extends Error {
-  constructor(public readonly renderError: RenderError) {
-    super(renderError.message);
-    this.name = 'BoundaryRenderError';
-  }
-}
-
 // Lookup table replaces a multi-branch error-code chain.
 const ERROR_CODES: Record<string, RenderErrorCode> = {
   instantiate: 'OPEN_ELEMENT_RENDER_INSTANTIATE_FAILED',
@@ -691,7 +655,7 @@ function addRegisteredSignalMarkers(
         return name ? [{ key, name }] : [];
       });
       const textSignal = children.length === 1 && isSignalLike(children[0])
-        ? names.get(children[0] as unknown as Signal<unknown>)
+        ? names.get(children[0] as Signal<unknown>)
         : undefined;
 
       // The marker protocol binds one named signal per element. Do not emit a

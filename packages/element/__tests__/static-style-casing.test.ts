@@ -10,9 +10,11 @@
  * re-activation alike), so the descriptor-level assertion here covers both.
  */
 
-import { assertEquals } from '@std/assert';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { applyBindingDescriptor } from '../src/internal/core/binding-activation.ts';
 import { bindStaticStyle } from '../src/internal/core/binding-descriptor.ts';
+import { serializeAttrs } from '../src/internal/core/render-ir.ts';
+import { attrNameFor, VNODE_CONTROL_PROP_KEYS } from '../src/internal/core/vnode-prop-rules.ts';
 
 Deno.test('static-style binding kebab-cases camelCase keys (#1056)', () => {
   const calls: [string, string][] = [];
@@ -28,4 +30,24 @@ Deno.test('static-style binding kebab-cases camelCase keys (#1056)', () => {
   );
 
   assertEquals(calls, [['background-color', 'red'], ['font-size', '12px']]);
+});
+
+Deno.test('SSR and CSR share attribute, style, and control-prop rules (#1096)', () => {
+  assertEquals(attrNameFor('x-card', 'className'), 'class');
+  assertEquals(attrNameFor('x-card', 'htmlFor'), 'for');
+  assertEquals(attrNameFor('x-card', 'itemCount'), 'item-count');
+  assertEquals(VNODE_CONTROL_PROP_KEYS.has('children'), true);
+
+  const html = serializeAttrs('x-card', {
+    className: 'box',
+    htmlFor: 'field',
+    itemCount: 2,
+    style: { backgroundColor: 'red', display: null },
+    children: 'ignored',
+  });
+  assertStringIncludes(html, 'class="box"');
+  assertStringIncludes(html, 'for="field"');
+  assertStringIncludes(html, 'item-count="2"');
+  assertStringIncludes(html, 'style="background-color: red"');
+  assertEquals(html.includes('children='), false);
 });

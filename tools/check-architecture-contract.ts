@@ -6,7 +6,7 @@
  * used as regressions for the active public contract.
  */
 
-import { extname } from '@std/path';
+import { dirname, extname, join, normalize } from '@std/path';
 import { formatError } from '@openelement/element';
 import { MOJIBAKE_CHARS, stripCommentsLine } from './lib/text.ts';
 import { gitTrackedFiles } from './lib/git.ts';
@@ -410,6 +410,63 @@ export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): vo
   );
 }
 
+/** Reject static import/export cycles inside the element source graph (#1095). */
+export function assertNoElementImportCycles(files: TextFile[], issues: Issue[]): void {
+  const source = files.filter((file) =>
+    file.path.startsWith('packages/element/src/') && /\.tsx?$/.test(file.path)
+  );
+  const known = new Set(source.map((file) => file.path));
+  const graph = new Map<string, string[]>();
+  const importRe = /\b(?:import|export)\s+(?:type\s+)?(?:[^'";]*?\s+from\s+)?['"](\.[^'"]+)['"]/g;
+  for (const file of source) {
+    const targets: string[] = [];
+    for (const match of file.text.matchAll(importRe)) {
+      const resolved = normalize(join(dirname(file.path), match[1])).replaceAll('\\', '/');
+      const target = known.has(resolved)
+        ? resolved
+        : known.has(`${resolved}.ts`)
+        ? `${resolved}.ts`
+        : known.has(`${resolved}.tsx`)
+        ? `${resolved}.tsx`
+        : null;
+      if (target) targets.push(target);
+    }
+    graph.set(file.path, targets);
+  }
+
+  const visited = new Set<string>();
+  const active = new Set<string>();
+  const stack: string[] = [];
+  const reported = new Set<string>();
+  const visit = (file: string): void => {
+    if (visited.has(file)) return;
+    active.add(file);
+    stack.push(file);
+    for (const target of graph.get(file) ?? []) {
+      if (active.has(target)) {
+        const start = stack.indexOf(target);
+        const cycle = [...stack.slice(start), target];
+        const key = [...new Set(cycle)].sort().join('\0');
+        if (!reported.has(key)) {
+          reported.add(key);
+          addIssue(
+            issues,
+            'element-import-cycle',
+            file,
+            `static import cycle: ${cycle.join(' -> ')}`,
+          );
+        }
+      } else {
+        visit(target);
+      }
+    }
+    stack.pop();
+    active.delete(file);
+    visited.add(file);
+  };
+  for (const file of graph.keys()) visit(file);
+}
+
 export function discoverScannerFiles(paths: string[]): string[] {
   return paths.filter((path) =>
     path.startsWith('packages/adapter-vite/src/') &&
@@ -537,6 +594,7 @@ async function main(): Promise<void> {
     issues,
   );
   assertDuplicateCounts(textFiles, issues);
+  assertNoElementImportCycles(textFiles, issues);
   assertStructuredMetadata(textFiles, issues);
   assertTypeEscapeAllowlistFiles(new Set(files), issues);
   assertMojibake(production.concat(currentDocs), issues);

@@ -31,11 +31,10 @@ import {
   isDepthLimitError,
   MAX_SSR_NESTING_DEPTH,
   RENDER_PATH_TRACK_MIN_DEPTH,
-  renderDsd,
-} from './render-dsd.ts';
+} from './render-policy.ts';
 import { createLogger } from './logger.ts';
 import { formatError, OpenElementError } from './errors.ts';
-import { camelToKebab } from './tag-utils.ts';
+import { attrNameFor, SSR_SKIP_ATTR_KEYS, styleObjectToString } from './vnode-prop-rules.ts';
 
 export type RenderNode =
   | { kind: 'text'; value: string }
@@ -117,15 +116,6 @@ export function dsdHostNode(params: Omit<Extract<RenderNode, { kind: 'dsd-host' 
 
 // ─── Unified Attribute Serialization ────────────────────────────
 
-const SKIP_ATTR_KEYS = new Set([
-  'children',
-  'ref',
-  'key',
-  'trustedHtml',
-  'innerHTML',
-  'textContent',
-]);
-
 // #602: attribute *names* are not escaped — reject anything that cannot be a
 // safe HTML attribute name, and never emit HTML event-handler attributes from
 // SSR props. The predicate lives in security.ts (#1033).
@@ -134,15 +124,12 @@ export function serializeAttrs(tag: string, props: Record<string, unknown>): str
   let result = '';
 
   for (const [key, value] of Object.entries(props)) {
-    if (SKIP_ATTR_KEYS.has(key)) continue;
+    if (SSR_SKIP_ATTR_KEYS.has(key)) continue;
     if (key.startsWith('on') && typeof value === 'function') continue;
     if (typeof value === 'function') continue;
     if (value == null) continue;
 
-    let attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
-    if (isCustomElement && attrName === key) {
-      attrName = camelToKebab(attrName);
-    }
+    const attrName = attrNameFor(isCustomElement ? tag : '', key);
     if (!isSafeAttributeName(attrName)) continue;
 
     const resolved = unwrapSignalLike(value);
@@ -153,11 +140,7 @@ export function serializeAttrs(tag: string, props: Record<string, unknown>): str
     }
 
     if (key === 'style' && typeof resolved === 'object' && resolved !== null) {
-      const styleObj: Record<string, unknown> = {};
-      for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
-        styleObj[sk] = unwrapSignalLike(sv);
-      }
-      const css = styleObjectToString(styleObj);
+      const css = styleObjectToString(resolved);
       if (css) result += ` style="${escapeAttr(css)}"`;
       continue;
     }
@@ -597,6 +580,7 @@ async function renderRegisteredCeBranch(
       );
     } catch (err) {
       if (isControlFlowThrow(err) || isDepthLimitError(err)) throw err;
+      const { renderDsd } = await import('./render-dsd.ts');
       const captured = await renderDsd(tagName, {
         componentClass,
         props,
@@ -621,6 +605,7 @@ async function renderRegisteredCeBranch(
 
   try {
     const hostEventAttrs = serializeEventMarkers(props, eventContext);
+    const { renderDsd } = await import('./render-dsd.ts');
     const dsdResult = await renderDsd(tagName, {
       componentClass,
       props,
@@ -680,11 +665,4 @@ function callComponent(
     return tag({ ...props, children });
   }
   return null;
-}
-
-function styleObjectToString(obj: Record<string, unknown>): string {
-  return Object.entries(obj)
-    .filter(([, value]) => value != null)
-    .map(([key, value]) => `${camelToKebab(key)}: ${value}`)
-    .join('; ');
 }

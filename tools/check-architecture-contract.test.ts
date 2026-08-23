@@ -3,6 +3,7 @@ import {
   assertAllowedTypeEscapes,
   assertDuplicateCounts,
   assertMojibake,
+  assertNoElementImportCycles,
   assertStructuredMetadata,
   failMatches,
   isAtOrAfter,
@@ -12,6 +13,27 @@ import {
   isTextPath,
   type TextFile,
 } from './check-architecture-contract.ts';
+
+Deno.test('arch: element static import cycles are rejected (#1095)', () => {
+  const files: TextFile[] = [
+    { path: 'packages/element/src/a.ts', text: "import './b.ts';" },
+    { path: 'packages/element/src/b.ts', text: "export { x } from './a.ts';" },
+  ];
+  const issues: Issue[] = [];
+  assertNoElementImportCycles(files, issues);
+  assertEquals(issues.length, 1);
+  assertEquals(issues[0].check, 'element-import-cycle');
+});
+
+Deno.test('arch: element acyclic imports pass (#1095)', () => {
+  const files: TextFile[] = [
+    { path: 'packages/element/src/a.ts', text: "import './b.ts';" },
+    { path: 'packages/element/src/b.ts', text: 'export const x = 1;' },
+  ];
+  const issues: Issue[] = [];
+  assertNoElementImportCycles(files, issues);
+  assertEquals(issues, []);
+});
 import { normalizeSlashes } from './lib/path.ts';
 
 const REPLACEMENT_CHAR = String.fromCharCode(0xFFFD);

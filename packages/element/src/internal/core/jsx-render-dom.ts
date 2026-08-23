@@ -26,7 +26,7 @@ import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { commitBindings } from './binding-activation.ts';
-import { camelToKebab } from './tag-utils.ts';
+import { attrNameFor, resolveStyleObject, VNODE_CONTROL_PROP_KEYS } from './vnode-prop-rules.ts';
 import {
   bindAttr,
   bindClass,
@@ -148,14 +148,6 @@ function signalNameFor(
  * kebab-cased so CSR output matches the SSR/hydration attribute naming
  * (camelToKebab is the single casing rule).
  */
-function attrNameFor(el: Element, key: string): string {
-  const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
-  if (attrName === key && el.localName.includes('-')) {
-    return camelToKebab(attrName);
-  }
-  return attrName;
-}
-
 /**
  * Collect BindingDescriptor objects from a JSX props object.
  *
@@ -179,7 +171,7 @@ export function collectPropBindings(
   props = normalizePublicProps(props);
 
   for (const [key, value] of Object.entries(props)) {
-    if (key === 'children' || key === 'key' || key === 'trustedHtml') continue;
+    if (VNODE_CONTROL_PROP_KEYS.has(key)) continue;
 
     // ref callback
     if (key === 'ref' && typeof value === 'function') {
@@ -291,18 +283,10 @@ function signalDescriptors(
 
   // Use signal-attr for all signal-driven props; signal-class toggling
   // (single class) is reserved for explicit data-signal-class markers.
-  return [bindAttr(el, [attrNameFor(el, key)], sig)];
+  return [bindAttr(el, [attrNameFor(el.localName, key)], sig)];
 }
 
 /** style object prop: unwrap nested signals into a static style map. */
-function resolveStyleObject(resolved: unknown): Record<string, string | number> {
-  const styleObj: Record<string, string | number> = {};
-  for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
-    styleObj[sk] = unwrapSignalLike(sv) as string | number;
-  }
-  return styleObj;
-}
-
 /** Static value: textContent DOM property, boolean attribute, or plain attribute. */
 function staticDescriptor(el: Element, key: string, resolved: unknown): BindingDescriptor {
   // DOM properties that are NOT HTML attributes
@@ -311,10 +295,10 @@ function staticDescriptor(el: Element, key: string, resolved: unknown): BindingD
   }
 
   if (typeof resolved === 'boolean') {
-    return bindStaticBoolean(el, attrNameFor(el, key), resolved);
+    return bindStaticBoolean(el, attrNameFor(el.localName, key), resolved);
   }
 
-  return bindStaticAttr(el, attrNameFor(el, key), resolved);
+  return bindStaticAttr(el, attrNameFor(el.localName, key), resolved);
 }
 
 /**
