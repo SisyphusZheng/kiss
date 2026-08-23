@@ -81,15 +81,15 @@ ADR-0114. This maintenance plan does not reopen either contract.
 
 ### TP-3 — Wave B remediation
 
-- [ ] #1125: explicit least-privilege grants plus fresh-default integration
+- [x] #1125: explicit least-privilege grants plus fresh-default integration
       evidence.
 - [x] #1126: loader/action context survives complete nested SSR evaluation and
       concurrent renders cannot cross-contaminate.
-- [ ] #1127: replay state transition and actor audit commit in one Postgres
+- [x] #1127: replay state transition and actor audit commit in one Postgres
       transaction.
 - [x] #1128: delete converges after Storage failure, database failure, process
       interruption and duplicate requests.
-- [ ] #1129: database length constraints, keyset pagination, page cap and SSR
+- [x] #1129: database length constraints, keyset pagination, page cap and SSR
       byte budget cover Notes.
 - [x] #1130: the documented JWT boundary matches runtime behavior and the
       authenticated-render test proves the allowed location and cleanup.
@@ -99,13 +99,13 @@ ADR-0114. This maintenance plan does not reopen either contract.
 - [x] Re-run the full architecture and package-boundary review.
 - [x] Re-run threat modeling across browser, SSR, Postgres, Storage, Stripe,
       Queues and scanner boundaries.
-- [ ] Re-run database privilege, RLS, constraint, index, pagination, atomicity
+- [x] Re-run database privilege, RLS, constraint, index, pagination, atomicity
       and reconciliation qualification.
-- [ ] Re-run runtime parity and release gates on the exact candidate SHA.
+- [x] Re-run runtime parity and release gates on the exact candidate SHA.
 - [x] Record external-provider evidence as `verified`, `blocked`, or
       `not run`; local stubs and dry-runs must not be reported as production proof.
 - [x] Publish the Wave C `GO`/`DO NOT RELEASE` report before any release action.
-- [ ] #1134: Realtime subscribe/reconnect claims freshness only after bounded
+- [x] #1134: Realtime subscribe/reconnect claims freshness only after bounded
       durable Notes reconciliation, and two real-project repetitions pass.
 
 ## Acceptance

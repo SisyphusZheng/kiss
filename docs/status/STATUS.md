@@ -1,6 +1,6 @@
 # OpenElement Status
 
-> Updated: 2026-08-23\
+> Updated: 2026-08-24\
 > Repository package line: `v0.43.0`\
 > npm registry line: `v0.43.0` (published 2026-08-20, dist-tag `latest`)\
 > Latest landed train: `v0.43.0`\
@@ -24,9 +24,11 @@ contract (deterministic per-tag render path + reason, unknown means
 client-only) with hydration-mismatch structured diagnostics. Framework
 session/flash, cache/ISR, streaming SSR and production runtime recovery stay
 unfrozen and are not scheduled. `v0.43.1` is a cumulative maintenance baseline:
-Wave A requalifies the 33 earlier closures, Wave B remediates six confirmed
-findings, and Wave C independently decides release readiness. Alpha.19 completed
-the third audit cleanup sweep (ADR-0118)
+Wave A requalified the 33 earlier closures, Wave B remediated six confirmed
+findings, and Wave C returned `GO` on the schema/runtime candidate after
+exact-SHA CI, authorized 23-migration Supabase application, post-apply
+catalog/RLS qualification, and Advisor review. v0.43.1 is now in the governed
+release workflow. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha
