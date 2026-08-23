@@ -12,7 +12,6 @@
  */
 
 import {
-  type DsdComponent,
   type DsdOptions,
   type DsdRenderMetrics,
   type HydrationHint,
@@ -37,22 +36,10 @@ import {
   safeNow,
 } from './render-dsd-internals.ts';
 import { escapeAttrValue } from './html-escape.ts';
-import { isVNode } from './vnode.ts';
-import { renderDsdTree } from './render-ir.ts';
-import {
-  dsdHostNode,
-  type RenderNode,
-  serializeAttrs,
-  serializeRenderNode,
-  trustedHtmlNode,
-} from './render-ir.ts';
+import { dsdHostNode, type RenderNode, serializeRenderNode, trustedHtmlNode } from './render-ir.ts';
 import { injectPropsSafe } from './security.ts';
 import { collectPublicProps } from './props-utils.ts';
 import { DATA_SSR_PROPS } from '../protocol/hydration-markers.ts';
-import { DATA_SIGNAL, DATA_SIGNAL_ATTR } from '../protocol/hydration-markers.ts';
-import type { Signal } from '../protocol/signal.ts';
-import type { VNode } from '../protocol/vnode.ts';
-import { isSignalLike } from '../signal/index.ts';
 import {
   BoundaryRenderError,
   formatDepthPathSuffix,

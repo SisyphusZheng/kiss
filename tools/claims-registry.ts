@@ -58,8 +58,8 @@ export const CODE_CLAIMS: CodeClaim[] = [
     claimLine: '23-35',
     description:
       'Keyed <For> must dispose the displaced first occurrence on duplicate keys, so no orphaned DOM or leaked item effects survive (audit #911).',
-    targetFile: 'packages/element/src/internal/core/binding-activation.ts',
-    pattern: 'if \\(seen\\.has\\(entryKey\\)\\)',
+    targetFile: 'packages/element/src/internal/core/binding-collections.ts',
+    pattern: 'const displaced = next\\.get\\(entryKey\\);[\\s\\S]*disposeEntry\\(displaced\\);',
   },
 ];
 

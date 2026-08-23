@@ -6,6 +6,7 @@ import {
   assertMojibake,
   assertNoElementImportCycles,
   assertPublicEntryBoundaries,
+  assertRenderResponsibilitySize,
   assertStructuredMetadata,
   failMatches,
   isAtOrAfter,
@@ -15,6 +16,26 @@ import {
   isTextPath,
   type TextFile,
 } from './check-architecture-contract.ts';
+
+Deno.test('arch: oversized render responsibility modules fail (#1098)', () => {
+  const files: TextFile[] = [{
+    path: 'packages/element/src/internal/core/render-ir.ts',
+    text: Array.from({ length: 401 }, () => 'x').join('\n'),
+  }];
+  const issues: Issue[] = [];
+  assertRenderResponsibilitySize(files, issues);
+  assertEquals(issues[0]?.check, 'render-responsibility-size');
+});
+
+Deno.test('arch: split render responsibility modules pass (#1098)', () => {
+  const files: TextFile[] = [{
+    path: 'packages/element/src/internal/core/render-ir.ts',
+    text: Array.from({ length: 400 }, () => 'x').join('\n'),
+  }];
+  const issues: Issue[] = [];
+  assertRenderResponsibilitySize(files, issues);
+  assertEquals(issues, []);
+});
 
 Deno.test('arch: package public entries reject internal module specifiers (#1097)', () => {
   const files: TextFile[] = [{

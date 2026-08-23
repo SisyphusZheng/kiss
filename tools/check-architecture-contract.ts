@@ -154,10 +154,16 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/open-element-implementation.ts',
+    file: 'packages/element/src/open-element-base.ts',
     fragment: '} as unknown as typeof HTMLElement)',
     reason: 'SSR HTMLElement stub for environments without DOM.',
 
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'packages/element/src/open-element-implementation.ts',
+    fragment: 'return this as unknown as OpenElementRuntimeHost;',
+    reason: 'Cycle-free structural bridge to the extracted lifecycle runtime collaborator.',
     revisitBy: '0.44.0',
   },
   {
@@ -413,6 +419,33 @@ export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void 
   }
 }
 
+const RENDER_RESPONSIBILITY_MODULES = new Set([
+  'packages/element/src/open-element-implementation.ts',
+  'packages/element/src/internal/core/binding-activation.ts',
+  'packages/element/src/internal/core/hydration-scope.ts',
+  'packages/element/src/internal/core/jsx-render-dom.ts',
+  'packages/element/src/internal/core/render-dsd.ts',
+  'packages/element/src/internal/core/render-ir.ts',
+  'packages/adapter-vite/src/internal/ssg/entry-codegen.ts',
+]);
+
+/** Keep the top-level render/codegen orchestrators below the #1098 budget. */
+export function assertRenderResponsibilitySize(files: TextFile[], issues: Issue[]): void {
+  for (
+    const file of files.filter((candidate) => RENDER_RESPONSIBILITY_MODULES.has(candidate.path))
+  ) {
+    const lines = file.text.split(/\r?\n/).length - (/\r?\n$/.test(file.text) ? 1 : 0);
+    if (lines > 400) {
+      addIssue(
+        issues,
+        'render-responsibility-size',
+        file.path,
+        `top-level responsibility module has ${lines} lines; maximum is 400`,
+      );
+    }
+  }
+}
+
 export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): void {
   const scannerPaths = new Set(discoverScannerFiles(files.map((file) => file.path)));
   const scannerFiles = files.filter((file) => scannerPaths.has(file.path));
@@ -653,6 +686,7 @@ async function main(): Promise<void> {
     issues,
   );
   assertDuplicateCounts(textFiles, issues);
+  assertRenderResponsibilitySize(textFiles, issues);
   assertCurrentDocRoots(files, issues);
   assertNoElementImportCycles(textFiles, issues);
   assertPublicEntryBoundaries(textFiles, issues);

@@ -1,6 +1,4 @@
 /**
- * hydration-scope.ts - HydrationScope value object.
- *
  * Standalone container for the lifecycle state of a hydrated shadow root.
  * Owns effect disposers, event cleanups, and the cached VNode used for
  * declarative event marker binding. Designed to be usable without an
