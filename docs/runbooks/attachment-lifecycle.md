@@ -25,13 +25,11 @@ only `fetch` implementation. The entry composes application-owned `queue` and
 - A Cron Trigger for reconciliation. Five-minute cadence is the reference
   setting.
 
-> 0.43 status (ADR-0132, #1070): the real scan engine is deferred to v0.44.
-> Deployments without `METADEFENDER_CORE_URL` / `METADEFENDER_API_KEY` are
-> valid: the scanner Worker is not deployed, the async overlay omits the
-> `ATTACHMENT_SCANNER` binding, scan messages exhaust retries into the DLQ and
-> durable dead letters, and every attachment stays `pending_scan` — never
-> listed, never signed. This runbook describes the maintained target state;
-> the Tier 3 artifact records `not-configured` until an engine is provided.
+> v0.43.1 status (ADR-0138, #1070): deployments without
+> `METADEFENDER_CORE_URL` / `METADEFENDER_API_KEY` remain runtime-safe, but
+> cannot satisfy release qualification. Provision mode records
+> `not-configured` and fails; attachments remain `pending_scan`, never listed
+> or signed.
 
 The safe base `wrangler.jsonc` intentionally contains no live Queue or Cron
 resources while database migrations are pending. Once `migration_mode=apply`
@@ -46,6 +44,41 @@ is green, dispatch `Fullstack deploy smoke (real providers)` with
 4. stores `SUPABASE_SERVICE_ROLE_KEY` as an encrypted application Worker secret;
 5. deploys with a three-retry, 30-second-delay consumer, DLQ, and five-minute Cron;
 6. records the selected mode in the redacted Tier 3 artifact.
+
+## Release qualification
+
+Dispatch `Fullstack deploy smoke (real providers)` on the candidate SHA with
+`async_mode=provision`. A release-green run must record both
+`attachment-scanner-real-clean-owner-download` and
+`attachment-scanner-real-eicar-quarantined` as `pass`. It must also record
+`attachment-scanner-real-retry-dlq` and
+`attachment-scanner-authenticated-admin-replay` as `pass`.
+
+The probe creates a short-lived confirmed Supabase user, signs into the real
+Worker, and uploads a benign text fixture plus EICAR through `/upload?/upload`.
+It polls the service-role view of the reservation state, requires `clean` and
+`quarantined` respectively, verifies the clean file's owner page produces a
+working signed URL, and verifies EICAR is absent from the owner listing. The
+cleanup trap removes the private Storage objects before deleting the Auth
+user. The archived JSON contains only check names/results and the candidate
+SHA; never add fixture contents, object keys, user ids, cookies, or provider
+responses.
+
+The failure probe deploys the same private scanner Worker with a reserved
+non-resolving `.invalid` engine origin, uploads a third benign fixture, and
+waits for bounded Queue retries plus durable DLQ persistence. A cleanup trap
+always restores the real engine origin. After restoration, the probe requests
+replay through the signed-in admin action and waits for Cron and Queue to
+produce a real `clean` verdict. If restoration fails, treat it as an incident:
+keep downloads fail-closed, restore the last known scanner deployment, and do
+not rerun or release until the service binding is healthy.
+
+Before dispatch, verify the two MetaDefender secrets exist at repository scope
+and that the endpoint is private or strongly authenticated. Roll back by
+restoring the previous scanner deployment or removing the service binding;
+never return a synthetic clean verdict. A missing engine deliberately makes
+the release evidence workflow red while preserving the runtime fail-closed
+state.
 
 Do not commit a second hand-maintained Wrangler config. Do not run base mode
 after async provisioning: base mode intentionally removes async bindings and is

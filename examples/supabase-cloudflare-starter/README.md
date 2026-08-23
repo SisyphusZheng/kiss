@@ -91,10 +91,11 @@ STRIPE_CHECKOUT_HOST
 APP_ORIGIN
 ```
 
-Optional scan-engine env (real-engine evidence deferred to v0.44, #1070 /
-ADR-0132). When unset, uploads stay `pending_scan` and remain undownloadable
-by everyone — fail-closed by design. When set, the private scanner Worker
-calls this `/file/sync`-compatible HTTPS endpoint:
+Private scan-engine configuration is required for v0.43.1 release evidence
+(#1070 / ADR-0138). When unset, uploads stay `pending_scan` and remain
+undownloadable by everyone — fail-closed by design, but not release-green.
+When set, the private scanner Worker calls this `/file/sync`-compatible HTTPS
+endpoint:
 
 ```
 METADEFENDER_CORE_URL
@@ -128,6 +129,7 @@ handlers and must never be rendered or prefixed with `VITE_`.
   verified (same evidence file, follow-ups 3/4). Known limitation: a fresh
   sender domain has zero reputation, so the first mail can land in spam on
   some providers — reputation ramps with volume; operational, not a defect.
-- Real scan-engine qualification stays deferred to v0.44 (#1070 / ADR-0132):
-  until `METADEFENDER_*` is configured, uploads remain `pending_scan` and
-  undownloadable by everyone — fail-closed by design.
+- v0.43.1 real scan-engine qualification is release-blocking (#1070 /
+  ADR-0138). Tier 3 provision mode runs benign and EICAR files through the
+  upload → Queue → private scanner → state transition path and proves that
+  only the clean owner file receives a working signed link.

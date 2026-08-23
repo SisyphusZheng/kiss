@@ -134,3 +134,19 @@ Deno.test('deploy smoke workflow provisions exactly the canonical queue names', 
     assertStringIncludes(workflow, name);
   }
 });
+
+Deno.test('deploy smoke release evidence requires real clean and EICAR verdicts (#1070)', async () => {
+  const workflow = await Deno.readTextFile('.github/workflows/fullstack-deploy-smoke.yml');
+  const retryHarness = await Deno.readTextFile('tools/qualify-scanner-retry-replay.sh');
+  assertStringIncludes(workflow, 'Qualify real scanner clean and EICAR paths');
+  assertStringIncludes(workflow, 'attachment-scanner-real-clean-owner-download');
+  assertStringIncludes(workflow, 'attachment-scanner-real-eicar-quarantined');
+  assertStringIncludes(retryHarness, 'attachment-scanner-real-retry-dlq');
+  assertStringIncludes(retryHarness, 'attachment-scanner-authenticated-admin-replay');
+  assertStringIncludes(workflow, 'wait_for_state "$clean_name" clean');
+  assertStringIncludes(workflow, 'wait_for_state "$eicar_name" quarantined');
+  assertStringIncludes(
+    workflow,
+    'v0.43.1 release qualification requires a real clean and EICAR verdict',
+  );
+});

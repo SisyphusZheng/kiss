@@ -15,10 +15,8 @@ name: Fullstack deploy smoke (real providers)
 # supersedes older scheduled reds. Manual runs intended as release evidence
 # must select the `provision` mode so they cover the full probe.
 #
-# #1070 / ADR-0132: real scan-engine evidence is deferred to v0.44. When
-# METADEFENDER_CORE_URL / METADEFENDER_API_KEY are absent, the scanner steps
-# are skipped and the artifact records not-configured — an honest annotation,
-# never a green scanner claim.
+# #1070: the scanner qualification runs only when its private engine secrets
+# exist. Absence is recorded honestly and cannot satisfy release acceptance.
 
 on:
   workflow_dispatch:
@@ -51,15 +49,15 @@ jobs:
   deploy-smoke:
     name: Deploy reference starter to Workers and smoke the live URL
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       # Scheduled runs have no inputs; default them to the full provision
       # probe so the weekly evidence covers Queue/DLQ, not just HTTP.
       ASYNC_MODE: ${{ inputs.async_mode || 'provision' }}
       SCANNER_SERVICE: ${{ inputs.scanner_service || 'openelement-attachment-scanner' }}
-      # #1070 / ADR-0132: the real scan engine is deferred to v0.44. Scanner
-      # steps run only when both engine secrets exist; otherwise the run
-      # records not-configured instead of failing.
+      # Scanner steps run only when both private-engine secrets exist;
+      # otherwise the artifact records not-configured instead of claiming a
+      # positive-path qualification.
       SCANNER_CONFIGURED: ${{ secrets.METADEFENDER_CORE_URL != '' && secrets.METADEFENDER_API_KEY != '' }}
     steps:
       # v7.0.1
@@ -102,7 +100,9 @@ jobs:
         run: |
           mkdir -p .smoke
           echo '{"check":"attachment-scanner-engine","result":"not-configured"}' >> .smoke/results.jsonl
-          echo "scan engine deferred to v0.44 (#1070, ADR-0132): attachments stay pending_scan and undownloadable — fail-closed"
+          echo "scan engine is not configured (#1070): attachments stay pending_scan and undownloadable — fail-closed"
+          echo "v0.43.1 release qualification requires a real clean and EICAR verdict" >&2
+          exit 1
 
       - name: Render and provision bounded async resources
         if: env.ASYNC_MODE == 'provision'
@@ -282,6 +282,114 @@ jobs:
           echo "Attachment/payment Queue + DLQ + persistence-failure provider lookup -> OK"
           echo '{"check":"attachment-payment-queues","result":"pass"}' \
             >> "$GITHUB_WORKSPACE/.smoke/results.jsonl"
+
+      - name: Qualify real scanner clean and EICAR paths
+        if: env.ASYNC_MODE == 'provision' && env.SCANNER_CONFIGURED == 'true'
+        env:
+          WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          cookie_jar=$(mktemp)
+          clean_file=$(mktemp)
+          eicar_file=$(mktemp)
+          user_id=''
+          cleanup() {
+            if [ -n "$user_id" ]; then
+              # Remove private objects before deleting the Auth owner. Never
+              # print keys, user ids, credentials, or fixture contents.
+              rows=$(curl -sf --max-time 20 \
+                "$SUPABASE_URL/rest/v1/attachment_reservations?select=object_key&user_id=eq.$user_id" \
+                -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" || echo '[]')
+              echo "$rows" | jq -r '.[].object_key' | while IFS= read -r key; do
+                encoded=$(printf '%s' "$key" | jq -sRr @uri | sed 's|%2F|/|g')
+                curl -s -o /dev/null -X DELETE \
+                  "$SUPABASE_URL/storage/v1/object/notes-attachments/$encoded" \
+                  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+                  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" || true
+              done
+              curl -s -o /dev/null -X DELETE \
+                "$SUPABASE_URL/auth/v1/admin/users/$user_id" \
+                -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" || true
+            fi
+            rm -f "$cookie_jar" "$clean_file" "$eicar_file"
+          }
+          trap cleanup EXIT
+
+          suffix="$(date +%s)-$RANDOM"
+          email="scanner-smoke-$suffix@example.com"
+          password="Scanner-Smoke-$suffix-$RANDOM"
+          user_id=$(curl -sf --max-time 20 -X POST "$SUPABASE_URL/auth/v1/admin/users" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$email\",\"password\":\"$password\",\"email_confirm\":true}" \
+            | jq -er .id)
+          curl -sf --max-time 20 -c "$cookie_jar" -o /dev/null -X POST "$WORKER_URL/login" \
+            -H "Origin: $WORKER_URL" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode "email=$email" --data-urlencode "password=$password"
+
+          clean_name="scanner-clean-$suffix.txt"
+          eicar_name="scanner-eicar-$suffix.txt"
+          printf 'OpenElement scanner qualification clean fixture.\n' > "$clean_file"
+          # Standard EICAR test string, generated only in the ephemeral runner.
+          printf '%s' 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > "$eicar_file"
+          for fixture in clean eicar; do
+            name_var="${fixture}_name"; file_var="${fixture}_file"
+            curl -sf --max-time 30 -b "$cookie_jar" -o /dev/null -X POST \
+              "$WORKER_URL/upload?/upload" -H "Origin: $WORKER_URL" \
+              -F "file=@${!file_var};filename=${!name_var};type=text/plain"
+          done
+
+          reservation_state() {
+            local name="$1"
+            curl -sf --max-time 20 \
+              "$SUPABASE_URL/rest/v1/attachment_reservations?select=state&user_id=eq.$user_id&display_name=eq.$name" \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" | jq -r '.[0].state // "missing"'
+          }
+          wait_for_state() {
+            local name="$1" expected="$2" state=''
+            for _ in $(seq 1 36); do
+              state=$(reservation_state "$name")
+              [ "$state" = "$expected" ] && return 0
+              case "$state" in pending_scan|reserved|missing) sleep 5 ;; *) return 1 ;; esac
+            done
+            return 1
+          }
+          wait_for_state "$clean_name" clean
+          wait_for_state "$eicar_name" quarantined
+
+          owner_html=$(curl -sf --max-time 20 -b "$cookie_jar" "$WORKER_URL/upload")
+          printf '%s' "$owner_html" | grep -q "$clean_name"
+          if printf '%s' "$owner_html" | grep -q "$eicar_name"; then
+            echo 'quarantined fixture became owner-downloadable' >&2; exit 1
+          fi
+          signed_url=$(printf '%s' "$owner_html" | \
+            grep -oE '<a href="[^"]+">[^<]*</a>' | grep "$clean_name" | \
+            sed -n 's/.*href="\([^"]*\)".*/\1/p' | head -1 | sed 's/&amp;/\&/g')
+          [ -n "$signed_url" ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$signed_url")" = '200' ]
+
+          echo '{"check":"attachment-scanner-real-clean-owner-download","result":"pass"}' >> .smoke/results.jsonl
+          echo '{"check":"attachment-scanner-real-eicar-quarantined","result":"pass"}' >> .smoke/results.jsonl
+          echo 'real scanner clean/EICAR owner-download qualification -> OK (redacted)'
+
+      - name: Qualify scanner retry, DLQ, and authenticated replay
+        if: env.ASYNC_MODE == 'provision' && env.SCANNER_CONFIGURED == 'true'
+        env:
+          WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          METADEFENDER_CORE_URL: ${{ secrets.METADEFENDER_CORE_URL }}
+          SCANNER_SERVICE: ${{ env.SCANNER_SERVICE }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: bash tools/qualify-scanner-retry-replay.sh
 
       - name: Delete the throwaway smoke user (Auth admin API)
         id: cleanup-user
