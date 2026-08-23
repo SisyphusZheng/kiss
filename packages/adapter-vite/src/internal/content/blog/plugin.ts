@@ -4,9 +4,26 @@ import type { OpenElementBuildContextLike } from '../../protocol/framework.ts';
 import type { FileSystemAdapter } from '../fs-adapter.ts';
 import { nodeFsAdapter } from '../fs-adapter.ts';
 import { createCollectionPlugin } from '../collection/plugin.ts';
-import type { CollectionOptions } from '../collection/types.ts';
+import type { CollectionEntry, CollectionOptions } from '../collection/types.ts';
 import { writeBlogDataModule } from './blog-data.ts';
 import type { BlogPost, OpenElementBlogOptions } from './types.ts';
+
+function toBlogPost(entry: CollectionEntry): BlogPost {
+  const frontmatter = entry.frontmatter;
+  return {
+    slug: entry.slug,
+    content: entry.content,
+    html: entry.html,
+    frontmatter: {
+      title: String(frontmatter.title),
+      date: String(frontmatter.date),
+      draft: Boolean(frontmatter.draft),
+      tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [],
+      ...(typeof frontmatter.excerpt === 'string' ? { excerpt: frontmatter.excerpt } : {}),
+      ...(typeof frontmatter.type === 'string' ? { type: frontmatter.type } : {}),
+    },
+  };
+}
 
 function blogCollectionOptions(options: OpenElementBlogOptions): CollectionOptions {
   return {
@@ -51,6 +68,6 @@ export function createBlogPlugin(
     contextKey: 'blogOptions',
     itemLabel: 'post',
     prepareEntries: (entries) => entries.filter((entry) => !entry.frontmatter.draft).reverse(),
-    dataModule: (entries) => writeBlogDataModule(entries as unknown as BlogPost[]),
+    dataModule: (entries) => writeBlogDataModule(entries.map(toBlogPost)),
   });
 }

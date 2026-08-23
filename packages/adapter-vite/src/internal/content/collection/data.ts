@@ -23,7 +23,7 @@ export async function loadCollectionData(
       parsed.data as Record<string, unknown>,
       { collection: name, fileName, filePath, slug: initialSlug },
     );
-    const rawHtml = options.markdown
+    const renderedMarkdown = options.markdown
       ? await options.markdown(parsed.content)
       : await marked(parsed.content, { async: true });
     entries.push({
@@ -33,7 +33,7 @@ export async function loadCollectionData(
         : {}),
       frontmatter: result.frontmatter,
       content: parsed.content,
-      html: sanitizeContentHtml(rawHtml),
+      html: sanitizeContentHtml(renderedMarkdown),
     });
   }
   return entries;

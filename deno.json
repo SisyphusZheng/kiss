@@ -49,7 +49,7 @@
     "release:evidence:check": "deno run --allow-read --allow-run=git tools/check-docs-truth.ts --check=evidence",
     "release:state-machine:check": "deno run --allow-read --allow-run=git tools/check-release-state-machine.ts",
     "docs:check-version-anchors": "deno run --allow-read tools/check-version-anchors.ts",
-    "docs:truth": "deno run --allow-read --allow-run=git tools/check-docs-truth.ts && deno task docs:check-version-anchors && deno task docs:check-recipe-parity",
+    "docs:truth": "deno run --allow-read --allow-run=git tools/check-docs-truth.ts && deno run --allow-read tools/check-release-truth.ts && deno task docs:check-version-anchors && deno task docs:check-recipe-parity",
     "www:check-current-truth": "deno run --allow-read tools/check-docs-truth.ts --check=www",
     "www:check-theme-tokens": "deno run --allow-read tools/check-www-theme-tokens.ts",
     "www:check-artifact-truth": "deno run --allow-read tools/check-docs-truth.ts --check=www --artifacts",
