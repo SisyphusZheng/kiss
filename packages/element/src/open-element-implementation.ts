@@ -258,6 +258,10 @@ export class OpenElement extends _Base {
     this.#hydrationScope = new HydrationScope({
       signalRegistry: this.signalRegistry,
     });
+    // Initialize static prop accessors during construction so SSR sees the
+    // same engine-backed, registered signals as CSR/hydration. The initializer
+    // is idempotent and reconnect only re-arms disposed reflection listeners.
+    initializeStaticProps(this);
   }
 
   /**

@@ -14,12 +14,14 @@ import type {
   PropsFrom,
   PropType,
 } from '../protocol/prop.ts';
+import { signal } from '../signal/framework.ts';
+import type { WritableSignal } from '../signal/types.ts';
 import { camelToKebab } from './tag-utils.ts';
 export type { NormalizedPropDecl, PropDecl, PropDeclFull, PropDeclShorthand, PropsFrom, PropType };
 
 // ─── Internal types ─────────────────────────────────────────────
 
-type PropSignal = { value: unknown; subscribe(fn: (v: unknown) => void): () => void };
+type PropSignal = WritableSignal<unknown>;
 
 // ─── WeakMap storage (v0.29.5: replaces Symbol.for()) ───────────
 
@@ -39,7 +41,9 @@ export function initializeStaticProps(instance: HTMLElement): void {
   // disposeStaticProps() are re-armed.
   const existing = _staticPropSignals.get(instance);
   if (existing) {
-    subscribeReflectProps(instance, existing, propsDef);
+    if ((_staticPropUnsubs.get(instance)?.length ?? 0) === 0) {
+      subscribeReflectProps(instance, existing, propsDef);
+    }
     return;
   }
 
@@ -51,6 +55,9 @@ export function initializeStaticProps(instance: HTMLElement): void {
     const { default: defVal } = normalizePropDecl(decl);
     const sig = createPropSignal(defVal);
     sigMap.set(name, sig);
+    const registry = (instance as unknown as { signalRegistry?: Map<string, PropSignal> })
+      .signalRegistry;
+    if (registry instanceof Map && !registry.has(name)) registry.set(name, sig);
 
     Object.defineProperty(instance, name, {
       get() {
@@ -156,7 +163,7 @@ export function handleStaticPropAttributeChange(
     if (camelToKebab(propName) !== name.toLowerCase()) continue;
     const sig = sigMap.get(propName);
     if (!sig) continue;
-    const { type, default: defaultValue } = normalizePropDecl(decl);
+    const { type, default: defaultValue, reflect } = normalizePropDecl(decl);
     const next: unknown = newValue === null
       ? defaultValue
       : parseAttributeValue(type, newValue, defaultValue);
@@ -166,7 +173,20 @@ export function handleStaticPropAttributeChange(
     // Removal (newValue === null) bypasses the short-circuit: the signal may
     // already hold the default, yet the reflect subscriber must still fire so
     // the mirrored attribute is restored to match the restored default.
-    if (newValue === null || !Object.is(sig.value, next)) sig.value = next;
+    if (!Object.is(sig.value, next)) {
+      sig.value = next;
+    } else if (newValue === null && reflect) {
+      // Real signals intentionally suppress equal-value notifications. When
+      // removing a reflected attribute restores the value the signal already
+      // holds, restore the mirror explicitly instead of depending on a fake
+      // same-value notification from the old hand-rolled signal.
+      if (type === Boolean) {
+        if (next) instance.setAttribute(name, '');
+      } else {
+        const serialized = type === Array || type === Object ? JSON.stringify(next) : String(next);
+        instance.setAttribute(name, serialized);
+      }
+    }
     return;
   }
 }
@@ -330,24 +350,10 @@ function mergePropsAttributeNames(
 }
 
 function createPropSignal(initial: unknown): PropSignal {
-  let _value = initial;
-  const _subs = new Set<(v: unknown) => void>();
-
-  return {
-    get value(): unknown {
-      return _value;
-    },
-    set value(v: unknown) {
-      _value = v;
-      for (const fn of _subs) fn(v);
-    },
-    // Fires fn once synchronously with the current value. The reflect
-    // subscriber in initializeStaticProps relies on (and skips) exactly this
-    // first fire; keep the contract synchronous.
-    subscribe(fn: (v: unknown) => void): () => void {
-      _subs.add(fn);
-      fn(_value);
-      return () => _subs.delete(fn);
-    },
-  };
+  // Static props participate in the same dependency graph as public signals.
+  // A hand-rolled value/subscribe object looks signal-like but cannot notify
+  // effects that read `.value`, leaving JSX bindings permanently stale.
+  // The engine-backed signal preserves subscribe()'s synchronous first call,
+  // which the reflection path above intentionally skips.
+  return signal(initial);
 }

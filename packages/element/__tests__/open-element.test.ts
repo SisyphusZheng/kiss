@@ -891,9 +891,9 @@ installDomHarness();
 const { OpenElement, ErrorBoundary } = await import('@openelement/element');
 const { defineElement } = await import('@openelement/element');
 const { jsx } = await import('@openelement/element/jsx-runtime');
-const { signal } = await import('@openelement/element');
+const { effect, signal } = await import('@openelement/element');
 const { StyleSheet } = await import('@openelement/element');
-const { renderDsdTree } = await import('@openelement/element');
+const { renderDsd, renderDsdTree } = await import('@openelement/element');
 const { Show, For } = await import('../src/internal/core/jsx-runtime.ts');
 const { renderToDom } = await import('../src/internal/core/jsx-render-dom.ts');
 import type { BindingLifecycle } from '../src/internal/core/binding-descriptor.ts';
@@ -2230,6 +2230,55 @@ Deno.test('OpenElement static props react to attribute changes', () => {
   assertEquals(elProps.count.value, 5);
 
   document.body.removeChild(el);
+});
+
+Deno.test('OpenElement static prop signals participate in framework effects (#1092)', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('static-props-effect');
+  class StaticPropsEffectElement extends OpenElement {
+    static props = { count: { type: Number, default: 1 } } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, StaticPropsEffectElement);
+
+  const el = document.createElement(tagName) as StaticPropsEffectElement;
+  document.body.appendChild(el);
+  const count = (el as unknown as Record<string, { value: number }>).count;
+  const values: number[] = [];
+  const dispose = effect(() => {
+    values.push(count.value);
+  });
+
+  count.value = 2;
+  assertEquals(values, [1, 2]);
+
+  dispose();
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement static prop signals emit automatic SSR hydration markers (#1092, #1093)', async () => {
+  if (!hasDOM) return;
+
+  class StaticPropsSsrElement extends OpenElement {
+    static props = { label: { type: String, default: 'ready' } } as const;
+    declare label: Signal<string>;
+
+    override render(): VNode | null {
+      return jsx('span', { title: this.label, children: 'value' });
+    }
+  }
+
+  const output = await renderDsd('x-static-props-ssr', {
+    componentClass: StaticPropsSsrElement,
+  });
+  assertStringIncludes(
+    output.html,
+    '<span title="ready" data-signal="label" data-signal-attr="title">value</span>',
+  );
 });
 
 Deno.test('OpenElement static props restore declared defaults when attributes are removed', () => {

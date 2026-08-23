@@ -45,6 +45,10 @@ import {
 import { injectPropsSafe } from './security.ts';
 import { collectPublicProps } from './props-utils.ts';
 import { DATA_SSR_PROPS } from '../protocol/hydration-markers.ts';
+import { DATA_SIGNAL, DATA_SIGNAL_ATTR } from '../protocol/hydration-markers.ts';
+import type { Signal } from '../protocol/signal.ts';
+import type { VNode } from '../protocol/vnode.ts';
+import { isSignalLike } from '../signal/index.ts';
 
 const log = createLogger('render-dsd');
 export const MAX_SSR_NESTING_DEPTH = 50;
@@ -611,11 +615,14 @@ async function renderComponentContent(
       return { content: '', hasError: captured };
     }
     if (isVNode(result)) {
+      const signalRegistry = instance.signalRegistry instanceof Map
+        ? instance.signalRegistry as Map<string, Signal<unknown>>
+        : undefined;
       // Captured fallback content renders with an inactive scope: a failing
       // component inside the fallback degrades in place instead of looping.
       return {
         content: await renderDsdTree(
-          result,
+          addRegisteredSignalMarkers(result, signalRegistry),
           undefined,
           nestingDepth,
           subtreeScope,
@@ -659,6 +666,50 @@ async function renderComponentContent(
     );
     return { content: '', hasError: true, earlyReturn: fallbackResult };
   }
+}
+
+/**
+ * Add the same named-signal hydration markers that the CSR backend emits.
+ * Registration is the sole identity source: signal-shaped values outside the
+ * component registry remain ordinary serialized values.
+ */
+function addRegisteredSignalMarkers(
+  vnode: VNode,
+  registry: Map<string, Signal<unknown>> | undefined,
+): VNode {
+  if (!registry || registry.size === 0) return vnode;
+  const names = new Map<Signal<unknown>, string>();
+  for (const [name, registered] of registry) names.set(registered, name);
+
+  const visit = (node: VNode): VNode => {
+    const props = { ...node.props };
+    const children = node.children.map((child) => isVNode(child) ? visit(child) : child);
+    if (typeof node.tag === 'string' && props[DATA_SIGNAL] == null) {
+      const attrBindings = Object.entries(props).flatMap(([key, value]) => {
+        if (!isSignalLike(value)) return [];
+        const name = names.get(value as Signal<unknown>);
+        return name ? [{ key, name }] : [];
+      });
+      const textSignal = children.length === 1 && isSignalLike(children[0])
+        ? names.get(children[0] as unknown as Signal<unknown>)
+        : undefined;
+
+      // The marker protocol binds one named signal per element. Do not emit a
+      // misleading marker when multiple independently named signals compete.
+      const bindingNames = new Set(attrBindings.map((binding) => binding.name));
+      if (textSignal) bindingNames.add(textSignal);
+      if (bindingNames.size === 1) {
+        const [name] = bindingNames;
+        props[DATA_SIGNAL] = name;
+        if (!textSignal && attrBindings.length > 0 && props[DATA_SIGNAL_ATTR] == null) {
+          props[DATA_SIGNAL_ATTR] = attrBindings.map((binding) => binding.key).join(',');
+        }
+      }
+    }
+    return { ...node, props, children };
+  };
+
+  return visit(vnode);
 }
 
 /**

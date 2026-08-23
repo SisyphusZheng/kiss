@@ -32,7 +32,7 @@ export default class OnlyTicker extends OpenElement {
   override render() {
     return (
       <>
-        <span data-signal='tick'></span>
+        <span>{this.#tick}</span>
         <button type='button' onClick={() => this.#tick.value++}>tick</button>
       </>
     );

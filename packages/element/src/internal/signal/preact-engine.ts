@@ -14,12 +14,14 @@ import {
   signal as preactSignal,
 } from '@preact/signals-core';
 import type { SignalEngine } from './types.ts';
+import { SIGNAL_BRAND } from '../protocol/signal.ts';
 
 export function createPreactEngine(): SignalEngine {
   return {
     signal<T>(initialValue: T) {
       const s = preactSignal(initialValue);
       return {
+        [SIGNAL_BRAND]: true as const,
         get value(): T {
           return s.value;
         },
@@ -36,6 +38,7 @@ export function createPreactEngine(): SignalEngine {
     computed<T>(fn: () => T) {
       const c = preactComputed(fn);
       return {
+        [SIGNAL_BRAND]: true as const,
         get value(): T {
           return c.value;
         },
