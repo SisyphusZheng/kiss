@@ -1,10 +1,10 @@
 # ADR-0136: Content Collections — Generalize the Blog Content Pipeline
 
-- Status: PROPOSED (target: v0.44 line; tracked in #1087)
+- Status: ACCEPTED (implemented for v0.43.1; tracked in #1087)
 - Date: 2026-08-22
 - References: ADR-0018 (virtual data modules → write-to-disk generated
   modules), ADR-0126 (sanitize-html allow-list), ADR-0135 (0.43.0 stable
-  scope freeze — this capability is deliberately NOT in the 0.43 line)
+  scope freeze; the follow-up was pulled into the v0.43.1 hardening train)
 
 ## Context
 
@@ -18,12 +18,10 @@ filename are fixed.
 The www guide section needed a second instance of the same pattern: 15 guide
 pages moved from a card-grid TSX shell (bilingual content records as string
 literals) to linear Markdown-authored articles rendered like blog posts.
-Because the framework line is frozen (ADR-0135), the guide pipeline shipped
-as a www-local pilot — `www/build-content-data.ts` plus
-`www/app/site-ui/guide-article.tsx` — which deliberately duplicates the blog
-pipeline, including the ADR-0126 sanitize allow-list. Two copies of a
-security-relevant allow-list will drift; the pilot must be retired, not
-ossified.
+The guide pipeline first shipped as a www-local pilot,
+`www/build-content-data.ts`, which deliberately duplicated the blog pipeline,
+including the ADR-0126 sanitizer. The v0.43.1 hardening train retired that
+pilot before the security-relevant allow-lists could drift.
 
 Every static-first framework that survived grew this capability (Astro
 Content Collections / Content Layer API is the closest analogue; Nuxt
@@ -44,9 +42,9 @@ the internal evidence that the need is real.
    abstraction is that the existing blog pipeline is re-expressible through
    it with zero output change. An abstraction that cannot express its own
    origin is a false abstraction.
-3. **The www guide collection is the second consumer.** On the v0.44 train
-   the www pilot (`www/build-content-data.ts`) is deleted and
-   `content/guide/` moves to `collections.guide`. The pilot's filename
+3. **The www guide collection is the second consumer.** The www pilot
+   (`www/build-content-data.ts`) is deleted and `content/guide/` plus
+   `content/architecture/` move to named collections. The pilot's filename
    convention (`slug.<locale>.md`) is retained as data for the follow-up
    i18n ADR, not enshrined by this one.
 4. **Out of scope — separate ADRs, do not bundle:**
@@ -71,14 +69,14 @@ the internal evidence that the need is real.
 - **Negative:** new public API on adapter-vite during a freeze culture —
   requires the surface inventory (`docs/current/PACKAGE_SURFACE.md`)
   update, api-surface gate evidence, and release-train coordination on the
-  v0.44 line.
-- **Negative:** if `schema?` validation is under-designed, collections
-  degenerate into untyped JSON blobs; the v0.44 implementation must decide
-  whether schema is declarative (field list) or a user-supplied validate
-  function — the pilot only demonstrates the declarative minimum.
+  v0.43.1 line.
+- **Resolved design:** `schema.fields` is declarative and drives both
+  fail-closed validation and generated TypeScript fields. An optional
+  `schema.transform` derives site-specific metadata or slugs without teaching
+  the framework conventions such as locale-suffixed filenames.
 - **Neutral:** `createBlogPlugin` survives as a thin alias over the generic
   factory for one release line, then is removed.
-- **Migration impact (v0.44 train):** `packages/adapter-vite`
+- **Migration impact (v0.43.1 train):** `packages/adapter-vite`
   (collection factory, blog desugar, writer naming), `www` (delete pilot,
   adopt `collections.guide`), `docs/current/PACKAGE_SURFACE.md`, and the
   www guide tests that pin the generated-module shape.

@@ -104,6 +104,20 @@ export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
 // Content/build utilities owned by the adapter implementation.
 export { generateSitemap } from './internal/content/sitemap/generator.ts';
+export { createCollectionPlugin } from './internal/content/collection/plugin.ts';
+export {
+  loadCollectionData,
+  writeCollectionDataModule,
+} from './internal/content/collection/data.ts';
+export type {
+  CollectionEntry,
+  CollectionFieldDefinition,
+  CollectionFieldType,
+  CollectionOptions,
+  CollectionSchema,
+  CollectionSchemaContext,
+  CollectionSchemaResult,
+} from './internal/content/collection/types.ts';
 
 // Default export
 export { openPipeline as default };

@@ -2,6 +2,7 @@ import type { Plugin } from 'vite';
 import type { OpenElementBuildContextLike } from '../protocol/framework.ts';
 import { type FileSystemAdapter, nodeFsAdapter } from './fs-adapter.ts';
 import { createBlogPlugin } from './blog/plugin.ts';
+import { createCollectionPlugin } from './collection/plugin.ts';
 import { createNavPlugin } from './nav/plugin.ts';
 import { createSitemapPlugin } from './sitemap/plugin.ts';
 import type { OpenElementContentOptions } from './types.ts';
@@ -21,6 +22,13 @@ export function openContent(options: OpenContentOptions = {}): Plugin[] {
   const plugins: Plugin[] = [];
   const fs = options.fs ?? nodeFsAdapter;
   const ctx = options.ctx;
+
+  for (const [name, collection] of Object.entries(options.collections ?? {})) {
+    if (name === 'blog' && options.blog) {
+      throw new Error('Configure blog through content.blog or content.collections.blog, not both');
+    }
+    plugins.push(createCollectionPlugin(name, collection, ctx, fs));
+  }
 
   if (options.blog) {
     plugins.push(createBlogPlugin(options.blog, ctx, fs));

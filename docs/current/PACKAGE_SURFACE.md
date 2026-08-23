@@ -111,6 +111,12 @@ promise and are not application-authoring surface.
   (alpha.13, ADR-0123 item 4): the former standalone `cli/preview` subpath
   merged into it as preview mode. The module
   files remain inside the package for internal relative imports only.
+- The adapter root owns the content-collection authoring surface:
+  `CollectionOptions`, `CollectionSchema`, `createCollectionPlugin`,
+  `loadCollectionData`, and `writeCollectionDataModule`. Normal applications
+  configure named collections through `openElement({ content: { collections } })`;
+  `content.blog` remains the compatible blog alias and emits the unchanged
+  `_generated-blog-data.ts` module contract.
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
   `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,

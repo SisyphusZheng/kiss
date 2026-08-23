@@ -2,7 +2,7 @@ import { openElement } from '@openelement/adapter-vite';
 import { openPropsTokenSheet, registerOpenUi } from '@openelement/ui';
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
-import { contentDataPlugin } from './build-content-data.ts';
+import { articleCollections } from './content-collections.ts';
 
 // www/ is an npm-first consumer; local workspace resolution during dev, npm
 // tarballs in production. No resolve.alias needed.
@@ -20,6 +20,7 @@ const rootCSS = _rawCSS
     /:host\(\[data-theme=["']dark["']\]\)\s*\{/g,
     'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]) {',
   );
+
 const siteCSS = `
 :root,
 html[data-theme="light"],
@@ -209,6 +210,7 @@ const openElementPlugins = openElement({
     ],
   },
   content: {
+    collections: articleCollections,
     blog: {
       contentDir: 'content/blog',
       basePath: '/blog',
@@ -250,6 +252,6 @@ export default defineConfig({
     jsx: 'automatic',
     jsxImportSource: '@openelement/element',
   },
-  plugins: [...openElementPlugins, contentDataPlugin()],
+  plugins: openElementPlugins,
 });
 registerOpenUi();

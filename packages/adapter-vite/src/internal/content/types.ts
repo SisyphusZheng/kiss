@@ -6,8 +6,10 @@
  */
 
 import type { BlogPost, BlogPostFrontmatter, OpenElementBlogOptions } from './blog/types.ts';
+import type { CollectionOptions, CollectionSchema } from './collection/types.ts';
 
 export type { BlogPost, BlogPostFrontmatter, OpenElementBlogOptions };
+export type { CollectionOptions, CollectionSchema };
 
 /** A single navigation item (sidebar link) */
 export interface NavItem {
@@ -83,6 +85,8 @@ export interface SitemapOptions {
 
 /** Options for the openContent() plugin */
 export interface OpenElementContentOptions {
+  /** Named Markdown collections. Each writes app/data/_generated-{name}-data.ts. */
+  collections?: Record<string, CollectionOptions>;
   /** Blog module config. Pass options to enable, false to disable */
   blog?: OpenElementBlogOptions | false;
   /** Nav module config. Pass options to enable, falsy to disable */

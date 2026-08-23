@@ -7,7 +7,7 @@ test.describe('Docs Layout Structure', () => {
     await page.goto('/guide/getting-started');
     await page.waitForLoadState('networkidle');
 
-    // The guide section is Markdown-authored long-form (#1087 pilot), not a
+    // The guide section is Markdown-authored through content collections (#1087), not a
     // card grid: article body with heading sections and code blocks.
     const article = await deepQuery(page, '.article-content');
     expect(article).toBeTruthy();
