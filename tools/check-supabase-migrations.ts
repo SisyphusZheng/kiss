@@ -87,6 +87,44 @@ export async function checkSupabaseMigrations(
       throw new Error(`${performanceFloorName} must wrap policy auth helpers in scalar subselects`);
     }
 
+    const replayAtomicityName = names.find((name) => name.endsWith('_replay_audit_atomicity.sql'));
+    if (!replayAtomicityName) throw new Error('missing atomic replay audit migration');
+    const replayAtomicity = await Deno.readTextFile(
+      new URL(`migrations/${replayAtomicityName}`, root),
+    );
+    for (
+      const anchor of [
+        'create or replace function public.mark_attachment_scan_replayed',
+        'create or replace function public.mark_payment_event_replay_enqueued',
+        'insert into public.admin_audit',
+        'attachment_scan_replay_enqueued',
+        'payment_event_replay_enqueued',
+      ]
+    ) {
+      if (!replayAtomicity.includes(anchor)) {
+        throw new Error(`${replayAtomicityName} is missing ${anchor}`);
+      }
+    }
+
+    const reconciliationIndexName = names.find((name) =>
+      name.endsWith('_stripe_reconciliation_index.sql')
+    );
+    if (!reconciliationIndexName) throw new Error('missing Stripe reconciliation index fix');
+    const reconciliationIndex = await Deno.readTextFile(
+      new URL(`migrations/${reconciliationIndexName}`, root),
+    );
+    for (
+      const anchor of [
+        'drop index if exists public.stripe_events_processing_queue_idx',
+        'create index stripe_events_processing_queue_idx',
+        "where processing_state in ('received', 'replay_requested')",
+      ]
+    ) {
+      if (!reconciliationIndex.includes(anchor)) {
+        throw new Error(`${reconciliationIndexName} is missing ${anchor}`);
+      }
+    }
+
     const workspaceName = names.find((name) => name.endsWith('_workspace_rls_qualification.sql'));
     if (!workspaceName) throw new Error('missing workspace RLS qualification migration');
     const workspace = await Deno.readTextFile(new URL(`migrations/${workspaceName}`, root));

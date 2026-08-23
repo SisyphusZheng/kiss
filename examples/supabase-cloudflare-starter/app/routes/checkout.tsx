@@ -12,6 +12,7 @@ import { createServerSupabase } from '../../lib/supabase-server.ts';
 import { serviceRoleRpc } from '../../lib/service-role.ts';
 import {
   checkoutConfiguration,
+  checkoutIntegrationSuffix,
   checkoutSessionBody,
   STRIPE_API_VERSION,
   verifiedCheckoutUrl,
@@ -122,7 +123,7 @@ export function createCheckoutAction(
           'idempotency-key': `checkout-${attemptId}`,
           'stripe-version': STRIPE_API_VERSION,
         },
-        body: checkoutSessionBody(config, orderId),
+        body: checkoutSessionBody(config, orderId, checkoutIntegrationSuffix(attemptId)),
       });
       if (!response.ok) throw new Error('Stripe Checkout creation failed');
       const session = await response.json() as { id?: unknown; url?: unknown; livemode?: unknown };

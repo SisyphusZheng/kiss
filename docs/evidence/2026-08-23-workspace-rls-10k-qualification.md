@@ -54,21 +54,27 @@ hard query limit.
 
 ## SSR/runtime result
 
-The same production build was exercised 30 times per runtime at the bounded
-`/workspace-records` SSR route. This local run tests runtime equivalence and
-render bounds; database latency is reported separately above.
+The reproduction gate now starts the generated Node standalone server and the
+generated Nitro Workers artifact under Wrangler/workerd. A deterministic local
+Supabase protocol fixture supplies an encoded authenticated SSR session and
+10,001 rows; this fixture proves production-client composition, the exact
+workspace filter, the 51-row query cap, and cursor rendering without requiring
+provider credentials. It does not replace the live-project RLS proof recorded
+above.
 
-| Runtime                | Status | Cache-Control       |    HTML |      p50 |       p95 |                     Runtime RSS |
-| ---------------------- | -----: | ------------------- | ------: | -------: | --------: | ------------------------------: |
-| Node standalone server |    200 | `private, no-cache` | 1,337 B | 2.113 ms |  3.232 ms |                      67,504 KiB |
-| Wrangler/workerd       |    200 | `private, no-cache` | 1,337 B | 5.070 ms | 12.822 ms | 52,064 KiB main workerd process |
+The gate fetched two consecutive 50-row pages ten times from each runtime. The
+first and second pages were byte-identical across Node and workerd, the second
+page neither duplicated nor skipped its boundary row, and every Data API call
+carried the expected workspace filter.
 
-Both returned the same content type and byte-identical HTML after the Workers
-mount was routed through the generated request-time server module. The explicit
-HTML budget is 98,304 bytes, leaving headroom while preventing an unbounded SSR
-table render. Wrangler also ran a separate inspector workerd process (79,760
-KiB); it is tooling overhead and is recorded here rather than attributed to the
-application isolate.
+| Runtime                | Status | Cache-Control       | Page 1 HTML | Page 2 HTML | two-page p50 | two-page p95 |
+| ---------------------- | -----: | ------------------- | ----------: | ----------: | -----------: | -----------: |
+| Node standalone server |    200 | `private, no-cache` |    22,471 B |    22,461 B |    10.445 ms |    50.852 ms |
+| Wrangler/workerd       |    200 | `private, no-cache` |    22,471 B |    22,461 B |    10.803 ms |    35.356 ms |
+
+Both pages remained below the explicit 98,304-byte HTML budget. Runtime
+qualification is local and deterministic; provider latency and database query
+plans remain the separate live-project measurements above.
 
 Reproduction gates:
 

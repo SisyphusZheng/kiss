@@ -4,7 +4,10 @@ import {
   loadCollectionData,
   writeCollectionDataModule,
 } from '../src/internal/content/collection/data.ts';
-import type { CollectionOptions } from '../src/internal/content/collection/types.ts';
+import type {
+  CollectionFieldDefinition,
+  CollectionOptions,
+} from '../src/internal/content/collection/types.ts';
 
 const schema: CollectionOptions['schema'] = {
   fields: {
@@ -58,4 +61,17 @@ Deno.test('collection schema fails closed on missing required frontmatter', asyn
   } finally {
     await Deno.remove(root, { recursive: true });
   }
+});
+
+Deno.test('generated collection locale mirrors runtime optionality', () => {
+  const moduleFor = (locale: CollectionFieldDefinition) =>
+    writeCollectionDataModule('guide', [], {
+      contentDir: '.',
+      schema: { fields: { locale } },
+    });
+
+  assertStringIncludes(moduleFor({ type: 'string', required: true }), '  locale: string;');
+  assertStringIncludes(moduleFor({ type: 'string', default: 'en' }), '  locale: string;');
+  assertStringIncludes(moduleFor({ type: 'string' }), '  locale?: string;');
+  assertStringIncludes(moduleFor({ type: 'number', required: true }), '  locale?: string;');
 });

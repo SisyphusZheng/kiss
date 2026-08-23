@@ -60,6 +60,14 @@
     {
       "file": "20260823031500_workspace_rls_qualification.sql",
       "sha256": "ba20a485ff5ac644722d44fc8e8d9853bb33da48f91fbea9f97b68b49e04fa59"
+    },
+    {
+      "file": "20260823094231_replay_audit_atomicity.sql",
+      "sha256": "415364415aa45d9bbef65a1fad5e33b72b39e940c11137fa7d134deb926781f1"
+    },
+    {
+      "file": "20260823094232_stripe_reconciliation_index.sql",
+      "sha256": "b0ec3d93eaaae702d98235ab2878dd153e81f39ea620fabd1dadda788a8e57d3"
     }
   ]
 }

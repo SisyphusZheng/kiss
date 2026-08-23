@@ -156,6 +156,8 @@ test.describe('Unified page structure', () => {
   });
 
   test('deep fragments scroll inside DSD on click, direct load, and history', async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message));
     await page.goto('/guide/getting-started');
     const first = page.locator('open-page-rail a[href^="#"]').first();
     const hash = await first.getAttribute('href');
@@ -169,6 +171,15 @@ test.describe('Unified page structure', () => {
     await page.evaluate(() => history.pushState(null, '', '#missing-fragment'));
     await page.goBack();
     await expect(page.locator(hash!)).toHaveAttribute('data-open-target', '');
+
+    await page.evaluate(() => {
+      const malformed = document.createElement('a');
+      malformed.href = '#%ZZ';
+      document.body.append(malformed);
+      malformed.click();
+      malformed.remove();
+    });
+    expect(pageErrors).toEqual([]);
   });
 
   test('reading information remains complete without IntersectionObserver or View Transitions', async ({ page }) => {

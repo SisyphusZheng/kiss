@@ -48,7 +48,7 @@ export function checkoutConfiguration(env: Record<string, unknown>): CheckoutCon
 export function checkoutSessionBody(
   config: CheckoutConfiguration,
   orderId: string,
-  integrationSuffix = randomIntegrationSuffix(),
+  integrationSuffix: string,
 ): URLSearchParams {
   if (!/^[a-z]{8}$/.test(integrationSuffix)) throw new Error('invalid integration suffix');
   const body = new URLSearchParams();
@@ -64,20 +64,20 @@ export function checkoutSessionBody(
   return body;
 }
 
-function randomIntegrationSuffix(): string {
-  const letters: string[] = [];
-  const bytes = new Uint8Array(16);
-  while (letters.length < 8) {
-    crypto.getRandomValues(bytes);
-    for (const byte of bytes) {
-      // 234 is the largest multiple of 26 below 256. Rejecting the tail avoids
-      // modulo bias while retaining a compact lowercase integration suffix.
-      if (byte >= 234) continue;
-      letters.push(String.fromCharCode(97 + byte % 26));
-      if (letters.length === 8) break;
-    }
+export function checkoutIntegrationSuffix(attemptId: string): string {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(attemptId)) {
+    throw new Error('invalid checkout attempt id');
   }
-  return letters.join('');
+  // The persisted v4 UUID already contains cryptographically random attempt
+  // entropy. Reducing it into base 26 keeps Stripe's eight-letter label while
+  // making every retry of one attempt serialize the exact same request body.
+  let value = BigInt(`0x${attemptId.replaceAll('-', '')}`);
+  let suffix = '';
+  for (let index = 0; index < 8; index++) {
+    suffix += String.fromCharCode(97 + Number(value % 26n));
+    value /= 26n;
+  }
+  return suffix;
 }
 
 export function verifiedCheckoutUrl(value: unknown, expectedHost: string): string {

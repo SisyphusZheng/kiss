@@ -68,6 +68,27 @@ function storagePath(origin: URL, objectKey: string): string {
   return new URL(`/storage/v1/object/authenticated/${ATTACHMENT_BUCKET}/${encoded}`, origin).href;
 }
 
+async function scanWithTimeout(
+  provider: MalwareScannerProvider,
+  input: Parameters<MalwareScannerProvider['scan']>[0],
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const reason = new Error('scan provider timed out');
+      controller.abort(reason);
+      reject(reason);
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([provider.scan(input, controller.signal), timeout]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export function createScannerWorker(
   fetchImpl: typeof fetch = fetch,
   options: {
@@ -117,11 +138,11 @@ export function createScannerWorker(
         if (!object.ok) throw new Error(`object download failed (${object.status})`);
         const bytes = await boundedBytes(object, Number(attachment.byte_size));
 
-        const verdict = await provider.scan({
+        const verdict = await scanWithTimeout(provider, {
           bytes,
           contentType: attachment.content_type,
           filename: 'attachment',
-        }, AbortSignal.timeout(timeoutMs));
+        }, timeoutMs);
         if (verdict !== 'clean' && verdict !== 'quarantined') {
           throw new Error('provider returned an invalid verdict');
         }

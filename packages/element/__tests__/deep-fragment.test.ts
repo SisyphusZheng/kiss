@@ -14,4 +14,5 @@ Deno.test('deepGetElementById finds direct and nested shadow targets (#1090)', (
   assertEquals(deepGetElementById('light', root), target);
   assertEquals(deepGetElementById('#build', root), target);
   assertEquals(deepGetElementById('missing', root), null);
+  assertEquals(deepGetElementById('#%ZZ', root), null);
 });

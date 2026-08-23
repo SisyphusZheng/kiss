@@ -3,11 +3,21 @@
 let installed = false;
 let currentTarget: HTMLElement | null = null;
 
+function decodeFragmentId(id: string): string | null {
+  try {
+    return decodeURIComponent(id.replace(/^#/, ''));
+  } catch (error) {
+    if (error instanceof URIError) return null;
+    throw error;
+  }
+}
+
 export function deepGetElementById(
   id: string,
   root: Document | ShadowRoot = document,
 ): HTMLElement | null {
-  const decoded = decodeURIComponent(id.replace(/^#/, ''));
+  const decoded = decodeFragmentId(id);
+  if (decoded === null) return null;
   const direct = root.getElementById(decoded);
   if (direct) return direct as HTMLElement;
   for (const element of root.querySelectorAll('*')) {
@@ -29,13 +39,7 @@ function anchorFromEvent(event: MouseEvent): HTMLAnchorElement | null {
 
 function scrollToHash(hash: string, behavior: ScrollBehavior): HTMLElement | null {
   if (hash.length <= 1) return null;
-  let target: HTMLElement | null;
-  try {
-    target = deepGetElementById(hash);
-  } catch (error) {
-    if (error instanceof URIError) return null;
-    throw error;
-  }
+  const target = deepGetElementById(hash);
   if (!target) return null;
   currentTarget?.removeAttribute('data-open-target');
   target.setAttribute('data-open-target', '');
@@ -63,10 +67,10 @@ export function ensureDeepFragmentNavigation(options: DeepFragmentOptions = {}):
     const anchor = anchorFromEvent(mouse);
     if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
     const url = new URL(anchor.href, location.href);
+    const fragmentId = decodeFragmentId(url.hash);
     if (
       !url.hash || url.origin !== location.origin || url.pathname !== location.pathname ||
-      url.search !== location.search ||
-      document.getElementById(decodeURIComponent(url.hash.slice(1)))
+      url.search !== location.search || fragmentId === null || document.getElementById(fragmentId)
     ) return;
     const reduced = typeof matchMedia === 'function' &&
       matchMedia('(prefers-reduced-motion: reduce)').matches;

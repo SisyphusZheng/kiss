@@ -174,3 +174,23 @@ Deno.test('private scanner converts upstream timeout into retryable failure', as
     }), { timeoutMs: 1 }).fetch(request(), env);
   assertEquals(response.status, 503);
 });
+
+Deno.test('scanner orchestration times out a provider that ignores AbortSignal', async () => {
+  const base = successfulFetch(0);
+  let aborted = false;
+  const startedAt = performance.now();
+  const response = await createScannerWorker(base.fetchImpl, {
+    timeoutMs: 5,
+    provider: {
+      name: 'stalled-provider',
+      scan(_input, signal) {
+        signal.addEventListener('abort', () => aborted = true, { once: true });
+        return new Promise(() => {});
+      },
+    },
+  }).fetch(request(), env);
+
+  assertEquals(response.status, 503);
+  assertEquals(aborted, true);
+  assertEquals(performance.now() - startedAt < 500, true);
+});

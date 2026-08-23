@@ -22,7 +22,9 @@ request logs, move to the restricted key, then rotate the broad key.
 
 Every Checkout creation pins `Stripe-Version: 2026-07-29.dahlia` and sends an
 `integration_identifier` beginning `openelement_reference_` with an eight-letter
-random suffix. Version changes require tests and a deliberate review.
+suffix derived from the persisted random checkout-attempt UUID. The label stays
+identical across idempotent retries. Version changes require tests and a
+deliberate review.
 
 ## Payment-method policy
 

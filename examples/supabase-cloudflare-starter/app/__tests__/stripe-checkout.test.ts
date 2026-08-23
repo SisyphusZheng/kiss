@@ -1,6 +1,7 @@
 import { assertEquals, assertThrows } from '@std/assert';
 import {
   checkoutConfiguration,
+  checkoutIntegrationSuffix,
   checkoutSessionBody,
   STRIPE_API_VERSION,
   verifiedCheckoutUrl,
@@ -53,6 +54,21 @@ Deno.test('Checkout request uses dynamic methods and remains webhook-correlated'
   assertEquals(body.get('payment_intent_data[metadata][order_id]'), 'order-1');
   assertEquals(body.get('success_url'), 'https://app.test/checkout?result=success');
   assertEquals(STRIPE_API_VERSION, '2026-07-29.dahlia');
+});
+
+Deno.test('Checkout retries serialize an identical body for one persisted attempt', () => {
+  const config = checkoutConfiguration(env);
+  const attemptId = '123e4567-e89b-42d3-a456-426614174000';
+  const suffix = checkoutIntegrationSuffix(attemptId);
+  const first = checkoutSessionBody(config, 'order-1', suffix).toString();
+  const second = checkoutSessionBody(config, 'order-1', checkoutIntegrationSuffix(attemptId))
+    .toString();
+  assertEquals(/^[a-z]{8}$/.test(suffix), true);
+  assertEquals(second, first);
+  assertEquals(
+    checkoutIntegrationSuffix('123e4567-e89b-42d3-a456-426614174001') === suffix,
+    false,
+  );
 });
 
 Deno.test('Checkout redirect accepts only the configured HTTPS host', () => {

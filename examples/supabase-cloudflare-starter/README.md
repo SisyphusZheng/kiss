@@ -35,10 +35,11 @@ application layer.
 - [x] Stripe webhook ingress preserves and verifies the raw body before JSON
       parsing, enforces timestamp tolerance, durably deduplicates provider event
       ids, and applies only monotonic order-state transitions
-- [x] one-time card Checkout uses a server-owned catalog, retry-stable attempt
-      ids and Stripe idempotency keys; Session and PaymentIntent metadata carry
-      the order id, paid events must reconcile amount/currency, and the success
-      URL never grants payment state
+- [x] one-time Checkout uses Dashboard-managed dynamic payment methods, a
+      server-owned catalog, retry-stable attempt ids and Stripe idempotency
+      keys; Session and PaymentIntent metadata carry the order id, paid events
+      must reconcile amount/currency, and the success URL never grants payment
+      state
 - [x] verified Stripe events persist a minimal envelope before Queue handoff;
       the Queue consumer owns state transitions, exhausted delivery becomes a
       durable admin-visible DLQ row, and Cron safely re-enqueues received events
