@@ -155,6 +155,22 @@ test.describe('Unified page structure', () => {
     await expect(details).toHaveAttribute('open', '');
   });
 
+  test('deep fragments scroll inside DSD on click, direct load, and history', async ({ page }) => {
+    await page.goto('/guide/getting-started');
+    const first = page.locator('open-page-rail a[href^="#"]').first();
+    const hash = await first.getAttribute('href');
+    expect(hash).toBeTruthy();
+    await first.click();
+    await expect(page).toHaveURL(new RegExp(`${hash!.replace('#', '#')}$`));
+    await expect(page.locator(hash!)).toHaveAttribute('data-open-target', '');
+
+    await page.goto(`/guide/getting-started${hash}`);
+    await expect(page.locator(hash!)).toHaveAttribute('data-open-target', '');
+    await page.evaluate(() => history.pushState(null, '', '#missing-fragment'));
+    await page.goBack();
+    await expect(page.locator(hash!)).toHaveAttribute('data-open-target', '');
+  });
+
   test('reading information remains complete without IntersectionObserver or View Transitions', async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(window, 'IntersectionObserver', {

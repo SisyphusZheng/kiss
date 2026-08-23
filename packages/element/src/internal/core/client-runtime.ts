@@ -10,6 +10,7 @@
 import type { Signal } from '../protocol/signal.ts';
 import { hasSelfHydrated, HydrationScope } from './hydration-scope.ts';
 import { ensurePreHydrationClickCapture, flushPendingClicks } from './pre-hydration-click.ts';
+import { ensureDeepFragmentNavigation } from './deep-fragment.ts';
 import { hasPopulatedShadowRoot } from './dsd-shadow-root.ts';
 import { OpenElementError } from './errors.ts';
 import { DATA_EID } from '../protocol/hydration-markers.ts';
@@ -155,6 +156,7 @@ export function hydrateOpenElement(
 ): () => void {
   // #942: install the pre-hydration click capture before hydrating any host.
   ensurePreHydrationClickCapture();
+  ensureDeepFragmentNavigation();
   const registry: CustomElementRegistry | undefined = options?.registry ??
     globalThis.customElements;
   const templates = collectDsdTemplates(root);

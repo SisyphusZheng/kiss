@@ -174,4 +174,5 @@ export type {
 export { disposeOpenElement, hydrateOpenElement } from './internal/core/client-runtime.ts';
 // #942: click capture/replay across the pre-hydration window (generated client entry).
 export { ensurePreHydrationClickCapture } from './internal/core/pre-hydration-click.ts';
+export { deepGetElementById, ensureDeepFragmentNavigation } from './internal/core/deep-fragment.ts';
 export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';
