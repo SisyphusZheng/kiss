@@ -49,8 +49,9 @@ application layer.
 - Deno (workspace tasks), Node (Nitro `node` preset run),
 - Supabase CLI + Docker (local emulator; migrations), or a hosted project,
 - Cloudflare account for deployment (wrangler, secret-boundary runbook).
-- A self-hosted OPSWAT MetaDefender Core HTTPS endpoint and API key for real
-  attachment qualification; the scanner fails closed when these are absent.
+- An operator-selected malware scanner for production attachment scanning.
+  MetaDefender Core is a reference adapter; the scanner fails closed when no
+  provider is configured.
 
 ## Tasks
 
@@ -91,11 +92,9 @@ STRIPE_CHECKOUT_HOST
 APP_ORIGIN
 ```
 
-Private scan-engine configuration is required for v0.43.1 release evidence
-(#1070 / ADR-0138). When unset, uploads stay `pending_scan` and remain
-undownloadable by everyone — fail-closed by design, but not release-green.
-When set, the private scanner Worker calls this `/file/sync`-compatible HTTPS
-endpoint:
+The scanner Worker uses a provider-neutral contract (ADR-0139). When no
+provider is configured, uploads stay `pending_scan` and remain undownloadable
+by everyone. The maintained MetaDefender reference adapter uses:
 
 ```
 METADEFENDER_CORE_URL
@@ -129,7 +128,6 @@ handlers and must never be rendered or prefixed with `VITE_`.
   verified (same evidence file, follow-ups 3/4). Known limitation: a fresh
   sender domain has zero reputation, so the first mail can land in spam on
   some providers — reputation ramps with volume; operational, not a defect.
-- v0.43.1 real scan-engine qualification is release-blocking (#1070 /
-  ADR-0138). Tier 3 provision mode runs benign and EICAR files through the
-  upload → Queue → private scanner → state transition path and proves that
-  only the clean owner file receives a working signed link.
+- Real scan-engine qualification is tracked for v0.44 (#1070 / ADR-0139).
+  v0.43.1 proves the provider-neutral fail-closed state machine without
+  requiring commercial credentials or paid container infrastructure.

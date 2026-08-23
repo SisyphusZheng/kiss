@@ -1,6 +1,6 @@
 # ADR-0138: Require Real Scanner Evidence for v0.43.1
 
-- Status: Accepted
+- Status: Superseded by ADR-0139
 - Date: 2026-08-23
 - Supersedes: ADR-0132 for the v0.43.1 release gate
 - Related: #1070, #984, #997

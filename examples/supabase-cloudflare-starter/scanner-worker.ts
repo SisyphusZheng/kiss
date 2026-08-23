@@ -1,4 +1,5 @@
 import { ATTACHMENT_BUCKET } from './lib/cloudflare-queues.ts';
+import { createMetaDefenderProvider, type MalwareScannerProvider } from './lib/malware-scanner.ts';
 import { serviceRoleRpc, UUID_PATTERN } from './lib/service-role.ts';
 
 interface ScannerEnv {
@@ -23,15 +24,12 @@ interface AuthorizedAttachment {
 const MAX_BYTES = 10 * 1024 * 1024;
 const TIMEOUT_MS = 20_000;
 
-function configuration(env: ScannerEnv): { supabase: URL; metadefender: URL } {
+function configuration(env: ScannerEnv): { supabase: URL } {
   const supabase = new URL(env.SUPABASE_URL);
-  const metadefender = new URL(env.METADEFENDER_CORE_URL);
-  if (
-    supabase.protocol !== 'https:' || metadefender.protocol !== 'https:' ||
-    metadefender.username || metadefender.password ||
-    !env.SUPABASE_SERVICE_ROLE_KEY || !env.METADEFENDER_API_KEY
-  ) throw new Error('scanner configuration unavailable');
-  return { supabase, metadefender };
+  if (supabase.protocol !== 'https:' || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('scanner configuration unavailable');
+  }
+  return { supabase };
 }
 
 async function boundedBytes(response: Response, expected: number): Promise<Uint8Array> {
@@ -72,7 +70,11 @@ function storagePath(origin: URL, objectKey: string): string {
 
 export function createScannerWorker(
   fetchImpl: typeof fetch = fetch,
-  options: { timeoutMs?: number } = {},
+  options: {
+    timeoutMs?: number;
+    provider?: MalwareScannerProvider;
+    providerFactory?: (env: ScannerEnv) => MalwareScannerProvider;
+  } = {},
 ) {
   const timeoutMs = options.timeoutMs ?? TIMEOUT_MS;
   return {
@@ -83,6 +85,8 @@ export function createScannerWorker(
           return new Response('Not Found', { status: 404 });
         }
         const config = configuration(env);
+        const provider = options.provider ?? options.providerFactory?.(env) ??
+          createMetaDefenderProvider(env, fetchImpl, timeoutMs);
         const body = await request.json() as Partial<ScanRequest>;
         if (
           body.type !== 'attachment.scan' || !UUID_PATTERN.test(body.reservationId ?? '') ||
@@ -113,32 +117,15 @@ export function createScannerWorker(
         if (!object.ok) throw new Error(`object download failed (${object.status})`);
         const bytes = await boundedBytes(object, Number(attachment.byte_size));
 
-        const scanEndpoint = new URL('/file/sync', config.metadefender);
-        const scan = await fetchImpl(scanEndpoint, {
-          method: 'POST',
-          headers: {
-            apikey: env.METADEFENDER_API_KEY,
-            'content-type': attachment.content_type,
-            filename: 'attachment',
-            rule: 'File scan',
-          },
-          body: Uint8Array.from(bytes).buffer,
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-        if (!scan.ok) throw new Error(`provider failed (${scan.status})`);
-        const result = await scan.json() as {
-          process_info?: { progress_percentage?: number; result?: string };
-          scan_results?: { progress_percentage?: number; scan_all_result_i?: number };
-        };
-        const complete = result.process_info?.progress_percentage === 100;
-        const disposition = result.process_info?.result;
-        const code = result.scan_results?.scan_all_result_i;
-        if (!complete || !Number.isInteger(code)) throw new Error('provider response incomplete');
-        if (code === 0 && disposition === 'Allowed') return Response.json({ verdict: 'clean' });
-        if ([1, 2, 8].includes(code!) && disposition === 'Blocked') {
-          return Response.json({ verdict: 'quarantined' });
+        const verdict = await provider.scan({
+          bytes,
+          contentType: attachment.content_type,
+          filename: 'attachment',
+        }, AbortSignal.timeout(timeoutMs));
+        if (verdict !== 'clean' && verdict !== 'quarantined') {
+          throw new Error('provider returned an invalid verdict');
         }
-        throw new Error(`provider returned non-verdict code ${code}`);
+        return Response.json({ verdict });
       } catch (error) {
         console.error(JSON.stringify({
           event: 'attachment_scan_failed',

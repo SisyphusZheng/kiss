@@ -15,8 +15,8 @@ name: Fullstack deploy smoke (real providers)
 # supersedes older scheduled reds. Manual runs intended as release evidence
 # must select the `provision` mode so they cover the full probe.
 #
-# #1070: the scanner qualification runs only when its private engine secrets
-# exist. Absence is recorded honestly and cannot satisfy release acceptance.
+# #1070 / ADR-0139: real-provider qualification is a v0.44 gate. Absence is
+# recorded honestly without blocking the provider-neutral v0.43.1 release.
 
 on:
   workflow_dispatch:
@@ -101,8 +101,7 @@ jobs:
           mkdir -p .smoke
           echo '{"check":"attachment-scanner-engine","result":"not-configured"}' >> .smoke/results.jsonl
           echo "scan engine is not configured (#1070): attachments stay pending_scan and undownloadable — fail-closed"
-          echo "v0.43.1 release qualification requires a real clean and EICAR verdict" >&2
-          exit 1
+          echo "real benign/EICAR provider qualification is tracked for v0.44 (#1070)"
 
       - name: Render and provision bounded async resources
         if: env.ASYNC_MODE == 'provision'
