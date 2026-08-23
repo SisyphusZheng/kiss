@@ -57,3 +57,27 @@ Deno.test('OpenElement connectedCallback guards document access in no-DOM runtim
   assertEquals(code, 0, `OpenElement subclass definition should not throw. stderr: ${err}`);
   assertEquals(out.trim(), 'function');
 });
+
+Deno.test('OpenElement SSR stub fails loudly on unsupported DOM access (#1099)', async () => {
+  const script = `
+    import { OpenElement } from '@openelement/element';
+    class TestEl extends OpenElement { render() { return null; } }
+    try {
+      new TestEl().querySelector('div');
+      throw new Error('expected SSR DOM access to fail');
+    } catch (error) {
+      if (error.code !== 'SSR_DOM_ACCESS_UNSUPPORTED') throw error;
+      console.log(error.message);
+    }
+  `;
+  const command = new Deno.Command(Deno.execPath(), {
+    args: ['eval', '--no-lock', script],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+  const { code, stdout, stderr } = await command.output();
+  const out = new TextDecoder().decode(stdout);
+  const err = new TextDecoder().decode(stderr);
+  assertEquals(code, 0, `SSR DOM diagnostic should be typed. stderr: ${err}`);
+  assertEquals(out.includes('HTMLElement.querySelector() is unavailable during SSR'), true);
+});

@@ -143,13 +143,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/internal/core/island.ts',
-    fragment: '} as unknown as typeof componentClass.prototype.connectedCallback',
-    reason: 'Preserve original connectedCallback signature after wrapping.',
-
-    revisitBy: '0.44.0',
-  },
-  {
     file: 'packages/element/src/internal/core/prop.ts',
     fragment: 'instance as unknown as {',
     reason: 'Static prop runtime writes element attributes and properties.',

@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from '@std/assert';
+import { assertEquals } from '@std/assert';
 import {
   OpenElementError,
   reportError,
@@ -7,23 +7,20 @@ import {
 } from '../src/internal/core/errors.ts';
 import { renderDsd } from '../src/internal/core/render-dsd.ts';
 
-Deno.test('setErrorTelemetryHook throws when called more than once (#644)', () => {
+Deno.test('setErrorTelemetryHook is reconfigurable (#1099)', () => {
   resetErrorTelemetryHookForTests();
   try {
     let received: string | null = null;
     setErrorTelemetryHook((e) => {
       received = e.message;
     });
-    // A second set must surface immediately instead of silently overwriting the
-    // existing hook (last-writer-wins across requests/tenants).
-    assertThrows(
-      () => setErrorTelemetryHook(() => {}),
-      Error,
-      'already called',
-    );
-    // The first hook remains wired.
+    let replacement = '';
+    setErrorTelemetryHook((error) => {
+      replacement = error.message;
+    });
     reportError(new OpenElementError('boom'));
-    assertEquals(received, 'boom');
+    assertEquals(received, null);
+    assertEquals(replacement, 'boom');
   } finally {
     resetErrorTelemetryHookForTests();
   }

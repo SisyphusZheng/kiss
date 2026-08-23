@@ -180,10 +180,10 @@ export function defineIsland<T extends CustomElementConstructor>(
   // Single rule source shared with defineElement() (tag-utils.ts).
   assertValidTagName(tagName);
 
-  wrapIslandConnectedCallback(componentClass);
+  const islandClass = createIslandClass(componentClass);
 
   // Define a registration function that's idempotent
-  const register = createIslandRegister(tagName, componentClass);
+  const register = createIslandRegister(tagName, islandClass);
 
   // SSR guard: browser-specific strategy handling is a no-op during SSR.
   // During SSR we just define the custom element and let the generated
@@ -213,7 +213,7 @@ export function defineIsland<T extends CustomElementConstructor>(
     register();
   }
 
-  return componentClass;
+  return islandClass;
 }
 
 /**
@@ -228,25 +228,20 @@ export function defineIsland<T extends CustomElementConstructor>(
  * the parent's wrapped connectedCallback and the subclass's both
  * call bindSsrProps on the same element.
  */
-function wrapIslandConnectedCallback<T extends CustomElementConstructor>(componentClass: T): void {
-  const origConnected = componentClass.prototype.connectedCallback;
-  if (!componentClass.prototype.__openIslandWrapped) {
-    componentClass.prototype.__openIslandWrapped = true;
-    componentClass.prototype.connectedCallback = function (this: HTMLElement) {
-      // Call original connectedCallback first (super.connectedCallback)
-      if (typeof origConnected === 'function') {
-        origConnected.call(this);
-      }
-      // Auto-bind SSR props on upgrade (idempotent - only once per element)
-      if (
-        this.hasAttribute(DATA_SSR_PROPS) &&
-        !ssrPropsBoundSet.has(this)
-      ) {
+function createIslandClass<T extends CustomElementConstructor>(componentClass: T): T {
+  const connected = (componentClass.prototype as HTMLElement & { connectedCallback?: () => void })
+    .connectedCallback;
+  class OpenElementIsland extends componentClass {
+    connectedCallback(): void {
+      // Restore SSR props synchronously before the component's first render.
+      if (this.hasAttribute(DATA_SSR_PROPS) && !ssrPropsBoundSet.has(this)) {
         ssrPropsBoundSet.add(this);
-        Promise.resolve().then(() => bindSsrProps(this));
+        bindSsrProps(this);
       }
-    } as unknown as typeof componentClass.prototype.connectedCallback;
+      if (typeof connected === 'function') connected.call(this);
+    }
   }
+  return OpenElementIsland as T;
 }
 
 /** Idempotent customElements.define wrapper safe for SSR contexts. */

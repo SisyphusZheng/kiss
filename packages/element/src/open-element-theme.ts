@@ -12,7 +12,7 @@ export class OpenElementThemeManager {
    * surviving a disconnect would be misread as host-owned on reconnect.
    */
   #broadcastApplied = new WeakSet<HTMLElement>();
-  #observerInstalled = false;
+  #observer?: MutationObserver;
 
   registerStyles(sheets: unknown | unknown[]): void {
     for (const sheet of Array.isArray(sheets) ? sheets : [sheets]) {
@@ -66,21 +66,28 @@ export class OpenElementThemeManager {
   disconnect(host: HTMLElement): void {
     this.#connected.delete(host);
     this.#selfThemed.delete(host);
+    if (this.#connected.size === 0) {
+      this.#observer?.disconnect();
+      this.#observer = undefined;
+    }
   }
 
   #installObserver(): void {
     if (
-      this.#observerInstalled || typeof document === 'undefined' ||
+      this.#observer || typeof document === 'undefined' ||
       typeof MutationObserver === 'undefined'
     ) return;
-    this.#observerInstalled = true;
     const observer = new MutationObserver((mutations) => {
       if (!mutations.some((m) => m.type === 'attributes' && m.attributeName === 'data-theme')) {
         return;
       }
       const theme = document.documentElement?.dataset?.theme;
       for (const host of this.#connected) {
-        if (!host.isConnected) continue;
+        if (!host.isConnected) {
+          this.#connected.delete(host);
+          this.#selfThemed.delete(host);
+          continue;
+        }
         if (this.#selfThemed.has(host)) continue;
         if (theme) {
           host.setAttribute('data-theme', theme);
@@ -95,5 +102,6 @@ export class OpenElementThemeManager {
       attributes: true,
       attributeFilter: ['data-theme'],
     });
+    this.#observer = observer;
   }
 }

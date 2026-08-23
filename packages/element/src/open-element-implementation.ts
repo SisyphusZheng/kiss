@@ -47,7 +47,7 @@
  * @module @openelement/element/open-element
  */
 
-import { formatError } from './internal/core/errors.ts';
+import { formatError, OpenElementError } from './internal/core/errors.ts';
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import {
   declareObservedAttributes,
@@ -85,6 +85,13 @@ import { attachFormInternals } from './open-element-form.ts';
  * Runtime-agnostic modules should not mutate the host global scope.
  */
 const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
+  #unsupported(member: string): never {
+    throw new OpenElementError(
+      `[openElement] HTMLElement.${member} is unavailable during SSR. ` +
+        'Move DOM access to a browser lifecycle hook or guard it with typeof document.',
+      { code: 'SSR_DOM_ACCESS_UNSUPPORTED', phase: 'ssr' },
+    );
+  }
   hasAttribute(_name: string): boolean {
     return false;
   }
@@ -98,6 +105,15 @@ const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
   }
   get isConnected(): boolean {
     return false;
+  }
+  querySelector(_selector: string): never {
+    return this.#unsupported('querySelector()');
+  }
+  attachShadow(_init: ShadowRootInit): never {
+    return this.#unsupported('attachShadow()');
+  }
+  dispatchEvent(_event: Event): never {
+    return this.#unsupported('dispatchEvent()');
   }
 } as unknown as typeof HTMLElement);
 
