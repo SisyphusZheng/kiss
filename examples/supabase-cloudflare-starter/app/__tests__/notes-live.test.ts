@@ -9,8 +9,10 @@ import NotesLive, {
   MAX_LIVE_EVENTS,
   MAX_RECONNECT_DELAY_MS,
   mergeLiveEvent,
+  mergeReconciledEvents,
   openElement,
   reconnectDelayMs,
+  resolveRealtimeAuthToken,
   tagName,
 } from '../islands/notes-live.tsx';
 
@@ -44,6 +46,24 @@ Deno.test('notes-live retention is explicitly bounded', () => {
   assertEquals(events[0].id, String(MAX_LIVE_EVENTS + 19));
 });
 
+Deno.test('notes-live reconciliation repairs dropped events without duplicates', () => {
+  const live = [
+    { id: 'note-3', body: 'delivered live' },
+    { id: 'note-1', body: 'older live' },
+  ];
+  const newestFirstSnapshot = [
+    { id: 'note-4', body: 'missed during reconnect' },
+    { id: 'note-3', body: 'same durable row' },
+    { id: 'note-2', body: 'missed before subscribe' },
+  ];
+  assertEquals(mergeReconciledEvents(live, newestFirstSnapshot), [
+    { id: 'note-4', body: 'missed during reconnect' },
+    { id: 'note-3', body: 'delivered live' },
+    { id: 'note-2', body: 'missed before subscribe' },
+    { id: 'note-1', body: 'older live' },
+  ]);
+});
+
 Deno.test('notes-live reconnect delay is exponential, jittered and capped', () => {
   assertEquals(reconnectDelayMs(0, () => 0.5), 500);
   assertEquals(reconnectDelayMs(3, () => 0.5), 4_000);
@@ -67,4 +87,10 @@ Deno.test('notes-live erases the SSR token only after handing it to Realtime', (
 
   assertEquals(handoffRealtimeAuth(null, host, 'not-yet-consumed'), false);
   assertEquals(removed, ['data-access-token']);
+});
+
+Deno.test('notes-live retains the user JWT for clients created after reconnect', () => {
+  assertEquals(resolveRealtimeAuthToken('fresh-jwt', null), 'fresh-jwt');
+  assertEquals(resolveRealtimeAuthToken(null, 'private-memory-jwt'), 'private-memory-jwt');
+  assertEquals(resolveRealtimeAuthToken(null, null), null);
 });

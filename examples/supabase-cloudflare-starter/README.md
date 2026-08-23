@@ -28,9 +28,10 @@ application layer.
       replay is durable; no duplicate provider config is maintained
 - [x] notes-live island: Supabase Realtime INSERT subscription in the browser,
       RLS-scoped via the user's short-lived access token + a hard `user_id`
-      filter, with bounded/deduplicated state, reconnect recovery, one-shot
-      token handoff (the SSR attribute is removed after `setAuth`), token
-      refresh, and explicit unsubscribe on disconnect
+      filter, with bounded/deduplicated state and a periodic RLS Data API
+      reconciliation fallback; the one-shot SSR token is removed after
+      `setAuth`, retained only in element-private memory for reconnect, wiped
+      on disconnect, and never persisted as a browser session
 - [x] admin authorization reads issuer-controlled `app_metadata.role` only;
       matching RLS and immutable append-only audit migration included
 - [x] Stripe webhook ingress preserves and verifies the raw body before JSON
@@ -121,9 +122,13 @@ handlers and must never be rendered or prefixed with `VITE_`.
 
 ## Qualification status
 
-- Tier 2 real Supabase password/OAuth/RLS/Realtime matrix: green (14/14),
-  evidence in
+- Historical Tier 2 real Supabase password/OAuth/RLS/Realtime matrix: green
+  (14/14 on 2026-08-18), evidence in
   [`docs/evidence/2026-08-18-reference-saas-freeze-check.md`](../../docs/evidence/2026-08-18-reference-saas-freeze-check.md).
+- Current v0.43.1 requalification: Auth/session/Notes write/curl RLS passed
+  twice, but Realtime delivery/recovery failed at two different points. #1134
+  retains the JWT across reconnect and adds bounded durable reconciliation;
+  two exact-candidate real-project passes are still required.
 - Tier 3 deployed Workers journey and Cloudflare production rate limiting:
   green.
 - Production SMTP domain authentication and signup email-confirmation E2E:

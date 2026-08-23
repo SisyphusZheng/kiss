@@ -448,8 +448,16 @@ token the connection authenticates as `anon`, which has no SELECT policy on
 the user's access token as a one-shot `data-access-token` attribute. The page
 host's internal loader data is not serialized as a public prop, so this is the
 token's only HTML location. The island calls `realtime.setAuth`, immediately
-removes the attribute, persists no client-side session, and adds a hard
-`user_id=eq.<uid>` filter on top. The route is request-time and `no-store`.
+removes the attribute, retains the token only in element-private memory so a
+new client can authenticate after reconnect, wipes it on disconnect, persists
+no client-side session, and adds a hard `user_id=eq.<uid>` filter on top. The
+route is request-time and `no-store`.
+
+Realtime delivery is not treated as a durable queue. A channel can report
+`SUBSCRIBED` after a network transition even though an event was missed. The
+island therefore remains `recovering` until a private, no-store Data API read
+succeeds, repeats that stable-ordered read every 10 seconds, hard-caps it at
+`MAX_LIVE_EVENTS`, and deduplicates notifications and recovered rows by id.
 
 ```tsx
 // app/islands/notes-live.tsx
@@ -465,10 +473,12 @@ export const openElement = defineIslandConfig({
 // app/islands/notes-live.tsx
 export const MAX_LIVE_EVENTS = 100;
 export const MAX_RECONNECT_DELAY_MS = 30_000;
+export const RECONCILE_INTERVAL_MS = 10_000;
 
 export interface LiveNoteEvent {
   id: string;
   body: string;
+  createdAt?: string;
 }
 
 /** Stable-id dedupe with an explicit DOM/memory bound. */
@@ -481,6 +491,27 @@ export function mergeLiveEvent(
   return [incoming, ...events].slice(0, Math.max(0, maximum));
 }
 
+/** Merge a newest-first Data API snapshot with possibly incomplete live events. */
+export function mergeReconciledEvents(
+  events: readonly LiveNoteEvent[],
+  snapshot: readonly LiveNoteEvent[],
+  maximum = MAX_LIVE_EVENTS,
+): LiveNoteEvent[] {
+  const existing = new Map(events.map((event) => [event.id, event]));
+  const seen = new Set<string>();
+  const merged: LiveNoteEvent[] = [];
+  for (const event of [...snapshot, ...events]) {
+    if (seen.has(event.id)) continue;
+    seen.add(event.id);
+    merged.push(existing.get(event.id) ?? event);
+  }
+  merged.sort((left, right) => {
+    if (!left.createdAt || !right.createdAt) return 0;
+    return right.createdAt.localeCompare(left.createdAt) || right.id.localeCompare(left.id);
+  });
+  return merged.slice(0, Math.max(0, maximum));
+}
+
 /** Capped exponential retry with full jitter; random is injectable for tests. */
 export function reconnectDelayMs(attempt: number, random = Math.random): number {
   const cap = Math.min(MAX_RECONNECT_DELAY_MS, 1_000 * 2 ** Math.max(0, attempt));
@@ -488,12 +519,13 @@ export function reconnectDelayMs(attempt: number, random = Math.random): number 
 }
 ```
 
-The live component additionally updates Realtime auth when its access-token
-attribute changes, releases the channel on disconnect, distinguishes
-connecting/subscribed/degraded/offline, and exposes a manual reconnect path.
-The anon key in the data attributes is public by design; row visibility stays
-enforced by RLS plus the hard filter, and no service-role key ever reaches this
-bundle (the tier-1 gate scans for exactly that).
+The live component additionally updates both the retained Realtime auth and
+the reconciliation credential when its access-token attribute changes,
+releases channel/timers/token on disconnect, distinguishes
+connecting/recovering/subscribed/degraded/offline, and exposes a manual
+reconnect path. The anon key in the data attributes is public by design; row
+visibility stays enforced by RLS plus the hard filter, and no service-role key
+ever reaches this bundle (the tier-1 gate scans for exactly that).
 
 ## Rate limits: two independent layers
 

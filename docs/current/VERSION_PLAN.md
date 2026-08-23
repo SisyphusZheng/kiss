@@ -26,6 +26,8 @@ independent closure audit on the exact release candidate.
 - **Wave C — independent closure:** #1131 repeats architecture, security,
   database, runtime, test and release audits after Waves A and B. It records a
   `GO` or `DO NOT RELEASE` verdict without inheriting earlier assumptions.
+  Real-project qualification found Realtime reconnect/delivery gap #1134;
+  Wave C includes its application-owned bounded reconciliation and recheck.
 - **Governance:** #1132 records the post-release 0.43.x maintenance policy;
   #1133 is the umbrella release gate.
 
@@ -103,13 +105,15 @@ ADR-0114. This maintenance plan does not reopen either contract.
 - [x] Record external-provider evidence as `verified`, `blocked`, or
       `not run`; local stubs and dry-runs must not be reported as production proof.
 - [x] Publish the Wave C `GO`/`DO NOT RELEASE` report before any release action.
+- [ ] #1134: Realtime subscribe/reconnect claims freshness only after bounded
+      durable Notes reconciliation, and two real-project repetitions pass.
 
 ## Acceptance
 
 The patch is release-ready only when all of the following are true:
 
-1. #1124–#1132 are closed with reproducible evidence and #1133 contains the
-   final candidate SHA.
+1. #1124–#1132 and #1134 are closed with reproducible evidence and #1133
+   contains the final candidate SHA.
 2. Every Wave A issue has an explicit current-HEAD verdict; no unresolved
    `partial`, `regressed`, or `unverifiable` item is hidden.
 3. All six Wave B findings have failure-injection or boundary-level regression

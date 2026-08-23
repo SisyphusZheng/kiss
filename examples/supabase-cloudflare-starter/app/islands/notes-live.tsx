@@ -27,10 +27,12 @@ export const openElement = defineIslandConfig({
 
 export const MAX_LIVE_EVENTS = 100;
 export const MAX_RECONNECT_DELAY_MS = 30_000;
+export const RECONCILE_INTERVAL_MS = 10_000;
 
 export interface LiveNoteEvent {
   id: string;
   body: string;
+  createdAt?: string;
 }
 
 /** Stable-id dedupe with an explicit DOM/memory bound. */
@@ -43,10 +45,39 @@ export function mergeLiveEvent(
   return [incoming, ...events].slice(0, Math.max(0, maximum));
 }
 
+/** Merge a newest-first Data API snapshot with possibly incomplete live events. */
+export function mergeReconciledEvents(
+  events: readonly LiveNoteEvent[],
+  snapshot: readonly LiveNoteEvent[],
+  maximum = MAX_LIVE_EVENTS,
+): LiveNoteEvent[] {
+  const existing = new Map(events.map((event) => [event.id, event]));
+  const seen = new Set<string>();
+  const merged: LiveNoteEvent[] = [];
+  for (const event of [...snapshot, ...events]) {
+    if (seen.has(event.id)) continue;
+    seen.add(event.id);
+    merged.push(existing.get(event.id) ?? event);
+  }
+  merged.sort((left, right) => {
+    if (!left.createdAt || !right.createdAt) return 0;
+    return right.createdAt.localeCompare(left.createdAt) || right.id.localeCompare(left.id);
+  });
+  return merged.slice(0, Math.max(0, maximum));
+}
+
 /** Capped exponential retry with full jitter; random is injectable for tests. */
 export function reconnectDelayMs(attempt: number, random = Math.random): number {
   const cap = Math.min(MAX_RECONNECT_DELAY_MS, 1_000 * 2 ** Math.max(0, attempt));
   return Math.floor(random() * cap);
+}
+
+/** Prefer a fresh DOM handoff, then reuse private memory for later reconnects. */
+export function resolveRealtimeAuthToken(
+  attributeToken: string | null,
+  retainedToken: string | null,
+): string | null {
+  return attributeToken || retainedToken;
 }
 
 /**
@@ -77,8 +108,12 @@ export default class NotesLive extends OpenElement {
 
   #client: RealtimeClient | null = null;
   #channel: RealtimeChannel | null = null;
+  #accessToken: string | null = null;
   #reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  #reconcileTimer: ReturnType<typeof setTimeout> | undefined;
   #reconnectAttempt = 0;
+  #reconcileAttempt = 0;
+  #connectionGeneration = 0;
 
   static override get observedAttributes(): string[] {
     return [...super.observedAttributes, 'data-access-token'];
@@ -102,6 +137,7 @@ export default class NotesLive extends OpenElement {
     const key = this.getAttribute('data-key');
     const userId = this.getAttribute('data-user-id');
     const accessToken = this.getAttribute('data-access-token');
+    this.#accessToken = resolveRealtimeAuthToken(accessToken, this.#accessToken);
     if (!url || !key || !userId) {
       this.#status.value = 'unconfigured';
       return;
@@ -121,8 +157,11 @@ export default class NotesLive extends OpenElement {
     // The SSR attribute is a one-shot handoff, not durable DOM state. The
     // token remains inside the Realtime client after setAuth and is removed
     // from the browser-readable element immediately (#1130).
-    handoffRealtimeAuth(client, this, accessToken);
+    // The DOM copy is one-shot, but reconnects still need the user JWT. Keep
+    // it only in this element's private memory and wipe it on disconnect.
+    handoffRealtimeAuth(client, this, this.#accessToken);
     this.#client = client;
+    const generation = ++this.#connectionGeneration;
     this.#channel = client
       .channel('notes-live')
       .on(
@@ -134,27 +173,104 @@ export default class NotesLive extends OpenElement {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          const row = payload.new as { id?: string; body?: string };
+          if (!this.isConnected || generation !== this.#connectionGeneration) return;
+          const row = payload.new as { id?: string; body?: string; created_at?: string };
           if (typeof row.id === 'string' && typeof row.body === 'string') {
             this.#events.value = mergeLiveEvent(this.#events.value, {
               id: row.id,
               body: row.body,
+              createdAt: typeof row.created_at === 'string' ? row.created_at : undefined,
             });
           }
         },
       )
       .subscribe((status) => {
+        if (!this.isConnected || generation !== this.#connectionGeneration) return;
         if (status === 'SUBSCRIBED') {
           this.#reconnectAttempt = 0;
-          this.#status.value = 'subscribed';
+          this.#status.value = 'recovering';
+          void this.#reconcile(generation);
           return;
         }
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           this.#status.value = 'degraded';
+          this.#clearReconcileTimer();
           this.#scheduleReconnect();
           return;
         }
       });
+  }
+
+  #clearReconcileTimer(): void {
+    if (this.#reconcileTimer !== undefined) clearTimeout(this.#reconcileTimer);
+    this.#reconcileTimer = undefined;
+  }
+
+  #scheduleReconcile(generation: number, delay: number): void {
+    if (this.#reconcileTimer !== undefined || !this.isConnected) return;
+    this.#reconcileTimer = setTimeout(() => {
+      this.#reconcileTimer = undefined;
+      void this.#reconcile(generation);
+    }, delay);
+  }
+
+  async #reconcile(generation: number): Promise<void> {
+    this.#clearReconcileTimer();
+    const url = this.getAttribute('data-url');
+    const key = this.getAttribute('data-key');
+    const userId = this.getAttribute('data-user-id');
+    const accessToken = this.#accessToken;
+    if (!url || !key || !userId || !accessToken) {
+      this.#status.value = 'degraded';
+      return;
+    }
+
+    this.#status.value = 'recovering';
+    try {
+      const endpoint = new URL(`${url.replace(/\/$/, '')}/rest/v1/notes`);
+      endpoint.searchParams.set('select', 'id,body,created_at');
+      endpoint.searchParams.set('user_id', `eq.${userId}`);
+      endpoint.searchParams.set('order', 'created_at.desc,id.desc');
+      endpoint.searchParams.set('limit', String(MAX_LIVE_EVENTS));
+      const response = await fetch(endpoint, {
+        cache: 'no-store',
+        headers: { apikey: key, authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok) throw new Error(`Notes reconciliation failed with HTTP ${response.status}`);
+      const payload = await response.json() as unknown;
+      if (!Array.isArray(payload)) throw new Error('Notes reconciliation returned a non-array');
+      const snapshot: LiveNoteEvent[] = [];
+      for (const row of payload) {
+        if (
+          typeof row === 'object' && row !== null &&
+          typeof (row as { id?: unknown }).id === 'string' &&
+          typeof (row as { body?: unknown }).body === 'string' &&
+          typeof (row as { created_at?: unknown }).created_at === 'string'
+        ) {
+          snapshot.push({
+            id: (row as { id: string }).id,
+            body: (row as { body: string }).body,
+            createdAt: (row as { created_at: string }).created_at,
+          });
+        }
+      }
+      if (!this.isConnected || generation !== this.#connectionGeneration) return;
+      this.#events.value = mergeReconciledEvents(this.#events.value, snapshot);
+      this.#reconcileAttempt = 0;
+      this.#status.value = 'subscribed';
+      this.#scheduleReconcile(generation, RECONCILE_INTERVAL_MS);
+    } catch {
+      if (!this.isConnected || generation !== this.#connectionGeneration) return;
+      if (globalThis.navigator?.onLine === false) {
+        this.#status.value = 'offline';
+        return;
+      }
+      this.#status.value = 'degraded';
+      this.#scheduleReconcile(
+        generation,
+        reconnectDelayMs(this.#reconcileAttempt++),
+      );
+    }
   }
 
   #scheduleReconnect(): void {
@@ -162,11 +278,16 @@ export default class NotesLive extends OpenElement {
     const delay = reconnectDelayMs(this.#reconnectAttempt++);
     this.#reconnectTimer = setTimeout(() => {
       this.#reconnectTimer = undefined;
-      void this.#releaseChannel().then(() => this.#connect());
+      void this.#releaseChannel().then(
+        () => this.#connect(),
+        () => this.#connect(),
+      );
     }, delay);
   }
 
   #releaseChannel(): Promise<unknown> {
+    this.#connectionGeneration++;
+    this.#clearReconcileTimer();
     const channel = this.#channel;
     const client = this.#client;
     this.#channel = null;
@@ -179,7 +300,10 @@ export default class NotesLive extends OpenElement {
     if (this.#reconnectTimer !== undefined) clearTimeout(this.#reconnectTimer);
     this.#reconnectTimer = undefined;
     this.#reconnectAttempt = 0;
-    void this.#releaseChannel().then(() => this.#connect());
+    void this.#releaseChannel().then(
+      () => this.#connect(),
+      () => this.#connect(),
+    );
   };
 
   #onOnline = (): void => {
@@ -188,13 +312,16 @@ export default class NotesLive extends OpenElement {
   };
 
   #onOffline = (): void => {
+    this.#clearReconcileTimer();
     this.#status.value = 'offline';
   };
 
   override attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
     super.attributeChangedCallback(name, oldValue, value);
     if (name === 'data-access-token' && value && value !== oldValue) {
+      this.#accessToken = value;
       handoffRealtimeAuth(this.#client, this, value);
+      if (this.#channel) void this.#reconcile(this.#connectionGeneration);
     }
   }
 
@@ -203,7 +330,9 @@ export default class NotesLive extends OpenElement {
     globalThis.removeEventListener?.('offline', this.#onOffline);
     if (this.#reconnectTimer !== undefined) clearTimeout(this.#reconnectTimer);
     this.#reconnectTimer = undefined;
-    void this.#releaseChannel();
+    this.#clearReconcileTimer();
+    void this.#releaseChannel().catch(() => undefined);
+    this.#accessToken = null;
     super.disconnectedCallback();
   }
 

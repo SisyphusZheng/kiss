@@ -35,10 +35,10 @@ async function record(check: string): Promise<void> {
 /**
  * Seed a note via the service role until the subscribed island renders it.
  * postgres_changes has no backfill: an insert that lands while the
- * server-side binding is still activating (the join is already acked) is
- * never delivered, so a single zero-notice seed false-fails on low-latency
- * networks (CI runners near the provider). Recovery means delivery resumes —
- * re-seed on a bound while keeping each attempt's delivery assertion intact.
+ * server-side binding is activating can be missed even after the join ack.
+ * The island therefore reconciles a bounded durable snapshot as a fallback.
+ * Re-seeding keeps the probe bounded while proving either notification or
+ * reconciliation converges instead of trusting the SUBSCRIBED label alone.
  */
 async function seedNoteUntilDelivered(
   live: Locator,
