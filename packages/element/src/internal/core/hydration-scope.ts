@@ -35,123 +35,27 @@ import {
 } from '../protocol/hydration-markers.ts';
 import { createLogger } from './logger.ts';
 import { clearChildren } from './dom-utils.ts';
+import { queueLayoutFixHost } from './layout-fix-queue.ts';
+import {
+  formatHydrationMismatchMessage,
+  type HydrationMismatchDetail,
+  isHydrationDevBuild,
+} from './hydration-diagnostics.ts';
+
+export {
+  formatHydrationMismatchMessage,
+  hasSelfHydrated,
+  HYDRATION_MISMATCH_CODE,
+  markSelfHydrated,
+} from './hydration-diagnostics.ts';
+export type { HydrationMismatchDetail, HydrationMismatchReason } from './hydration-diagnostics.ts';
 
 const scopeLog = createLogger('hydration');
 
-/**
- * Stable diagnostic code for SSR/hydration mismatches (#631), in the same
- * taxonomy style as the `OPEN_ELEMENT_RENDER_*` render codes. Kept as a
- * module-local constant: the client hydration path cannot reach the SSR
- * `RenderHooks.onError` channel (hooks are renderDsd options), so the
- * diagnostic stays logger-based with the code in the message and the
- * structured detail as a second logger argument.
- */
-export const HYDRATION_MISMATCH_CODE = 'OPEN_ELEMENT_HYDRATION_MISMATCH';
-
-/** Why the SSR shadow root diverged from the VNode-derived expectations. */
-export type HydrationMismatchReason = 'marker-count' | 'branch-count' | 'branch-token';
-
-/**
- * Structured detail for a hydration mismatch, attached to the warning as a
- * second logger argument so devtools/telemetry can consume it without
- * parsing the message. Counts/tokens are exactly what the detection point
- * knows: the `data-eid` marker count the client VNode implies vs the SSR
- * DOM, and the expected vs actual `oe-branch` token sequence.
- */
-export interface HydrationMismatchDetail {
-  reason: HydrationMismatchReason;
-  /** Lowercased tag of the shadow host whose hydration degraded. */
-  hostTag: string;
-  expectedMarkers: number;
-  actualMarkers: number;
-  expectedBranches: string[];
-  actualBranches: string[];
-  /** Index of the first diverging branch token (reason 'branch-token' only). */
-  divergedAt?: number;
-}
-
-// Mirrors the Vite half of the shared dev-mode signal (#743,
-// packages/app/src/internal/dev-mode.ts): element is runtime-free, so it can
-// only read the compile-time `import.meta.env.DEV` constant, never DENO_ENV.
-interface ImportMetaWithEnv extends ImportMeta {
-  env?: { DEV?: boolean };
-}
-
-function isDevBuild(): boolean {
-  return (import.meta as ImportMetaWithEnv).env?.DEV === true;
-}
-
-/**
- * Format the mismatch warning. Development (Vite `import.meta.env.DEV`)
- * gets the full structured detail — counts, both token sequences, and the
- * divergence index — while production gets a one-line coded summary. The
- * detail object is always passed to the logger as a second argument.
- * Exported for tests; not part of the package public facade.
- */
-export function formatHydrationMismatchMessage(
-  detail: HydrationMismatchDetail,
-  dev: boolean,
-): string {
-  if (!dev) {
-    return `[${HYDRATION_MISMATCH_CODE}] SSR/hydration mismatch (${detail.reason}) on ` +
-      `<${detail.hostTag}>; falling back to client-side render for this shadow root.`;
-  }
-  const lines = [
-    `[${HYDRATION_MISMATCH_CODE}] SSR/hydration mismatch on <${detail.hostTag}>: ` +
-    'the SSR shadow root diverged from the client VNode.',
-  ];
-  if (detail.reason === 'marker-count') {
-    lines.push(
-      `  data-eid event markers: expected ${detail.expectedMarkers} (client VNode), ` +
-        `found ${detail.actualMarkers} (SSR DOM).`,
-    );
-  } else if (detail.reason === 'branch-count') {
-    lines.push(
-      `  oe-branch tokens: expected ${detail.expectedBranches.length} (client VNode), ` +
-        `found ${detail.actualBranches.length} (SSR DOM).`,
-    );
-  } else {
-    const at = detail.divergedAt ?? 0;
-    lines.push(
-      `  oe-branch token diverges at index ${at}: expected ` +
-        `"${detail.expectedBranches[at]}", found "${detail.actualBranches[at]}".`,
-    );
-  }
-  if (detail.reason !== 'marker-count') {
-    lines.push(`  expected tokens: [${detail.expectedBranches.join(', ')}]`);
-    lines.push(`  actual tokens:   [${detail.actualBranches.join(', ')}]`);
-  }
-  lines.push('Falling back to client-side render for this shadow root.');
-  return lines.join('\n');
-}
-
-/**
- * Elements whose shadow-root (or light-DOM) bindings are owned by the
- * element's own HydrationScope — set by OpenElement after a successful DSD
- * hydration or CSR render. client-runtime reads this to avoid stacking a
- * second HydrationScope onto an element that already hydrated itself (which
- * double-subscribed every signal marker and cleared signal-render targets a
- * second time).
- */
-const selfHydratedElements = new WeakSet<Element>();
-
-/** Record that an element manages its own bindings through its own scope. */
-export function markSelfHydrated(el: Element): void {
-  selfHydratedElements.add(el);
-}
-
-/** Whether an element manages its own bindings through its own scope. */
-export function hasSelfHydrated(el: Element): boolean {
-  return selfHydratedElements.has(el);
-}
-
 /** Options for creating a HydrationScope. */
 interface HydrationScopeOptions {
-  /** Signal registry used to resolve data-signal markers. */
   signalRegistry?: Map<string, Signal<unknown>>;
-  /** Renderer used for signal-render and event-marker VNode rendering. */
   renderer?: BindingRenderer;
-  /** Render function that produces the VNode used for event-marker hydration. */
   render?: () => unknown;
 }
 
@@ -280,7 +184,7 @@ export class HydrationScope {
         // warning carries the stable code and (as a second argument) the
         // structured detail; the message text carries the full detail in dev
         // builds and a one-line coded summary in production (#631).
-        scopeLog.warn(formatHydrationMismatchMessage(detail, isDevBuild()), detail);
+        scopeLog.warn(formatHydrationMismatchMessage(detail, isHydrationDevBuild()), detail);
         this.#renderClientSide(shadowRoot, vnode, lifecycle);
         this.#scheduleLayoutFix(shadowRoot);
         return;
@@ -494,62 +398,5 @@ export class HydrationScope {
       return vnode;
     }
     return undefined;
-  }
-}
-
-// ─── Module-wide batched Chromium DSD layout fix ──────────────────────
-// #896: chunked per-frame flush — a mass hydration (thousands of hosts in
-// one frame) must not force thousands of synchronous reflows in a single
-// rAF callback. Each frame drains at most LAYOUT_FIX_CHUNK_SIZE hosts and
-// schedules the next chunk; small batches still flush in one frame.
-const LAYOUT_FIX_CHUNK_SIZE = 100;
-const LAYOUT_FIX_WARN_THRESHOLD = 500;
-const layoutFixHosts = new Set<Element>();
-let layoutFixScheduled = false;
-let layoutFixWarned = false;
-
-function flushLayoutFixHosts(): void {
-  layoutFixScheduled = false;
-  const chunk: Element[] = [];
-  for (const host of layoutFixHosts) {
-    chunk.push(host);
-    if (chunk.length >= LAYOUT_FIX_CHUNK_SIZE) break;
-  }
-  for (const host of chunk) {
-    layoutFixHosts.delete(host);
-    void (host as HTMLElement).offsetHeight;
-  }
-  if (layoutFixHosts.size === 0) return;
-  if (typeof globalThis.requestAnimationFrame === 'function') {
-    layoutFixScheduled = true;
-    globalThis.requestAnimationFrame(flushLayoutFixHosts);
-  } else {
-    // No rAF (non-browser runtimes): drain the remaining chunks
-    // synchronously. Without this, the queued hosts would never drain (and
-    // stay strongly referenced) and the reflow fix would be lost (#845).
-    flushLayoutFixHosts();
-  }
-}
-
-function queueLayoutFixHost(host: Element | undefined): void {
-  if (!host) return;
-  layoutFixHosts.add(host);
-  if (layoutFixHosts.size > LAYOUT_FIX_WARN_THRESHOLD && !layoutFixWarned) {
-    layoutFixWarned = true;
-    console.warn(
-      `[openElement] ${layoutFixHosts.size} hosts queued for the DSD layout fix in one frame; ` +
-        'a hydration pathology is likely (thousands of elements per frame).',
-    );
-  }
-  if (layoutFixScheduled) return;
-  layoutFixScheduled = true;
-  if (typeof globalThis.requestAnimationFrame === 'function') {
-    globalThis.requestAnimationFrame(flushLayoutFixHosts);
-  } else {
-    // No rAF (non-browser runtimes): flush synchronously. Without this
-    // fallback layoutFixScheduled would latch forever, the queued hosts would
-    // never drain (and stay strongly referenced), and the reflow fix would be
-    // permanently lost (#845).
-    flushLayoutFixHosts();
   }
 }

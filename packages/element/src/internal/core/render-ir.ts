@@ -6,7 +6,6 @@
  * flows through `renderToNode`.
  */
 
-import { escapeAttr, escapeHtml } from './html-escape.ts';
 import {
   createEventMarkerContext,
   type EventMarkerContext,
@@ -18,7 +17,7 @@ import {
   showBranchMarker,
 } from './event-marker.ts';
 import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
-import { injectPropsSafe, isSafeAttributeName, trustRenderHtml } from './security.ts';
+import { injectPropsSafe } from './security.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
@@ -34,179 +33,24 @@ import {
 } from './render-policy.ts';
 import { createLogger } from './logger.ts';
 import { formatError, OpenElementError } from './errors.ts';
-import { attrNameFor, SSR_SKIP_ATTR_KEYS, styleObjectToString } from './vnode-prop-rules.ts';
-
-export type RenderNode =
-  | { kind: 'text'; value: string }
-  | { kind: 'trusted-html'; value: string }
-  | { kind: 'comment'; value: string }
-  | { kind: 'fragment'; children: RenderNode[] }
-  | {
-    kind: 'element';
-    tag: string;
-    attrs: Record<string, unknown>;
-    eventAttrs?: string;
-    children: RenderNode[];
-    voidElement?: boolean;
-  }
-  | {
-    kind: 'dsd-host';
-    tag: string;
-    attrs: Record<string, unknown>;
-    eventAttrs?: string;
-    ssrPropsAttr: string;
-    source: string;
-    templateAttrs: string;
-    styleCss: string;
-    shadow: RenderNode[];
-    light: RenderNode[];
-    layer: string;
-  };
-
-const VOID_ELEMENTS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'param',
-  'source',
-  'track',
-  'wbr',
-]);
-
-// #932: raw-text elements whose text children are never entity-decoded by
-// the HTML parser. Escape-free serialization is safe for <script> only as
-// long as the content has no `</script` sequence — the author is trusted.
-const RAW_TEXT_ELEMENTS = new Set(['style', 'script']);
-
-function isRawTextElement(tag: string): boolean {
-  return RAW_TEXT_ELEMENTS.has(tag.toLowerCase());
-}
-
-export function textNode(value: unknown): RenderNode {
-  return { kind: 'text', value: String(value) };
-}
-
-/**
- * Internal branch-state comment (`<!--oe-branch:...-->`). Values are produced
- * by showBranchMarker/forBranchMarker and contain only `[a-z0-9:-]`, so they
- * are safe to serialize verbatim inside an HTML comment.
- */
-function branchCommentNode(value: string): RenderNode {
-  return { kind: 'comment', value };
-}
-
-export function trustedHtmlNode(value: unknown): RenderNode {
-  return { kind: 'trusted-html', value: trustRenderHtml(String(value)) };
-}
-
-function fragmentNode(children: RenderNode[]): RenderNode {
-  return { kind: 'fragment', children };
-}
-
-export function dsdHostNode(params: Omit<Extract<RenderNode, { kind: 'dsd-host' }>, 'kind'>) {
-  return { kind: 'dsd-host', ...params } satisfies RenderNode;
-}
-
-// ─── Unified Attribute Serialization ────────────────────────────
-
-// #602: attribute *names* are not escaped — reject anything that cannot be a
-// safe HTML attribute name, and never emit HTML event-handler attributes from
-// SSR props. The predicate lives in security.ts (#1033).
-export function serializeAttrs(tag: string, props: Record<string, unknown>): string {
-  const isCustomElement = tag.includes('-');
-  let result = '';
-
-  for (const [key, value] of Object.entries(props)) {
-    if (SSR_SKIP_ATTR_KEYS.has(key)) continue;
-    if (key.startsWith('on') && typeof value === 'function') continue;
-    if (typeof value === 'function') continue;
-    if (value == null) continue;
-
-    const attrName = attrNameFor(isCustomElement ? tag : '', key);
-    if (!isSafeAttributeName(attrName)) continue;
-
-    const resolved = unwrapSignalLike(value);
-
-    if (typeof resolved === 'boolean') {
-      if (resolved) result += ` ${attrName}`;
-      continue;
-    }
-
-    if (key === 'style' && typeof resolved === 'object' && resolved !== null) {
-      const css = styleObjectToString(resolved);
-      if (css) result += ` style="${escapeAttr(css)}"`;
-      continue;
-    }
-
-    if (typeof resolved === 'object') {
-      // Unserializable values (circular structure, BigInt) must not take the
-      // serializer down — serializeAttrs is also the render-failure fallback
-      // path. Skip the attribute; the caller's error reporting already ran.
-      try {
-        result += ` ${attrName}="${escapeAttr(JSON.stringify(resolved))}"`;
-      } catch {
-        continue;
-      }
-    } else {
-      result += ` ${attrName}="${escapeAttr(String(resolved))}"`;
-    }
-  }
-
-  return result;
-}
-
-// ─── Serialization ──────────────────────────────────────────────
-
-export function serializeRenderNode(node: RenderNode): string {
-  switch (node.kind) {
-    case 'text':
-      return escapeHtml(node.value);
-    case 'trusted-html':
-      return node.value;
-    case 'comment':
-      return `<!--${node.value}-->`;
-    case 'fragment':
-      return node.children.map(serializeRenderNode).join('');
-    case 'element': {
-      const attrs = serializeAttrs(node.tag, node.attrs);
-      const events = node.eventAttrs ?? '';
-      if (node.voidElement || VOID_ELEMENTS.has(node.tag)) {
-        return `<${node.tag}${attrs}${events}>`;
-      }
-      // #932: <style>/<script> are raw-text elements — the browser does not
-      // decode entities there, so escaping would corrupt CSS selectors such
-      // as `a > b` and `&`. Their text children serialize verbatim.
-      const children = isRawTextElement(node.tag)
-        ? node.children
-          .map((child) => (child.kind === 'text' ? child.value : serializeRenderNode(child)))
-          .join('')
-        : node.children.map(serializeRenderNode).join('');
-      return `<${node.tag}${attrs}${events}>${children}</${node.tag}>`;
-    }
-    case 'dsd-host': {
-      const attrs = serializeAttrs(node.tag, node.attrs);
-      const events = node.eventAttrs ?? '';
-      if (node.layer === 'pure-island' || node.layer === 'light-dom') {
-        return `<${node.tag}${attrs}${events}${node.ssrPropsAttr}${node.source}>${
-          [...node.shadow, ...node.light].map(serializeRenderNode).join('')
-        }</${node.tag}>`;
-      }
-      const style = node.styleCss ? `\n    <style>${node.styleCss}</style>` : '';
-      return `<${node.tag}${attrs}${events}${node.ssrPropsAttr}${node.source}>
-  <template shadowrootmode="open"${node.templateAttrs}>${style}
-    ${node.shadow.map(serializeRenderNode).join('')}
-  </template>
-${node.light.map(serializeRenderNode).join('')}</${node.tag}>`;
-    }
-  }
-}
+import {
+  branchCommentNode,
+  dsdHostNode,
+  fragmentNode,
+  type RenderNode,
+  serializeRenderNode,
+  textNode,
+  trustedHtmlNode,
+  VOID_ELEMENTS,
+} from './render-ir-serialization.ts';
+export {
+  dsdHostNode,
+  serializeAttrs,
+  serializeRenderNode,
+  textNode,
+  trustedHtmlNode,
+} from './render-ir-serialization.ts';
+export type { RenderNode } from './render-ir-serialization.ts';
 
 // ─── Single async render path ───────────────────────────────────
 
