@@ -52,9 +52,9 @@ export function articleContentStyles(scope: string): string {
     ${scope} ul, ${scope} ol { padding-left: var(--size-6); margin: var(--size-4) 0; }
     ${scope} li { margin: 0.375rem 0; }
     ${scope} strong { color: var(--text-primary); }
-    ${scope} code { background: var(--bg-surface); padding: 0.125rem 0.375rem; border-radius: var(--radius-1); font-size: var(--font-size-0); font-family: var(--font-mono); }
+    ${scope} code { background: var(--bg-surface); color: var(--text-primary); padding: 0.125rem 0.375rem; border-radius: var(--radius-1); font-size: var(--font-size-0); font-family: var(--font-mono); }
     ${scope} pre { background: var(--surface-code); border: 0.5px solid var(--border); border-radius: var(--radius-2); padding: var(--size-4); overflow-x: auto; margin: var(--size-4) 0; }
-    ${scope} pre code { background: none; padding: 0; font-size: var(--font-size-0); line-height: 1.6; }
+    ${scope} pre code { background: none; color: var(--code-text); padding: 0; font-size: var(--font-size-0); line-height: 1.6; }
     ${scope} open-code-block { margin: var(--size-5) 0; }
     ${scope} table { width: 100%; border-collapse: collapse; margin: var(--size-4) 0; font-size: var(--font-size-1); }
     ${scope} th, ${scope} td { padding: var(--size-2) var(--size-3); text-align: left; border-bottom: 0.5px solid var(--border); }

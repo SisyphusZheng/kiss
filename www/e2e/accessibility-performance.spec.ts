@@ -18,6 +18,51 @@ import { deepQueryAllInPage } from '../../tools/lib/shadow-walker.ts';
 const LOAD_THRESHOLD_MS = process.env.CI ? 5000 : 60000;
 
 test.describe('Accessibility', () => {
+  test('shared prose and mobile rail color pairs meet WCAG AA', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/guide/getting-started');
+    const contrast = (element: Element): number => {
+      const luminance = (value: string): number => {
+        const rgb = value.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0];
+        const scale = value.startsWith('color(srgb ') ? 1 : 255;
+        const linear = rgb.map((channel) => {
+          const c = channel / scale;
+          return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+      };
+      const style = getComputedStyle(element);
+      const fg = luminance(style.color);
+      const bg = luminance(style.backgroundColor);
+      return (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+    };
+    const codeRatio = await page.locator('open-reading-shell code').first().evaluate(contrast);
+    const summaryRatio = await page.locator('open-page-rail summary').evaluate((summary) => {
+      const luminance = (value: string): number => {
+        const rgb = value.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0];
+        const scale = value.startsWith('color(srgb ') ? 1 : 255;
+        const linear = rgb.map((channel) => {
+          const c = channel / scale;
+          return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+      };
+      const fg = luminance(getComputedStyle(summary).color);
+      const details = summary.closest('details');
+      if (!details) throw new Error('mobile page rail summary must belong to details');
+      const bg = luminance(getComputedStyle(details).backgroundColor);
+      return (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+    });
+    expect(codeRatio).toBeGreaterThanOrEqual(4.5);
+    expect(summaryRatio).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test('layout footer labels do not create skipped heading levels', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('open-layout footer h4')).toHaveCount(0);
+    await expect(page.locator('open-layout footer .footer-heading')).toHaveCount(4);
+  });
+
   test('homepage has no auto-detected a11y issues', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');

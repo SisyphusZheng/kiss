@@ -378,7 +378,8 @@ sheet.replaceSync(`
     grid-template-columns: repeat(4, 1fr);
     gap: var(--size-8);
   }
-  .footer-column h4 {
+  .footer-heading {
+    display: block;
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
@@ -801,7 +802,7 @@ export class OpenLayout extends OpenElement {
         <footer className='app-footer' part='footer'>
           <div className='footer-inner'>
             <div className='footer-column'>
-              <h4>Product</h4>
+              <span className='footer-heading'>Product</span>
               <a
                 href={localePath('/guide/core-concepts')}
                 data-nav={localePath('/guide/core-concepts')}
@@ -828,7 +829,7 @@ export class OpenLayout extends OpenElement {
               </a>
             </div>
             <div className='footer-column'>
-              <h4>Resources</h4>
+              <span className='footer-heading'>Resources</span>
               <a
                 href={localePath('/guide/getting-started')}
                 data-nav={localePath('/guide/getting-started')}
@@ -855,7 +856,7 @@ export class OpenLayout extends OpenElement {
               </a>
             </div>
             <div className='footer-column'>
-              <h4>Company</h4>
+              <span className='footer-heading'>Company</span>
               <a href='https://github.com/open-element/openelement'>GitHub</a>
               <a
                 href={localePath('/roadmap')}
@@ -871,7 +872,7 @@ export class OpenLayout extends OpenElement {
               </a>
             </div>
             <div className='footer-column'>
-              <h4>Legal</h4>
+              <span className='footer-heading'>Legal</span>
               <a href='https://github.com/open-element/openelement/blob/main/LICENSE'>
                 MIT License
               </a>
