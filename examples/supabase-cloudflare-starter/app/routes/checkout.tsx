@@ -13,6 +13,7 @@ import { serviceRoleRpc } from '../../lib/service-role.ts';
 import {
   checkoutConfiguration,
   checkoutSessionBody,
+  STRIPE_API_VERSION,
   verifiedCheckoutUrl,
 } from '../../lib/stripe-checkout.ts';
 
@@ -119,6 +120,7 @@ export function createCheckoutAction(
           authorization: `Bearer ${config.secretKey}`,
           'content-type': 'application/x-www-form-urlencoded',
           'idempotency-key': `checkout-${attemptId}`,
+          'stripe-version': STRIPE_API_VERSION,
         },
         body: checkoutSessionBody(config, orderId),
       });
@@ -180,7 +182,7 @@ const CheckoutPage = definePage<CheckoutData>({
           : null}
         {data.result === 'cancelled' ? <p id='checkout-result'>Checkout was cancelled.</p> : null}
         {actionData?.error ? <p id='action-error'>{actionData.error}</p> : null}
-        <p>Starter support — USD 5.00, one-time card payment.</p>
+        <p>Starter support — USD 5.00, one-time payment.</p>
         <form method='post' action='/checkout?/checkout'>
           <input type='hidden' name='attempt_id' value={attemptId} />
           <button type='submit'>Pay with Stripe</button>

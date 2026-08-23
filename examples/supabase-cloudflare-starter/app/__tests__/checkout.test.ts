@@ -119,6 +119,10 @@ Deno.test('Checkout uses fixed server price, idempotency and persists session be
   assertEquals(body.get('metadata[order_id]'), ORDER);
   assertEquals(body.get('payment_intent_data[metadata][order_id]'), ORDER);
   assertEquals(new Headers(stripe.init?.headers).get('idempotency-key'), `checkout-${ATTEMPT}`);
+  assertEquals(new Headers(stripe.init?.headers).get('stripe-version'), '2026-07-29.dahlia');
+  assertEquals(body.get('payment_method_types[0]'), null);
+  assertEquals(body.get('managed_payments[enabled]'), null);
+  assertEquals(body.get('integration_identifier')?.startsWith('openelement_reference_'), true);
   assertEquals(calls[1].url.endsWith('/rpc/attach_checkout_session'), true);
 });
 

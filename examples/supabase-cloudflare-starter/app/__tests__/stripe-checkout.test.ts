@@ -2,6 +2,7 @@ import { assertEquals, assertThrows } from '@std/assert';
 import {
   checkoutConfiguration,
   checkoutSessionBody,
+  STRIPE_API_VERSION,
   verifiedCheckoutUrl,
 } from '../../lib/stripe-checkout.ts';
 
@@ -25,18 +26,33 @@ Deno.test('Checkout configuration requires an exact application origin', () => {
     assertThrows(() => checkoutConfiguration({ ...env, APP_ORIGIN: origin }));
   }
   assertThrows(() => checkoutConfiguration({ ...env, STRIPE_SECRET_KEY: 'sk_live_wrong' }));
+  assertEquals(
+    checkoutConfiguration({ ...env, STRIPE_SECRET_KEY: 'rk_test_restricted' }).livemode,
+    false,
+  );
+  assertEquals(
+    checkoutConfiguration({
+      ...env,
+      STRIPE_LIVEMODE: 'true',
+      STRIPE_SECRET_KEY: 'rk_live_restricted',
+    })
+      .livemode,
+    true,
+  );
   assertThrows(() => checkoutConfiguration({ ...env, STRIPE_CHECKOUT_HOST: 'evil.example/path' }));
 });
 
-Deno.test('Checkout request is one-time card-only and webhook-correlated', () => {
-  const body = checkoutSessionBody(checkoutConfiguration(env), 'order-1');
+Deno.test('Checkout request uses dynamic methods and remains webhook-correlated', () => {
+  const body = checkoutSessionBody(checkoutConfiguration(env), 'order-1', 'abcdefgh');
   assertEquals(body.get('mode'), 'payment');
-  assertEquals(body.get('payment_method_types[0]'), 'card');
-  assertEquals(body.get('managed_payments[enabled]'), 'false');
+  assertEquals([...body.keys()].some((key) => key.startsWith('payment_method_types')), false);
+  assertEquals(body.has('managed_payments[enabled]'), false);
+  assertEquals(body.get('integration_identifier'), 'openelement_reference_abcdefgh');
   assertEquals(body.get('line_items[0][price]'), 'price_fixed');
   assertEquals(body.get('metadata[order_id]'), 'order-1');
   assertEquals(body.get('payment_intent_data[metadata][order_id]'), 'order-1');
   assertEquals(body.get('success_url'), 'https://app.test/checkout?result=success');
+  assertEquals(STRIPE_API_VERSION, '2026-07-29.dahlia');
 });
 
 Deno.test('Checkout redirect accepts only the configured HTTPS host', () => {
