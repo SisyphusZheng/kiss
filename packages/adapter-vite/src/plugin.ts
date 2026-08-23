@@ -470,55 +470,95 @@ export function createOpenPlugin(
       server.watcher.add(absoluteRoutesDir);
       server.watcher.add(absoluteIslandsDir);
 
-      // Only add/unlink change the route SET; content edits to an existing
-      // route file flow through normal HMR without touching the descriptor.
-      const onRouteSetChanged = (file: string) => {
+      let routeDirty = false;
+      let islandDirty = false;
+      let latestChangedFile = '';
+      let rescanTimer: ReturnType<typeof setTimeout> | undefined;
+      let rescanQueue = Promise.resolve();
+
+      const invalidateVirtualEntries = (ids: string[]): void => {
+        for (const id of ids) {
+          const mod = server.moduleGraph.getModuleById(id);
+          if (mod) server.moduleGraph.invalidateModule(mod);
+        }
+      };
+
+      /**
+       * Serialize descriptor rescans behind one debounced queue. A new event
+       * arriving during a scan marks another pass dirty, so filesystem event
+       * order—not whichever async scan happens to finish last—determines the
+       * final descriptor.
+       */
+      const scheduleDescriptorRescan = (kind: 'route' | 'island', file: string): void => {
+        if (kind === 'route') routeDirty = true;
+        else islandDirty = true;
+        latestChangedFile = file;
+        if (rescanTimer) clearTimeout(rescanTimer);
+        rescanTimer = setTimeout(() => {
+          rescanTimer = undefined;
+          rescanQueue = rescanQueue.then(async () => {
+            const scanRoutesNow = routeDirty;
+            const scanIslandsNow = islandDirty;
+            routeDirty = false;
+            islandDirty = false;
+            if (scanRoutesNow) await rescanRoutes();
+            if (scanIslandsNow) await rescanIslands();
+            invalidateVirtualEntries([
+              RESOLVED_ENTRY_ID,
+              ...(scanIslandsNow ? [RESOLVED_CLIENT_ENTRY_ID] : []),
+            ]);
+            log.info(`Sources changed: ${relative(process.cwd(), latestChangedFile)} - reloading`);
+            server.hot.send({ type: 'full-reload' });
+          }).catch((err: unknown) => {
+            // A broken source must not poison the queue: the next edit chains
+            // after this handled rejection and gets a fresh rescan attempt.
+            log.error(`Descriptor rescan failed: ${formatError(err)}`);
+          });
+        }, 25);
+      };
+
+      // Route contents affect renderIntent, metadata and enhanced-form
+      // admission, so change events require the same descriptor rebuild as
+      // add/unlink—not only normal client HMR.
+      const onRouteChanged = (file: string) => {
         if (!file.startsWith(absoluteRoutesDir)) return;
         if (!/\.(ts|tsx|js|jsx|mdx)$/.test(file)) return;
-
-        rescanRoutes().then(() => {
-          const mod = server.moduleGraph.getModuleById(RESOLVED_ENTRY_ID);
-          if (mod) server.moduleGraph.invalidateModule(mod);
-          log.info(`Routes changed: ${relative(process.cwd(), file)} - reloading`);
-          server.hot.send({ type: 'full-reload' });
-        }).catch((err: unknown) => {
-          // A broken route file must not kill the dev server — the next edit
-          // re-triggers the scan.
-          log.error(`Route rescan failed: ${formatError(err)}`);
-        });
+        scheduleDescriptorRescan('route', file);
       };
 
       // #1062: same chain for the island SET (extension filter mirrors
       // scanIslands). The island client entry is a virtual module too, so it
       // must be invalidated alongside the SSR entry — otherwise the browser
       // re-requests the cached client map and new islands never hydrate.
-      const onIslandSetChanged = (file: string) => {
+      const onIslandChanged = (file: string) => {
         if (!file.startsWith(absoluteIslandsDir)) return;
         if (!/\.(ts|tsx|js|jsx)$/.test(file)) return;
-
-        rescanIslands().then(() => {
-          for (const id of [RESOLVED_ENTRY_ID, RESOLVED_CLIENT_ENTRY_ID]) {
-            const mod = server.moduleGraph.getModuleById(id);
-            if (mod) server.moduleGraph.invalidateModule(mod);
-          }
-          log.info(`Islands changed: ${relative(process.cwd(), file)} - reloading`);
-          server.hot.send({ type: 'full-reload' });
-        }).catch((err: unknown) => {
-          // A broken island file must not kill the dev server — the next edit
-          // re-triggers the scan.
-          log.error(`Island rescan failed: ${formatError(err)}`);
-        });
+        scheduleDescriptorRescan('island', file);
       };
 
-      server.watcher.on('add', onRouteSetChanged);
-      server.watcher.on('unlink', onRouteSetChanged);
-      server.watcher.on('add', onIslandSetChanged);
-      server.watcher.on('unlink', onIslandSetChanged);
+      // Explicitly invalidate both the changed module/importer chain and the
+      // virtual SSR entry. Vite's client transform already sees the edit; this
+      // closes the separate SSR-runner cache path used by hono dev serving.
+      const onSsrSourceChanged = (file: string) => {
+        const modules = server.moduleGraph.getModulesByFile(file);
+        if (modules) {
+          for (const mod of modules) server.moduleGraph.invalidateModule(mod);
+        }
+        invalidateVirtualEntries([RESOLVED_ENTRY_ID]);
+      };
+
+      for (const event of ['add', 'change', 'unlink'] as const) {
+        server.watcher.on(event, onRouteChanged);
+        server.watcher.on(event, onIslandChanged);
+      }
+      server.watcher.on('change', onSsrSourceChanged);
       server.httpServer?.on('close', () => {
-        server.watcher.off('add', onRouteSetChanged);
-        server.watcher.off('unlink', onRouteSetChanged);
-        server.watcher.off('add', onIslandSetChanged);
-        server.watcher.off('unlink', onIslandSetChanged);
+        if (rescanTimer) clearTimeout(rescanTimer);
+        for (const event of ['add', 'change', 'unlink'] as const) {
+          server.watcher.off(event, onRouteChanged);
+          server.watcher.off(event, onIslandChanged);
+        }
+        server.watcher.off('change', onSsrSourceChanged);
       });
     },
   };
