@@ -33,10 +33,10 @@ warning remained.
 Both probes used `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` after `ANALYZE` inside
 the rollback-only transaction.
 
-| Operation | Rows | Intended plan | Execution | Buffers |
-| --- | ---: | --- | ---: | --- |
-| Owner list, newest 50 | 10,000 seeded / 50 returned | `Index Scan` on `notes_owner_created_id_idx` | 0.094 ms | 5 shared hits, 0 reads |
-| Owner delete, oldest 1,000 | 10,000 seeded / 1,000 matched | `Index Scan` on `notes_owner_created_id_idx` | 7.861 ms | 1,027 shared hits, 0 reads |
+| Operation                  |                          Rows | Intended plan                                | Execution | Buffers                    |
+| -------------------------- | ----------------------------: | -------------------------------------------- | --------: | -------------------------- |
+| Owner list, newest 50      |   10,000 seeded / 50 returned | `Index Scan` on `notes_owner_created_id_idx` |  0.094 ms | 5 shared hits, 0 reads     |
+| Owner delete, oldest 1,000 | 10,000 seeded / 1,000 matched | `Index Scan` on `notes_owner_created_id_idx` |  7.861 ms | 1,027 shared hits, 0 reads |
 
 The list plan used `user_id` as its index condition and satisfied
 `created_at DESC, id DESC` directly. The delete plan used both `user_id` and the

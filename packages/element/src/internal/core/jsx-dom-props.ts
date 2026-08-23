@@ -87,7 +87,7 @@ export function createElementForTag(tag: string): Element {
 
 const signalNameIndex = new WeakMap<Map<string, Signal<unknown>>, Map<Signal<unknown>, string>>();
 
-function signalNameFor(
+export function signalNameFor(
   value: unknown,
   signalRegistry?: Map<string, Signal<unknown>>,
 ): string | undefined {

@@ -2144,6 +2144,21 @@ Deno.test('renderToDom resolves registered signals to their data-signal names', 
   assertEquals(second.getAttribute('data-signal'), 'label');
 });
 
+Deno.test('renderToDom marks an element whose sole child is a registered signal', () => {
+  if (!hasDOM) return;
+
+  const count = signal(0);
+  const registry = new Map<string, Signal<unknown>>([['count', count]]);
+  const el = renderToDom(
+    jsx('span', { children: count }),
+    undefined,
+    registry,
+  ) as unknown as TestElement;
+
+  assertEquals(el.getAttribute('data-signal'), 'count');
+  assertEquals(el.textContent, '0');
+});
+
 Deno.test('renderToDom emits no data-signal marker for signals outside the registry', () => {
   if (!hasDOM) return;
 

@@ -32,6 +32,7 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     '@openelement/adapter-vite/nitro-mount',
     '@openelement/app',
     '@openelement/element',
+    '@openelement/element/build-utils',
     '@openelement/element/jsx-dev-runtime',
     '@openelement/element/jsx-runtime',
     '@openelement/generated/blog-data',

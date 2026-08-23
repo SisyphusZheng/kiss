@@ -26,7 +26,8 @@ import { formatError } from './errors.ts';
 import { commitBindings } from './binding-activation.ts';
 import { bindConditional, bindList, bindRef, bindText } from './binding-descriptor.ts';
 import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
-import { collectPropBindings, createElementForTag } from './jsx-dom-props.ts';
+import { collectPropBindings, createElementForTag, signalNameFor } from './jsx-dom-props.ts';
+import { DATA_SIGNAL } from '../protocol/hydration-markers.ts';
 export { collectPropBindings } from './jsx-dom-props.ts';
 
 /**
@@ -251,6 +252,10 @@ function renderHostElement(
   const el = createElementForTag(String(node.tag));
   const propDescriptors = collectPropBindings(el, props, signalRegistry);
   descriptors.push(...propDescriptors);
+  if (children.length === 1 && isSignalLike(children[0]) && !el.hasAttribute(DATA_SIGNAL)) {
+    const signalName = signalNameFor(children[0], signalRegistry);
+    if (signalName) el.setAttribute(DATA_SIGNAL, signalName);
+  }
   // vnode.ref is stripped from props by createVNode (jsx-runtime.ts), so the
   // props.ref branch in collectPropBindings never sees JSX refs — consume it
   // here. The ref binding fires at commitBindings() time, after the whole

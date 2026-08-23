@@ -58,10 +58,10 @@ The same production build was exercised 30 times per runtime at the bounded
 `/workspace-records` SSR route. This local run tests runtime equivalence and
 render bounds; database latency is reported separately above.
 
-| Runtime | Status | Cache-Control | HTML | p50 | p95 | Runtime RSS |
-| --- | ---: | --- | ---: | ---: | ---: | ---: |
-| Node standalone server | 200 | `private, no-cache` | 1,337 B | 2.113 ms | 3.232 ms | 67,504 KiB |
-| Wrangler/workerd | 200 | `private, no-cache` | 1,337 B | 5.070 ms | 12.822 ms | 52,064 KiB main workerd process |
+| Runtime                | Status | Cache-Control       |    HTML |      p50 |       p95 |                     Runtime RSS |
+| ---------------------- | -----: | ------------------- | ------: | -------: | --------: | ------------------------------: |
+| Node standalone server |    200 | `private, no-cache` | 1,337 B | 2.113 ms |  3.232 ms |                      67,504 KiB |
+| Wrangler/workerd       |    200 | `private, no-cache` | 1,337 B | 5.070 ms | 12.822 ms | 52,064 KiB main workerd process |
 
 Both returned the same content type and byte-identical HTML after the Workers
 mount was routed through the generated request-time server module. The explicit

@@ -23,16 +23,20 @@ Deno.test('dispatchRequest shares mutating and styled-fallback production semant
     const serverMod = {
       matchRequestTimeRoute: (pathname: string) =>
         pathname === '/live' ? { path: '/live', params: {} } : null,
-      default: async ({ req }: { req: Request }) => {
+      default: ({ req }: { req: Request }) => {
         seen.push(`${req.method} ${new URL(req.url).pathname}`);
         if (new URL(req.url).pathname === '/missing') {
-          return new Response('<h1>styled not found</h1>', {
-            status: 404,
-            statusText: 'Styled Not Found',
-            headers: { 'content-type': 'text/html; charset=utf-8' },
-          });
+          return Promise.resolve(
+            new Response('<h1>styled not found</h1>', {
+              status: 404,
+              statusText: 'Styled Not Found',
+              headers: { 'content-type': 'text/html; charset=utf-8' },
+            }),
+          );
         }
-        return new Response('request-time', { status: req.method === 'PUT' ? 405 : 200 });
+        return Promise.resolve(
+          new Response('request-time', { status: req.method === 'PUT' ? 405 : 200 }),
+        );
       },
     };
 
