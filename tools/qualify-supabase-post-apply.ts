@@ -59,9 +59,18 @@ async function loadEnv(): Promise<QualificationEnv> {
     if (!values[name]) throw new Error(`${name} is required`);
   }
   return {
-    ...Object.fromEntries(required.map((name) => [name, values[name]])),
+    SUPABASE_URL: values.SUPABASE_URL,
+    SUPABASE_ANON_KEY: values.SUPABASE_ANON_KEY,
+    SUPABASE_ACCESS_TOKEN: values.SUPABASE_ACCESS_TOKEN,
+    SUPABASE_PROJECT_ID: values.SUPABASE_PROJECT_ID,
+    A_ID: values.A_ID,
+    A_EMAIL: values.A_EMAIL,
+    A_PASSWORD: values.A_PASSWORD,
+    B_ID: values.B_ID,
+    B_EMAIL: values.B_EMAIL,
+    B_PASSWORD: values.B_PASSWORD,
     SMOKE_RESULTS_FILE: values.SMOKE_RESULTS_FILE,
-  } as unknown as QualificationEnv;
+  };
 }
 
 async function record(env: QualificationEnv, check: string, details?: Record<string, unknown>) {
