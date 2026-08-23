@@ -91,7 +91,8 @@ for migration in \
   20260823110000_explicit_data_api_privileges.sql \
   20260823110100_replay_request_audit_atomicity.sql \
   20260823110200_attachment_delete_reconciliation.sql \
-  20260823110300_notes_bounds.sql; do
+  20260823110300_notes_bounds.sql \
+  20260823110400_replay_current_admin_authorization.sql; do
   mv "$upgrade_workdir/supabase/migrations/$migration" "$forward_dir/$migration"
 done
 start_project "$upgrade_workdir"

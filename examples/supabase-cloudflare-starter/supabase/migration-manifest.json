@@ -84,6 +84,10 @@
     {
       "file": "20260823110300_notes_bounds.sql",
       "sha256": "89f21e4c40f5ccfc93cfacf250a3c696655d8a7d387fb6ddee54362e58189c4a"
+    },
+    {
+      "file": "20260823110400_replay_current_admin_authorization.sql",
+      "sha256": "8d9afd62433671f3fe4758ba5ded8f34e3ba70fe9b2ddc46bf3046a01c9ed6cd"
     }
   ]
 }

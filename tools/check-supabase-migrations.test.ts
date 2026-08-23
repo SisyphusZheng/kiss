@@ -10,6 +10,7 @@ SUPABASE_PROJECT_ID:
 migration_mode:
 supabase db push --linked --dry-run
 tools/qualify-supabase-schema-parity.sh
+tools/qualify-supabase-post-apply.ts
 fresh and upgraded projects converge
 `;
 const CONFIG = `

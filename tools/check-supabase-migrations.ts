@@ -220,6 +220,28 @@ export async function checkSupabaseMigrations(
     for (const anchor of ['notes_title_length_check', 'notes_body_length_check', '<= 10000']) {
       if (!notesBounds.includes(anchor)) throw new Error(`${notesBoundsName} is missing ${anchor}`);
     }
+
+    const currentAdminName = names.find((name) =>
+      name.endsWith('_replay_current_admin_authorization.sql')
+    );
+    if (!currentAdminName) throw new Error('missing current-admin replay authorization migration');
+    const currentAdmin = await Deno.readTextFile(
+      new URL(`migrations/${currentAdminName}`, root),
+    );
+    for (
+      const anchor of [
+        'create or replace function public.request_payment_event_replay',
+        'create or replace function public.request_attachment_scan_replay',
+        'from auth.users u',
+        "u.raw_app_meta_data ->> 'role'",
+        'audit_actor uuid := (select auth.uid())',
+        'insert into public.admin_audit',
+      ]
+    ) {
+      if (!currentAdmin.includes(anchor)) {
+        throw new Error(`${currentAdminName} is missing ${anchor}`);
+      }
+    }
   }
 
   const config = await Deno.readTextFile(new URL('config.toml', root));
@@ -246,6 +268,7 @@ export async function checkSupabaseMigrations(
       'migration_mode:',
       'supabase db push --linked --dry-run',
       'tools/qualify-supabase-schema-parity.sh',
+      'tools/qualify-supabase-post-apply.ts',
       'fresh and upgraded projects converge',
     ]
   ) {
