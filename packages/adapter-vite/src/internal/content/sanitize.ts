@@ -1,8 +1,7 @@
-// @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml from 'sanitize-html';
+import { sanitizeHtml, type SanitizeOptions } from '@openelement/element/sanitize';
 
 /** ADR-0126: the single shared allow-list for every Markdown collection. */
-export const CONTENT_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+export const CONTENT_SANITIZE_OPTIONS: SanitizeOptions = {
   allowedTags: [
     'p',
     'a',
@@ -55,9 +54,9 @@ export const CONTENT_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   },
   allowedSchemes: ['http', 'https', 'mailto', '#', 'relative'],
   disallowedTagsMode: 'discard',
-  transformTags: {
-    a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }),
-  },
+  allowDangerousTags: ['details', 'summary', 'input'],
+  linkRel: ['noopener', 'noreferrer'],
+  voidElementStyle: 'xhtml',
 };
 
 export function sanitizeContentHtml(html: string): string {

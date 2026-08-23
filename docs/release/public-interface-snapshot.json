@@ -172,7 +172,7 @@
           ]
         },
         "./sanitize": {
-          "sha256": "e8d93e36882380bcee071edaa8743c7e043b3ff33c400bd4087714963af5912a",
+          "sha256": "3b6ee955ac3bb9ec476f7840d534d9459393790daab585759223ecead627489a",
           "publicDeclarations": [
             "export interface SanitizeOptions {",
             "export function isSafeUrl(",

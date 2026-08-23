@@ -11,7 +11,7 @@ import type { BlogPost, OpenElementBlogOptions } from './types.ts';
 import { sanitizeContentHtml } from '../sanitize.ts';
 
 /**
- * Allow-list HTML sanitizer using sanitize-html.
+ * Allow-list HTML sanitizer shared with the element trust boundary.
  * Only permits safe tags and attributes - all other HTML is stripped.
  * href/src/action only allow http/https/mailto/#/relative URLs.
  * This is a build-time defense-in-depth - content files are developer-controlled,

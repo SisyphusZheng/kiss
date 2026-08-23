@@ -317,3 +317,25 @@ Deno.test('isSafeUrl: rejects executable schemes and smuggling', () => {
   assertEquals(isSafeUrl('\njavascript:alert(1)', SAFE_SCHEMES), false);
   assertEquals(isSafeUrl('./:x', SAFE_SCHEMES), false);
 });
+
+Deno.test('sanitizeHtml: dangerous-tag opt-in stays constrained by tag and attribute allow-lists', () => {
+  assertEquals(
+    sanitizeHtml('<input type="checkbox" checked onclick="evil()"><script>x</script>', {
+      allowedTags: ['input'],
+      allowedAttributes: { input: ['type', 'checked'] },
+      allowDangerousTags: ['input'],
+      voidElementStyle: 'xhtml',
+    }),
+    '<input type="checkbox" checked="" />',
+  );
+});
+
+Deno.test('sanitizeHtml: policy options force link rel and reject protocol-relative URLs', () => {
+  assertEquals(
+    sanitizeHtml('<a href="/local">local</a><a href="//evil.test/x">evil</a>', {
+      linkRel: ['noopener', 'noreferrer'],
+      allowProtocolRelative: false,
+    }),
+    '<a href="/local" rel="noopener noreferrer">local</a><a rel="noopener noreferrer">evil</a>',
+  );
+});

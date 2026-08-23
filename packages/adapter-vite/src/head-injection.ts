@@ -15,13 +15,12 @@ import type { FrameworkOptions } from './internal/protocol/framework.ts';
 import { OpenElementError } from '@openelement/element';
 import { escapeAttr as escapeHtmlAttr } from '@openelement/element';
 import { createLogger, isSafeAttributeName } from '@openelement/element';
-// @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml, { type IOptions as SanitizeHtmlOptions } from 'sanitize-html';
+import { sanitizeHtml, type SanitizeOptions } from '@openelement/element/sanitize';
 
 const log = createLogger('adapter-vite:head-injection');
 
 const SAFE_SCHEMES = ['http', 'https', 'mailto', 'tel', 'sms'];
-const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
+const HEAD_SANITIZE_OPTIONS: SanitizeOptions = {
   // <base> is excluded: it can hijack every relative URL in the document.
   allowedTags: ['link', 'meta', 'noscript', 'title'],
   allowedAttributes: {
@@ -40,8 +39,8 @@ const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
       'title',
       'type',
     ],
-    // http-equiv is excluded: sanitize-html cannot filter by attribute value,
-    // and http-equiv="refresh" enables open redirects. charset/viewport/name/
+    // http-equiv is excluded because http-equiv="refresh" enables open redirects.
+    // charset/viewport/name/
     // property metas do not need it; CSP metas are emitted by the SSG
     // postprocess, not through this allow-list.
     meta: ['charset', 'content', 'name', 'property'],
@@ -49,11 +48,10 @@ const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
     title: [],
   },
   allowedSchemes: SAFE_SCHEMES,
-  allowedSchemesByTag: {
-    link: SAFE_SCHEMES,
-  },
-  allowedSchemesAppliedToAttributes: ['href', 'src', 'action', 'formaction', 'xlink:href'],
+  disallowedTagsMode: 'discard',
+  allowDangerousTags: ['link', 'meta', 'noscript'],
   allowProtocolRelative: false,
+  voidElementStyle: 'xhtml',
 };
 
 /** Fold CSS escapes and strip comments so the blacklist below cannot be

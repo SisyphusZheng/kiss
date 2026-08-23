@@ -3,14 +3,14 @@
 - Status: ACCEPTED (implemented for v0.43.1; tracked in #1087)
 - Date: 2026-08-22
 - References: ADR-0018 (virtual data modules → write-to-disk generated
-  modules), ADR-0126 (sanitize-html allow-list), ADR-0135 (0.43.0 stable
+  modules), ADR-0126 (dependency-free HTML allow-list), ADR-0135 (0.43.0 stable
   scope freeze; the follow-up was pulled into the v0.43.1 hardening train)
 
 ## Context
 
 `createBlogPlugin` (`packages/adapter-vite/src/internal/content/blog/`) is a
 content pipeline hardcoded to the blog use case: scan a Markdown directory →
-gray-matter frontmatter → marked → sanitize-html allow-list → write
+gray-matter frontmatter → marked → the ADR-0126 sanitizer → write
 `app/data/_generated-blog-data.ts`, with dev watch + regenerate. The
 frontmatter schema (`title/date/tags/excerpt/type/draft`) and the output
 filename are fixed.

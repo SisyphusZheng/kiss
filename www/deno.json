@@ -5,8 +5,7 @@
     "@openelement/generated/blog-data": "./app/data/_generated-blog-data.d.ts",
     "@openelement/generated/i18n": "./app/data/_generated-i18n-data.ts",
     "marked": "npm:marked@^15.0.0",
-    "gray-matter": "npm:gray-matter@^4.0.3",
-    "sanitize-html": "npm:sanitize-html@^2.17.4"
+    "gray-matter": "npm:gray-matter@^4.0.3"
   },
   "compilerOptions": {
     "skipLibCheck": true,
