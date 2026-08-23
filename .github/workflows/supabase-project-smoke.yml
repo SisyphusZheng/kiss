@@ -261,10 +261,13 @@ jobs:
           [ "$(echo "$deleted" | jq 'length')" = "0" ]
           record user-b-update-delete-a-denied pass
 
-          # 4c. Anonymous REST reads cannot observe any notes.
-          anonymous_rows=$(curl -sf "$SUPABASE_URL/rest/v1/notes?select=id&limit=1" \
+          # 4c. Object privileges fail closed before RLS for anonymous Data API
+          # requests. A 200 + empty array would only prove row filtering and
+          # would regress the explicit least-privilege grant boundary.
+          anonymous_code=$(curl -s -o .smoke/anonymous-notes.json -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/notes?select=id&limit=1" \
             -H "apikey: $SUPABASE_ANON_KEY")
-          [ "$(echo "$anonymous_rows" | jq 'length')" = "0" ]
+          [[ "$anonymous_code" = "401" || "$anonymous_code" = "403" ]]
           record anonymous-direct-rest-denied pass
 
           # 4d. The application upload is insert-only and enters the scan
