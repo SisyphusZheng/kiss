@@ -38,6 +38,7 @@ import {
   releaseTag,
   updateCurrentVersionAnchors,
   updateProjectConstants,
+  updatePublishedReleaseState,
 } from './version-anchors.ts';
 
 // Re-exported for cli.ts (releaseTag) and tools/check-docs-truth.ts
@@ -341,6 +342,7 @@ export function createReleasePlan(
         'packages/*/deno.json',
         'packages/create/src/version.ts',
         'packages/ui/src/generated-manifest.json',
+        'examples/supabase-cloudflare-starter/deno.json',
         'tools/project-constants.ts',
         'README.md',
         'README.zh.md',
@@ -1092,6 +1094,7 @@ async function commitFinalEvidenceAndClosure(
   branch: string,
 ): Promise<void> {
   await writeAndStageReleaseEvidence(evidence);
+  await updatePublishedReleaseState(evidence.targetVersion);
   const tag = releaseTag(evidence.targetVersion);
   const env = (name: string) => Deno.env.get(name);
   const record: ReleaseClosureRecord = {
@@ -1111,6 +1114,7 @@ async function commitFinalEvidenceAndClosure(
     'add',
     closureFile(evidence.targetVersion),
     releaseNoteFile(evidence.targetVersion),
+    'docs/release/release-state.json',
   ]);
   if (await hasStagedChanges()) {
     await runCaptured([

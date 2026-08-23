@@ -75,13 +75,15 @@ and the
 built on the
 [ADR-0129](./docs/adr/ADR-0129-response-header-channel.md) response-header
 channel. Delivered scope is the 0.43 line together with Universal WC SSR;
-production-runtime recovery and cache semantics remain 0.44 work.
+framework-owned production-runtime recovery and cache semantics remain
+unfrozen and unscheduled under ADR-0140.
 
 ## Current release state
 
-The five-package convergence is published as stable `0.43.0` (Universal WC
-SSR under ADR-0135, on top of the ADR-0122 application loop and untouched
-ADR-0119 static freeze). npm beta.1 through beta.3 remain withdrawn partial artifacts and
+The five-package convergence is published as stable `0.43.1`: the cumulative
+maintenance baseline for Universal WC SSR under ADR-0135, on top of the
+ADR-0122 application loop and untouched ADR-0119 static freeze. npm beta.1
+through beta.3 remain withdrawn partial artifacts and
 are not compatibility baselines. The third audit sweep completed in alpha.19 (see
 [ADR-0118](./docs/adr/ADR-0118-third-audit-round-alpha19-cleanup-sweep.md)),
 and the #390 pilot was retired by maintainer decision after zero recruitment
@@ -99,8 +101,9 @@ cache/ISR, streaming SSR, performance SLOs, the third-party WC SSR corpus
 promise is static-first applications with fullstack output paths—not broad
 fullstack parity.
 
-The `1.0.0` path is a stable five-package product after the application loop, WC SSR,
-production runtime and external-adoption evidence are complete.
+The `1.0.0` path remains unscheduled. It requires a maintainer-approved ADR,
+real-product compatibility evidence and external adoption before the
+five-package surface can receive a long-term compatibility commitment.
 
 ## Start
 

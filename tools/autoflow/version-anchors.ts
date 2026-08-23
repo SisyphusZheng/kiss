@@ -20,6 +20,48 @@ export function releaseTag(version: string): string {
   return `v${version}`;
 }
 
+export interface PublishedReleaseState {
+  schemaVersion: number;
+  sourceVersion: string;
+  publishedVersion: string;
+  latestLandedTrain: string;
+  activeTarget: string;
+  nextPlannedTrain: string;
+  maturity: 'alpha' | 'beta' | 'stable';
+}
+
+/**
+ * Advance the durable source/registry truth only after publication completes.
+ * Prepare intentionally leaves publishedVersion on the prior line; finalize is
+ * the first point where npm, the immutable tag and the GitHub release are all
+ * proven, so it owns this transition.
+ */
+export function advancePublishedReleaseStateText(text: string, version: string): string {
+  const state = JSON.parse(text) as PublishedReleaseState;
+  const prerelease = version.match(/-(alpha|beta)(?:\.|$)/u)?.[1];
+  return `${
+    JSON.stringify(
+      {
+        ...state,
+        schemaVersion: 1,
+        sourceVersion: version,
+        publishedVersion: version,
+        latestLandedTrain: releaseTag(version),
+        activeTarget: releaseTag(version),
+        maturity: prerelease === 'alpha' || prerelease === 'beta' ? prerelease : 'stable',
+      } satisfies PublishedReleaseState,
+      null,
+      2,
+    )
+  }\n`;
+}
+
+export async function updatePublishedReleaseState(version: string): Promise<void> {
+  const path = 'docs/release/release-state.json';
+  const text = await Deno.readTextFile(path);
+  await Deno.writeTextFile(path, advancePublishedReleaseStateText(text, version));
+}
+
 export function nextPrereleaseTag(version: string): string {
   const match = version.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/u);
   if (!match) return releaseTag(version);

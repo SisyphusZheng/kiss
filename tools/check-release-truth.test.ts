@@ -20,10 +20,13 @@ const state: ReleaseState = {
 function files() {
   return {
     'README.md':
-      `Source package line: \`${state.sourceVersion}\`\nnpm registry line: \`v${state.publishedVersion}\``,
-    'docs/status/STATUS.md': `Active release target: \`${state.activeTarget}\``,
+      `Source package line: \`${state.sourceVersion}\`\nnpm registry line: \`v${state.publishedVersion}\`\npublished as stable \`${state.publishedVersion}\``,
+    'README.zh.md':
+      `源码包行为 \`${state.sourceVersion}\`\nnpm registry 行为 \`v${state.publishedVersion}\`\nstable \`${state.publishedVersion}\` 发布`,
+    'docs/status/STATUS.md':
+      `Active release target: \`${state.activeTarget}\`\nstable at\n\`${state.publishedVersion}\``,
     'docs/roadmap/ROADMAP.md':
-      `Active execution target: \`${state.activeTarget}\`.\n| \`0.43.0\` | shipped |`,
+      `Active execution target: \`${state.activeTarget}\`.\n\`${state.publishedVersion}\` is both the current source package line\n| \`0.43.0\` | shipped |`,
     'docs/current/VERSION_PLAN.md': `Active release target: \`${state.activeTarget}\``,
     'examples/supabase-cloudflare-starter/deno.json': `"version": "${state.sourceVersion}"`,
   };

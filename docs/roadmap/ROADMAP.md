@@ -13,7 +13,7 @@ Execution and release state follow the
 > ADR-0135; the #1002 production closure is complete.\
 > Planned line: `0.43.1` cumulative maintenance baseline; no later minor is
 > scheduled. `0.43.0` (Universal WC SSR) shipped 2026-08-20 under ADR-0135.\
-> Maturity stage: stable (0.43.0 — the 0.41.x interface freeze under
+> Maturity stage: stable (0.43.1 cumulative maintenance baseline — the 0.41.x interface freeze under
 > ADR-0119, the request-time loop freeze under ADR-0122, and the Universal
 > WC admission freeze under ADR-0135); the
 > abandoned beta naming is retired.
@@ -134,11 +134,10 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.43.0` is both the current source package line and the published npm
-line (2026-08-20, dist-tag `latest`), promoted from the `0.43.0-alpha.2`
-train (published 2026-08-15, dist-tag `alpha`) without further changes.
-No later minor is scheduled; `0.43.x` enters maintenance mode after the
-`v0.43.1` cumulative baseline. These are
+`0.43.1` is both the current source package line and the published npm
+line (2026-08-24, dist-tag `latest`). It follows the `0.43.0` Universal WC
+SSR stable line and its `0.43.0-alpha.2` train. No later minor is scheduled;
+`0.43.x` is now in maintenance mode after the `v0.43.1` cumulative baseline. These are
 separate facts by design: landed work is not described as published until the
 registry and immutable release evidence prove it.
 npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn

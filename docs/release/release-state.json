@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "sourceVersion": "0.43.0",
-  "publishedVersion": "0.43.0",
-  "latestLandedTrain": "v0.43.0",
+  "sourceVersion": "0.43.1",
+  "publishedVersion": "0.43.1",
+  "latestLandedTrain": "v0.43.1",
   "activeTarget": "v0.43.1",
   "nextPlannedTrain": "not scheduled (maintenance mode)",
   "maturity": "stable"

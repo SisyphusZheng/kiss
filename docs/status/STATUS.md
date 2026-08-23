@@ -13,7 +13,7 @@
 ## Current position
 
 OpenElement is a Web Components-native application framework, stable at
-`0.43.0` under ADR-0135: the 0.41.x static freeze (ADR-0119 — `defineElement`,
+`0.43.1` as the cumulative maintenance baseline over ADR-0135: the 0.41.x static freeze (ADR-0119 — `defineElement`,
 `definePage`, `buildApp`, the five-package graph, the supported subpaths and
 the static/SPA semantics of `defineApp`) and the request-time Application Loop
 freeze (ADR-0122 — loader/action signatures, the
@@ -27,8 +27,8 @@ unfrozen and are not scheduled. `v0.43.1` is a cumulative maintenance baseline:
 Wave A requalified the 33 earlier closures, Wave B remediated six confirmed
 findings, and Wave C returned `GO` on the schema/runtime candidate after
 exact-SHA CI, authorized 23-migration Supabase application, post-apply
-catalog/RLS qualification, and Advisor review. v0.43.1 is now in the governed
-release workflow. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
+catalog/RLS qualification, and Advisor review. v0.43.1 is published and the
+0.43.x line is now in ADR-0140 maintenance mode. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha

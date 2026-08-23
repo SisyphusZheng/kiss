@@ -20,6 +20,9 @@
  */
 
 const PACKAGES_DIR = 'packages';
+const VERSIONED_APP_DENOS = [
+  'examples/supabase-cloudflare-starter/deno.json',
+] as const;
 
 interface PackageJson {
   name?: string;
@@ -133,6 +136,10 @@ function updateVersion(
   const name = data.name ?? path;
   const oldVersion = data.version ?? 'unknown';
 
+  if (data.version === toVersion) {
+    return { updated: false, name, oldVersion };
+  }
+
   if (data.version && data.version === fromVersion) {
     if (!dryRun) {
       const text = Deno.readTextFileSync(path);
@@ -219,6 +226,9 @@ function main(): void {
 
   // Find all package deno.json files
   const packageDenos = findPackageDenos(root);
+  const versionedAppDenos = VERSIONED_APP_DENOS.map((path) => `${root}/${path}`);
+  const versionedAppSet = new Set(versionedAppDenos);
+  const versionedDenos = [...packageDenos, ...versionedAppDenos];
   console.log(`Found ${packageDenos.length} package(s) in ${PACKAGES_DIR}/`);
 
   // Determine "from" version
@@ -231,11 +241,10 @@ function main(): void {
   }
 
   if (resolvedFrom === toVersion) {
-    console.log(`Already at version ${toVersion}. Nothing to do.`);
-    return;
+    console.log(`Package line already at ${toVersion}; checking every governed manifest.`);
+  } else {
+    validateVersionStep(resolvedFrom, toVersion);
   }
-
-  validateVersionStep(resolvedFrom, toVersion);
 
   console.log(`Bumping: ${resolvedFrom} → ${toVersion}${dryRun ? ' (dry-run)' : ''}`);
   console.log('');
@@ -244,8 +253,16 @@ function main(): void {
   let updatedCount = 0;
   const mismatched: string[] = [];
 
-  for (const path of packageDenos) {
-    const result = updateVersion(path, resolvedFrom, toVersion, dryRun);
+  for (const path of versionedDenos) {
+    const existing = readJson(path).version;
+    // Versioned application manifests are convergence anchors, not publishable
+    // packages. Heal them on an idempotent resume even when the package line
+    // was already bumped before this manifest joined the governed set.
+    const manifestFrom = versionedAppSet.has(path) && existing ? existing : resolvedFrom;
+    if (versionedAppSet.has(path) && existing && existing !== toVersion) {
+      validateVersionStep(existing, toVersion);
+    }
+    const result = updateVersion(path, manifestFrom, toVersion, dryRun);
     if (result.updated) {
       updatedCount++;
       console.log(`  ✅ ${result.name}: ${result.oldVersion} → ${toVersion}`);
@@ -258,7 +275,7 @@ function main(): void {
   }
 
   console.log('');
-  console.log(`Updated ${updatedCount}/${packageDenos.length} packages.`);
+  console.log(`Updated ${updatedCount}/${versionedDenos.length} versioned manifests.`);
 
   // Update cross-package imports in each package's deno.json. (Root deno.json
   // is deliberately not touched: check-package-graph bans @openelement/*
@@ -289,7 +306,7 @@ function main(): void {
   console.log('Validating alignment...');
 
   let allAligned = true;
-  for (const path of packageDenos) {
+  for (const path of versionedDenos) {
     const data = readJson(path);
     if (data.version !== toVersion) {
       allAligned = false;
@@ -298,7 +315,7 @@ function main(): void {
   }
 
   if (allAligned) {
-    console.log(`  ✅ All ${packageDenos.length} packages aligned to ${toVersion}`);
+    console.log(`  ✅ All ${versionedDenos.length} versioned manifests aligned to ${toVersion}`);
   } else {
     console.log('  ❌ Version alignment check FAILED');
     if (!dryRun) Deno.exit(1);

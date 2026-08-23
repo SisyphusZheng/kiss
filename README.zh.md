@@ -60,13 +60,14 @@ Cloudflare 是被组合的服务提供方，不是框架内建功能。
 （绿色运行
 [31925944647](https://github.com/open-element/openelement/actions/runs/31925944647)），
 构建于 [ADR-0129](./docs/adr/ADR-0129-response-header-channel.md)
-响应头通道之上。交付范围是 0.43 线与 Universal WC SSR；生产运行时恢复与
-缓存语义仍是 0.44 的工作。
+响应头通道之上。交付范围是 0.43 线与 Universal WC SSR；框架自有生产运行时
+恢复与缓存语义在 ADR-0140 下仍未冻结，也没有已排期的后续 minor。
 
 ## 当前发布状态
 
-五包收敛已作为 stable `0.41.0` 发布。npm beta.1 至 beta.3 仍是已撤回的
-不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
+五包收敛已作为 stable `0.43.1` 发布：它是 ADR-0135 Universal WC SSR 之上的
+累计维护基线，并进入 ADR-0140 规定的 0.43.x patch-only 维护模式。npm beta.1
+至 beta.3 仍是已撤回的不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
 #390 试点在零招募后由 maintainer 决策退役（ADR-0119）。
 
 `0.42 = WC 轻量全栈（WC light fullstack）`。`0.42.0` 稳定线交付 request-time

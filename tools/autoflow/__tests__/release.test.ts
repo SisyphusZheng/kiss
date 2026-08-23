@@ -32,6 +32,7 @@ import {
   writeReleaseNote,
 } from '../release.ts';
 import {
+  advancePublishedReleaseStateText,
   buildVersionAnchorReplacements,
   bumpProjectConstantsText,
   nextPrereleaseTag,
@@ -248,6 +249,29 @@ Deno.test('bumpProjectConstantsText: re-running a bump is a no-op and keeps the 
   assert(once.includes("PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.16'"));
 });
 
+Deno.test('advancePublishedReleaseStateText: finalize converges source and registry truth', () => {
+  const input = JSON.stringify({
+    schemaVersion: 1,
+    sourceVersion: '0.43.1',
+    publishedVersion: '0.43.0',
+    latestLandedTrain: 'v0.43.0',
+    activeTarget: 'v0.43.1',
+    nextPlannedTrain: 'not scheduled (maintenance mode)',
+    maturity: 'stable',
+  });
+  const stable = JSON.parse(advancePublishedReleaseStateText(input, '0.43.1'));
+  assertEquals(stable.sourceVersion, '0.43.1');
+  assertEquals(stable.publishedVersion, '0.43.1');
+  assertEquals(stable.latestLandedTrain, 'v0.43.1');
+  assertEquals(stable.activeTarget, 'v0.43.1');
+  assertEquals(stable.nextPlannedTrain, 'not scheduled (maintenance mode)');
+  assertEquals(stable.maturity, 'stable');
+
+  const alpha = JSON.parse(advancePublishedReleaseStateText(input, '0.44.0-alpha.1'));
+  assertEquals(alpha.publishedVersion, '0.44.0-alpha.1');
+  assertEquals(alpha.maturity, 'alpha');
+});
+
 Deno.test('two-phase release: prepare never publishes, tags, or pushes main', () => {
   const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
   const names = steps.map((step) => step.name);
@@ -260,6 +284,7 @@ Deno.test('two-phase release: prepare never publishes, tags, or pushes main', ()
   assertFalse(commands.some((command) => command.includes('git push')));
   const stage = steps.find((step) => step.name === 'stage release bump');
   assert(stage?.command?.includes('packages/create/src/version.ts'));
+  assert(stage?.command?.includes('examples/supabase-cloudflare-starter/deno.json'));
 });
 
 Deno.test('two-phase release: publish-existing never bumps and verifies main CI first', () => {
@@ -811,7 +836,26 @@ async function initReleaseRepo(): Promise<{ root: string; work: string }> {
   await git(work, ['config', 'user.name', 'Release Test']);
   await git(work, ['checkout', '-b', 'main']);
   await Deno.writeTextFile(`${work}/seed.txt`, 'seed\n');
-  await git(work, ['add', 'seed.txt']);
+  await Deno.mkdir(`${work}/docs/release`, { recursive: true });
+  await Deno.writeTextFile(
+    `${work}/docs/release/release-state.json`,
+    `${
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          sourceVersion: '9.9.9',
+          publishedVersion: '9.9.8',
+          latestLandedTrain: 'v9.9.8',
+          activeTarget: 'v9.9.9',
+          nextPlannedTrain: 'not scheduled',
+          maturity: 'stable',
+        },
+        null,
+        2,
+      )
+    }\n`,
+  );
+  await git(work, ['add', 'seed.txt', 'docs/release/release-state.json']);
   await git(work, ['commit', '-m', 'seed']);
   await git(work, ['checkout', '-b', 'dev']);
   await git(work, ['remote', 'add', 'origin', origin]);
@@ -896,6 +940,12 @@ Deno.test('local release finalize: evidence and closure land on main, dev is syn
       await git(work, ['show', 'main:docs/release/autoflow3/v9.9.9.json']),
     ) as { status: string };
     assertEquals(mainEvidence.status, 'completed');
+    const releaseState = JSON.parse(
+      await git(work, ['show', 'main:docs/release/release-state.json']),
+    ) as { sourceVersion: string; publishedVersion: string; latestLandedTrain: string };
+    assertEquals(releaseState.sourceVersion, '9.9.9');
+    assertEquals(releaseState.publishedVersion, '9.9.9');
+    assertEquals(releaseState.latestLandedTrain, 'v9.9.9');
     // The release note on main carries the Durable closure section.
     const note = await git(work, ['show', 'main:docs/release/v9.9.9.md']);
     assert(note.includes('## Durable closure'));

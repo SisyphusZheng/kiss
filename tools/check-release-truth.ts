@@ -37,8 +37,17 @@ export function findReleaseTruthFailures(
   const anchors: Array<[string, string]> = [
     ['README.md', `Source package line: \`${state.sourceVersion}\``],
     ['README.md', `npm registry line: \`v${state.publishedVersion}\``],
+    ['README.md', `published as stable \`${state.publishedVersion}\``],
+    ['README.zh.md', `源码包行为 \`${state.sourceVersion}\``],
+    ['README.zh.md', `npm registry 行为 \`v${state.publishedVersion}\``],
+    ['README.zh.md', `stable \`${state.publishedVersion}\` 发布`],
     ['docs/status/STATUS.md', `Active release target: \`${state.activeTarget}\``],
+    ['docs/status/STATUS.md', `stable at\n\`${state.publishedVersion}\``],
     ['docs/roadmap/ROADMAP.md', `Active execution target: \`${state.activeTarget}\``],
+    [
+      'docs/roadmap/ROADMAP.md',
+      `\`${state.publishedVersion}\` is both the current source package line`,
+    ],
     ['docs/current/VERSION_PLAN.md', `Active release target: \`${state.activeTarget}\``],
     ['examples/supabase-cloudflare-starter/deno.json', `"version": "${state.sourceVersion}"`],
   ];
