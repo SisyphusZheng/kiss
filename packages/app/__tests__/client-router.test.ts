@@ -351,6 +351,67 @@ Deno.test('client router guard redirect limit rejects redirect loops', async () 
   }
 });
 
+Deno.test('client router dispose invalidates a pending programmatic guard', async () => {
+  let resolveGuard!: (value: boolean) => void;
+  const guard = new Promise<boolean>((resolve) => resolveGuard = resolve);
+  const browser = installFakeBrowser('/public');
+  let changes = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/protected', tagName: 'protected-page', guard: () => guard },
+    ],
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    const navigation = router.navigate('/protected');
+    router.dispose();
+    resolveGuard(true);
+    await navigation;
+    assertEquals(browser.applied, []);
+    assertEquals(browser.path(), '/public');
+    assertEquals(changes, 0);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('client router dispose invalidates a pending browser guard', async () => {
+  let resolveGuard!: (value: boolean) => void;
+  const guard = new Promise<boolean>((resolve) => resolveGuard = resolve);
+  const browser = installFakeBrowser('/public');
+  let changes = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/protected', tagName: 'protected-page', guard: () => guard },
+    ],
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    router.dispose();
+    resolveGuard(true);
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/public');
+    assertEquals(router.currentRoute?.tagName, 'public-page');
+    assertEquals(browser.applied, []);
+    assertEquals(changes, 0);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
 // ─── Browser-driven navigation (popstate/hashchange) guard coverage ───
 
 interface FakeBrowser {

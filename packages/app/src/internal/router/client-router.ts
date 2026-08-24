@@ -538,6 +538,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
   let currentPath = '';
   let currentRoute: RouteConfig | null = null;
   let currentParams: Record<string, string> = Object.create(null);
+  let disposed = false;
 
   /** Registered listeners keyed by event type, to support dispose. */
   const listeners: Array<{ type: string; handler: EventListener }> = [];
@@ -575,6 +576,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
   }
 
   function notifyChange(): void {
+    if (disposed) return;
     // Outer try/catch catches synchronous throws from onChange().
     // Promise.resolve().catch() only handles async rejections; a sync throw
     // during argument evaluation would crash the router.
@@ -606,6 +608,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
     navOptions: { replace: boolean; depth?: number; restoreOnBlock?: boolean },
     ticket?: number,
   ): Promise<void> {
+    if (disposed) return;
     const depth = navOptions.depth ?? 0;
     if (depth > MAX_GUARD_REDIRECTS) {
       throw new Error(
@@ -618,6 +621,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
     const matched = routeMatcher.match(u.pathname, u.search);
     if (matched?.route.guard) {
       const result = await matched.route.guard();
+      if (disposed) return;
       // Latest-wins (#1023): a newer programmatic navigation already owns the
       // outcome; a superseded guard resolution must not push state.
       if (ticket !== undefined && ticket !== programmaticNavigationSeq) return;
@@ -639,7 +643,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
       }
     }
 
-    if (ticket !== undefined && ticket !== programmaticNavigationSeq) return;
+    if (disposed || (ticket !== undefined && ticket !== programmaticNavigationSeq)) return;
     const url = mode === 'hash' ? toHashUrl(path) : path;
     if (navOptions.replace) {
       history.replaceState(null, '', url);
@@ -682,6 +686,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
   let lastLandedUrl: string | null = null;
 
   async function commitBrowserNavigation(): Promise<void> {
+    if (disposed) return;
     const landed = readPath();
     if (landed === lastLandedUrl) return;
     try {
@@ -690,6 +695,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
       if (matched?.route.guard) {
         const seqAtGuardStart = programmaticNavigationSeq;
         const result = await matched.route.guard();
+        if (disposed) return;
         if (result === false) {
           // Blocked: restore the entry the user came from (see
           // restoreBlockedEntry for why this rewrites rather than pushes).
@@ -711,6 +717,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
           return;
         }
       }
+      if (disposed) return;
       rematch();
       notifyChange();
     } finally {
@@ -725,9 +732,11 @@ export function createRouter(options: RouterOptions): RouterInstance {
   let browserNavigationQueue: Promise<void> = Promise.resolve();
 
   function onBrowserNavigation(): void {
+    if (disposed) return;
     browserNavigationQueue = browserNavigationQueue
       .then(commitBrowserNavigation)
       .catch((err) => {
+        if (disposed) return;
         // Intentional fail-open: a rejected guard or a router error must not
         // wedge the queue or leave the UI inconsistent with the address bar,
         // so we log and converge to the real URL instead of rethrowing.
@@ -738,6 +747,11 @@ export function createRouter(options: RouterOptions): RouterInstance {
   }
 
   function dispose(): void {
+    if (disposed) return;
+    disposed = true;
+    // Supersede every programmatic guard ticket that was issued before
+    // disposal. Browser guards use the same disposed check after each await.
+    programmaticNavigationSeq++;
     for (const { type, handler } of listeners) {
       removeEventListener(type, handler);
     }

@@ -854,7 +854,7 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   assertStringIncludes(code, 'c.req.header(__actionFetchHeader)');
   assertStringIncludes(
     code,
-    'try { JSON.stringify(data); } catch { data = null; }',
+    'if (JSON.stringify(data) === undefined) data = null;',
   );
   assertStringIncludes(
     code,

@@ -217,20 +217,26 @@ Deno.test({
         'POST /fail-unserializable (fetch channel) → 422 with degraded payload',
         async () => {
           for (const [name, base] of Object.entries(both)) {
-            const response = await fetch(`${base}/fail-unserializable`, {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/x-www-form-urlencoded',
-                'x-openelement-action': 'true',
-                origin: new URL(base).origin,
-              },
-              body: 'x=1',
-            });
-            assertEquals(response.status, 422, `${name}: unserializable fail status`);
-            const body = await response.json();
-            assertEquals(body.type, 'failure', `${name}: failure body shape`);
-            assertEquals(body.status, 422, `${name}: failure body status`);
-            assertEquals(body.data, null, `${name}: unserializable data degrades to null`);
+            for (const kind of ['undefined', 'function', 'symbol', 'circular']) {
+              const response = await fetch(`${base}/fail-unserializable`, {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/x-www-form-urlencoded',
+                  'x-openelement-action': 'true',
+                  origin: new URL(base).origin,
+                },
+                body: `kind=${kind}`,
+              });
+              assertEquals(response.status, 422, `${name}/${kind}: unserializable fail status`);
+              const body = await response.json();
+              assertEquals(body.type, 'failure', `${name}/${kind}: failure body shape`);
+              assertEquals(body.status, 422, `${name}/${kind}: failure body status`);
+              assertEquals(
+                body.data,
+                null,
+                `${name}/${kind}: unserializable data degrades to null`,
+              );
+            }
           }
         },
       );

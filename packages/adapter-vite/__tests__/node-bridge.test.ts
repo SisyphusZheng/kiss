@@ -134,7 +134,12 @@ Deno.test('applyWebResponseHeaders: multiple Set-Cookie go out as a node header 
 });
 
 Deno.test('nodeRequestToWeb: GET without body; Host-derived URL', () => {
-  const req = { url: '/form?x=1', method: 'GET', headers: { host: 'app.example.com' } };
+  const req = Object.assign(new EventEmitter(), {
+    url: '/form?x=1',
+    method: 'GET',
+    headers: { host: 'app.example.com' },
+    socket: new EventEmitter(),
+  });
   const request = nodeRequestToWeb(req as unknown as IncomingMessage, direct);
   assertEquals(request.url, 'http://app.example.com/form?x=1');
   assertEquals(request.method, 'GET');
@@ -144,7 +149,8 @@ Deno.test('nodeRequestToWeb: GET without body; Host-derived URL', () => {
 
 Deno.test('nodeRequestToWeb: POST streams the body through', async () => {
   const emitter = new EventEmitter();
-  const req = Object.assign(emitter, { url: '/', method: 'POST', headers: {} });
+  const socket = new EventEmitter();
+  const req = Object.assign(emitter, { url: '/', method: 'POST', headers: {}, socket });
   const request = nodeRequestToWeb(req as unknown as IncomingMessage, direct);
   queueMicrotask(() => {
     emitter.emit('data', Buffer.from('hello-'));
@@ -152,6 +158,16 @@ Deno.test('nodeRequestToWeb: POST streams the body through', async () => {
     emitter.emit('end');
   });
   assertEquals(await request.text(), 'hello-body');
+});
+
+Deno.test('nodeRequestToWeb: client abort propagates to Request.signal', () => {
+  const emitter = new EventEmitter();
+  const socket = new EventEmitter();
+  const req = Object.assign(emitter, { url: '/', method: 'GET', headers: {}, socket });
+  const request = nodeRequestToWeb(req as unknown as IncomingMessage, direct);
+  assertEquals(request.signal.aborted, false);
+  emitter.emit('aborted');
+  assertEquals(request.signal.aborted, true);
 });
 
 Deno.test('writeWebResponse: status, set-cookie array and streamed body reach the node response', async () => {
@@ -162,18 +178,24 @@ Deno.test('writeWebResponse: status, set-cookie array and streamed body reach th
   const written: Array<{ key: string; value: string | string[] }> = [];
   const chunks: Uint8Array[] = [];
   let ended = false;
-  const res = {
+  const resEvents = new EventEmitter();
+  const res = Object.assign(resEvents, {
     statusCode: 0,
+    destroyed: false,
+    writableEnded: false,
     setHeader(key: string, value: string | string[]) {
       written.push({ key, value });
     },
     write(value: Uint8Array) {
       chunks.push(value);
+      return true;
     },
     end() {
       ended = true;
+      this.writableEnded = true;
+      resEvents.emit('finish');
     },
-  };
+  });
   writeWebResponse(response, res as never);
   await new Promise((resolve) => setTimeout(resolve, 20));
   assertEquals(res.statusCode, 201);
@@ -194,6 +216,76 @@ Deno.test('writeWebResponse: status, set-cookie array and streamed body reach th
   assert(ended);
 });
 
+Deno.test('writeWebResponse: backpressure pauses pulling until drain', async () => {
+  let pulls = 0;
+  let cancelled = 0;
+  const response = new Response(
+    new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls++;
+        controller.enqueue(new Uint8Array([pulls]));
+        if (pulls === 3) controller.close();
+      },
+      cancel() {
+        cancelled++;
+      },
+    }),
+  );
+  const resEvents = new EventEmitter();
+  const res = Object.assign(resEvents, {
+    statusCode: 0,
+    destroyed: false,
+    writableEnded: false,
+    setHeader() {},
+    writes: 0,
+    write() {
+      this.writes++;
+      return this.writes !== 1;
+    },
+    end() {
+      this.writableEnded = true;
+      resEvents.emit('finish');
+    },
+  });
+  writeWebResponse(response, res as never);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assertEquals(res.writes, 1);
+  assert(pulls <= 2, 'the stream may prefetch one chunk but must stop writing');
+  res.emit('drain');
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assertEquals(res.writes, 3);
+  assertEquals(cancelled, 0);
+});
+
+Deno.test('writeWebResponse: response close cancels the web stream', async () => {
+  let cancelled = 0;
+  const response = new Response(
+    new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(new Uint8Array([1]));
+      },
+      cancel() {
+        cancelled++;
+      },
+    }),
+  );
+  const resEvents = new EventEmitter();
+  const res = Object.assign(resEvents, {
+    statusCode: 0,
+    destroyed: false,
+    writableEnded: false,
+    setHeader() {},
+    write() {
+      resEvents.emit('close');
+      return false;
+    },
+    end() {},
+  });
+  writeWebResponse(response, res as never);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assertEquals(cancelled, 1);
+});
+
 Deno.test('serve.mjs embeds the bridge verbatim — the twin is single-sourced', () => {
   const code = renderStandaloneServerModule();
   for (const fn of NODE_BRIDGE_EMBEDDED_FUNCTIONS) {
@@ -201,7 +293,7 @@ Deno.test('serve.mjs embeds the bridge verbatim — the twin is single-sourced',
   }
   assertStringIncludes(code, 'OPEN_ELEMENT_TRUST_PROXY');
   assertStringIncludes(code, 'nodeRequestToWeb(req, { host: hostname, port, trustProxy })');
-  assertStringIncludes(code, 'writeWebResponse(response, res)');
+  assertStringIncludes(code, 'writeWebResponse(response, res, request)');
   // The old collapsing write path must be gone from the generated server.
   assertEquals(code.includes('response.headers.forEach'), false);
 });

@@ -75,7 +75,11 @@ export function renderActionRuntime(): string {
   if (state.isFetch) {
     if (__isActionFailure(actionResult)) {
       let data = actionResult.data;
-      try { JSON.stringify(data); } catch { data = null; }
+      try {
+        if (JSON.stringify(data) === undefined) data = null;
+      } catch {
+        data = null;
+      }
       return { response: c.json({ type: 'failure', status: actionResult.status, data }, actionResult.status) };
     }
     return { response: c.json({ type: 'redirect', status: 303, location: prgTarget }) };

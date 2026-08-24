@@ -6,14 +6,16 @@
  */
 import { definePage, fail, type OpenElementActionFailure } from '@openelement/app';
 
-interface FailData {
-  error?: string;
-}
-
-export function action(): OpenElementActionFailure<FailData> {
+export function action(
+  ctx: { formData: FormData },
+): OpenElementActionFailure<unknown> {
+  const kind = String(ctx.formData.get('kind') ?? 'circular');
+  if (kind === 'undefined') return fail(422, undefined);
+  if (kind === 'function') return fail(422, () => 'not serializable');
+  if (kind === 'symbol') return fail(422, Symbol('not serializable'));
   const circular: Record<string, unknown> = { error: 'always fails' };
   circular.self = circular;
-  return fail(422, circular as FailData);
+  return fail(422, circular);
 }
 
 export default definePage({

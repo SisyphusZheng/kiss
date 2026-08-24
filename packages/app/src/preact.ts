@@ -68,12 +68,18 @@ export function definePreactIsland<
   const baseProps = options.props ?? {};
 
   class OpenElementPreactIsland extends OpenElement {
+    #preactMounted = false;
+    #preactActivated = false;
+    #detachGeneration = 0;
+
+    #preactVNode() {
+      return h(Component, resolveProps(this, baseProps) as Props);
+    }
+
     override render(): VNode | null {
       if (typeof document === 'undefined') {
         // SSR path: render Preact component to string, return as trusted HTML
-        const html = renderToString(
-          h(Component, resolveProps(this, baseProps) as Props),
-        );
+        const html = renderToString(this.#preactVNode());
         return trustedHtml(html);
       }
       // Client: let clientActivate() handle Preact hydration/render
@@ -81,15 +87,50 @@ export function definePreactIsland<
     }
 
     protected override clientActivate(): void {
+      // A same-turn DOM move disconnects and reconnects before the deferred
+      // teardown below. Invalidate that teardown and keep Preact as the sole
+      // owner of the existing tree.
+      this.#detachGeneration++;
       const root = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
-      const vnode = h(Component, resolveProps(this, baseProps) as Props);
-      if (options.ssr !== false) {
+      const vnode = this.#preactVNode();
+      if (!this.#preactActivated && options.ssr !== false) {
         // DSD hydration: the shadow DOM already has SSR-rendered content
         preactHydrate(vnode, root);
       } else {
-        // CSR: full render from scratch
+        // CSR, reconnect, or a same-turn DOM move: render/update through the
+        // existing Preact owner instead of hydrating the same tree twice.
         preactRender(vnode, root);
       }
+      this.#preactActivated = true;
+      this.#preactMounted = true;
+    }
+
+    override update(): void {
+      if (typeof document === 'undefined' || !this.#preactMounted) {
+        super.update();
+        return;
+      }
+      const root = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
+      preactRender(this.#preactVNode(), root);
+    }
+
+    override requestUpdate(): void {
+      this.update();
+    }
+
+    override disconnectedCallback(): void {
+      super.disconnectedCallback();
+      const generation = ++this.#detachGeneration;
+      queueMicrotask(() => {
+        if (
+          generation !== this.#detachGeneration ||
+          this.isConnected ||
+          !this.#preactMounted
+        ) return;
+        const root = this.shadowRoot;
+        if (root) preactRender(null, root);
+        this.#preactMounted = false;
+      });
     }
   }
 

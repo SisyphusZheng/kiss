@@ -31,6 +31,15 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+interface NodeBridgeRequestState {
+  abort(reason?: unknown): void;
+  cleanup(): void;
+}
+
+interface NodeBridgeTrackedRequest extends Request {
+  [key: symbol]: NodeBridgeRequestState | undefined;
+}
+
 /** Listen-address + proxy-trust context for URL resolution. */
 export interface NodeBridgeListen {
   host: string;
@@ -118,21 +127,76 @@ export function nodeRequestToWeb(req: IncomingMessage, listen: NodeBridgeListen)
   }
   const method = req.method || 'GET';
   const hasBody = method !== 'GET' && method !== 'HEAD';
-  return new Request(url, {
+  const abortController = new AbortController();
+  let bodyController: ReadableStreamDefaultController<Uint8Array> | null = null;
+  let bodySettled = !hasBody;
+  let cleaned = false;
+
+  const abort = (reason: unknown = new DOMException('Client disconnected', 'AbortError')) => {
+    if (!abortController.signal.aborted) abortController.abort(reason);
+    if (!bodySettled && bodyController) {
+      bodySettled = true;
+      bodyController.error(reason);
+    }
+  };
+  const onAborted = () => abort();
+  const onError = (error: Error) => abort(error);
+  const onSocketClose = () => abort();
+  const onData = (chunk: Uint8Array) => {
+    if (!bodySettled && bodyController) bodyController.enqueue(new Uint8Array(chunk));
+  };
+  const onEnd = () => {
+    if (bodySettled || !bodyController) return;
+    bodySettled = true;
+    bodyController.close();
+  };
+  req.once('aborted', onAborted);
+  req.once('error', onError);
+  req.socket?.once('close', onSocketClose);
+
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    req.removeListener('aborted', onAborted);
+    req.removeListener('error', onError);
+    req.socket?.removeListener('close', onSocketClose);
+    req.removeListener('data', onData);
+    req.removeListener('end', onEnd);
+  };
+
+  const request = new Request(url, {
     method,
     headers,
+    signal: abortController.signal,
     body: hasBody
       ? new ReadableStream({
         start(controller) {
-          req.on('data', (chunk) => controller.enqueue(new Uint8Array(chunk)));
-          req.on('end', () => controller.close());
-          req.on('error', (err) => controller.error(err));
+          bodyController = controller;
+          req.on('data', onData);
+          req.on('end', onEnd);
+        },
+        cancel(reason) {
+          abort(reason);
+          req.destroy(reason instanceof Error ? reason : undefined);
         },
       })
       : undefined,
     // @ts-expect-error Node 18 requires this for a non-GET body; ignored elsewhere.
     duplex: hasBody ? 'half' : undefined,
   });
+  Object.defineProperty(request, Symbol.for('openelement.node-bridge-request'), {
+    configurable: false,
+    enumerable: false,
+    value: { abort, cleanup } satisfies NodeBridgeRequestState,
+  });
+  return request;
+}
+
+function nodeBridgeRequestState(request: Request | undefined): NodeBridgeRequestState | undefined {
+  if (!request) return undefined;
+  return (request as NodeBridgeTrackedRequest)[
+    Symbol.for('openelement.node-bridge-request')
+  ];
 }
 
 /**
@@ -158,14 +222,90 @@ export function applyWebResponseHeaders(
  * Set-Cookie array handling of applyWebResponseHeaders), then the streamed
  * body. A body pump failure ends the response instead of hanging.
  */
-export function writeWebResponse(response: Response, res: ServerResponse): void {
+export function writeWebResponse(
+  response: Response,
+  res: ServerResponse,
+  request?: Request,
+): void {
   res.statusCode = response.status;
   applyWebResponseHeaders(response.headers, (key, value) => res.setHeader(key, value));
-  if (!response.body) {
+  const requestState = nodeBridgeRequestState(request);
+  let finished = false;
+  let settled = false;
+  let closed = false;
+  const reader = response.body?.getReader();
+
+  const cleanup = () => {
+    res.removeListener('finish', onFinish);
+    res.removeListener('close', onClose);
+    res.removeListener('error', onError);
+    requestState?.cleanup();
+  };
+  const onFinish = () => {
+    finished = true;
+    settled = true;
+    cleanup();
+  };
+  const cancelBody = async (reason: unknown) => {
+    if (settled) return;
+    settled = true;
+    requestState?.abort(reason);
+    try {
+      await reader?.cancel(reason);
+    } catch {
+      // The source may already have errored or closed; cancellation is best-effort.
+    }
+    cleanup();
+  };
+  const onClose = () => {
+    closed = true;
+    if (!finished) {
+      const reason = new DOMException('Client disconnected', 'AbortError');
+      requestState?.abort(reason);
+      void cancelBody(reason);
+      return;
+    }
+    cleanup();
+  };
+  const onError = (error: Error) => {
+    requestState?.abort(error);
+    void cancelBody(error);
+  };
+  res.once('finish', onFinish);
+  res.once('close', onClose);
+  res.once('error', onError);
+
+  if (!reader) {
     res.end();
     return;
   }
-  const reader = response.body.getReader();
+  const waitForDrain = () =>
+    new Promise<void>((resolve, reject) => {
+      if (closed) {
+        reject(new DOMException('Client disconnected', 'AbortError'));
+        return;
+      }
+      const remove = () => {
+        res.removeListener('drain', onDrain);
+        res.removeListener('close', onDrainClose);
+        res.removeListener('error', onDrainError);
+      };
+      const onDrain = () => {
+        remove();
+        resolve();
+      };
+      const onDrainClose = () => {
+        remove();
+        reject(new DOMException('Client disconnected', 'AbortError'));
+      };
+      const onDrainError = (error: Error) => {
+        remove();
+        reject(error);
+      };
+      res.once('drain', onDrain);
+      res.once('close', onDrainClose);
+      res.once('error', onDrainError);
+    });
   const pump = async () => {
     while (true) {
       const { done, value } = await reader.read();
@@ -173,10 +313,13 @@ export function writeWebResponse(response: Response, res: ServerResponse): void 
         res.end();
         break;
       }
-      res.write(value);
+      if (!res.write(value)) await waitForDrain();
     }
   };
-  pump().catch(() => res.end());
+  pump().catch(async (error) => {
+    await cancelBody(error);
+    if (!res.destroyed && !res.writableEnded) res.end();
+  });
 }
 
 /**
@@ -190,6 +333,7 @@ export const NODE_BRIDGE_EMBEDDED_FUNCTIONS = [
   validateHostHeader,
   resolveRequestUrl,
   nodeRequestToWeb,
+  nodeBridgeRequestState,
   applyWebResponseHeaders,
   writeWebResponse,
 ];

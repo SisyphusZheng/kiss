@@ -501,11 +501,10 @@ const trustProxy = process.env.OPEN_ELEMENT_TRUST_PROXY === '1';
 const server = createServer((req, res) => {
   const request = nodeRequestToWeb(req, { host: hostname, port, trustProxy });
   handleRequest(request).then((response) => {
-    writeWebResponse(response, res);
+    writeWebResponse(response, res, request);
   }).catch((err) => {
     console.error('[openElement serve] fatal handler error:', err);
-    res.statusCode = 500;
-    res.end('Internal Server Error');
+    writeWebResponse(new Response('Internal Server Error', { status: 500 }), res, request);
   });
 });
 

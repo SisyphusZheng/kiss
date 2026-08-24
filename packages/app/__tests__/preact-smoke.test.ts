@@ -16,6 +16,7 @@ import { assertEquals, assertExists, assertInstanceOf, assertStringIncludes } fr
 import { OpenElement } from '@openelement/element';
 import { signal } from '@openelement/element';
 import { h } from 'preact';
+import { useLayoutEffect } from 'preact/hooks';
 import { definePreactIsland, type PreactIslandOptions } from '../src/preact.ts';
 import { installDomStubs, StubNode, suppressDocument } from './dom-stubs.ts';
 
@@ -343,6 +344,72 @@ Deno.test('Preact island smoke: dismount does not throw', () => {
     // disconnectedCallback should be callable without throwing
     // (it disposes hydration scope, static props, and lifecycle abort)
     instance.disconnectedCallback!();
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('Preact island smoke: update stays with the Preact renderer owner', () => {
+  const restore = installDomStubs();
+  try {
+    const props: { label: string } = { label: 'initial' };
+    const Component = (props: { label?: string }) => h('div', null, props.label ?? 'initial');
+    const ctor = definePreactIsland('test-preact-owned-update', Component as never, { props });
+    const instance = new ctor() as OpenElement & {
+      clientActivate: () => void;
+      shadowRoot: ShadowRoot | null;
+    };
+    instance.shadowRoot = new StubNode() as unknown as ShadowRoot;
+    instance.clientActivate();
+    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'initial');
+
+    props.label = 'updated';
+    instance.requestUpdate();
+    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'updated');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('Preact island smoke: real detach unmounts once; same-turn move does not', async () => {
+  const restore = installDomStubs();
+  try {
+    let starts = 0;
+    let cleanups = 0;
+    const Component = () => {
+      useLayoutEffect(() => {
+        starts++;
+        return () => cleanups++;
+      }, []);
+      return h('div', null, 'owned');
+    };
+    const ctor = definePreactIsland('test-preact-owned-detach', Component as never);
+    const instance = new ctor() as OpenElement & {
+      clientActivate: () => void;
+      shadowRoot: ShadowRoot | null;
+      disconnectedCallback: () => void;
+    };
+    let connected = true;
+    Object.defineProperty(instance, 'isConnected', {
+      configurable: true,
+      get: () => connected,
+    });
+    instance.shadowRoot = new StubNode() as unknown as ShadowRoot;
+    instance.clientActivate();
+    assertEquals(starts, 1);
+
+    connected = false;
+    instance.disconnectedCallback();
+    connected = true;
+    instance.clientActivate();
+    await Promise.resolve();
+    assertEquals(cleanups, 0);
+    assertEquals(starts, 1);
+
+    connected = false;
+    instance.disconnectedCallback();
+    await Promise.resolve();
+    assertEquals(cleanups, 1);
   } finally {
     restore();
   }

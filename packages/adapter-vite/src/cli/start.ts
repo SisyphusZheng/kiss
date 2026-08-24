@@ -170,7 +170,7 @@ async function runStart(): Promise<void> {
       onHandlerError: (error) =>
         console.error('[openElement start] request-time handler error:', error),
     });
-    writeWebResponse(response, res);
+    writeWebResponse(response, res, request);
   });
 
   server.listen(port, hostname, () => {
