@@ -4,16 +4,16 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Source package line: `v0.43.1`.\
-> npm registry line: `v0.43.1` (published 2026-08-24, dist-tag `latest` — see Current release state).\
-> Latest landed train: `v0.43.1`.\
-> Active execution target: `v0.43.1`.\
+> Source package line: `v0.43.2`.\
+> npm registry line: `v0.43.2` (published 2026-08-24, dist-tag `latest` — see Current release state).\
+> Latest landed train: `v0.43.2`.\
+> Active execution target: `v0.43.2`.\
 > Next planned train: `not scheduled (maintenance mode)`.\
 > Current implementation state: the 0.43 line is shipped and frozen under
 > ADR-0135; the #1002 production closure is complete.\
-> Planned line: `0.43.1` cumulative maintenance baseline; no later minor is
+> Planned line: `0.43.x` patch maintenance; no later minor is
 > scheduled. `0.43.0` (Universal WC SSR) shipped 2026-08-20 under ADR-0135.\
-> Maturity stage: stable (0.43.1 cumulative maintenance baseline — the 0.41.x interface freeze under
+> Maturity stage: stable (0.43.2 runtime stabilization over the 0.43.1 cumulative baseline — the 0.41.x interface freeze under
 > ADR-0119, the request-time loop freeze under ADR-0122, and the Universal
 > WC admission freeze under ADR-0135); the
 > abandoned beta naming is retired.
@@ -109,6 +109,7 @@ making the standard Custom Element contract span both layers. See the official
 | `0.42.0`          | WC light fullstack              | ADR-0120 loop (load → DSD → form → action → revalidate, no-JS) + first-mile `start`, fail-closed SSG, default CSRF same-origin; login via recipes (better-auth), not framework session                                                                                                    |
 | `0.43.0`          | Universal WC SSR                | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus, hydration-mismatch developer diagnostics (#631), recipes: rate-limit (#627), auth-guard (#630), file-data (#629); plus the OpenElement × Supabase × Cloudflare delivery path (epic #981) |
 | `0.43.1`          | Cumulative maintenance baseline | Requalify 33 Wave A issues, remediate six Wave B findings, independent Wave C closure, then enter patch-only maintenance under ADR-0140                                                                                                                                                   |
+| `0.43.2`          | Runtime stabilization closure   | Contain Node, Preact, router and action failure paths; harden Starter token, upload and Stripe boundaries; make clean-clone and parity evidence reproducible                                                                                                                              |
 | future minor      | Not scheduled                   | Requires an ADR-0140 re-entry decision backed by a concrete cross-application need, compatibility analysis, migration plan and real-product evidence                                                                                                                                      |
 | `1.0.0`           | Long-term stable product goal   | Not scheduled; external production use must first prove that the five-package interfaces and support policy are ready for a compatibility commitment                                                                                                                                      |
 
@@ -134,10 +135,10 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.43.1` is both the current source package line and the published npm
-line (2026-08-24, dist-tag `latest`). It follows the `0.43.0` Universal WC
-SSR stable line and its `0.43.0-alpha.2` train. No later minor is scheduled;
-`0.43.x` is now in maintenance mode after the `v0.43.1` cumulative baseline. These are
+`0.43.2` is both the current source package line and the published npm
+line (2026-08-24, dist-tag `latest`). It is a compatibility-preserving runtime
+stabilization patch over the `v0.43.1` cumulative baseline. No later minor is
+scheduled; `0.43.x` remains in maintenance mode under ADR-0140. These are
 separate facts by design: landed work is not described as published until the
 registry and immutable release evidence prove it.
 npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn

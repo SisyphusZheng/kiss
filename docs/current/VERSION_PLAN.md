@@ -1,40 +1,26 @@
-# v0.43.1 — cumulative maintenance baseline
+# v0.43.2 — runtime failure containment and stabilization closure
 
-> Current source package line: `v0.43.1`\
-> Current npm registry line: `v0.43.1` (published 2026-08-24, dist-tag `latest`)\
-> Latest landed train: `v0.43.1`\
-> Active release target: `v0.43.1`\
+> Current source package line: `v0.43.2`\
+> Current npm registry line: `v0.43.2` (published 2026-08-24, dist-tag `latest`)\
+> Latest landed train: `v0.43.2`\
+> Active release target: `v0.43.2`\
 > Next planned train: `not scheduled (maintenance mode)`\
-> Planning release target: `v0.43.1` (audit remediation and maintenance handoff)\
+> Planning release target: `v0.43.2` (compatible runtime and release hardening)\
 > Current maturity stage: stable (`0.43.x`, frozen by ADR-0119, ADR-0122,
 > ADR-0135 and maintained under ADR-0140)
 
 ## Objective and scope
 
-`v0.43.1` is a cumulative correctness and release-truth patch. It does not
-open a new feature train. It must requalify every issue previously counted as
-closed for the patch, remediate every confirmed post-merge finding, and pass an
-independent closure audit on the exact release candidate.
+`v0.43.2` is a compatibility-preserving correction patch over the cumulative
+`v0.43.1` maintenance baseline. It closes observable failure paths in the
+framework runtime and Supabase × Cloudflare reference application, then makes
+their behavioral and release evidence reproducible from a clean checkout.
 
-- **Wave A — requalification:** all 33 issues originally closed through
-  PR #1115, tracked by #1124. Each receives an evidence-backed verdict:
-  `verified`, `partial`, `regressed`, `superseded`, or `unverifiable`.
-- **Wave B — confirmed remediation:** fresh-project Data API privileges
-  (#1125), nested SSR data context (#1126), atomic replay request auditing
-  (#1127), recoverable attachment deletion (#1128), bounded Notes data and SSR
-  output (#1129), and a truthful authenticated JWT boundary (#1130).
-- **Wave C — independent closure:** #1131 repeats architecture, security,
-  database, runtime, test and release audits after Waves A and B. It records a
-  `GO` or `DO NOT RELEASE` verdict without inheriting earlier assumptions.
-  Real-project qualification found Realtime reconnect/delivery gap #1134;
-  Wave C includes its application-owned bounded reconciliation and recheck.
-- **Governance:** #1132 records the post-release 0.43.x maintenance policy;
-  #1133 is the umbrella release gate.
-
-The cumulative audit record is
-[`2026-08-23-v0.43.1-post-merge-full-repo-audit.md`](../audit/2026-08-23-v0.43.1-post-merge-full-repo-audit.md).
-
-The patch preserves the existing product contract:
+The patch adds no public package or export, changes no applied migration, and
+does not introduce a framework session, transaction, outbox, retry or recovery
+abstraction. The frozen application-loop and Universal WC contracts remain in
+force. ADR-0141 records why Node disconnect propagation strengthens cleanup
+without changing ADR-0122 first-mile start semantics.
 
 ```text
 OpenElement = Web Components-native fullstack application framework
@@ -43,122 +29,91 @@ official build path = Vite + Nitro through @openelement/adapter-vite/nitro-mount
 ```
 
 Package responsibilities and exports remain governed by
-[`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) and the convergence rule in
-ADR-0114. This maintenance plan does not reopen either contract.
+[`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md); ADR-0114 continues to require one
+aligned five-package release line.
+
+## Work packages
+
+### Framework runtime
+
+- [x] #1135: Preact alone owns its island DOM across hydration, update, detach,
+      same-tick move, reconnect and teardown.
+- [x] #1136: the Node HTTP bridge propagates request abort, respects response
+      backpressure, cancels disconnected streams and removes listeners.
+- [x] #1143: router disposal invalidates pending programmatic and browser guard
+      work, redirect chains and rejected guards.
+- [x] #1144: unsupported action data (`undefined`, function, `Symbol`,
+      `BigInt`, circular values) retains the same `{ data: null }` failure
+      envelope in Hono development and Nitro production output.
+
+### SaaS reference application
+
+- [x] #1138: an upload finalize failure retains durable Storage cleanup intent
+      and the reconciler converges retries.
+- [x] #1139: Notes Realtime renews expiring Supabase tokens only through the
+      same-origin session boundary, handles 401, and rejects cross-origin use.
+- [x] #1145: Stripe webhook bodies are bounded for chunked, forged
+      `Content-Length`, overflow and stalled-stream cases before verification.
+
+### Tooling, docs and tests
+
+- [x] #1137: the public-interface gate fingerprints declaration dependency
+      graphs, including re-exported type-shape changes.
+- [x] #1140: current docs state the published maintenance line and frozen
+      contract honestly.
+- [x] #1141: docs no longer claim the SPA options interface is a named public
+      export.
+- [x] #1142: the root test task succeeds in a clean clone and includes the
+      Starter's separate test configuration.
+- [x] #1147: the Hono/Nitro parity harness owns an exact loopback server and
+      disables Vite's independent WebSocket listener.
 
 ## Non-goals
 
-- No new public package, provider-owned abstraction, framework auth/ORM, or CRM
-  business primitive.
-- No speculative framework session/cache/outbox API. A local recovery state
-  required to correct the reference application may be implemented without
-  claiming a new general-purpose framework capability.
-- No `0.44.0` feature train, streaming SSR, OTel product surface, generic ISR
-  semantics, or broad production-runtime expansion.
-- No package version bump, tag, GitHub Release, npm publication, merge to
-  `main`, or milestone closure merely because an issue exists or a unit test
-  passes.
-- No China-specific product work. The separate CRM product is global-first;
-  framework changes are admitted only when the product exposes a reusable
-  framework defect or a standards-level missing seam.
-
-## Tasks
-
-### TP-1 — establish auditable scope
-
-- [x] Reopen milestone `v0.43.1`.
-- [x] Create Wave A/B/C, governance and umbrella issues (#1124–#1133).
-- [x] Preserve the post-merge audit as repository evidence.
-- [x] Record ADR-0140 and align all current release anchors.
-
-### TP-2 — Wave A requalification
-
-- [x] Build a 33-row issue matrix for #615, #892, #1087, #1089–#1114 and
-      #1116–#1123.
-- [x] Link each verdict to implementation, tests and current-HEAD gate output.
-- [x] Reopen or create a narrowly scoped follow-up for every non-`verified`
-      verdict; do not silently relabel partial work as complete.
-
-### TP-3 — Wave B remediation
-
-- [x] #1125: explicit least-privilege grants plus fresh-default integration
-      evidence.
-- [x] #1126: loader/action context survives complete nested SSR evaluation and
-      concurrent renders cannot cross-contaminate.
-- [x] #1127: replay state transition and actor audit commit in one Postgres
-      transaction.
-- [x] #1128: delete converges after Storage failure, database failure, process
-      interruption and duplicate requests.
-- [x] #1129: database length constraints, keyset pagination, page cap and SSR
-      byte budget cover Notes.
-- [x] #1130: the documented JWT boundary matches runtime behavior and the
-      authenticated-render test proves the allowed location and cleanup.
-
-### TP-4 — Wave C independent closure
-
-- [x] Re-run the full architecture and package-boundary review.
-- [x] Re-run threat modeling across browser, SSR, Postgres, Storage, Stripe,
-      Queues and scanner boundaries.
-- [x] Re-run database privilege, RLS, constraint, index, pagination, atomicity
-      and reconciliation qualification.
-- [x] Re-run runtime parity and release gates on the exact candidate SHA.
-- [x] Record external-provider evidence as `verified`, `blocked`, or
-      `not run`; local stubs and dry-runs must not be reported as production proof.
-- [x] Publish the Wave C `GO`/`DO NOT RELEASE` report before any release action.
-- [x] #1134: Realtime subscribe/reconnect claims freshness only after bounded
-      durable Notes reconciliation, and two real-project repetitions pass.
+- No new user-facing feature, public API, package or runtime default.
+- No modification to the 23 applied Supabase migrations and no remote schema
+  deployment as part of this patch.
+- No real Stripe, Storage, Queue, scanner or other provider write during local
+  qualification.
+- No claim that generic production recovery, observability, cache/ISR,
+  streaming SSR or CRM business primitives now belong to the framework.
+- No `0.44.0` feature train. A future minor still requires ADR-0140 re-entry
+  evidence from a concrete cross-application requirement.
 
 ## Acceptance
 
-The patch is release-ready only when all of the following are true:
+1. All 12 milestone issues (#1135–#1145 and #1147) have a locked failing or
+   boundary assertion and a minimal root-cause correction.
+2. Public exports and package ownership remain compatible with `0.43.1`; all
+   five packages and the Starter resolve one aligned `0.43.2` line.
+3. Root tests, coverage, build, Chromium, Firefox and WebKit E2E,
+   request-time parity, Starter, Node/Workers Nitro proofs and packed consumers
+   pass on the exact release candidate.
+4. Repeated runtime qualification reports no unbounded listener, file
+   descriptor, timer, heap or unhandled-rejection growth.
+5. Documentation, package artifacts, npm registry, tag, GitHub Release and
+   immutable release evidence agree before milestone closure.
+6. Publication occurs only under the maintainer's explicit 2026-08-24
+   authorization.
 
-1. #1124–#1132 and #1134 are closed with reproducible evidence and #1133
-   contains the final candidate SHA.
-2. Every Wave A issue has an explicit current-HEAD verdict; no unresolved
-   `partial`, `regressed`, or `unverifiable` item is hidden.
-3. All six Wave B findings have failure-injection or boundary-level regression
-   coverage, not only happy-path unit tests.
-4. Database qualification proves both privileges and RLS: `anon`,
-   `authenticated` and `service_role` receive only their intended operations.
-5. Node 20/24, Deno, workerd and all three supported browsers remain green for
-   the surfaces they claim.
-6. Wave C returns `GO`; docs, source, registry and release evidence agree.
-7. The maintainer explicitly authorizes publication after reviewing the final
-   evidence. Readiness never implies authorization.
+## Verification matrix
 
-## Test matrix
+| Boundary    | Required evidence                                                                             |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| Node bridge | abort, close, `drain`, stream cancel, listener cleanup, keep-alive and repeated resource runs |
+| Preact      | first hydration, update, real detach, same-tick move, reconnect and idempotent teardown       |
+| Router      | dispose during programmatic/browser guards, redirects and rejection                           |
+| Action wire | identical Hono/Nitro 422 envelopes for every unsupported value                                |
+| Starter     | Stripe body limits; Notes renewal/401/origin; upload Storage/RPC/finalize failure matrix      |
+| Repository  | fmt, lint, typecheck, graph, interface, docs, migrations, coverage and clean-root tests       |
+| Outputs     | static freeze, Nitro Node/Workers, local and packed consumers, third-party WC and npm dry-run |
+| Release     | exact-SHA main CI, five npm artifacts, dist-tag, tag, GitHub notes and closure evidence       |
 
-| Boundary            | Required evidence                                                                                                                  |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Framework packages  | fmt, lint, typecheck, unit tests, architecture graph, package surface, interface snapshot, exports                                 |
-| SSR data context    | nested child/grandchild loader and action reads; two concurrent renders with distinct values; exception cleanup                    |
-| Supabase schema     | immutable migration check; explicit grant inventory; RLS positive/negative matrix; constraints and indexes                         |
-| Admin replay        | normal transaction plus injected audit failure proving rollback                                                                    |
-| Attachment deletion | Storage failure, finalize failure, mid-flight interruption, retry and reconciler convergence                                       |
-| Notes               | 10,001-row keyset fixture, oversized direct insert rejection, stable cursor, response-byte budget on Node and Workers              |
-| JWT boundary        | authenticated request-time render, allowlisted token location, `no-store`, post-hydration attribute removal, static-output absence |
-| Stripe              | deterministic API/webhook tests and official security posture; real-provider status reported separately                            |
-| Consumers           | local, packed, starter, Nitro/Node and element ESM smoke                                                                           |
-| Browsers            | Chromium, Firefox and WebKit critical paths; skips listed and justified                                                            |
-| Release             | docs truth, workflow, evidence consistency, dry-run packaging, exact-SHA CI, post-publish smoke only after authorization           |
+## Post-v0.43.2 policy
 
-## Release evidence requirements
-
-- Store the Wave A matrix and Wave C report under `docs/audit/`.
-- Record exact commit, commands, counts, durations, skips and environment
-  versions. Do not reuse PR #1115 counts as candidate evidence.
-- Keep local qualification, provider sandbox evidence and production evidence
-  distinct.
-- Preserve failed release attempts and partial external verification honestly.
-- Do not bump versions until implementation and local gates pass. Do not merge,
-  tag or publish until the workflow order and explicit maintainer authorization
-  are both satisfied.
-
-## Post-v0.43.1 maintenance policy
-
-After release, `0.43.x` remains the active maintenance line. Compatible bug,
-security, dependency, runtime-compatibility, documentation and release-tooling
-fixes may ship as patches. No next minor is scheduled. A future minor is opened
-only by a maintainer-approved ADR and version plan demonstrating a concrete
-cross-application requirement; the separate CRM is the primary proving ground,
-not a source of framework-specific business abstractions. See ADR-0140.
+`0.43.x` remains the active maintenance line. Compatible correctness,
+security, dependency, runtime-compatibility, documentation, test and release
+tooling fixes may ship as later patches. No next minor is scheduled. The
+separate global-first CRM remains the primary proving ground; provider-neutral
+requirements may propose framework work, while CRM domain and China-market
+integration logic stays outside framework packages.

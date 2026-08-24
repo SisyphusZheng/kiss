@@ -329,10 +329,10 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.1',
-      theme: 'cumulative audit closure — maintenance baseline',
+      version: 'v0.43.2',
+      theme: 'runtime failure containment — stabilization closure',
       copy:
-        'The cumulative patch for the frozen 0.43 line requalifies 33 earlier closures, remediates six Wave B findings, closes the Realtime reconciliation gap, and records an independent Wave C GO. Framework SSR, hydration, content and release boundaries are rechecked alongside the Supabase × Cloudflare starter; the hosted project converges at 23 ordered migrations with its ACL, RLS, recovery and Advisor evidence recorded. After this release ADR-0140 keeps 0.43.x in patch maintenance mode, with no 0.44 feature train scheduled.',
+        'This compatible patch contains failure paths across the Node bridge, Preact ownership, router disposal and action wire, then hardens Notes token renewal, upload cleanup intent and bounded Stripe webhook reads in the Supabase × Cloudflare starter. Clean-clone, declaration-graph and loopback parity gates make the release reproducible. ADR-0140 keeps 0.43.x in patch maintenance mode, with no 0.44 feature train scheduled.',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -378,10 +378,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.43.1',
-      theme: '累计审计收敛 — 维护基线',
+      version: 'v0.43.2',
+      theme: '运行时故障收敛 — 稳定化闭环',
       copy:
-        '冻结后的 0.43 线累计补丁重新核验此前 33 项关闭结论，修复 Wave B 的六项发现，关闭 Realtime 对账缺口，并由独立 Wave C 给出 GO。框架 SSR、hydration、内容与发布边界连同 Supabase × Cloudflare starter 一并复核；托管项目收敛到 23 个有序 migration，并记录 ACL、RLS、恢复与 Advisor 证据。发布后按 ADR-0140 进入 0.43.x patch 维护模式，不预排 0.44 功能列车。',
+        '这个兼容 patch 收敛 Node bridge、Preact 所有权、router dispose 与 action wire 的故障路径，并强化 Supabase × Cloudflare starter 的 Notes token 续期、upload 清理意图和 Stripe webhook 有界读取。clean-clone、声明图与 loopback parity 门禁让发布可复现。ADR-0140 继续将 0.43.x 置于 patch 维护模式，不预排 0.44 功能列车。',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -435,7 +435,7 @@ const content = {
       '[{"id":"release-line","label":"Release line"},{"id":"product-boundary","label":"Product boundary"},{"id":"decision-matrix","label":"Decision matrix"},{"id":"system-visual","label":"System visual"}]',
     architecture: 'Architecture',
     freezeBadge: 'ADR-0140 maintenance mode',
-    nowTitle: '0.43.1 is the cumulative maintenance baseline for the frozen 0.43 line.',
+    nowTitle: '0.43.2 closes runtime failure paths on the frozen 0.43 line.',
     nowCopy: (version: string) =>
       `${version} is the published stable maintenance line. ADR-0119, ADR-0122, and ADR-0135 keep the framework contracts frozen; ADR-0140 admits compatible patches and requires a new maintainer decision before any minor feature train.`,
     releaseLineIndex: '01 / release line',
@@ -513,7 +513,7 @@ const content = {
       '[{"id":"release-line","label":"发布线"},{"id":"product-boundary","label":"产品边界"},{"id":"decision-matrix","label":"决策矩阵"},{"id":"system-visual","label":"系统图示"}]',
     architecture: '架构',
     freezeBadge: 'ADR-0140 维护模式',
-    nowTitle: '0.43.1 是冻结后 0.43 线的累计维护基线。',
+    nowTitle: '0.43.2 收敛冻结后 0.43 线的运行时故障路径。',
     nowCopy: (version: string) =>
       `${version} 是已发布的稳定维护线。ADR-0119、ADR-0122 与 ADR-0135 继续冻结框架契约；ADR-0140 只准入兼容 patch，任何 minor 功能列车都必须重新经过维护者决策。`,
     releaseLineIndex: '01 / 发布线',

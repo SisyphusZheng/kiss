@@ -1,19 +1,20 @@
 # OpenElement Status
 
 > Updated: 2026-08-24\
-> Repository package line: `v0.43.1`\
-> npm registry line: `v0.43.1` (published 2026-08-24, dist-tag `latest`)\
-> Latest landed train: `v0.43.1`\
-> Active release target: `v0.43.1`\
+> Repository package line: `v0.43.2`\
+> npm registry line: `v0.43.2` (published 2026-08-24, dist-tag `latest`)\
+> Latest landed train: `v0.43.2`\
+> Active release target: `v0.43.2`\
 > Next planned train: `not scheduled (maintenance mode)`\
-> Next release line: `v0.43.1` (hardening closure)\
+> Next release line: `not scheduled (maintenance mode)`\
 > Product graph: five packages\
 > Current maturity stage: stable (0.43.x, Universal WC SSR + the Supabase × Cloudflare delivery path under ADR-0135; maintenance mode under ADR-0140)
 
 ## Current position
 
 OpenElement is a Web Components-native application framework, stable at
-`0.43.1` as the cumulative maintenance baseline over ADR-0135: the 0.41.x static freeze (ADR-0119 — `defineElement`,
+`0.43.2` as the runtime stabilization patch over the cumulative `0.43.1`
+maintenance baseline and ADR-0135: the 0.41.x static freeze (ADR-0119 — `defineElement`,
 `definePage`, `buildApp`, the five-package graph, the supported subpaths and
 the static/SPA semantics of `defineApp`) and the request-time Application Loop
 freeze (ADR-0122 — loader/action signatures, the
@@ -27,8 +28,10 @@ unfrozen and are not scheduled. `v0.43.1` is a cumulative maintenance baseline:
 Wave A requalified the 33 earlier closures, Wave B remediated six confirmed
 findings, and Wave C returned `GO` on the schema/runtime candidate after
 exact-SHA CI, authorized 23-migration Supabase application, post-apply
-catalog/RLS qualification, and Advisor review. v0.43.1 is published and the
-0.43.x line is now in ADR-0140 maintenance mode. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
+catalog/RLS qualification, and Advisor review. `v0.43.2` adds compatible
+failure containment for the Node bridge, Preact lifecycle, router disposal,
+action serialization and Starter provider boundaries. The 0.43.x line remains
+in ADR-0140 maintenance mode. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha
@@ -122,6 +125,7 @@ recipes).
 | `0.42.0`          | WC light fullstack stable — Application Loop frozen (ADR-0122)           |
 | `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                     |
 | `0.43.1`          | Cumulative maintenance baseline: Wave A/B/C closure                      |
+| `0.43.2`          | Runtime failure containment and stabilization closure                    |
 | future minor      | Not scheduled; requires ADR-0140 re-entry evidence                       |
 | `1.0.0`           | Stable five-package product                                              |
 
