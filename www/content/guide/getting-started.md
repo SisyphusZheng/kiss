@@ -4,7 +4,7 @@ lede: 'OpenElement is a Web Components-native, static-first application framewor
 order: 1
 ---
 
-> The current source line is `{{OPENELEMENT_VERSION}}`. The published npm line is the stable 0.42 line (dist-tag `latest`); it ships under the ADR-0122 freeze on top of the untouched ADR-0119 static freeze.
+> The current source and published npm line is stable `{{OPENELEMENT_VERSION}}` (dist-tag `latest`), carrying the ADR-0119 static freeze, the ADR-0122 application-loop freeze and the 0.43 Universal WC SSR contract.
 
 ## Install
 
@@ -16,7 +16,7 @@ cd my-app
 deno task dev
 ```
 
-The default dist-tag is the stable 0.42 line. `--minimum-dependency-age 0` is needed because Deno's default `minimumDependencyAge` (~24h) refuses packages published within the last day.
+The default dist-tag is the stable 0.43 line. `--minimum-dependency-age 0` keeps the bootstrap usable during the first day after a compatible patch is published, when Deno's default `minimumDependencyAge` would otherwise refuse it.
 
 > Deno 2.8+ is required — the generated starter writes the `minimumDependencyAge` config key, which older Deno versions do not understand.
 

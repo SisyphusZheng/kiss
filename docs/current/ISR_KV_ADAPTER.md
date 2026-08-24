@@ -1,21 +1,19 @@
 # ISR KV Adapter — self-build contract (multi-instance / edge)
 
-> Status: **experimental, 0.42.** ISR is not wired into the 0.42 request-time
-> server entry (see `docs/current/VERSION_PLAN.md` → "ISR status (0.42)"). This
-> document is the forward-compatibility contract for teams that want to run ISR
-> at the edge once it is enabled (targeting **0.44**). The in-box
+> Status: **dormant experimental design note.** ISR is not wired into the
+> current request-time server entry and is not part of the 0.43.x public
+> runtime contract. No delivery version is assigned. The in-box
 > `MemoryIsrCache` is intentionally single-instance only.
 >
-> **Not importable on 0.42:** the ISR runtime named below
+> **Not importable on the current line:** the ISR runtime named below
 > (`renderIsrResponse`, `findIsrManifestEntry`, `IsrRuntimeCache`,
 > `MemoryIsrCache`, `isIsrRouteConfig`) lives in
 > `packages/element/src/internal/` and is **not** forwarded by any public
-> export entry of `@openelement/element` on the 0.42 line, so application
+> export entry of `@openelement/element`, so application
 > code cannot import it. Only the `IsrCacheEntry` / `IsrCacheResult` /
 > `CacheEntry` **types** are public (`@experimental`). The runtime is
-> scheduled to be wired and exposed with the 0.44 ISR work; treat the
-> `renderIsrResponse` wiring instructions below as the 0.44 contract, not a
-> 0.42 how-to.
+> not scheduled for exposure. Treat the `renderIsrResponse` wiring below as
+> design exploration, not a supported how-to or future-version promise.
 
 ## Why a KV adapter is required
 
@@ -29,9 +27,9 @@ LRU. Under multi-instance or edge deployment it has two structural gaps:
 2. **No shared cache.** Instance A's regenerated entry is invisible to instance B,
    so the same URL can serve two different versions.
 
-Until a KV-backed adapter exists, ISR at the edge is unsafe. Build your own
-against the contract below, or wait for the 0.44 reference implementation
-(ADR-0038 promised `DenoKvIsrCache` / `CfKvIsrCache`).
+Until a KV-backed adapter exists, ISR at the edge is unsafe. The examples
+below document the requirements a future proposal would have to satisfy;
+they do not make internal runtime imports supported application APIs.
 
 ## The contract to implement
 
@@ -123,9 +121,9 @@ export class DenoKvIsrCache {
 }
 ```
 
-Wire it by passing an instance as the `cache` option to `renderIsrResponse`
-once ISR is enabled in the request-time entry and the runtime is exposed
-through the public export surface (0.44 target — see the status note above).
+If a future ADR enables ISR in the request-time entry and exposes its runtime
+through the public surface, a cache adapter would be passed as the `cache`
+option to `renderIsrResponse`. Until then this is illustrative only.
 Two responsibilities stay with the host, not the runtime:
 
 - **Persisting tags.** `IsrCacheEntry` has no `tags` field; store your route's
@@ -135,9 +133,9 @@ Two responsibilities stay with the host, not the runtime:
   successful action write, the host invokes `purgeTag` with the affected tags
   to invalidate stale HTML across all instances.
 
-## Deployment prerequisite (until 0.44)
+## Deployment prerequisite for any future public ISR runtime
 
 Treat a KV adapter as a **deployment prerequisite** for ISR, not an optional
 extra: without `purgeTag`, a published action can leave every edge node serving
-stale HTML indefinitely. Single-instance (`deno task start`, one process) is
-the only safe 0.42 topology, and even there ISR is inert until wired.
+stale HTML indefinitely. The current public runtime keeps ISR inert; do not
+infer production support from these internal types or examples.

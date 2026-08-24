@@ -12,6 +12,6 @@ order: 90
 
 已知包可配置为 package island，并利用可用的 CEM metadata，无需引入已退役的包接口。
 
-## 路线图诊断
+## 当前诊断
 
-通用的 DSD/light/client-only 分类与 hydration 不匹配诊断属于 `0.43` 路线图工作，并非当前已上市的能力宣称。
+0.43 版本线已经交付通用 DSD/light/client-only 分类、hydration 不匹配诊断与已跟踪的第三方 WC SSR 语料库。准入仍依赖显式 package-island 配置与已观测 metadata，并不意味着对所有第三方组件作笼统认证。

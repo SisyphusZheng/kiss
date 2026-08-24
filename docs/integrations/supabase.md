@@ -215,6 +215,7 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
         anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
         userId: user.id,
         accessToken: session?.access_token ?? '',
+        accessTokenExpiresAt: session?.expires_at,
       },
     };
   };
@@ -411,8 +412,22 @@ export function createUploadAction(
       reservation_id: reservationId,
     });
     if (finalized.error) {
-      await supabase.storage.from(BUCKET).remove([key]);
-      await supabase.rpc('release_attachment', { reservation_id: reservationId });
+      // Finalization may have committed even when its response was lost. Move
+      // the matching row (reserved or pending_scan) into the existing durable
+      // deletion state before touching Storage. The scheduled reconciler can
+      // finish either a failed Storage remove or a failed row completion.
+      const requested = await supabase.rpc('request_attachment_delete', { target_key: key });
+      if (requested.error) {
+        throw new Error('upload finalization is uncertain; cleanup is pending');
+      }
+      const removed = await supabase.storage.from(BUCKET).remove([key]);
+      if (removed.error) {
+        throw new Error('upload finalization failed; object deletion is queued for retry');
+      }
+      const completed = await supabase.rpc('complete_attachment_delete', { target_key: key });
+      if (completed.error) {
+        throw new Error('object deleted; upload quota reconciliation is pending');
+      }
       throw new Error('upload could not be finalized');
     }
     const queue = ctx.env.ATTACHMENT_SCAN_QUEUE as
@@ -448,9 +463,13 @@ token the connection authenticates as `anon`, which has no SELECT policy on
 the user's access token as a one-shot `data-access-token` attribute. The page
 host's internal loader data is not serialized as a public prop, so this is the
 token's only HTML location. The island calls `realtime.setAuth`, immediately
-removes the attribute, retains the token only in element-private memory so a
-new client can authenticate after reconnect, wipes it on disconnect, persists
-no client-side session, and adds a hard `user_id=eq.<uid>` filter on top. The
+removes the attribute, and adds a hard `user_id=eq.<uid>` filter on top. Before
+expiry, and once on a reconciliation 401, it POSTs to the same-origin
+`/api/session-token` endpoint. That server route rotates the Supabase session
+through HttpOnly cookies and returns only a new short-lived access token plus
+expiry; no refresh token enters DOM, island memory or response JSON. Realtime's
+`accessToken` callback and `setAuth` propagate the renewed JWT in-band. The
+island wipes its token on disconnect and persists no client-side session. The
 route is request-time and `no-store`.
 
 Realtime delivery is not treated as a durable queue. A channel can report
@@ -474,6 +493,10 @@ export const openElement = defineIslandConfig({
 export const MAX_LIVE_EVENTS = 100;
 export const MAX_RECONNECT_DELAY_MS = 30_000;
 export const RECONCILE_INTERVAL_MS = 10_000;
+export interface NotesAccessToken {
+  accessToken: string;
+  expiresAt: number | null;
+}
 
 export interface LiveNoteEvent {
   id: string;
@@ -516,6 +539,25 @@ export function mergeReconciledEvents(
 export function reconnectDelayMs(attempt: number, random = Math.random): number {
   const cap = Math.min(MAX_RECONNECT_DELAY_MS, 1_000 * 2 ** Math.max(0, attempt));
   return Math.floor(random() * cap);
+}
+
+export function shouldRefreshAccessToken(
+  expiresAtSeconds: number | null,
+  nowMs = Date.now(),
+): boolean {
+  return (expiresAtSeconds ?? 0) * 1_000 <= nowMs + 60_000;
+}
+
+export async function requestNotesAccessToken(
+  fetchImpl: typeof fetch = fetch,
+): Promise<NotesAccessToken> {
+  const response = await fetchImpl('/api/session-token', {
+    method: 'POST',
+    cache: 'no-store',
+    credentials: 'same-origin',
+  });
+  if (!response.ok) throw new Error(`Session renewal failed (${response.status})`);
+  return response.json() as Promise<NotesAccessToken>;
 }
 ```
 

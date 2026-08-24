@@ -219,7 +219,7 @@ const content = {
     s1Index: '01 / interface rule',
     s1Title: 'Authoring starts at product packages.',
     s1Copy:
-      'Current documentation, starters and dogfood use the five supported interfaces. Load, action, form and revalidation capabilities are frozen at 0.42.0 (ADR-0122) — session, cache and streaming remain 0.43/0.44 roadmap work.',
+      'Current documentation, starters and dogfood use the five supported interfaces. Loader, action and form semantics are frozen at 0.42.0 (ADR-0122); framework session, active cache and streaming are outside the current contract and have no assigned version.',
     s2Index: '02 / supported surface',
     s2Title: 'Five products, one application path.',
     s2Copy:
@@ -239,7 +239,7 @@ const content = {
     s1Index: '01 / 接口规则',
     s1Title: '创作从产品包开始。',
     s1Copy:
-      '当前文档、starter 与 dogfood 都使用这五个受支持的接口。Load、action、表单与 revalidation 能力已在 0.42.0 冻结（ADR-0122）——session、cache 与 streaming 仍是 0.43/0.44 的 roadmap 工作。',
+      '当前文档、starter 与 dogfood 都使用这五个受支持的接口。Loader、action 与表单语义已在 0.42.0 冻结（ADR-0122）；框架 session、active cache 与 streaming 不在当前契约内，且尚未分配版本。',
     s2Index: '02 / 受支持的产品面',
     s2Title: '五个产品，一条应用路径。',
     s2Copy: '每个包对应一个明确的使用者决策；被吸收的实现包保持私有。',

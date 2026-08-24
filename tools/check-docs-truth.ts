@@ -174,6 +174,21 @@ const LEGACY: Array<{ re: RegExp; name: string }> = [
   { re: /renderTemplateToString/, name: 'renderTemplateToString()' },
 ];
 
+const STALE_CURRENT_CONTRACT: Array<{ re: RegExp; name: string }> = [
+  {
+    re: /(?:0\.42.{0,80}unfrozen|unfrozen.{0,80}0\.42|0\.42.{0,80}未冻结)/iu,
+    name: 'accepted 0.42 contract described as unfrozen',
+  },
+  {
+    re: /\bSpaAppOptions\b/u,
+    name: 'non-exported SpaAppOptions named as a consumer type',
+  },
+  {
+    re: /(?:0\.44.{0,80}(?:target|scheduled|takes effect)|targeting.{0,40}0\.44)/iu,
+    name: 'unapproved 0.44 delivery assignment',
+  },
+];
+
 const CURRENT_DOC_ALLOWED = [
   'migration',
   'changelog',
@@ -218,6 +233,11 @@ const currentCheck: DocsTruthCheck = {
         if (legacyCss(line)) continue;
         for (const { re, name } of LEGACY) {
           if (re.test(line)) issues.push({ file, line: index + 1, text: name });
+        }
+        if (file.startsWith('docs/current/')) {
+          for (const { re, name } of STALE_CURRENT_CONTRACT) {
+            if (re.test(line)) issues.push({ file, line: index + 1, text: name });
+          }
         }
       }
     }
@@ -297,6 +317,23 @@ const wwwForbidden: Array<{ name: string; re: RegExp }> = [
   {
     name: 'retired UI surface',
     re: /@openelement\/ui\/(?:daisy-classes|open-modal|open-step-card)|<open-(?:modal|step-card)\b/,
+  },
+  {
+    name: 'stale current npm 0.42 claim',
+    re: /(?:published npm line|npm 发布线|default dist-tag|默认 dist-tag).{0,80}0\.42/iu,
+  },
+  {
+    name: 'delivered 0.43 capability described as roadmap',
+    re: /(?:0\.43.{0,80}(?:roadmap work|路线图工作)|(?:roadmap work|路线图工作).{0,80}0\.43)/iu,
+  },
+  {
+    name: 'frozen application-loop behavior described as unfrozen',
+    re: /(?:0\.42.{0,80}unfrozen|0\.42.{0,80}未冻结)/iu,
+  },
+  {
+    name: 'unapproved 0.44 delivery assignment',
+    re:
+      /(?:0\.44.{0,80}(?:scope|work|target|ISR|范围|工作|目标)|(?:scope|work|target|ISR|范围|工作|目标).{0,80}0\.44)/iu,
   },
   { name: 'retired prerelease current claim', re: activeRetiredPattern },
 ];

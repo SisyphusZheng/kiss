@@ -12,6 +12,9 @@ order: 90
 
 Known packages can be configured as package islands and use available CEM metadata without importing retired package surfaces.
 
-## Roadmap diagnostics
+## Current diagnostics
 
-Universal DSD/light/client-only classification and hydration-mismatch diagnostics are `0.43` roadmap work, not a current market claim.
+The 0.43 line ships Universal DSD/light/client-only classification,
+hydration-mismatch diagnostics and the tracked third-party WC SSR corpus.
+Admission still depends on explicit package-island configuration and observed
+metadata; it is not a blanket certification of every third-party component.

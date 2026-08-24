@@ -212,7 +212,7 @@ const outputs = [
   ['BROWSER', 'Pure static HTML + DSD. CDN-ready, no runtime.', false],
   [
     'NODE',
-    'Nitro server output. ISR manifests are forward-compat only — caching is 0.44 scope.',
+    'Nitro server output. ISR manifests are forward-compat only — active caching is outside the current contract.',
     true,
   ],
   ['WORKERS', 'Edge deploys from the same page model. Proof gate per release.', false],
@@ -253,7 +253,7 @@ const content = {
     specOutput: 'Server output',
     begin: 'Begin.',
     beginNote:
-      "The default dist-tag is the stable 0.42.0 line; --minimum-dependency-age 0 bypasses Deno's default ~24h minimumDependencyAge, which refuses same-day publishes.",
+      `The default dist-tag is stable ${PUBLISHED_STABLE_VERSION}; --minimum-dependency-age 0 keeps same-day compatible patches installable despite Deno's default ~24h minimumDependencyAge.`,
     facts: 'Facts behind the feeling',
     continueComposition: 'Continue the composition.',
     referenceCopy:
@@ -272,7 +272,7 @@ const content = {
     specOutput: '服务端输出',
     begin: '开始。',
     beginNote:
-      '默认 dist-tag 即 0.42.0 稳定线；--minimum-dependency-age 0 绕过 Deno 默认约 24h 的 minimumDependencyAge——默认会拒绝当天发布的包。',
+      `默认 dist-tag 即稳定版 ${PUBLISHED_STABLE_VERSION}；--minimum-dependency-age 0 可绕过 Deno 默认约 24 小时的 minimumDependencyAge，使当天发布的兼容补丁仍可安装。`,
     facts: '感觉背后的事实',
     continueComposition: '继续这场组合。',
     referenceCopy: '每一个场景都立足于公开产品面、架构与发布真相——不是装饰性的虚构。',

@@ -95,11 +95,13 @@ Application Loop: dynamic loader/action routes, no-JS + enhanced forms,
 check on generated action POSTs. Login apps are supported via the better-auth
 recipe on Web-standard `Request` headers.
 
-Explicitly **not** in the 0.42 claim (ADR-0122 §5): framework session/flash,
-cache/ISR, streaming SSR, performance SLOs, the third-party WC SSR corpus
-(0.43), production runtime recovery (0.44) and auth packages. The current
-promise is static-first applications with fullstack output paths—not broad
-fullstack parity.
+The historical 0.42 freeze explicitly excluded framework session/flash,
+cache/ISR, streaming SSR, performance SLOs, production-runtime recovery and
+auth packages. The third-party WC SSR corpus was subsequently delivered in
+0.43. Framework-owned recovery and cache semantics remain outside the current
+contract and have no assigned version; adding them requires evidence and an
+approved ADR. The current promise is static-first applications with fullstack
+output paths—not broad fullstack parity.
 
 The `1.0.0` path remains unscheduled. It requires a maintainer-approved ADR,
 real-product compatibility evidence and external adoption before the

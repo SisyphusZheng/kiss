@@ -6,7 +6,10 @@ import { applyPageHostData, type PageHostElement } from '../src/internal/page-ho
 
 Deno.test('SPA interface accepts custom-element routes', () => {
   const routes: RouteConfig[] = [{ path: '/', tagName: 'app-home' }];
-  const app = defineApp({ mode: 'spa', routes });
+  // Public docs derive the non-exported options type from the function
+  // signature so 0.43.x does not add a new named public export.
+  const options: Parameters<typeof defineApp>[0] = { mode: 'spa', routes };
+  const app = defineApp(options);
   assertEquals(app.router, null);
   app.dispose();
 });

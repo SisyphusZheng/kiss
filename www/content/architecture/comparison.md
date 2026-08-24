@@ -47,13 +47,15 @@ order: 20
 - Choose **Astro / Enhance / Lit / Stencil** when a standards-first Web Components story matters and you want to avoid a heavy application runtime.
 - Choose **Next.js / Nuxt / SvelteKit** when your product is intentionally built around a React, Vue, or Svelte application model.
 - Choose **Fresh** when you want a Deno-native, near-zero-build Preact island experience.
-- Do not choose **openElement** when a mature ecosystem, a framework-specific UI runtime, or a ready-made enterprise design system is the main requirement. Alpha releases also require teams to validate the documented starter and deployment path themselves.
+- Do not choose **openElement** when a mature ecosystem, a framework-specific UI runtime, or a ready-made enterprise design system is the main requirement. Teams adopting 0.43.x should validate the documented starter and deployment path against their own production environment.
 
 ## The official composition path
 
 OpenElement × Supabase × Cloudflare is the verified fullstack delivery path, with explicit ownership boundaries: OpenElement owns the application UX; Supabase owns data, Auth, RLS, Storage and Realtime; Cloudflare owns edge delivery, security, cache and async execution. Supabase and Cloudflare are composed providers — never built-in framework features — and a tier-1 boundary gate keeps provider code out of the framework packages.
 
-Delivered in the 0.43 line together with Universal WC SSR; production-runtime recovery and cache semantics remain 0.44 work.
+Delivered in the 0.43 line together with Universal WC SSR. Framework-owned
+production-runtime recovery and cache semantics remain outside the current
+contract and have no assigned release version.
 
 - [Supabase recipe](https://github.com/open-element/openelement/blob/main/docs/integrations/supabase.md)
 - [Verified reference app](https://github.com/open-element/openelement/tree/main/examples/supabase-cloudflare-starter)

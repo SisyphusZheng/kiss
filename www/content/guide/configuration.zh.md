@@ -6,7 +6,7 @@ order: 70
 
 ## openPipeline()
 
-精简的 Vite 插件入口，在 `vite.config.ts` 中配置：`openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras })`。默认值：routes 为 `app/routes`，islands 为 `app/islands`，components 为 `app/components`，`viewTransition` 开启。`headExtras` 注入前按 head allowlist 消毒——仅放行 `link`/`meta`/`noscript`/`title`，`base` 与 `meta http-equiv` 被剔除，`script` 标签直接拒绝（脚本请走 `inject.scripts`）（#931，0.42 版本线，未冻结）。
+精简的 Vite 插件入口，在 `vite.config.ts` 中配置：`openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras })`。默认值：routes 为 `app/routes`，islands 为 `app/islands`，components 为 `app/components`，`viewTransition` 开启。`headExtras` 注入前按 head allowlist 消毒——仅放行 `link`/`meta`/`noscript`/`title`，`base` 与 `meta http-equiv` 被剔除，`script` 标签直接拒绝（脚本请走 `inject.scripts`）（#931，已按 ADR-0122 冻结）。
 
 ### vite.config.ts
 

@@ -14,7 +14,7 @@ The docs site is generated through the SSG pipeline.
 
 ## Request-time server
 
-When any route declares `renderIntent: { mode: 'dynamic' }`, the build also emits `dist/server/index.js` — a Nitro-mountable handler over the same SSR bundle — plus `server-manifest.json` listing the request-time routes, and `dist/server/serve.mjs`, a standalone production entry (`node dist/server/serve.mjs`; Node 24+, Deno, Bun) that serves the static tree and dispatches request-time routes without the CLI. Pure-static builds emit none of these (0.42 line, unfrozen).
+When any route declares `renderIntent: { mode: 'dynamic' }`, the build also emits `dist/server/index.js` — a Nitro-mountable handler over the same SSR bundle — plus `server-manifest.json` listing the request-time routes, and `dist/server/serve.mjs`, a standalone production entry (`node dist/server/serve.mjs`; Node 24+, Deno, Bun) that serves the static tree and dispatches request-time routes without the CLI. Pure-static builds emit none of these; this output contract is frozen under ADR-0122.
 
 ## Nitro presets
 

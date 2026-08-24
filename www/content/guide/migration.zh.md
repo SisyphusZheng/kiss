@@ -4,9 +4,9 @@ lede: '自 0.40.x 以来的全部 breaking change，按发布版本分组。'
 order: 75
 ---
 
-## 0.41.x → 0.42（alpha）
+## 0.41.x → 0.42
 
-0.42 alpha 线新增 request-time 面——loader、action、渐进增强表单、redirect 与 Nitro 服务端输出。静态面零成本升级：0.41 冻结面无 breaking change。完整 TP-6 迁移说明随 0.42.0 stable 发布（ADR-0122 提案中）。
+稳定的 0.42 版本线新增 request-time 面——loader、action、渐进增强表单、redirect 与 Nitro 服务端输出。静态面升级没有破坏 0.41 冻结面；ADR-0122 记录了已接受的 0.42.0 契约。
 
 ## 从 0.40.x 升级
 

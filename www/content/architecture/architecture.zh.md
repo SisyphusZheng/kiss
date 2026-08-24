@@ -35,7 +35,7 @@ order: 10
 
 ### WC SSR
 
-构建将把标准、Lit、FAST 与 Stencil 元素分类为 DSD、light DOM 或仅客户端渲染，并给出可操作的诊断。
+0.43 版本线会把已准入的标准、Lit、FAST 与 Stencil 元素分类为 DSD、light DOM 或仅客户端渲染，并提供可操作的诊断与语料证据。
 
 ### 应用闭环
 
@@ -43,7 +43,7 @@ order: 10
 
 ### 可移植输出
 
-Node 与 Workers 输出从打包后的公开产物验证；缓存意图与部署诊断随 0.43/0.44 线跟进。
+Node 与 Workers 输出从打包后的公开产物验证。服务提供方自有的恢复路径由参考栈证明；框架自有 cache/recovery API 尚未分配版本，必须经过未来 ADR。
 
 ## 当前真相由机器校验。
 

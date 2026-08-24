@@ -1,6 +1,7 @@
 # Morph Continuity Contract
 
-> Status: unfrozen 0.42-line semantics (ADR-0120 rule 6, amended by ADR-0121).
+> Status: frozen application-loop semantics since 0.42.0 (ADR-0122;
+> ADR-0120 rule 6, amended by ADR-0121).
 > The wire/attribute surface described here is the contract; the matching
 > algorithm is implementation detail and may improve without notice.
 > Introduced: 0.42.0-alpha.3 (broken, see below). Functional since:
@@ -64,9 +65,8 @@ Content-Type: application/problem+json
 
 The enhanced (`enhance`) and native channels are untouched: they keep the
 equivalent semantics as full-HTML responses (403 text, 404/400 status pages,
-500 error boundary), so both channels stay symmetric. The wire shape is
-alpha-unfrozen; it lands on the alpha.13 train so that ADR-0122 acceptance
-freezes it in this problem+json form rather than amending the freeze later.
+500 error boundary), so both channels stay symmetric. The wire shape was
+finalized on the alpha.13 train and is part of the ADR-0122 frozen contract.
 
 ## Morph scope
 

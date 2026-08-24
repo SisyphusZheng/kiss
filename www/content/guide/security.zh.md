@@ -6,7 +6,7 @@ order: 95
 
 ## 基本假设
 
-生成的 action POST 处理器内置 fail-closed 同源地板（ADR-0121 §12 修订文）：当 `Sec-Fetch-Site` 为 `cross-site`、`Origin` 存在且与请求 URL 的源不一致，或 `Sec-Fetch-Site` 为 `same-site` 但 `Origin` 缺失或为 `null` 时拒绝请求——最后一种是伪造头，因为浏览器 POST 总会带 `Origin`（#921）；loopback 主机别名（`localhost` / `127.0.0.1` / `[::1]`）视同同源（#937）。两个头都省略的客户端（典型的非浏览器工具）放行。在请求 env 绑定（`c.env` / Nitro runtime env）上设置 `OPEN_ELEMENT_DISABLE_CSRF=1` 可选择退出。第一方 cookie 会话仍属 0.44 范围；在此之前表单/action 循环假定浏览器 `SameSite=Lax` 默认值。
+生成的 action POST 处理器内置 fail-closed 同源地板（ADR-0121 §12 修订文）：当 `Sec-Fetch-Site` 为 `cross-site`、`Origin` 存在且与请求 URL 的源不一致，或 `Sec-Fetch-Site` 为 `same-site` 但 `Origin` 缺失或为 `null` 时拒绝请求——最后一种是伪造头，因为浏览器 POST 总会带 `Origin`（#921）；loopback 主机别名（`localhost` / `127.0.0.1` / `[::1]`）视同同源（#937）。两个头都省略的客户端（典型的非浏览器工具）放行。在请求 env 绑定（`c.env` / Nitro runtime env）上设置 `OPEN_ELEMENT_DISABLE_CSRF=1` 可选择退出。框架自有 session API 不在当前契约内；服务提供方配方负责 cookie/session 传输，并必须应用相同的同源地板与显式 cookie 属性。
 
 ## 隐式身份验证
 

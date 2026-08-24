@@ -6,7 +6,7 @@ order: 70
 
 ## openPipeline()
 
-The lean Vite plugin entry, configured in `vite.config.ts`: `openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras })`. Defaults: routes `app/routes`, islands `app/islands`, components `app/components`, `viewTransition` on. `headExtras` is sanitized on injection against a head allowlist — only `link`/`meta`/`noscript`/`title` survive, `base` and `meta http-equiv` are stripped, and `script` tags are rejected outright (use `inject.scripts` for scripts) (#931; 0.42 line, unfrozen).
+The lean Vite plugin entry, configured in `vite.config.ts`: `openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras })`. Defaults: routes `app/routes`, islands `app/islands`, components `app/components`, `viewTransition` on. `headExtras` is sanitized on injection against a head allowlist — only `link`/`meta`/`noscript`/`title` survive, `base` and `meta http-equiv` are stripped, and `script` tags are rejected outright (use `inject.scripts` for scripts) (#931; frozen under ADR-0122).
 
 ### vite.config.ts
 

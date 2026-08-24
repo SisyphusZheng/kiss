@@ -14,7 +14,7 @@ Control flow throws: `redirect(location, status)` throws `OpenElementRedirect` â
 
 ## The error definition
 
-`definePage({ error })` is the page-level `PageErrorFunction`: it receives the render context plus `error` and renders the failure UI. `notFound()` and unexpected loader/action throws land here; on the SPA chain a throw is normalized into the same channel instead of silently replacing loader data. On the programmatic action channel (`x-openelement-action: true`), error outcomes answer RFC 9457 Problem Details (`application/problem+json` with `type`/`title`/`status`/`detail`) instead of a bespoke JSON envelope (#863, ADR-0123) â€” an alpha-unfrozen wire shape that ADR-0122 acceptance will freeze in this problem+json form.
+`definePage({ error })` is the page-level `PageErrorFunction`: it receives the render context plus `error` and renders the failure UI. `notFound()` and unexpected loader/action throws land here; on the SPA chain a throw is normalized into the same channel instead of silently replacing loader data. On the programmatic action channel (`x-openelement-action: true`), error outcomes answer RFC 9457 Problem Details (`application/problem+json` with `type`/`title`/`status`/`detail`) instead of a bespoke JSON envelope (#863, ADR-0123); ADR-0122 freezes this wire shape.
 
 ### app/routes/posts/[id].tsx
 

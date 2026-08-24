@@ -14,7 +14,7 @@ order: 80
 
 ## error 定义
 
-`definePage({ error })` 是页面级 `PageErrorFunction`：它接收渲染上下文外加 `error`，渲染失败 UI。`notFound()` 与意外的 loader/action 抛出都会落到这里；SPA 链上 throw 会被规整进同一通道，而不是悄悄替换 loader 数据。在程序化 action 通道（`x-openelement-action: true`）上，错误结果以 RFC 9457 Problem Details 应答（`application/problem+json`，字段 `type`/`title`/`status`/`detail`），取代此前的自定义 JSON 封装（#863，ADR-0123）——该线格式在 alpha 阶段未冻结，ADR-0122 接受时将以此 problem+json 形态冻结。
+`definePage({ error })` 是页面级 `PageErrorFunction`：它接收渲染上下文外加 `error`，渲染失败 UI。`notFound()` 与意外的 loader/action 抛出都会落到这里；SPA 链上 throw 会被规整进同一通道，而不是悄悄替换 loader 数据。在程序化 action 通道（`x-openelement-action: true`）上，错误结果以 RFC 9457 Problem Details 应答（`application/problem+json`，字段 `type`/`title`/`status`/`detail`），取代此前的自定义 JSON 封装（#863，ADR-0123）；ADR-0122 已冻结该线格式。
 
 ### app/routes/posts/[id].tsx
 

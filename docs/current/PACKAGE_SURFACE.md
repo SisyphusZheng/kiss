@@ -107,8 +107,9 @@ promise and are not application-authoring surface.
 - `@openelement/app/i18n` is the optional locale-expansion integration point.
 - App's router implementation (`internal/router`) is not exported; the router
   types (`RouteConfig`, `RouterInstance`, `RouterMode`) were removed from the
-  app root export in alpha.17 — SPA consumers derive them from
-  `SpaAppInstance` / `SpaAppOptions`.
+  app root export in alpha.17 — SPA consumers derive the instance from
+  `ReturnType<typeof defineApp>` and the options from
+  `Parameters<typeof defineApp>[0]`.
 - `@openelement/adapter-vite` internal subpaths (`app-vite`, `build-context`,
   `head-injection`, `i18n-plugin`, `plugin`, `generated-data-resolver`,
   `plugin-mdx`, `route-manifest`, `cli/build-client`, `cli/build-ssg`) were
@@ -140,11 +141,11 @@ graph, the supported subpaths above, and the static/SPA semantics of
 configuration (`ssr`/`dsd`/`hydrate`), DSD output, and the SPA-mode
 loader/action chain.
 
-Explicitly not frozen: request-time data, forms, sessions and cache
-semantics (0.42 WC Application Loop and 0.44 Production Runtime scope), the
-`@openelement/ui` stable scope (decided at v0.46), and everything marked
-internal in the map above. Post-freeze changes to the frozen surface require
-a major-version ADR.
+The 0.41 freeze did not cover request-time data, forms, sessions, cache
+semantics, the `@openelement/ui` stable scope, or anything marked internal in
+the map above. Request-time data and form semantics were later frozen by
+ADR-0122; framework session/cache capabilities remain unassigned. Any
+post-freeze change to a frozen surface requires a major-version ADR.
 
 Frozen-surface change on the alpha line (ADR-0127, #920): element's
 `IslandOptions.strategy` was renamed to `hydrate` in 0.42.0-alpha.16,
@@ -167,8 +168,8 @@ unaffected: their `tagName` export remains the registration tag.
   declares the ISR revalidate window in seconds for static routes — on the
   0.42 line the value is **recorded in the build manifest but inert** (no ISR
   caching is wired into the request-time server entry, so the route behaves
-  like a plain dynamic/static route); it takes effect with the 0.44 ISR
-  wiring.
+  like a plain dynamic/static route). No public ISR delivery version is
+  assigned.
 - Route-module `loader`/`action`/`actions` exports with the ADR-0120
   protocol: `fail(status, data)` 422 re-render, 303 PRG, named actions via
   `formaction='?/name'` (0.42.0-alpha.2).

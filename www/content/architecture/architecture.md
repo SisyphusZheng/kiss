@@ -37,7 +37,7 @@ The roadmap earns WC fullstack leadership through compatibility evidence, comple
 
 ### WC SSR
 
-Builds will classify standard, Lit, FAST and Stencil elements for DSD, light DOM or client-only rendering with actionable diagnostics.
+The 0.43 line classifies admitted standard, Lit, FAST and Stencil elements for DSD, light DOM or client-only rendering with actionable diagnostics and corpus evidence.
 
 ### Application loop
 
@@ -45,7 +45,7 @@ Routes, data, progressive forms, actions, redirects and revalidation form one de
 
 ### Portable output
 
-Node and Workers output is verified from packed public artifacts; cache intent and deployment diagnostics follow with the 0.43/0.44 line.
+Node and Workers output is verified from packed public artifacts. Provider-owned recovery is proven in the reference stack; framework-owned cache/recovery APIs remain unassigned and require a future ADR.
 
 ## Current truth is checked mechanically.
 

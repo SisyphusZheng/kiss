@@ -18,15 +18,15 @@ Routes 应当能从仓库目录树中被发现。`definePage` 路由有两种合
 
 ## 渲染模式
 
-`renderIntent.mode` 决定页面在哪里渲染:`'static'`(默认)在构建时预渲染;`'dynamic'` 跳过预渲染,通过生成的 `dist/server` 入口按请求渲染,每次请求都会运行路由 loader。导出 action 的页面必须声明 `'dynamic'`——构建会拒绝预渲染的 action 页面(0.42 版本线,未冻结)。
+`renderIntent.mode` 决定页面在哪里渲染:`'static'`(默认)在构建时预渲染;`'dynamic'` 跳过预渲染,通过生成的 `dist/server` 入口按请求渲染,每次请求都会运行路由 loader。导出 action 的页面必须声明 `'dynamic'`——构建会拒绝预渲染的 action 页面。该行为已按 ADR-0122 冻结。
 
 ## renderIntent.revalidate
 
-`revalidate` 会记录在路由上，但在 0.42 版本线中是 inert 的——它不会启用缓存；该字段为 0.44 的 ISR 工作预留。把它当作不稳定的 `@experimental` 对待。
+`revalidate` 会记录在路由上，但仍是 inert 的——它不会启用缓存。把它当作不稳定的 `@experimental` 对待；公开 ISR 尚未分配交付版本。
 
 ## 表单 action
 
-dynamic 路由可导出 `action({ formData })`——纯 HTML 表单无需 JavaScript 即可工作:校验失败返回 `fail(4xx, data)`,以 `fail()` 的状态码(惯例为 422)重渲染并回显;成功则以 303 应答(PRG)。命名 action 通过 `formaction='?/name'` 分派。标记 `data-open-enhance` 的表单经 fetch 提交并把返回的文档 morph 就位:light DOM 未变化的已水合 island 状态保留,`data-open-preserve` 豁免子树,URL 跟随 PRG 目标。action 在校验失败后必须可安全重跑(0.42 版本线,未冻结)。
+dynamic 路由可导出 `action({ formData })`——纯 HTML 表单无需 JavaScript 即可工作:校验失败返回 `fail(4xx, data)`,以 `fail()` 的状态码(惯例为 422)重渲染并回显;成功则以 303 应答(PRG)。命名 action 通过 `formaction='?/name'` 分派。标记 `data-open-enhance` 的表单经 fetch 提交并把返回的文档 morph 就位:light DOM 未变化的已水合 island 状态保留,`data-open-preserve` 豁免子树,URL 跟随 PRG 目标。action 在校验失败后必须可安全重跑；这些应用闭环语义已按 ADR-0122 冻结。
 
 ### app/routes/guestbook.tsx
 
