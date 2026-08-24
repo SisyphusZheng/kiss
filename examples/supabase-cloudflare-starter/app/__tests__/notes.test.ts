@@ -44,7 +44,10 @@ function stubClient(overrides: {
   return () => ({
     auth: {
       getUser: () => Promise.resolve({ data: { user } }),
-      getSession: () => Promise.resolve({ data: { session: { access_token: 'token' } } }),
+      getSession: () =>
+        Promise.resolve({
+          data: { session: { access_token: 'token', expires_at: 2_000_000_000 } },
+        }),
     },
     from: () => ({
       select: (columns: string) => {
@@ -109,6 +112,7 @@ Deno.test('notes loader returns the signed-in owner rows', async () => {
   assertEquals(result.denied, false);
   assertEquals(result.notes, notes);
   assertEquals(result.live?.userId, USER.id);
+  assertEquals(result.live?.accessTokenExpiresAt, 2_000_000_000);
 });
 
 Deno.test('notes loader applies a fixed keyset page and emits a stable next cursor', async () => {

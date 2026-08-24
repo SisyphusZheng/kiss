@@ -15,7 +15,83 @@ interface PaymentQueue {
   send(message: { type: 'payment.process'; eventId: string }): Promise<void>;
 }
 
-const MAX_WEBHOOK_BYTES = 1024 * 1024;
+export const MAX_WEBHOOK_BYTES = 1024 * 1024;
+export const WEBHOOK_READ_TIMEOUT_MS = 10_000;
+
+export class WebhookBodyTooLargeError extends Error {
+  constructor() {
+    super('Stripe webhook body exceeds the configured limit');
+    this.name = 'WebhookBodyTooLargeError';
+  }
+}
+
+export class WebhookBodyReadTimeoutError extends Error {
+  constructor() {
+    super('Stripe webhook body read timed out');
+    this.name = 'WebhookBodyReadTimeoutError';
+  }
+}
+
+/** Read exact signature bytes without ever buffering more than maxBytes. */
+export async function readBoundedRawBody(
+  request: Request,
+  maxBytes = MAX_WEBHOOK_BYTES,
+  readTimeoutMs = WEBHOOK_READ_TIMEOUT_MS,
+): Promise<Uint8Array> {
+  if (!request.body) return new Uint8Array();
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  let failed = false;
+  const deadline = Date.now() + readTimeoutMs;
+  try {
+    while (true) {
+      const result = await new Promise<ReadableStreamReadResult<Uint8Array>>((resolve, reject) => {
+        let settled = false;
+        const finish = (callback: () => void) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          request.signal.removeEventListener('abort', onAbort);
+          callback();
+        };
+        const onAbort = () =>
+          finish(() =>
+            reject(request.signal.reason ?? new DOMException('Request aborted', 'AbortError'))
+          );
+        const timer = setTimeout(
+          () => finish(() => reject(new WebhookBodyReadTimeoutError())),
+          Math.max(0, deadline - Date.now()),
+        );
+        request.signal.addEventListener('abort', onAbort, { once: true });
+        reader.read().then(
+          (value) => finish(() => resolve(value)),
+          (error) => finish(() => reject(error)),
+        );
+      });
+      if (result.done) break;
+      total += result.value.byteLength;
+      if (total > maxBytes) throw new WebhookBodyTooLargeError();
+      chunks.push(result.value);
+    }
+  } catch (error) {
+    failed = true;
+    void reader.cancel(error).catch(() => undefined);
+    throw error;
+  } finally {
+    // A timed-out reader may still have a pending read until cancellation
+    // reaches the source; releasing a locked reader then would mask the real
+    // error with a TypeError. A completed reader is safe to release now.
+    if (!failed) reader.releaseLock();
+  }
+  const rawBody = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    rawBody.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return rawBody;
+}
 
 function serverSecret(env: Record<string, unknown>, name: string): string {
   const value = env[name];
@@ -45,8 +121,24 @@ export function createStripeWebhook(fetchImpl: typeof fetch = fetch) {
       logPayment('error', { event: 'stripe_webhook_rejected', reason: 'payload_too_large' });
       return Response.json({ error: 'payload too large' }, { status: 413 });
     }
-    // Stripe signs the exact bytes. Read once, verify first, parse only afterwards.
-    const rawBody = new Uint8Array(await request.arrayBuffer());
+    // Stripe signs the exact bytes. Read once with a streaming cap, verify
+    // first, and parse only afterwards. Content-Length is only a fast reject;
+    // chunked or dishonest requests are bounded by readBoundedRawBody too.
+    let rawBody: Uint8Array;
+    try {
+      rawBody = await readBoundedRawBody(request);
+    } catch (error) {
+      if (error instanceof WebhookBodyTooLargeError) {
+        logPayment('error', { event: 'stripe_webhook_rejected', reason: 'payload_too_large' });
+        return Response.json({ error: 'payload too large' }, { status: 413 });
+      }
+      if (error instanceof WebhookBodyReadTimeoutError) {
+        logPayment('error', { event: 'stripe_webhook_rejected', reason: 'body_read_timeout' });
+        return Response.json({ error: 'request timeout' }, { status: 408 });
+      }
+      logPayment('error', { event: 'stripe_webhook_rejected', reason: 'invalid_body' });
+      return Response.json({ error: 'invalid body' }, { status: 400 });
+    }
     if (rawBody.byteLength > MAX_WEBHOOK_BYTES) {
       logPayment('error', { event: 'stripe_webhook_rejected', reason: 'payload_too_large' });
       return Response.json({ error: 'payload too large' }, { status: 413 });

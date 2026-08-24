@@ -54,7 +54,13 @@ interface NotesData {
    * by design; events are hard-filtered to the owner's user_id). The
    * access token is the user's own short-lived JWT — Realtime scopes
    * postgres_changes by RLS, so the anon role alone would receive nothing. */
-  live?: { url: string; anonKey: string; userId: string; accessToken: string };
+  live?: {
+    url: string;
+    anonKey: string;
+    userId: string;
+    accessToken: string;
+    accessTokenExpiresAt?: number;
+  };
 }
 
 interface CreateNoteData {
@@ -69,7 +75,7 @@ export interface NotesSupabaseClient {
       data: { user: { id: string; email?: string } | null };
     }>;
     getSession(): Promise<{
-      data: { session: { access_token: string } | null };
+      data: { session: { access_token: string; expires_at?: number } | null };
     }>;
   };
   from(table: 'notes'): {
@@ -136,6 +142,7 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
         anonKey: ctx.env.SUPABASE_ANON_KEY ?? '',
         userId: user.id,
         accessToken: session?.access_token ?? '',
+        accessTokenExpiresAt: session?.expires_at,
       },
     };
   };
@@ -250,6 +257,7 @@ const NotesPage = definePage<NotesData>({
               data-key={data.live.anonKey}
               data-user-id={data.live.userId}
               data-access-token={data.live.accessToken}
+              data-access-token-expires-at={data.live.accessTokenExpiresAt}
             >
             </notes-live>
           )

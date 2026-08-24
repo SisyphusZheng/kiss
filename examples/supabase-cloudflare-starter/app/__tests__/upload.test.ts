@@ -228,7 +228,7 @@ Deno.test('action atomically reserves and releases quota when upload fails', asy
   assertEquals(calls, ['reserve_attachment', 'release_attachment']);
 });
 
-Deno.test('finalize failure compensates storage and quota before surfacing server error', async () => {
+Deno.test('finalize failure records durable deletion before removing Storage', async () => {
   const calls: string[] = [];
   const removed: string[][] = [];
   const action = createUploadAction(stubClient({
@@ -240,8 +240,54 @@ Deno.test('finalize failure compensates storage and quota before surfacing serve
   formData.set('file', new File(['x'], 'a.txt', { type: 'text/plain' }));
   const error = await assertRejects(() => action({ ...ctx(), formData }), Error);
   assertEquals(error.message, 'upload could not be finalized');
-  assertEquals(calls, ['reserve_attachment', 'finalize_attachment', 'release_attachment']);
+  assertEquals(calls, [
+    'reserve_attachment',
+    'finalize_attachment',
+    'request_attachment_delete',
+    'complete_attachment_delete',
+  ]);
   assertEquals(removed.length, 1);
+});
+
+Deno.test('finalize compensation Storage failure leaves the durable deletion intent', async () => {
+  const calls: string[] = [];
+  const action = createUploadAction(stubClient({
+    rpcErrors: { finalize_attachment: { message: 'database unavailable' } },
+    removeError: { message: 'storage unavailable' },
+    onRpc: (name) => calls.push(name),
+  }));
+  const formData = new FormData();
+  formData.set('file', new File(['x'], 'a.txt', { type: 'text/plain' }));
+  const error = await assertRejects(() => action({ ...ctx(), formData }), Error);
+  assertEquals(error.message, 'upload finalization failed; object deletion is queued for retry');
+  assertEquals(calls, [
+    'reserve_attachment',
+    'finalize_attachment',
+    'request_attachment_delete',
+  ]);
+});
+
+Deno.test('finalize compensation never deletes Storage before durable intent', async () => {
+  const calls: string[] = [];
+  const removed: string[][] = [];
+  const action = createUploadAction(stubClient({
+    rpcErrors: {
+      finalize_attachment: { message: 'database unavailable' },
+      request_attachment_delete: { message: 'intent unavailable' },
+    },
+    onRpc: (name) => calls.push(name),
+    onRemove: (paths) => removed.push(paths),
+  }));
+  const formData = new FormData();
+  formData.set('file', new File(['x'], 'a.txt', { type: 'text/plain' }));
+  const error = await assertRejects(() => action({ ...ctx(), formData }), Error);
+  assertEquals(error.message, 'upload finalization is uncertain; cleanup is pending');
+  assertEquals(calls, [
+    'reserve_attachment',
+    'finalize_attachment',
+    'request_attachment_delete',
+  ]);
+  assertEquals(removed, []);
 });
 
 Deno.test('delete rejects a cross-user object key before Storage', async () => {

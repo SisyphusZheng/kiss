@@ -5,6 +5,11 @@ import {
   verifyStripeSignature,
 } from '../../lib/stripe-webhook.ts';
 import stripeWebhook, { createStripeWebhook } from '../routes/api/stripe-webhook.ts';
+import {
+  MAX_WEBHOOK_BYTES,
+  readBoundedRawBody,
+  WebhookBodyReadTimeoutError,
+} from '../routes/api/stripe-webhook.ts';
 
 const secret = 'whsec_test_secret';
 const timestamp = 1_700_000_000;
@@ -93,6 +98,59 @@ Deno.test('Stripe webhook is POST-only and fails closed when secrets are unavail
     env: {},
   });
   assertEquals(post.status, 503);
+});
+
+Deno.test('Stripe webhook bounds chunked bodies before signature verification', async () => {
+  let cancelled = 0;
+  const oversized = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(MAX_WEBHOOK_BYTES));
+      controller.enqueue(new Uint8Array([1]));
+    },
+    cancel() {
+      cancelled++;
+    },
+  });
+  const request = new Request('https://app.test/api/stripe-webhook', {
+    method: 'POST',
+    body: oversized,
+  });
+  const response = await createStripeWebhook()({
+    request,
+    env: {
+      STRIPE_WEBHOOK_SECRET: secret,
+      STRIPE_LIVEMODE: 'false',
+      SUPABASE_URL: 'https://project.supabase.co',
+      SUPABASE_SERVICE_ROLE_KEY: 'server-only',
+      PAYMENT_EVENT_QUEUE: { send: () => Promise.resolve() },
+    },
+  });
+  await Promise.resolve();
+  assertEquals(request.headers.has('content-length'), false);
+  assertEquals(response.status, 413);
+  assertEquals(cancelled, 1);
+});
+
+Deno.test('bounded Stripe body reader cancels a stalled stream on timeout', async () => {
+  let cancelled = 0;
+  const stalled = new ReadableStream<Uint8Array>({
+    pull() {
+      return new Promise<void>(() => {});
+    },
+    cancel() {
+      cancelled++;
+    },
+  });
+  const request = new Request('https://app.test/api/stripe-webhook', {
+    method: 'POST',
+    body: stalled,
+  });
+  await assertRejects(
+    () => readBoundedRawBody(request, MAX_WEBHOOK_BYTES, 5),
+    WebhookBodyReadTimeoutError,
+  );
+  await Promise.resolve();
+  assertEquals(cancelled, 1);
 });
 
 Deno.test('Stripe webhook acknowledges only after the verified event is durable', async () => {

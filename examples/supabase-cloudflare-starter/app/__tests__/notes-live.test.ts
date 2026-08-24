@@ -3,7 +3,7 @@
  * SSR render (subscription wiring is browser-only and verified with
  * Playwright against the real project — see the issue evidence).
  */
-import { assertEquals, assertExists } from '@std/assert';
+import { assertEquals, assertExists, assertRejects } from '@std/assert';
 import NotesLive, {
   handoffRealtimeAuth,
   MAX_LIVE_EVENTS,
@@ -12,7 +12,9 @@ import NotesLive, {
   mergeReconciledEvents,
   openElement,
   reconnectDelayMs,
+  requestNotesAccessToken,
   resolveRealtimeAuthToken,
+  shouldRefreshAccessToken,
   tagName,
 } from '../islands/notes-live.tsx';
 
@@ -93,4 +95,31 @@ Deno.test('notes-live retains the user JWT for clients created after reconnect',
   assertEquals(resolveRealtimeAuthToken('fresh-jwt', null), 'fresh-jwt');
   assertEquals(resolveRealtimeAuthToken(null, 'private-memory-jwt'), 'private-memory-jwt');
   assertEquals(resolveRealtimeAuthToken(null, null), null);
+});
+
+Deno.test('notes-live refreshes only expired or near-expiry access tokens', () => {
+  const now = 1_700_000_000_000;
+  assertEquals(shouldRefreshAccessToken(null, now), true);
+  assertEquals(shouldRefreshAccessToken(now / 1_000 + 30, now), true);
+  assertEquals(shouldRefreshAccessToken(now / 1_000 + 120, now), false);
+});
+
+Deno.test('notes-live renews through the same-origin cookie endpoint', async () => {
+  let input: string | URL | Request = '';
+  let init: RequestInit | undefined;
+  const fresh = await requestNotesAccessToken((candidate, options) => {
+    input = candidate;
+    init = options;
+    return Promise.resolve(Response.json({ accessToken: 'fresh-jwt', expiresAt: 2_000_000_000 }));
+  });
+  assertEquals(input, '/api/session-token');
+  assertEquals(init?.method, 'POST');
+  assertEquals(init?.credentials, 'same-origin');
+  assertEquals(init?.cache, 'no-store');
+  assertEquals(fresh, { accessToken: 'fresh-jwt', expiresAt: 2_000_000_000 });
+  await assertRejects(() =>
+    requestNotesAccessToken(() =>
+      Promise.resolve(Response.json({ accessToken: 'fresh-jwt' }, { status: 401 }))
+    )
+  );
 });

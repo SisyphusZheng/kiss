@@ -172,8 +172,22 @@ export function createUploadAction(
       reservation_id: reservationId,
     });
     if (finalized.error) {
-      await supabase.storage.from(BUCKET).remove([key]);
-      await supabase.rpc('release_attachment', { reservation_id: reservationId });
+      // Finalization may have committed even when its response was lost. Move
+      // the matching row (reserved or pending_scan) into the existing durable
+      // deletion state before touching Storage. The scheduled reconciler can
+      // finish either a failed Storage remove or a failed row completion.
+      const requested = await supabase.rpc('request_attachment_delete', { target_key: key });
+      if (requested.error) {
+        throw new Error('upload finalization is uncertain; cleanup is pending');
+      }
+      const removed = await supabase.storage.from(BUCKET).remove([key]);
+      if (removed.error) {
+        throw new Error('upload finalization failed; object deletion is queued for retry');
+      }
+      const completed = await supabase.rpc('complete_attachment_delete', { target_key: key });
+      if (completed.error) {
+        throw new Error('object deleted; upload quota reconciliation is pending');
+      }
       throw new Error('upload could not be finalized');
     }
     const queue = ctx.env.ATTACHMENT_SCAN_QUEUE as

@@ -28,6 +28,10 @@ export const openElement = defineIslandConfig({
 export const MAX_LIVE_EVENTS = 100;
 export const MAX_RECONNECT_DELAY_MS = 30_000;
 export const RECONCILE_INTERVAL_MS = 10_000;
+export interface NotesAccessToken {
+  accessToken: string;
+  expiresAt: number | null;
+}
 
 export interface LiveNoteEvent {
   id: string;
@@ -72,6 +76,25 @@ export function reconnectDelayMs(attempt: number, random = Math.random): number 
   return Math.floor(random() * cap);
 }
 
+export function shouldRefreshAccessToken(
+  expiresAtSeconds: number | null,
+  nowMs = Date.now(),
+): boolean {
+  return (expiresAtSeconds ?? 0) * 1_000 <= nowMs + 60_000;
+}
+
+export async function requestNotesAccessToken(
+  fetchImpl: typeof fetch = fetch,
+): Promise<NotesAccessToken> {
+  const response = await fetchImpl('/api/session-token', {
+    method: 'POST',
+    cache: 'no-store',
+    credentials: 'same-origin',
+  });
+  if (!response.ok) throw new Error(`Session renewal failed (${response.status})`);
+  return response.json() as Promise<NotesAccessToken>;
+}
+
 /** Prefer a fresh DOM handoff, then reuse private memory for later reconnects. */
 export function resolveRealtimeAuthToken(
   attributeToken: string | null,
@@ -109,6 +132,8 @@ export default class NotesLive extends OpenElement {
   #client: RealtimeClient | null = null;
   #channel: RealtimeChannel | null = null;
   #accessToken: string | null = null;
+  #accessTokenExpiresAt: number | null = null;
+  #accessTokenRefresh: Promise<string | null> | null = null;
   #reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   #reconcileTimer: ReturnType<typeof setTimeout> | undefined;
   #reconnectAttempt = 0;
@@ -138,6 +163,7 @@ export default class NotesLive extends OpenElement {
     const userId = this.getAttribute('data-user-id');
     const accessToken = this.getAttribute('data-access-token');
     this.#accessToken = resolveRealtimeAuthToken(accessToken, this.#accessToken);
+    this.#accessTokenExpiresAt = Number(this.getAttribute('data-access-token-expires-at')) || null;
     if (!url || !key || !userId) {
       this.#status.value = 'unconfigured';
       return;
@@ -149,6 +175,7 @@ export default class NotesLive extends OpenElement {
     // the same Realtime endpoint directly and keep the island single-purpose.
     const client = new RealtimeClient(`${url.replace(/\/$/, '')}/realtime/v1`, {
       params: { apikey: key },
+      accessToken: () => this.#validAccessToken(),
     });
     // Hosted Realtime scopes postgres_changes by RLS: without the user's
     // short-lived access token the connection is `anon`, which has no
@@ -214,12 +241,31 @@ export default class NotesLive extends OpenElement {
     }, delay);
   }
 
+  #validAccessToken(force = false): Promise<string | null> {
+    if (
+      !force && this.#accessToken &&
+      !shouldRefreshAccessToken(this.#accessTokenExpiresAt)
+    ) return Promise.resolve(this.#accessToken);
+    if (this.#accessTokenRefresh) return this.#accessTokenRefresh;
+    this.#accessTokenRefresh = requestNotesAccessToken()
+      .then((fresh) => {
+        if (!this.isConnected) return null;
+        this.#accessToken = fresh.accessToken;
+        this.#accessTokenExpiresAt = fresh.expiresAt;
+        return fresh.accessToken;
+      })
+      .finally(() => {
+        this.#accessTokenRefresh = null;
+      });
+    return this.#accessTokenRefresh;
+  }
+
   async #reconcile(generation: number): Promise<void> {
     this.#clearReconcileTimer();
     const url = this.getAttribute('data-url');
     const key = this.getAttribute('data-key');
     const userId = this.getAttribute('data-user-id');
-    const accessToken = this.#accessToken;
+    let accessToken = await this.#validAccessToken();
     if (!url || !key || !userId || !accessToken) {
       this.#status.value = 'degraded';
       return;
@@ -232,10 +278,18 @@ export default class NotesLive extends OpenElement {
       endpoint.searchParams.set('user_id', `eq.${userId}`);
       endpoint.searchParams.set('order', 'created_at.desc,id.desc');
       endpoint.searchParams.set('limit', String(MAX_LIVE_EVENTS));
-      const response = await fetch(endpoint, {
-        cache: 'no-store',
-        headers: { apikey: key, authorization: `Bearer ${accessToken}` },
-      });
+      const reconcile = (token: string) =>
+        fetch(endpoint, {
+          cache: 'no-store',
+          headers: { apikey: key, authorization: `Bearer ${token}` },
+        });
+      let response = await reconcile(accessToken);
+      if (response.status === 401) {
+        accessToken = await this.#validAccessToken(true);
+        if (!accessToken) throw new Error('Notes session renewal failed');
+        await this.#client?.setAuth(accessToken);
+        response = await reconcile(accessToken);
+      }
       if (!response.ok) throw new Error(`Notes reconciliation failed with HTTP ${response.status}`);
       const payload = await response.json() as unknown;
       if (!Array.isArray(payload)) throw new Error('Notes reconciliation returned a non-array');
@@ -333,6 +387,7 @@ export default class NotesLive extends OpenElement {
     this.#clearReconcileTimer();
     void this.#releaseChannel().catch(() => undefined);
     this.#accessToken = null;
+    this.#accessTokenExpiresAt = null;
     super.disconnectedCallback();
   }
 
