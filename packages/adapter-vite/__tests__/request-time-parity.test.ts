@@ -24,6 +24,7 @@
 
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import { join, toFileUrl } from '@std/path';
+import { createServer as createNodeServer } from 'node:http';
 
 const fixtureDir = join(import.meta.dirname!, '../__fixtures__/request-time');
 const serverEntryPath = join(fixtureDir, 'dist/server/index.js');
@@ -61,17 +62,44 @@ async function bootDevServer(): Promise<ServerHandle> {
     server = await createServer({
       root: fixtureDir,
       logLevel: 'silent',
-      server: { port: 0, strictPort: false },
+      // Vite probes wildcard addresses before binding its standalone server,
+      // even when `host` is loopback. Run the exact Hono/Vite middleware stack
+      // behind our own loopback-only server so this contract remains safe in
+      // restricted CI and local adversarial runs (#1147).
+      server: { middlewareMode: true, ws: false },
     });
-    await server.listen();
   } finally {
     Deno.chdir(previousCwd);
   }
-  const address = server.httpServer?.address();
+  const httpServer = createNodeServer((request, response) => {
+    server.middlewares(request, response, (error: unknown) => {
+      response.statusCode = error ? 500 : 404;
+      response.end(error instanceof Error ? error.message : 'Not Found');
+    });
+  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      httpServer.once('error', reject);
+      httpServer.listen(0, '127.0.0.1', resolve);
+    });
+  } catch (error) {
+    await server.close();
+    throw error;
+  }
+  const address = httpServer.address();
   assert(address && typeof address === 'object', 'vite dev server did not bind a port');
+  assertEquals(address.address, '127.0.0.1', 'vite dev server must stay on loopback');
   return {
     base: `http://127.0.0.1:${address.port}`,
-    close: () => server.close(),
+    close: async () => {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          httpServer.close((error) => error ? reject(error) : resolve());
+        });
+      } finally {
+        await server.close();
+      }
+    },
   };
 }
 
@@ -217,7 +245,7 @@ Deno.test({
         'POST /fail-unserializable (fetch channel) → 422 with degraded payload',
         async () => {
           for (const [name, base] of Object.entries(both)) {
-            for (const kind of ['undefined', 'function', 'symbol', 'circular']) {
+            for (const kind of ['undefined', 'function', 'symbol', 'bigint', 'circular']) {
               const response = await fetch(`${base}/fail-unserializable`, {
                 method: 'POST',
                 headers: {

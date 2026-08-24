@@ -13,6 +13,7 @@ export function action(
   if (kind === 'undefined') return fail(422, undefined);
   if (kind === 'function') return fail(422, () => 'not serializable');
   if (kind === 'symbol') return fail(422, Symbol('not serializable'));
+  if (kind === 'bigint') return fail(422, 1n);
   const circular: Record<string, unknown> = { error: 'always fails' };
   circular.self = circular;
   return fail(422, circular);
