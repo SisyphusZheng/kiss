@@ -80,9 +80,10 @@ unfrozen and unscheduled under ADR-0140.
 
 ## Current release state
 
-The five-package convergence is published as stable `0.43.1`: the cumulative
-maintenance baseline for Universal WC SSR under ADR-0135, on top of the
-ADR-0122 application loop and untouched ADR-0119 static freeze. npm beta.1
+The five-package convergence is published as stable `0.43.2`: the runtime
+failure-containment patch over the cumulative `0.43.1` maintenance baseline
+for Universal WC SSR under ADR-0135, on top of the ADR-0122 application loop
+and untouched ADR-0119 static freeze. npm beta.1
 through beta.3 remain withdrawn partial artifacts and
 are not compatibility baselines. The third audit sweep completed in alpha.19 (see
 [ADR-0118](./docs/adr/ADR-0118-third-audit-round-alpha19-cleanup-sweep.md)),
