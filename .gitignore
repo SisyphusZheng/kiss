@@ -117,3 +117,7 @@ examples/deno-desktop-mastodon/stress-report.json
 /.zcode/
 /skills/
 /skills-lock.json
+
+# Root-local media/agent scratch artifacts (never release inputs)
+/.tmp/
+/.tmp-*

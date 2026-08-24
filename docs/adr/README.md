@@ -191,6 +191,7 @@ git history.
 | 0138 | Require Real Scanner Evidence for v0.43.1                                                                                            | Superseded by ADR-0139                           |
 | 0139 | Provider-Neutral Attachment Scanning and v0.44 Qualification                                                                         | Accepted                                         |
 | 0140 | 0.43.x Maintenance Mode and CRM-Driven Evolution                                                                                     | Accepted                                         |
+| 0141 | Node Bridge Disconnect Propagation Preserves First-Mile Start Semantics                                                              | Accepted                                         |
 
 ## Superseded / Historical
 

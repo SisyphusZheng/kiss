@@ -143,6 +143,7 @@
       "www/public/assets/",
       "custom-dist/",
       "dist-test-ssg-render/",
+      ".tmp*",
       "**/.nitro/"
     ]
   },
