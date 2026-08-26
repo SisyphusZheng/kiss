@@ -1,0 +1,47 @@
+{
+  "nodeModulesDir": "auto",
+  "exclude": [
+    "e2e"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable",
+      "deno.ns"
+    ],
+    "strict": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@openelement/element"
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "exclude": [
+        "no-sloppy-imports"
+      ]
+    }
+  },
+  "imports": {
+    "@zag-js/combobox": "npm:@zag-js/combobox@1.43.3",
+    "@zag-js/vanilla": "npm:@zag-js/vanilla@1.43.3",
+    "@openelement/app": "../../../app/src/index.ts",
+    "@openelement/element": "../../../element/src/index.ts",
+    "@openelement/element/jsx-runtime": "../../../element/src/jsx-runtime.ts",
+    "@openelement/element/jsx-dev-runtime": "../../../element/src/jsx-dev-runtime.ts",
+    "@openelement/element/build-utils": "../../../element/src/build-utils.ts",
+    "@openelement/element/sanitize": "../../../element/src/sanitize.ts",
+    "@openelement/element/": "../../../element/src/"
+  }
+}
