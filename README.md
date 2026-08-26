@@ -80,8 +80,10 @@ unfrozen and unscheduled under ADR-0140.
 
 ## Current release state
 
-The five-package convergence is published as stable `0.43.2`: the runtime
-failure-containment patch over the cumulative `0.43.1` maintenance baseline
+The five-package convergence is published as stable `0.43.3`: the patch that
+hydrates renderer-owned light DOM in place across SSR upgrade (ADR-0142) and
+closes the robustness adversarial audit with committed per-case evidence,
+over the cumulative `0.43.2`/`0.43.1` maintenance baseline
 for Universal WC SSR under ADR-0135, on top of the ADR-0122 application loop
 and untouched ADR-0119 static freeze. npm beta.1
 through beta.3 remain withdrawn partial artifacts and

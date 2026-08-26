@@ -5,7 +5,7 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Source package line: `v0.43.3`.\
-> npm registry line: `v0.43.3` (published 2026-08-24, dist-tag `latest` — see Current release state).\
+> npm registry line: `v0.43.3` (published 2026-08-26, dist-tag `latest` — see Current release state).\
 > Latest landed train: `v0.43.3`.\
 > Active execution target: `v0.43.3`.\
 > Next planned train: `not scheduled (maintenance mode)`.\
@@ -135,9 +135,11 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.43.2` is both the current source package line and the published npm
-line (2026-08-24, dist-tag `latest`). It is a compatibility-preserving runtime
-stabilization patch over the `v0.43.1` cumulative baseline. No later minor is
+`0.43.3` is both the current source package line and the published npm
+line (2026-08-26, dist-tag `latest`). It is a compatibility-preserving patch
+over the `v0.43.2` runtime stabilization patch: renderer-owned light DOM now
+hydrates in place across SSR upgrade (ADR-0142), and the robustness
+adversarial audit closed with committed per-case evidence. No later minor is
 scheduled; `0.43.x` remains in maintenance mode under ADR-0140. These are
 separate facts by design: landed work is not described as published until the
 registry and immutable release evidence prove it.

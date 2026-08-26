@@ -2,7 +2,7 @@
 
 > Updated: 2026-08-26\
 > Repository package line: `v0.43.3`\
-> npm registry line: `v0.43.3` (published 2026-08-24, dist-tag `latest`)\
+> npm registry line: `v0.43.3` (published 2026-08-26, dist-tag `latest`)\
 > Latest landed train: `v0.43.3`\
 > Active release target: `v0.43.3`\
 > Next planned train: `not scheduled (maintenance mode)`\
