@@ -11,33 +11,23 @@
 import type { Signal } from '../protocol/signal.ts';
 import { applyBindingDescriptor } from './binding-activation.ts';
 import {
-  collectDomBranchMarkers,
   collectEventBindings,
   collectListGroups,
-  type EventBindingRecord,
   hydrateEventMarkers,
-  isInsideNestedLightHost,
   type ListTarget,
 } from './event-hydration.ts';
 import { renderToDom } from './jsx-render-dom.ts';
 import { isVNode } from './vnode.ts';
-import { bindAttr, bindClass, bindList, bindRender, bindText } from './binding-descriptor.ts';
+import { collectHydrationBindings } from './hydration-bindings.ts';
+import { bindList } from './binding-descriptor.ts';
 import { unwrapSignalLike } from '../signal/index.ts';
-import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
-import {
-  DATA_EID,
-  DATA_SIGNAL,
-  DATA_SIGNAL_ATTR,
-  DATA_SIGNAL_CLASS,
-  DATA_SIGNAL_RENDER,
-  parseSignalAttrSpec,
-} from '../protocol/hydration-markers.ts';
+import type { BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import { createLogger } from './logger.ts';
 import { clearChildren } from './dom-utils.ts';
 import { queueLayoutFixHost } from './layout-fix-queue.ts';
 import {
+  detectSsrMismatch,
   formatHydrationMismatchMessage,
-  type HydrationMismatchDetail,
   isHydrationDevBuild,
 } from './hydration-diagnostics.ts';
 
@@ -63,66 +53,6 @@ interface HydrationScopeDebug {
   isActive: boolean;
   effectCount: number;
   eventCleanupCount: number;
-}
-
-/**
- * Collect binding descriptors from data-signal markers in an activation root.
- *
- * `scopeLightHost` (ADR-0142, #1148) is set only when the root is a
- * light-mode host: markers inside a nested `data-oe-light` subtree bind in
- * the nested host's own scope and are pruned from this walk.
- */
-function collectHydrationBindings(
-  root: Element | ShadowRoot,
-  signalRegistry: Map<string, Signal<unknown>>,
-  lifecycle: BindingLifecycle,
-  scopeLightHost = false,
-): BindingDescriptor[] {
-  const descriptors: BindingDescriptor[] = [];
-
-  for (const el of root.querySelectorAll(`[${DATA_SIGNAL}]`)) {
-    if (scopeLightHost && isInsideNestedLightHost(el, root)) continue;
-    const name = el.getAttribute(DATA_SIGNAL);
-    if (!name) continue;
-    const sig = signalRegistry.get(name);
-    if (!sig) continue;
-
-    const hasClass = el.hasAttribute(DATA_SIGNAL_CLASS);
-    const hasAttr = el.hasAttribute(DATA_SIGNAL_ATTR);
-
-    if (hasClass) {
-      const className = el.getAttribute(DATA_SIGNAL_CLASS);
-      if (className) {
-        descriptors.push(bindClass(el, className, sig));
-      }
-    }
-
-    if (hasAttr) {
-      const attrSpec = el.getAttribute(DATA_SIGNAL_ATTR);
-      if (attrSpec) {
-        const attrNames = parseSignalAttrSpec(attrSpec);
-        if (attrNames.length > 0) {
-          descriptors.push(bindAttr(el, attrNames, sig));
-        }
-      }
-    }
-
-    if (!hasClass && !hasAttr) {
-      descriptors.push(bindText(el, sig));
-    }
-  }
-
-  for (const el of root.querySelectorAll(`[${DATA_SIGNAL_RENDER}]`)) {
-    if (scopeLightHost && isInsideNestedLightHost(el, root)) continue;
-    const name = el.getAttribute(DATA_SIGNAL_RENDER);
-    if (!name) continue;
-    const sig = signalRegistry.get(name);
-    if (!sig) continue;
-
-    descriptors.push(bindRender(el, sig, lifecycle));
-  }
-
-  return descriptors;
 }
 
 /**
@@ -182,7 +112,7 @@ export class HydrationScope {
     // element itself as root. An Element has no `.host`, so `host === root`
     // identifies that case; nested light subtrees are then pruned from every
     // marker walk via scopeLightHost.
-    const host: Element | undefined = (root as ShadowRoot).host ?? (root as unknown as Element);
+    const host: Element | undefined = (root as { host?: Element }).host ?? (root as Element);
     const isLightRoot = host === root;
 
     const registry = signalRegistry ?? this.#signalRegistry;
@@ -194,7 +124,7 @@ export class HydrationScope {
       const expectedBranches: string[] = [];
       const listTargets: ListTarget[] = [];
       const eventBindings = collectEventBindings(vnode, expectedBranches, listTargets);
-      const detail = this.#detectSsrMismatch(
+      const detail = detectSsrMismatch(
         root,
         host,
         eventBindings,
@@ -303,105 +233,6 @@ export class HydrationScope {
         this.#renderer,
       );
     }
-  }
-
-  /**
-   * Determinism guard for marker-based event hydration.
-   *
-   * SSR (renderToNode) and hydration (collectEventBindings) assign `data-eid`
-   * values in the same traversal order, so the marker count in the serialized
-   * DOM must equal the binding count derived from the cached VNode, and the
-   * `<!--oe-branch:...-->` token sequence must match exactly. Any drift means
-   * runtime signal values changed between SSR and hydration (or the SSR HTML
-   * was transformed), in which case position-based binding would be wrong.
-   *
-   * Light roots (ADR-0142 readiness, #1148) additionally validate the exact
-   * in-scope id multiset: the DOM `data-eid` values must be precisely the
-   * VNode-derived set `e0..e(N-1)`, so a duplicated, missing, or substituted
-   * id degrades even when the count matches. Bindings are id-keyed
-   * (hydrateEventMarkers looks records up by `data-eid`), so REORDERED ids
-   * are fine — only membership and uniqueness matter. Shadow roots keep the
-   * historical count-only check (frozen behavior).
-   *
-   * Returns null on a match; on divergence returns the structured detail used
-   * for the #631 diagnostic (checks run cheapest-first: marker count, light
-   * id multiset, branch count, then token equality).
-   */
-  #detectSsrMismatch(
-    root: ShadowRoot | HTMLElement,
-    host: Element | undefined,
-    eventBindings: Map<string, EventBindingRecord[]>,
-    expectedBranches: string[],
-    scopeLightHost: boolean,
-  ): HydrationMismatchDetail | null {
-    const hostTag = host?.tagName?.toLowerCase() ?? '(unknown host)';
-    const markerEls = root.querySelectorAll(`[${DATA_EID}]`);
-    let actualMarkers = markerEls.length;
-    if (scopeLightHost) {
-      // ADR-0142 (#1148): markers inside a nested light host's subtree bind in
-      // the nested host's own scope — count only markers in this scope.
-      actualMarkers = 0;
-      for (const el of markerEls) {
-        if (!isInsideNestedLightHost(el, root)) actualMarkers++;
-      }
-    }
-    if (actualMarkers !== eventBindings.size) {
-      return {
-        reason: 'marker-count',
-        hostTag,
-        expectedMarkers: eventBindings.size,
-        actualMarkers,
-        expectedBranches,
-        actualBranches: [],
-      };
-    }
-
-    if (scopeLightHost) {
-      // ADR-0142 readiness (#1148): count equality is not enough for a light
-      // root — the in-scope DOM ids must be EXACTLY the VNode-derived id set
-      // (e0..e(N-1)). A duplicated, missing, or substituted id means the SSR
-      // DOM was hand-authored or transformed, and id-keyed binding would
-      // mis-wire handlers. Reordered ids are fine: only membership and
-      // uniqueness matter.
-      const expectedMarkerIds = [...eventBindings.keys()];
-      const actualMarkerIds: string[] = [];
-      for (const el of markerEls) {
-        if (isInsideNestedLightHost(el, root)) continue;
-        actualMarkerIds.push(el.getAttribute(DATA_EID) ?? '');
-      }
-      const byId = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-      const sortedActual = [...actualMarkerIds].sort(byId).join('\n');
-      const sortedExpected = [...expectedMarkerIds].sort(byId).join('\n');
-      if (sortedActual !== sortedExpected) {
-        return {
-          reason: 'marker-id',
-          hostTag,
-          expectedMarkers: eventBindings.size,
-          actualMarkers,
-          expectedBranches,
-          actualBranches: [],
-          expectedMarkerIds,
-          actualMarkerIds,
-        };
-      }
-    }
-
-    const actualBranches = collectDomBranchMarkers(root, { scopeLightHost });
-    const base = {
-      hostTag,
-      expectedMarkers: eventBindings.size,
-      actualMarkers,
-      expectedBranches,
-      actualBranches,
-    };
-    if (actualBranches.length !== expectedBranches.length) {
-      return { reason: 'branch-count', ...base };
-    }
-    const divergedAt = expectedBranches.findIndex((token, i) => actualBranches[i] !== token);
-    if (divergedAt !== -1) {
-      return { reason: 'branch-token', ...base, divergedAt };
-    }
-    return null;
   }
 
   /** Degrade to a full client-side render when SSR DOM alignment is broken. */

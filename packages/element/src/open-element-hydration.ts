@@ -58,10 +58,10 @@ export function hydrateExistingDom(
  * nested custom-element instances survive the upgrade.
  */
 export function hydrateExistingLightDom(
-  instance: OpenElementLike,
+  instance: OpenElementLike & HTMLElement,
   scope: HydrationScope,
 ): void {
   scope.reset();
   scope.setCachedVNode(instance.render());
-  scope.hydrate(instance as unknown as HTMLElement);
+  scope.hydrate(instance);
 }
