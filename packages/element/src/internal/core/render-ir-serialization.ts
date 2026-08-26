@@ -1,4 +1,5 @@
 import { unwrapSignalLike } from '../signal/index.ts';
+import { DATA_OE_LIGHT } from '../protocol/hydration-markers.ts';
 import { escapeAttr, escapeHtml } from './html-escape.ts';
 import { isSafeAttributeName, trustRenderHtml } from './security.ts';
 import { attrNameFor, SSR_SKIP_ATTR_KEYS, styleObjectToString } from './vnode-prop-rules.ts';
@@ -124,7 +125,10 @@ export function serializeRenderNode(node: RenderNode): string {
       const attrs = serializeAttrs(node.tag, node.attrs);
       const events = node.eventAttrs ?? '';
       if (node.layer === 'pure-island' || node.layer === 'light-dom') {
-        return `<${node.tag}${attrs}${events}${node.ssrPropsAttr}${node.source}>${
+        // ADR-0142 (#1148): only light-dom hosts carry the SSR provenance
+        // marker that opts the client connection into in-place activation.
+        const lightMarker = node.layer === 'light-dom' ? ` ${DATA_OE_LIGHT}` : '';
+        return `<${node.tag}${attrs}${events}${node.ssrPropsAttr}${node.source}${lightMarker}>${
           [...node.shadow, ...node.light].map(serializeRenderNode).join('')
         }</${node.tag}>`;
       }

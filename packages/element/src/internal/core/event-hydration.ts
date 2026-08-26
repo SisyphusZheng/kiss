@@ -18,6 +18,7 @@ import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vn
 import {
   BRANCH_MARKER_PREFIX,
   DATA_EID,
+  DATA_OE_LIGHT,
   FOR_END_PREFIX,
   FOR_ITEM_PREFIX,
 } from '../protocol/hydration-markers.ts';
@@ -247,13 +248,45 @@ function eventRecordsToDescriptors(
   });
 }
 
+/**
+ * Scoping options for marker walks over a light-mode activation root.
+ *
+ * Default (false) keeps the historical whole-root walk, byte-identical for
+ * shadow roots. `scopeLightHost: true` applies the ADR-0142 nested-host
+ * pruning (#1148) and is passed only when the activation root is a light host.
+ */
+export interface LightHostScopeOptions {
+  scopeLightHost?: boolean;
+}
+
+/**
+ * ADR-0142 (#1148): whether `el` sits inside the rendered subtree of a nested
+ * light-mode host, whose markers belong to that host's own activation scope.
+ *
+ * Walks from `el.parentNode` up to (but not including) `root`; true when any
+ * ancestor Element on that path carries `data-oe-light`. An element that
+ * itself carries `data-oe-light` is NOT excluded — its host-level markers
+ * (e.g. the nested host's own `data-eid`) stay in the parent scope.
+ */
+export function isInsideNestedLightHost(el: Element, root: Element | ShadowRoot): boolean {
+  let node: Node | null = el.parentNode;
+  while (node && node !== root) {
+    if (node.nodeType === 1 && (node as Element).hasAttribute(DATA_OE_LIGHT)) return true;
+    node = node.parentNode;
+  }
+  return false;
+}
+
 export function hydrateEventMarkers(
   root: Element | ShadowRoot,
   bindings: Map<string, EventBindingRecord[]>,
   cleanupBag: Array<() => void>,
   owner?: unknown,
+  options?: LightHostScopeOptions,
 ): void {
   for (const el of root.querySelectorAll(`[${DATA_EID}]`)) {
+    // ADR-0142: a nested light host's subtree binds in its own scope (#1148).
+    if (options?.scopeLightHost && isInsideNestedLightHost(el, root)) continue;
     const id = el.getAttribute(DATA_EID);
     if (!id) continue;
     const records = bindings.get(id);
@@ -271,13 +304,24 @@ export function hydrateEventMarkers(
  * VNode by collectEventBindings; any divergence means signal values changed
  * between SSR and hydration and marker-based binding must not proceed.
  */
-export function collectDomBranchMarkers(root: Element | ShadowRoot): string[] {
+export function collectDomBranchMarkers(
+  root: Element | ShadowRoot,
+  options?: LightHostScopeOptions,
+): string[] {
   const tokens: string[] = [];
   const walk = (node: Element | ShadowRoot | ChildNode): void => {
     for (const child of node.childNodes) {
       if (child.nodeType === 8) {
         const data = (child as Comment).data;
         if (data.startsWith(BRANCH_MARKER_PREFIX)) tokens.push(data);
+        continue;
+      }
+      // ADR-0142: a nested light host's branch tokens belong to its own
+      // scope's walk — do not descend (#1148).
+      if (
+        options?.scopeLightHost && child.nodeType === 1 &&
+        (child as Element).hasAttribute(DATA_OE_LIGHT)
+      ) {
         continue;
       }
       walk(child);
@@ -299,7 +343,10 @@ export function collectDomBranchMarkers(root: Element | ShadowRoot): string[] {
  * branch tokens, Show included) matches the ordinal ListTarget got from
  * collectEventBindings, pairing each DOM group with its VNode-side target.
  */
-export function collectListGroups(root: Element | ShadowRoot): ListDomGroup[] {
+export function collectListGroups(
+  root: Element | ShadowRoot,
+  options?: LightHostScopeOptions,
+): ListDomGroup[] {
   const flat: Array<{ node: Comment; kind: 'branch' | 'item' | 'end' }> = [];
   const walk = (node: Element | ShadowRoot | ChildNode): void => {
     for (const child of node.childNodes) {
@@ -312,6 +359,14 @@ export function collectListGroups(root: Element | ShadowRoot): ListDomGroup[] {
         } else if (data.startsWith(FOR_END_PREFIX)) {
           flat.push({ node: child as Comment, kind: 'end' });
         }
+        continue;
+      }
+      // ADR-0142: a nested light host's list markers belong to its own
+      // scope's walk — do not descend (#1148).
+      if (
+        options?.scopeLightHost && child.nodeType === 1 &&
+        (child as Element).hasAttribute(DATA_OE_LIGHT)
+      ) {
         continue;
       }
       walk(child);

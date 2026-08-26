@@ -21,10 +21,12 @@ import {
 interface FakeElementLike {
   nodeType: number;
   hasAttribute: (name: string) => boolean;
-  shadowRoot?: { querySelector: (selector: string) => unknown };
+  shadowRoot?: { querySelector: (selector: string) => unknown } | null;
   closest?: (selector: string) => FakeElementLike | null;
   dispatchEvent?: (event: unknown) => boolean;
   addEventListener?: (type: string, fn: unknown, capture?: unknown) => void;
+  getRootNode?: () => unknown;
+  contains?: (node: unknown) => boolean;
 }
 
 function markerHost(): FakeElementLike {
@@ -88,10 +90,13 @@ function fakeEvent(
   };
 }
 
-function fakeTarget(dispatchCount: { n: number }): FakeElementLike {
+function fakeTarget(dispatchCount: { n: number }, rootNode?: unknown): FakeElementLike {
   return {
     nodeType: 1,
     hasAttribute: () => false,
+    // flushPendingClicks only replays onto targets still contained in the
+    // flushed host; shadow-host fakes model containment via getRootNode().
+    getRootNode: () => rootNode,
     dispatchEvent: () => {
       dispatchCount.n++;
       return true;
@@ -115,7 +120,7 @@ Deno.test('click inside an unhydrated shadow host is recorded and replayed once'
     assert(isPreHydrationClickCaptureInstalled());
     const host = markerHost();
     const events = { n: 0 };
-    const button = fakeTarget(events);
+    const button = fakeTarget(events, host.shadowRoot);
     const click = fakeEvent(button, [button, host]);
 
     captured.captureHandler?.(click);
@@ -140,6 +145,7 @@ Deno.test(
       const button: FakeElementLike = {
         nodeType: 1,
         hasAttribute: () => false,
+        getRootNode: () => host.shadowRoot,
         dispatchEvent: (event) => {
           events.n++;
           captured.captureHandler?.(event);
@@ -174,7 +180,7 @@ Deno.test('multiple pre-hydration clicks replay only the latest click once (#102
     ensurePreHydrationClickCapture();
     const host = markerHost();
     const counts = [{ n: 0 }, { n: 0 }, { n: 0 }];
-    const buttons = counts.map((count) => fakeTarget(count));
+    const buttons = counts.map((count) => fakeTarget(count, host.shadowRoot));
     for (const button of buttons) {
       captured.captureHandler?.(fakeEvent(button, [button, host]));
     }
@@ -213,7 +219,7 @@ Deno.test('light-DOM markers resolve the nearest custom-element host, no ssr-pro
       parentElement: island,
     };
     const events = { n: 0 };
-    const button = fakeTarget(events);
+    const button = fakeTarget(events, island.shadowRoot);
     captured.captureHandler?.(fakeEvent(button, [button, markerEl]));
     assertEquals(events.n, 0, 'no replay before hydration');
     flushPendingClicks(island as unknown as Element);
@@ -221,13 +227,48 @@ Deno.test('light-DOM markers resolve the nearest custom-element host, no ssr-pro
   });
 });
 
-Deno.test('light-mode island clicks are never queued: hydration detaches the recorded target (#1067)', () => {
+Deno.test(
+  'light-mode island clicks queue for a data-oe-light host and replay on flush (ADR-0142, #1148)',
+  () => {
+    withStubDocument(() => {
+      ensurePreHydrationClickCapture();
+      // A renderMode 'light' island whose SSR host carries data-oe-light
+      // activates in place: the recorded target survives the upgrade, so the
+      // click is queued for the host and replayed once its bindings are live.
+      // Supersedes the #1067 skip, which assumed clearChildren + full
+      // re-render detached the target before any replay could run.
+      const events = { n: 0 };
+      const button = fakeTarget(events);
+      const island = {
+        nodeType: 1,
+        tagName: 'my-light-island',
+        hasAttribute: (name: string) => name === 'data-oe-light',
+        shadowRoot: null,
+        // Light-host containment: the recorded target lives in the host's
+        // light subtree, proven via host.contains(target).
+        contains: (node: unknown) => node === button,
+      };
+      const markerEl = {
+        nodeType: 1,
+        tagName: 'SPAN',
+        hasAttribute: (name: string) => name === 'data-signal',
+        parentElement: island,
+      };
+      captured.captureHandler?.(fakeEvent(button, [button, markerEl]));
+      assertEquals(events.n, 0, 'no replay before hydration');
+      flushPendingClicks(island as unknown as Element);
+      assertEquals(events.n, 1, 'queued for the light host, replayed once after hydration');
+    });
+  },
+);
+
+Deno.test('light-mode island clicks without data-oe-light stay unqueued (pre-ADR-0142 SSR)', () => {
   withStubDocument(() => {
     ensurePreHydrationClickCapture();
-    // A renderMode 'light' island hydrates by clearChildren + full re-render,
-    // so the node a pre-hydration click was recorded against is replaced
-    // before any replay could run — queueing it would dispatch on a dead
-    // node. No shadow root with markers => not queued.
+    // A light island without the provenance marker (SSR HTML predating
+    // ADR-0142, or a marker stripped upstream) still takes the
+    // clear-and-render path, which detaches the recorded target — so the
+    // click is not queued, exactly as under #1067.
     const island = {
       nodeType: 1,
       tagName: 'my-light-island',
@@ -264,7 +305,7 @@ Deno.test(
         getRootNode: () => ({ host: island }),
       };
       const events = { n: 0 };
-      const button = fakeTarget(events);
+      const button = fakeTarget(events, island.shadowRoot);
       captured.captureHandler?.(
         fakeEvent(button, [button, markerButton, island]),
       );
@@ -282,6 +323,7 @@ Deno.test('a throwing replay target does not break the flush', () => {
     const bad: FakeElementLike = {
       nodeType: 1,
       hasAttribute: () => false,
+      getRootNode: () => host.shadowRoot,
       dispatchEvent: () => {
         throw new Error('target boom');
       },
@@ -292,5 +334,62 @@ Deno.test('a throwing replay target does not break the flush', () => {
     // so a second flush has nothing left to replay.
     flushPendingClicks(host as unknown as Element);
     flushPendingClicks(host as unknown as Element);
+  });
+});
+
+Deno.test(
+  'a light-host target detached by a mismatch-degrade re-render never receives the replay (ADR-0142, #1148)',
+  () => {
+    withStubDocument(() => {
+      ensurePreHydrationClickCapture();
+      const events = { n: 0 };
+      const button = fakeTarget(events);
+      // Models the degrade path swapping the subtree between record and
+      // flush: contains() reports the recorded node as no longer inside.
+      let attached = true;
+      const island = {
+        nodeType: 1,
+        tagName: 'my-light-island',
+        hasAttribute: (name: string) => name === 'data-oe-light',
+        shadowRoot: null,
+        contains: () => attached,
+      };
+      const markerEl = {
+        nodeType: 1,
+        tagName: 'SPAN',
+        hasAttribute: (name: string) => name === 'data-signal',
+        parentElement: island,
+      };
+      captured.captureHandler?.(fakeEvent(button, [button, markerEl]));
+
+      attached = false;
+      flushPendingClicks(island as unknown as Element);
+      assertEquals(events.n, 0, 'detached light-DOM target is skipped at flush');
+    });
+  },
+);
+
+Deno.test('a shadow-host target that left the shadow root never receives the replay', () => {
+  withStubDocument(() => {
+    ensurePreHydrationClickCapture();
+    const host = markerHost();
+    const events = { n: 0 };
+    let root: unknown = host.shadowRoot;
+    const button: FakeElementLike = {
+      nodeType: 1,
+      hasAttribute: () => false,
+      getRootNode: () => root,
+      dispatchEvent: () => {
+        events.n++;
+        return true;
+      },
+    };
+    captured.captureHandler?.(fakeEvent(button, [button, host]));
+
+    // A degrade re-render clears the shadow root: the detached node's
+    // getRootNode() now returns its own tree root, not the shadow root.
+    root = button;
+    flushPendingClicks(host as unknown as Element);
+    assertEquals(events.n, 0, 'target outside the shadow root is skipped at flush');
   });
 });

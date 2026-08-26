@@ -1,9 +1,9 @@
 /**
- * Standalone container for the lifecycle state of a hydrated shadow root.
- * Owns effect disposers, event cleanups, and the cached VNode used for
- * declarative event marker binding. Designed to be usable without an
- * OpenElement instance so third-party framework runtimes can hydrate the
- * same DSD shadow root later.
+ * Standalone container for the lifecycle state of a hydrated shadow root or
+ * light-mode host subtree (ADR-0142). Owns effect disposers, event cleanups,
+ * and the cached VNode used for declarative event marker binding. Designed to
+ * be usable without an OpenElement instance so third-party framework runtimes
+ * can hydrate the same DSD shadow root later.
  *
  * @module ./hydration-scope.ts
  */
@@ -16,6 +16,7 @@ import {
   collectListGroups,
   type EventBindingRecord,
   hydrateEventMarkers,
+  isInsideNestedLightHost,
   type ListTarget,
 } from './event-hydration.ts';
 import { renderToDom } from './jsx-render-dom.ts';
@@ -64,15 +65,23 @@ interface HydrationScopeDebug {
   eventCleanupCount: number;
 }
 
-/** Collect binding descriptors from data-signal markers in a shadow root. */
+/**
+ * Collect binding descriptors from data-signal markers in an activation root.
+ *
+ * `scopeLightHost` (ADR-0142, #1148) is set only when the root is a
+ * light-mode host: markers inside a nested `data-oe-light` subtree bind in
+ * the nested host's own scope and are pruned from this walk.
+ */
 function collectHydrationBindings(
-  shadowRoot: ShadowRoot,
+  root: Element | ShadowRoot,
   signalRegistry: Map<string, Signal<unknown>>,
   lifecycle: BindingLifecycle,
+  scopeLightHost = false,
 ): BindingDescriptor[] {
   const descriptors: BindingDescriptor[] = [];
 
-  for (const el of shadowRoot.querySelectorAll(`[${DATA_SIGNAL}]`)) {
+  for (const el of root.querySelectorAll(`[${DATA_SIGNAL}]`)) {
+    if (scopeLightHost && isInsideNestedLightHost(el, root)) continue;
     const name = el.getAttribute(DATA_SIGNAL);
     if (!name) continue;
     const sig = signalRegistry.get(name);
@@ -103,7 +112,8 @@ function collectHydrationBindings(
     }
   }
 
-  for (const el of shadowRoot.querySelectorAll(`[${DATA_SIGNAL_RENDER}]`)) {
+  for (const el of root.querySelectorAll(`[${DATA_SIGNAL_RENDER}]`)) {
+    if (scopeLightHost && isInsideNestedLightHost(el, root)) continue;
     const name = el.getAttribute(DATA_SIGNAL_RENDER);
     if (!name) continue;
     const sig = signalRegistry.get(name);
@@ -116,7 +126,7 @@ function collectHydrationBindings(
 }
 
 /**
- * Lifecycle scope for a hydrated shadow root.
+ * Lifecycle scope for a hydrated shadow root or light-mode host element.
  *
  * Keeps effect disposers, event listener cleanups, and the cached VNode in one
  * place so they can be disposed as a unit. The scope does not depend on
@@ -126,7 +136,11 @@ function collectHydrationBindings(
  * `<!--oe-branch:...-->` token sequence in the SSR DOM diverges from what the
  * cached VNode implies (signal drift between SSR and hydration, or transformed
  * SSR HTML), the scope warns and degrades to a client-side re-render of the
- * shadow root rather than binding handlers to misaligned elements.
+ * activation root rather than binding handlers to misaligned elements.
+ *
+ * ADR-0142 (#1148): the activation root may be a light-mode host element
+ * carrying `data-oe-light`; nested light subtrees are then pruned from every
+ * marker walk (`scopeLightHost`).
  */
 export class HydrationScope {
   #effectDisposers: Set<() => void> = new Set();
@@ -157,12 +171,19 @@ export class HydrationScope {
     this.#cacheValid = true;
   }
 
-  /** Resolve data-signal markers in a shadow root and activate bindings. */
+  /** Resolve data-signal markers in an activation root and activate bindings. */
   hydrate(
-    shadowRoot: ShadowRoot,
+    root: ShadowRoot | HTMLElement,
     signalRegistry?: Map<string, Signal<unknown>>,
   ): void {
     if (!this.#active) return;
+
+    // ADR-0142 (#1148): a light-mode host hydrates in place with the host
+    // element itself as root. An Element has no `.host`, so `host === root`
+    // identifies that case; nested light subtrees are then pruned from every
+    // marker walk via scopeLightHost.
+    const host: Element | undefined = (root as ShadowRoot).host ?? (root as unknown as Element);
+    const isLightRoot = host === root;
 
     const registry = signalRegistry ?? this.#signalRegistry;
     const lifecycle: BindingLifecycle = { disposers: this.#effectDisposers };
@@ -173,7 +194,13 @@ export class HydrationScope {
       const expectedBranches: string[] = [];
       const listTargets: ListTarget[] = [];
       const eventBindings = collectEventBindings(vnode, expectedBranches, listTargets);
-      const detail = this.#detectSsrMismatch(shadowRoot, eventBindings, expectedBranches);
+      const detail = this.#detectSsrMismatch(
+        root,
+        host,
+        eventBindings,
+        expectedBranches,
+        isLightRoot,
+      );
       if (detail) {
         // The SSR DOM cannot be trusted to line up with the VNode-derived
         // bindings (eid count drift or Show/For branch flip between SSR and
@@ -182,36 +209,46 @@ export class HydrationScope {
         // warning carries the stable code and (as a second argument) the
         // structured detail; the message text carries the full detail in dev
         // builds and a one-line coded summary in production (#631).
-        scopeLog.warn(formatHydrationMismatchMessage(detail, isHydrationDevBuild()), detail);
-        this.#renderClientSide(shadowRoot, vnode, lifecycle);
-        this.#scheduleLayoutFix(shadowRoot);
+        scopeLog.warn(
+          formatHydrationMismatchMessage(
+            detail,
+            isHydrationDevBuild(),
+            isLightRoot ? 'light' : 'shadow',
+          ),
+          detail,
+        );
+        this.#renderClientSide(root, vnode, lifecycle);
+        this.#scheduleLayoutFix(host, isLightRoot);
         return;
       }
 
-      this.#activateSignalBindings(shadowRoot, registry, lifecycle);
-      this.#activateListBindings(shadowRoot, listTargets, lifecycle);
+      this.#activateSignalBindings(root, registry, lifecycle, isLightRoot);
+      this.#activateListBindings(root, listTargets, lifecycle, isLightRoot);
       hydrateEventMarkers(
-        shadowRoot,
+        root,
         eventBindings,
         this.#eventCleanups,
-        shadowRoot.host ?? undefined,
+        host ?? undefined,
+        { scopeLightHost: isLightRoot },
       );
     } else {
-      this.#activateSignalBindings(shadowRoot, registry, lifecycle);
+      this.#activateSignalBindings(root, registry, lifecycle, isLightRoot);
     }
 
-    this.#scheduleLayoutFix(shadowRoot);
+    this.#scheduleLayoutFix(host, isLightRoot);
   }
 
   #activateSignalBindings(
-    shadowRoot: ShadowRoot,
+    root: ShadowRoot | HTMLElement,
     registry: Map<string, Signal<unknown>>,
     lifecycle: BindingLifecycle,
+    scopeLightHost: boolean,
   ): void {
     const descriptors = collectHydrationBindings(
-      shadowRoot,
+      root,
       registry,
       lifecycle,
+      scopeLightHost,
     );
 
     for (const desc of descriptors) {
@@ -233,12 +270,13 @@ export class HydrationScope {
    * the degrade path restored reactivity.
    */
   #activateListBindings(
-    shadowRoot: ShadowRoot,
+    root: ShadowRoot | HTMLElement,
     listTargets: ListTarget[],
     lifecycle: BindingLifecycle,
+    scopeLightHost: boolean,
   ): void {
     if (listTargets.length === 0) return;
-    const groups = collectListGroups(shadowRoot);
+    const groups = collectListGroups(root, { scopeLightHost });
     for (const group of groups) {
       // Pair by branchOrdinal, not position: the ordinal counts ALL branches
       // (Show included) on both sides, while listTargets is a compact
@@ -277,18 +315,36 @@ export class HydrationScope {
    * runtime signal values changed between SSR and hydration (or the SSR HTML
    * was transformed), in which case position-based binding would be wrong.
    *
+   * Light roots (ADR-0142 readiness, #1148) additionally validate the exact
+   * in-scope id multiset: the DOM `data-eid` values must be precisely the
+   * VNode-derived set `e0..e(N-1)`, so a duplicated, missing, or substituted
+   * id degrades even when the count matches. Bindings are id-keyed
+   * (hydrateEventMarkers looks records up by `data-eid`), so REORDERED ids
+   * are fine — only membership and uniqueness matter. Shadow roots keep the
+   * historical count-only check (frozen behavior).
+   *
    * Returns null on a match; on divergence returns the structured detail used
-   * for the #631 diagnostic (checks run cheapest-first: marker count, branch
-   * count, then token equality).
+   * for the #631 diagnostic (checks run cheapest-first: marker count, light
+   * id multiset, branch count, then token equality).
    */
   #detectSsrMismatch(
-    shadowRoot: ShadowRoot,
+    root: ShadowRoot | HTMLElement,
+    host: Element | undefined,
     eventBindings: Map<string, EventBindingRecord[]>,
     expectedBranches: string[],
+    scopeLightHost: boolean,
   ): HydrationMismatchDetail | null {
-    const hostTag = (shadowRoot.host as Element | undefined)?.tagName?.toLowerCase() ??
-      '(unknown host)';
-    const actualMarkers = shadowRoot.querySelectorAll(`[${DATA_EID}]`).length;
+    const hostTag = host?.tagName?.toLowerCase() ?? '(unknown host)';
+    const markerEls = root.querySelectorAll(`[${DATA_EID}]`);
+    let actualMarkers = markerEls.length;
+    if (scopeLightHost) {
+      // ADR-0142 (#1148): markers inside a nested light host's subtree bind in
+      // the nested host's own scope — count only markers in this scope.
+      actualMarkers = 0;
+      for (const el of markerEls) {
+        if (!isInsideNestedLightHost(el, root)) actualMarkers++;
+      }
+    }
     if (actualMarkers !== eventBindings.size) {
       return {
         reason: 'marker-count',
@@ -300,7 +356,37 @@ export class HydrationScope {
       };
     }
 
-    const actualBranches = collectDomBranchMarkers(shadowRoot);
+    if (scopeLightHost) {
+      // ADR-0142 readiness (#1148): count equality is not enough for a light
+      // root — the in-scope DOM ids must be EXACTLY the VNode-derived id set
+      // (e0..e(N-1)). A duplicated, missing, or substituted id means the SSR
+      // DOM was hand-authored or transformed, and id-keyed binding would
+      // mis-wire handlers. Reordered ids are fine: only membership and
+      // uniqueness matter.
+      const expectedMarkerIds = [...eventBindings.keys()];
+      const actualMarkerIds: string[] = [];
+      for (const el of markerEls) {
+        if (isInsideNestedLightHost(el, root)) continue;
+        actualMarkerIds.push(el.getAttribute(DATA_EID) ?? '');
+      }
+      const byId = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+      const sortedActual = [...actualMarkerIds].sort(byId).join('\n');
+      const sortedExpected = [...expectedMarkerIds].sort(byId).join('\n');
+      if (sortedActual !== sortedExpected) {
+        return {
+          reason: 'marker-id',
+          hostTag,
+          expectedMarkers: eventBindings.size,
+          actualMarkers,
+          expectedBranches,
+          actualBranches: [],
+          expectedMarkerIds,
+          actualMarkerIds,
+        };
+      }
+    }
+
+    const actualBranches = collectDomBranchMarkers(root, { scopeLightHost });
     const base = {
       hostTag,
       expectedMarkers: eventBindings.size,
@@ -320,12 +406,12 @@ export class HydrationScope {
 
   /** Degrade to a full client-side render when SSR DOM alignment is broken. */
   #renderClientSide(
-    shadowRoot: ShadowRoot,
+    root: ShadowRoot | HTMLElement,
     vnode: unknown,
     lifecycle: BindingLifecycle,
   ): void {
-    clearChildren(shadowRoot);
-    shadowRoot.appendChild(this.#renderer.render(vnode, lifecycle));
+    clearChildren(root);
+    root.appendChild(this.#renderer.render(vnode, lifecycle));
   }
 
   /**
@@ -334,9 +420,14 @@ export class HydrationScope {
    * Batched module-wide: every hydrated host queues into one set, and a
    * single requestAnimationFrame forces reflow for all of them, instead of
    * scheduling one rAF per hydrated component.
+   *
+   * DSD-only (ADR-0142 readiness, #1148): the fix works around a Chromium
+   * declarative-shadow-DOM parser bug, so a light-mode activation root —
+   * plain light DOM, no shadow root — must never be queued.
    */
-  #scheduleLayoutFix(shadowRoot: ShadowRoot): void {
-    queueLayoutFixHost(shadowRoot.host);
+  #scheduleLayoutFix(host: Element | undefined, isLightRoot: boolean): void {
+    if (isLightRoot) return;
+    queueLayoutFixHost(host);
   }
 
   /** Dispose all effects and event listeners tracked by this scope. */

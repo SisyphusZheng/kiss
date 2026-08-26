@@ -48,3 +48,20 @@ export function hydrateExistingDom(
   scope.reset();
   hydrateSignals(instance, instance.shadowRoot, scope);
 }
+
+/**
+ * Hydrate server-rendered light DOM in place (ADR-0142, #1148).
+ *
+ * Mirrors hydrateExistingDom but roots the scope at the host element itself:
+ * the SSR subtree (proven by the host's `data-oe-light` marker) is activated
+ * by binding its existing markers, so node identity, focus, form values, and
+ * nested custom-element instances survive the upgrade.
+ */
+export function hydrateExistingLightDom(
+  instance: OpenElementLike,
+  scope: HydrationScope,
+): void {
+  scope.reset();
+  scope.setCachedVNode(instance.render());
+  scope.hydrate(instance as unknown as HTMLElement);
+}

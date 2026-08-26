@@ -81,3 +81,56 @@ Deno.test('dev branch-token message names the divergence index and tokens', () =
   assertStringIncludes(prod, '(branch-token)');
   assertStringIncludes(prod, 'OPEN_ELEMENT_HYDRATION_MISMATCH');
 });
+
+Deno.test('an explicit shadow root kind keeps the historical exact wording', () => {
+  // Threading the root kind through (ADR-0142 readiness) must not perturb
+  // the pinned shadow text: explicit 'shadow' is identical to the default.
+  assertEquals(
+    formatHydrationMismatchMessage(base, false, 'shadow'),
+    formatHydrationMismatchMessage(base, false),
+  );
+  assertEquals(
+    formatHydrationMismatchMessage(base, true, 'shadow'),
+    formatHydrationMismatchMessage(base, true),
+  );
+});
+
+Deno.test('light-root mismatch wording names the light DOM subtree, never "shadow root" (ADR-0142, #1148)', () => {
+  const prod = formatHydrationMismatchMessage(base, false, 'light');
+  assertEquals(
+    prod,
+    '[OPEN_ELEMENT_HYDRATION_MISMATCH] SSR/hydration mismatch (marker-count) on ' +
+      '<x-counter>; falling back to client-side render for this light DOM subtree.',
+  );
+  const dev = formatHydrationMismatchMessage(base, true, 'light');
+  assertStringIncludes(dev, 'the SSR light DOM diverged from the client VNode.');
+  assertStringIncludes(dev, 'Falling back to client-side render for this light DOM subtree.');
+  assertEquals(dev.includes('shadow root'), false);
+});
+
+Deno.test('dev marker-id message lists expected vs actual marker ids (#1148)', () => {
+  const detail: HydrationMismatchDetail = {
+    ...base,
+    reason: 'marker-id',
+    expectedMarkers: 2,
+    actualMarkers: 2,
+    expectedMarkerIds: ['e0', 'e1'],
+    actualMarkerIds: ['e0', 'e0'],
+  };
+  const message = formatHydrationMismatchMessage(detail, true, 'light');
+  assertStringIncludes(message, '[OPEN_ELEMENT_HYDRATION_MISMATCH]');
+  assertStringIncludes(
+    message,
+    'expected exactly [e0, e1] (client VNode), found [e0, e0] (SSR DOM)',
+  );
+  assertEquals(
+    message.includes('expected tokens:'),
+    false,
+    'marker-id does not print the oe-branch token lines',
+  );
+  // Production stays a coded one-liner: reason + host, no id dump.
+  const prod = formatHydrationMismatchMessage(detail, false, 'light');
+  assertStringIncludes(prod, '(marker-id)');
+  assertEquals(prod.includes('\n'), false);
+  assertEquals(prod.includes('e0'), false);
+});

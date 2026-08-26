@@ -229,6 +229,10 @@ const openElementPlugins = openElement({
     },
     sitemap: {
       hostname: 'https://openelement.org',
+      // #1148 e2e probe route: a real page (both locales), but not a public
+      // surface — keep it out of sitemap.xml. The nav scanner never picks it
+      // up because the route exports no meta.
+      exclude: ['/probe-light', '/zh/probe-light'],
     },
   },
   i18n: {

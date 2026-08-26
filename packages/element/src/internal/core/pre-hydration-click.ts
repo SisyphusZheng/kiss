@@ -25,12 +25,18 @@
  * replayed events carry isTrusted=false. A replay is skipped once a host is
  * flushed (WeakSet), so a replay can never re-enter the queue.
  *
+ * Light-mode hosts carrying `data-oe-light` are captured too (ADR-0142,
+ * #1148): their in-place activation keeps the recorded target alive, which
+ * supersedes the #1067 skip — that skip assumed clearChildren + full
+ * re-render would detach the recorded node before any replay could run.
+ *
  * The module is runtime-safe without DOM globals (SSR): `Element`/`Node` are
  * only used as types, never via `instanceof`.
  */
 
 import {
   DATA_EID,
+  DATA_OE_LIGHT,
   DATA_SIGNAL,
   DATA_SIGNAL_ATTR,
   DATA_SIGNAL_CLASS,
@@ -98,9 +104,11 @@ function shadowRootHasMarkers(el: Element): boolean {
  * has public props, so a no-props island would key the queue to the marker
  * node and never flush.
  *
- * Light-mode islands are skipped entirely (#1067): they hydrate by
- * clearChildren + full re-render, which detaches the recorded target node,
- * so replaying would dispatch on a dead node — a guaranteed no-op.
+ * Light-mode islands carrying `data-oe-light` queue as well (ADR-0142,
+ * #1148): their SSR subtree is activated in place, so the recorded target
+ * survives the upgrade. The #1067 skip — recorded targets detached by
+ * clearChildren + full re-render — now applies only to light hosts WITHOUT
+ * the marker (pre-ADR-0142 SSR output), which still take the CSR path.
  */
 function pendingHostFromPath(path: readonly EventTarget[]): Element | null {
   for (const node of path) {
@@ -113,9 +121,12 @@ function pendingHostFromPath(path: readonly EventTarget[]): Element | null {
         if (host) return host;
       }
       const host = nearestCustomElementAncestor(node);
-      // Only shadow (DSD) islands queue: the host proves its shadow root
-      // carries live markers; a light-mode island has none and is skipped.
-      if (!host || !shadowRootHasMarkers(host)) return null;
+      // Shadow (DSD) islands queue on the shadow root's live markers. A
+      // light-mode island has no shadow root; it queues when the host carries
+      // data-oe-light, because ADR-0142 in-place activation keeps the
+      // recorded target alive (#1148, superseding the #1067 skip).
+      if (!host) return null;
+      if (!shadowRootHasMarkers(host) && !host.hasAttribute(DATA_OE_LIGHT)) return null;
       return host;
     }
   }
@@ -157,13 +168,33 @@ export function ensurePreHydrationClickCapture(): void {
 }
 
 /**
+ * Replay containment guard: the recorded target must still live inside the
+ * flushed host's own tree. A mismatch-degrade re-render (#631, ADR-0142
+ * rule 5) — or any upstream DOM swap — detaches the SSR node, and replaying
+ * on a detached node would fire the island's handler against DOM the user
+ * never interacted with. A light host (ADR-0142, #1148) contains its targets
+ * in its light subtree; a shadow host's recorded targets live in its shadow
+ * root. Fails closed when the DOM APIs needed to prove containment are
+ * unavailable.
+ */
+function isReplayTargetContained(host: Element, target: EventTarget): boolean {
+  if (host.shadowRoot) {
+    return typeof (target as { getRootNode?: unknown }).getRootNode === 'function' &&
+      (target as Node).getRootNode() === host.shadowRoot;
+  }
+  return typeof host.contains === 'function' && host.contains(target as Node);
+}
+
+/**
  * Replay clicks that landed inside `host` before it hydrated.
  *
  * Call right after the host's event bindings are live: element-managed
  * hosts after `markSelfHydrated` (DSD/CSR/light paths), and hosts hydrated
  * by `hydrateOpenElement`. Re-dispatching the original event on its target
  * runs the now-bound native handler exactly once; the capture listener skips
- * it because the host is flushed before replay.
+ * it because the host is flushed before replay. A recorded target that is no
+ * longer inside the flushed host (mismatch-degrade re-render) is skipped —
+ * see isReplayTargetContained.
  */
 export function flushPendingClicks(host: Element): void {
   flushedHosts.add(host);
@@ -175,15 +206,15 @@ export function flushPendingClicks(host: Element): void {
     // `event.target`: at the document level the browser retargets target to
     // the outermost shadow host, so dispatching there would never reach the
     // island's own handler.
-    if (isNodeLike(pending.target)) {
-      try {
-        pending.target.dispatchEvent(pending.event);
-      } catch (err) {
-        // A throwing target (e.g. the event is already being dispatched, or
-        // a hostile EventTarget) must not starve the rest of the queue nor
-        // break the hydration path that called flush.
-        log.warn(`pre-hydration click replay dropped: ${formatError(err)}`);
-      }
+    if (!isNodeLike(pending.target)) continue;
+    if (!isReplayTargetContained(host, pending.target)) continue;
+    try {
+      pending.target.dispatchEvent(pending.event);
+    } catch (err) {
+      // A throwing target (e.g. the event is already being dispatched, or
+      // a hostile EventTarget) must not starve the rest of the queue nor
+      // break the hydration path that called flush.
+      log.warn(`pre-hydration click replay dropped: ${formatError(err)}`);
     }
   }
 }

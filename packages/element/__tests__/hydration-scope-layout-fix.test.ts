@@ -148,3 +148,25 @@ Deno.test('without rAF the layout fix flushes synchronously and the scheduling f
     assertEquals(state.reflows, 2);
   });
 });
+
+Deno.test('light-mode activation roots are never queued for the DSD layout fix (ADR-0142, #1148)', () => {
+  withCountingRaf((callbacks) => {
+    // A light-mode host hydrates with the host element itself as the root:
+    // no `.host` property, so HydrationScope reads host === root as the
+    // light-root case. The layout fix works around a Chromium DSD parser
+    // bug and must never touch plain light DOM.
+    const state = { reflows: 0 };
+    const lightHost = {
+      get offsetHeight() {
+        state.reflows++;
+        return 0;
+      },
+      querySelectorAll: () => [],
+    };
+
+    new HydrationScope().hydrate(lightHost as unknown as HTMLElement);
+
+    assertEquals(callbacks.length, 0, 'no rAF scheduled for a light activation root');
+    assertEquals(state.reflows, 0, 'light host is never reflowed by the DSD fix');
+  });
+});

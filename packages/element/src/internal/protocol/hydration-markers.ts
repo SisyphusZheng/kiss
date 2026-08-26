@@ -29,6 +29,16 @@ export const DATA_EID = 'data-eid';
  */
 export const DATA_SSR_PROPS = 'data-ssr-props';
 
+/**
+ * Internal SSR provenance marker on light-mode host tags (ADR-0142, #1148).
+ *
+ * Present only when the host's light subtree was server-rendered under the
+ * in-place activation contract: the client binds the existing DOM instead of
+ * clearing it, and a parent's activation walk prunes the nested host's
+ * subtree. Client rendering never writes it and it is never removed.
+ */
+export const DATA_OE_LIGHT = 'data-oe-light';
+
 /** HTML comment prefix recording the SSR-evaluated branch state of `<Show>`/`<For>`. */
 export const BRANCH_MARKER_PREFIX = 'oe-branch:';
 

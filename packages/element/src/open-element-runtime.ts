@@ -6,6 +6,7 @@ import {
 import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import { formatError } from './internal/core/errors.ts';
 import { createLogger } from './internal/core/logger.ts';
+import { DATA_OE_LIGHT } from './internal/protocol/hydration-markers.ts';
 import {
   disposeStaticProps,
   initializeStaticProps,
@@ -15,6 +16,7 @@ import type { Signal } from './internal/protocol/signal.ts';
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import type { VNode } from './internal/protocol/vnode.ts';
 import { attachFormInternals } from './open-element-form.ts';
+import { hydrateExistingLightDom } from './open-element-hydration.ts';
 import type { ElementLifecycle } from './open-element-lifecycle.ts';
 import type { ElementParams } from './open-element-params.ts';
 import {
@@ -66,6 +68,18 @@ export function renderOrHydrateOpenElement(host: OpenElementRuntimeHost): void {
   try {
     const ctor = host.constructor as RuntimeConstructor;
     if (ctor.renderMode === 'light') {
+      // ADR-0142 (#1148): a host whose light subtree was server-rendered
+      // carries data-oe-light and is activated in place — node identity,
+      // form values, and pre-upgrade click targets survive. Unmarked hosts
+      // (empty createElement host, or marker stripped upstream) keep the
+      // clear-and-render CSR path. Both paths fire onCsrRendered: light
+      // connects keep a single hook, per the ADR-0142 lifecycle rule.
+      if (host.hasAttribute(DATA_OE_LIGHT)) {
+        hydrateExistingLightDom(host, hostScope(host));
+        markHydrated(host);
+        host.onCsrRendered();
+        return;
+      }
       renderIntoLightDom(host, hostScope(host));
       markHydrated(host);
       host.onCsrRendered();
