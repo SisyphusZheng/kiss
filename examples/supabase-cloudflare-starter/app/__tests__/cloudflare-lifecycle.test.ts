@@ -161,6 +161,56 @@ Deno.test('Cron removes stale objects before releasing quota and requeues pendin
   }]);
 });
 
+Deno.test('Cron retains an abandoned reservation across Storage failure and releases it on retry', async () => {
+  // Reserve succeeded but the client never finalized: the row stays 'reserved'
+  // until the 15-minute stale sweep lists it (migration 20260817000002). The
+  // sweep must not release quota while the object removal failed, and must
+  // converge on the next run — object removal strictly before quota release.
+  const originalFetch = globalThis.fetch;
+  let released = 0;
+  let storageAttempts = 0;
+  const operations: string[] = [];
+  globalThis.fetch = (input) => {
+    const url = String(input);
+    if (url.endsWith('/rpc/list_pending_attachment_deletions')) {
+      return Promise.resolve(Response.json([]));
+    }
+    if (url.endsWith('/rpc/list_stale_attachment_reservations')) {
+      return Promise.resolve(
+        Response.json(released ? [] : [{ id: 'stale-1', object_key: 'u/stale' }]),
+      );
+    }
+    if (url.includes('/storage/v1/object/')) {
+      storageAttempts++;
+      operations.push(`storage:DELETE#${storageAttempts}`);
+      return Promise.resolve(
+        storageAttempts === 1
+          ? Response.json({ error: 'temporary outage' }, { status: 503 })
+          : Response.json({}),
+      );
+    }
+    if (url.endsWith('/rpc/release_stale_attachment')) {
+      released++;
+      operations.push('release');
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (
+      url.endsWith('/rpc/list_pending_attachment_scans') ||
+      url.endsWith('/rpc/list_requested_attachment_scan_replays')
+    ) return Promise.resolve(Response.json([]));
+    throw new Error(`unexpected request: ${url}`);
+  };
+  try {
+    await reconcileAttachments(env());
+    await reconcileAttachments(env());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(storageAttempts, 2);
+  assertEquals(released, 1);
+  assertEquals(operations, ['storage:DELETE#1', 'storage:DELETE#2', 'release']);
+});
+
 Deno.test('Cron converges an interrupted attachment deletion', async () => {
   const originalFetch = globalThis.fetch;
   const operations: string[] = [];

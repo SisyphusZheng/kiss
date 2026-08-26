@@ -95,6 +95,63 @@ export async function requestNotesAccessToken(
   return response.json() as Promise<NotesAccessToken>;
 }
 
+/**
+ * Fetch the newest-first notes snapshot through the RLS Data API with a
+ * bounded retry: one 401 forces a session refresh, the fresh token is handed
+ * back through onRefreshed (Realtime setAuth), and the request is retried
+ * exactly once. A failed refresh, a failed retry — including another 401 —
+ * or any other non-2xx response throws, so the caller fails closed into its
+ * degraded path instead of looping. fetchImpl is injectable for tests.
+ */
+export async function fetchNotesSnapshot(options: {
+  url: string;
+  key: string;
+  userId: string;
+  token: string;
+  refreshToken: () => Promise<string | null>;
+  onRefreshed?: (token: string) => void | Promise<void>;
+  fetchImpl?: typeof fetch;
+}): Promise<LiveNoteEvent[]> {
+  const { url, key, userId, refreshToken, onRefreshed } = options;
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = new URL(`${url.replace(/\/$/, '')}/rest/v1/notes`);
+  endpoint.searchParams.set('select', 'id,body,created_at');
+  endpoint.searchParams.set('user_id', `eq.${userId}`);
+  endpoint.searchParams.set('order', 'created_at.desc,id.desc');
+  endpoint.searchParams.set('limit', String(MAX_LIVE_EVENTS));
+  const reconcile = (token: string) =>
+    fetchImpl(endpoint, {
+      cache: 'no-store',
+      headers: { apikey: key, authorization: `Bearer ${token}` },
+    });
+  let response = await reconcile(options.token);
+  if (response.status === 401) {
+    const fresh = await refreshToken();
+    if (!fresh) throw new Error('Notes session renewal failed');
+    await onRefreshed?.(fresh);
+    response = await reconcile(fresh);
+  }
+  if (!response.ok) throw new Error(`Notes reconciliation failed with HTTP ${response.status}`);
+  const payload = await response.json() as unknown;
+  if (!Array.isArray(payload)) throw new Error('Notes reconciliation returned a non-array');
+  const snapshot: LiveNoteEvent[] = [];
+  for (const row of payload) {
+    if (
+      typeof row === 'object' && row !== null &&
+      typeof (row as { id?: unknown }).id === 'string' &&
+      typeof (row as { body?: unknown }).body === 'string' &&
+      typeof (row as { created_at?: unknown }).created_at === 'string'
+    ) {
+      snapshot.push({
+        id: (row as { id: string }).id,
+        body: (row as { body: string }).body,
+        createdAt: (row as { created_at: string }).created_at,
+      });
+    }
+  }
+  return snapshot;
+}
+
 /** Prefer a fresh DOM handoff, then reuse private memory for later reconnects. */
 export function resolveRealtimeAuthToken(
   attributeToken: string | null,
@@ -265,7 +322,7 @@ export default class NotesLive extends OpenElement {
     const url = this.getAttribute('data-url');
     const key = this.getAttribute('data-key');
     const userId = this.getAttribute('data-user-id');
-    let accessToken = await this.#validAccessToken();
+    const accessToken = await this.#validAccessToken();
     if (!url || !key || !userId || !accessToken) {
       this.#status.value = 'degraded';
       return;
@@ -273,41 +330,14 @@ export default class NotesLive extends OpenElement {
 
     this.#status.value = 'recovering';
     try {
-      const endpoint = new URL(`${url.replace(/\/$/, '')}/rest/v1/notes`);
-      endpoint.searchParams.set('select', 'id,body,created_at');
-      endpoint.searchParams.set('user_id', `eq.${userId}`);
-      endpoint.searchParams.set('order', 'created_at.desc,id.desc');
-      endpoint.searchParams.set('limit', String(MAX_LIVE_EVENTS));
-      const reconcile = (token: string) =>
-        fetch(endpoint, {
-          cache: 'no-store',
-          headers: { apikey: key, authorization: `Bearer ${token}` },
-        });
-      let response = await reconcile(accessToken);
-      if (response.status === 401) {
-        accessToken = await this.#validAccessToken(true);
-        if (!accessToken) throw new Error('Notes session renewal failed');
-        await this.#client?.setAuth(accessToken);
-        response = await reconcile(accessToken);
-      }
-      if (!response.ok) throw new Error(`Notes reconciliation failed with HTTP ${response.status}`);
-      const payload = await response.json() as unknown;
-      if (!Array.isArray(payload)) throw new Error('Notes reconciliation returned a non-array');
-      const snapshot: LiveNoteEvent[] = [];
-      for (const row of payload) {
-        if (
-          typeof row === 'object' && row !== null &&
-          typeof (row as { id?: unknown }).id === 'string' &&
-          typeof (row as { body?: unknown }).body === 'string' &&
-          typeof (row as { created_at?: unknown }).created_at === 'string'
-        ) {
-          snapshot.push({
-            id: (row as { id: string }).id,
-            body: (row as { body: string }).body,
-            createdAt: (row as { created_at: string }).created_at,
-          });
-        }
-      }
+      const snapshot = await fetchNotesSnapshot({
+        url,
+        key,
+        userId,
+        token: accessToken,
+        refreshToken: () => this.#validAccessToken(true),
+        onRefreshed: (fresh) => this.#client?.setAuth(fresh),
+      });
       if (!this.isConnected || generation !== this.#connectionGeneration) return;
       this.#events.value = mergeReconciledEvents(this.#events.value, snapshot);
       this.#reconcileAttempt = 0;

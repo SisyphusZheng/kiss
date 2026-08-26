@@ -269,6 +269,151 @@ Deno.test({
         },
       );
 
+      // #1146 area 4a — native (no-JS) channel parity for the same five
+      // unserializable kinds: a plain form POST WITHOUT the fetch header.
+      // Contract (from entry-action-runtime.ts): __runActionProtocol returns
+      // { actionResult } and the handler re-renders the page at the author
+      // status (entry-codegen.ts:149-154 + c.html(..., __actionStatus)). The
+      // raw fail() data rides the __openElementActionData prop, which
+      // collectPublicProps drops (props-utils.ts:64), so it never reaches
+      // attribute/hydration serialization — the re-render cannot 500.
+      await t.step(
+        'POST /fail-unserializable (native channel) → 422 page re-render (#1146 4a)',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            for (const kind of ['undefined', 'function', 'symbol', 'bigint', 'circular']) {
+              const response = await fetch(`${base}/fail-unserializable`, formBody({ kind }));
+              assertEquals(response.status, 422, `${name}/${kind}: native fail status`);
+              assertStringIncludes(
+                response.headers.get('content-type') ?? '',
+                'text/html',
+                `${name}/${kind}: native fail content-type`,
+              );
+              assertStringIncludes(
+                response.headers.get('vary') ?? '',
+                'x-openelement-action',
+                `${name}/${kind}: native fail vary`,
+              );
+              assertEquals(
+                response.headers.get('cache-control'),
+                'no-store',
+                `${name}/${kind}: native fail cache-control`,
+              );
+              const body = await response.text();
+              assertStringIncludes(
+                body,
+                '<h1>fail-unserializable</h1>',
+                `${name}/${kind}: native fail re-renders the page`,
+              );
+            }
+          }
+        },
+      );
+
+      // #1146 area 4b — large-but-serializable fail() data on both channels.
+      // Threshold (pinned by the fixture's bigPayload()): 64 nesting levels
+      // over a 64 KiB string leaf; serialized payload ≥ 64 KiB. The fetch
+      // channel must answer 422 with the payload intact (no truncation, no
+      // 500); the native channel re-renders without embedding the data.
+      await t.step(
+        'large serializable fail() data (64-deep, 64 KiB leaf) → intact on both channels (#1146 4b)',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const json = await fetch(`${base}/fail-unserializable`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                'x-openelement-action': 'true',
+                origin: new URL(base).origin,
+              },
+              body: 'kind=big',
+            });
+            assertEquals(json.status, 422, `${name}: big fetch status`);
+            const body = await json.json() as {
+              type?: string;
+              status?: number;
+              data?: unknown;
+            };
+            assertEquals(body.type, 'failure', `${name}: big fetch body shape`);
+            assertEquals(body.status, 422, `${name}: big fetch body status`);
+            let node = body.data;
+            let depth = 0;
+            while (node !== null && typeof node === 'object' && 'child' in node) {
+              node = (node as { child: unknown }).child;
+              depth++;
+            }
+            assertEquals(depth, 64, `${name}: big nesting depth survives untruncated`);
+            assertEquals(
+              (node as { leaf: string }).leaf.length,
+              64 * 1024,
+              `${name}: big 64 KiB leaf survives untruncated`,
+            );
+            assert(
+              JSON.stringify(body.data).length >= 64 * 1024,
+              `${name}: big serialized payload is ≥ 64 KiB`,
+            );
+
+            const native = await fetch(`${base}/fail-unserializable`, formBody({ kind: 'big' }));
+            assertEquals(native.status, 422, `${name}: big native status`);
+            const html = await native.text();
+            assertStringIncludes(
+              html,
+              '<h1>fail-unserializable</h1>',
+              `${name}: big native re-renders the page`,
+            );
+            // fail() data is render-context state, not document state: the
+            // 64 KiB leaf must not be embedded into the re-rendered HTML.
+            assert(
+              !html.includes('x'.repeat(1024)),
+              `${name}: big fail data is not embedded in the native HTML`,
+            );
+          }
+        },
+      );
+
+      // #1146 area 4c — symbol-KEYED object (not symbol value): JSON.stringify
+      // drops symbol keys silently, so the fetch payload keeps only the plain
+      // key; the native channel re-renders unaffected.
+      await t.step(
+        'symbol-keyed fail() data: symbol key dropped, plain key survives (#1146 4c)',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const json = await fetch(`${base}/fail-unserializable`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                'x-openelement-action': 'true',
+                origin: new URL(base).origin,
+              },
+              body: 'kind=symbol-key',
+            });
+            assertEquals(json.status, 422, `${name}: symbol-key fetch status`);
+            const body = await json.json() as {
+              type?: string;
+              status?: number;
+              data?: unknown;
+            };
+            assertEquals(body.type, 'failure', `${name}: symbol-key fetch body shape`);
+            assertEquals(
+              body.data,
+              { plain: 1 },
+              `${name}: symbol key dropped silently, plain key survives`,
+            );
+
+            const native = await fetch(
+              `${base}/fail-unserializable`,
+              formBody({ kind: 'symbol-key' }),
+            );
+            assertEquals(native.status, 422, `${name}: symbol-key native status`);
+            assertStringIncludes(
+              await native.text(),
+              '<h1>fail-unserializable</h1>',
+              `${name}: symbol-key native re-renders the page`,
+            );
+          }
+        },
+      );
+
       // ADR-0129: the loader writes the channel on every GET; the action
       // writes Set-Cookie then redirects; a 422 re-render carries the
       // action's header; protocol headers (Cache-Control) cannot be
@@ -483,6 +628,102 @@ Deno.test({
           assertStringIncludes(await get.text(), 'echo=chain', `${name}: PRG target body`);
         }
       });
+
+      // #1146 area 4d — concurrency: one burst of N=20 parallel action POSTs
+      // per runtime, alternating valid/fail-unserializable across both
+      // channels (5 requests per quadrant). Cross-talk shows up as a wrong
+      // per-request marker in the 303/redirect location or a status flip;
+      // server-side failures show up as console.error output from the
+      // generated entry's catch blocks, captured here for the assertion.
+      await t.step(
+        'concurrent mixed submissions: 20 parallel, both channels, no cross-talk (#1146 4d)',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const origin = new URL(base).origin;
+            const errorLogs: unknown[][] = [];
+            const originalError = console.error;
+            console.error = (...args: unknown[]) => {
+              errorLogs.push(args);
+            };
+            type BurstResult = { quadrant: number; marker: string; response: Response };
+            try {
+              const results: BurstResult[] = await Promise.all(
+                Array.from({ length: 20 }, async (_, i) => {
+                  const quadrant = i % 4;
+                  const marker = `mix-${i}`;
+                  if (quadrant === 0 || quadrant === 2) {
+                    // Native channel: valid → 303, fail → 422 re-render.
+                    const target = quadrant === 0 ? '/form' : '/fail-unserializable';
+                    const fields: Record<string, string> = quadrant === 0
+                      ? { message: marker }
+                      : { kind: 'circular' };
+                    const response = await fetch(`${base}${target}`, formBody(fields));
+                    return { quadrant, marker, response };
+                  }
+                  // Fetch channel: valid → 200 JSON redirect, fail → 422 JSON failure.
+                  const target = quadrant === 1 ? '/form' : '/fail-unserializable';
+                  const body = quadrant === 1 ? `message=${marker}` : 'kind=circular';
+                  const response = await fetch(`${base}${target}`, {
+                    method: 'POST',
+                    headers: {
+                      'content-type': 'application/x-www-form-urlencoded',
+                      'x-openelement-action': 'true',
+                      origin,
+                    },
+                    body,
+                  });
+                  return { quadrant, marker, response };
+                }),
+              );
+              assertEquals(results.length, 20, `${name}: every burst request answered`);
+              for (const { quadrant, marker, response } of results) {
+                if (quadrant === 0) {
+                  assertEquals(response.status, 303, `${name}/${marker}: native valid status`);
+                  assertEquals(
+                    response.headers.get('location'),
+                    `/form?echoed=${marker}`,
+                    `${name}/${marker}: native valid location carries its own marker`,
+                  );
+                  await response.body?.cancel();
+                } else if (quadrant === 1) {
+                  assertEquals(response.status, 200, `${name}/${marker}: fetch valid status`);
+                  const body = await response.json() as {
+                    type?: string;
+                    status?: number;
+                    location?: string;
+                  };
+                  assertEquals(body.type, 'redirect', `${name}/${marker}: fetch valid shape`);
+                  assertEquals(body.status, 303, `${name}/${marker}: fetch valid body status`);
+                  assertEquals(
+                    body.location,
+                    `/form?echoed=${marker}`,
+                    `${name}/${marker}: fetch valid location carries its own marker`,
+                  );
+                } else if (quadrant === 2) {
+                  assertEquals(response.status, 422, `${name}/${marker}: native fail status`);
+                  assertStringIncludes(
+                    await response.text(),
+                    '<h1>fail-unserializable</h1>',
+                    `${name}/${marker}: native fail re-renders the page`,
+                  );
+                } else {
+                  assertEquals(response.status, 422, `${name}/${marker}: fetch fail status`);
+                  const body = await response.json() as { type?: string; data?: unknown };
+                  assertEquals(body.type, 'failure', `${name}/${marker}: fetch fail shape`);
+                  assertEquals(body.data, null, `${name}/${marker}: fetch fail degrades to null`);
+                }
+              }
+            } finally {
+              console.error = originalError;
+            }
+            assertEquals(
+              errorLogs,
+              [],
+              `${name}: no server error logs during the concurrent burst`,
+            );
+          }
+        },
+      );
 
       // ADR-0123 item 2 (#858): the fixture configures middleware.use with an
       // outer post-processor and an inner short-circuit. Both runtimes must

@@ -1010,3 +1010,284 @@ Deno.test('back onto a veto-restored entry after a programmatic navigation re-sy
     browser.restore();
   }
 });
+
+// ─── Adversarial dispose / guard-failure coverage (#1146, area 3) ───
+
+/**
+ * Process-level unhandledRejection trap (#1146-3d).
+ *
+ * Must be installed BEFORE installFakeBrowser (which replaces
+ * globalThis.addEventListener) so the trap lands on the real event target,
+ * and restored AFTER browser.restore() puts the real functions back.
+ * preventDefault keeps the run alive; the assertions report failures.
+ */
+function trapUnhandledRejections(): { rejections: unknown[]; restore(): void } {
+  const rejections: unknown[] = [];
+  const onUnhandled = (event: PromiseRejectionEvent) => {
+    rejections.push(event.reason);
+    event.preventDefault();
+  };
+  addEventListener('unhandledrejection', onUnhandled);
+  return {
+    rejections,
+    restore() {
+      removeEventListener('unhandledrejection', onUnhandled);
+    },
+  };
+}
+
+Deno.test('client router dispose mid-redirect-chain commits nothing and unhooks listeners (#1146-3a/3d)', async () => {
+  const trap = trapUnhandledRejections();
+  const browser = installFakeBrowser('/');
+  let resolveB!: (value: string) => void;
+  const guardCalls: string[] = [];
+  let changes = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/', tagName: 'home-page' },
+      {
+        path: '/a',
+        tagName: 'a-page',
+        guard: () => {
+          guardCalls.push('a');
+          return Promise.resolve('/b');
+        },
+      },
+      {
+        path: '/b',
+        tagName: 'b-page',
+        guard: () => {
+          guardCalls.push('b');
+          return new Promise<string>((resolve) => resolveB = resolve);
+        },
+      },
+      { path: '/c', tagName: 'c-page' },
+    ],
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    const navigation = router.navigate('/a');
+    // Hop 1 (/a → /b) resolves; hop 2 (/b's guard) suspends.
+    await flushBrowserNavigation();
+    assertEquals(guardCalls, ['a', 'b']);
+    // Dispose between hops, then let the stale guard resolve the chain on.
+    router.dispose();
+    resolveB('/c');
+    await navigation;
+    await flushBrowserNavigation();
+    // No navigation committed: nothing pushed/replaced, router state and the
+    // address bar still describe the initial entry, no change notified.
+    assertEquals(browser.applied, []);
+    assertEquals(browser.path(), '/');
+    assertEquals(router.currentPath, '/');
+    assertEquals(router.currentRoute?.tagName, 'home-page');
+    assertEquals(changes, 0);
+    // Listeners were removed: a browser event after dispose runs no guard.
+    browser.jumpTo('/a');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(guardCalls, ['a', 'b']);
+    assertEquals(router.currentPath, '/');
+    assertEquals(trap.rejections, []);
+  } finally {
+    router.dispose();
+    browser.restore();
+    trap.restore();
+  }
+});
+
+Deno.test('client router dispose invalidates a pending hash-mode browser guard (#1146-3b/3d)', async () => {
+  const trap = trapUnhandledRejections();
+  let resolveGuard!: (value: boolean) => void;
+  let guardCalls = 0;
+  const browser = installFakeBrowser('#/public');
+  let changes = 0;
+  const router = createRouter({
+    mode: 'hash',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () => {
+          guardCalls++;
+          return new Promise<boolean>((resolve) => resolveGuard = resolve);
+        },
+      },
+    ],
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    browser.jumpTo('#/protected');
+    browser.fire('hashchange');
+    await flushBrowserNavigation();
+    assertEquals(guardCalls, 1);
+    router.dispose();
+    resolveGuard(true);
+    await flushBrowserNavigation();
+    // The stale guard resolution committed nothing and restored nothing.
+    assertEquals(router.currentPath, '/public');
+    assertEquals(router.currentRoute?.tagName, 'public-page');
+    assertEquals(browser.applied, []);
+    assertEquals(changes, 0);
+    // The hashchange listener is gone: further hash events run no guard.
+    browser.jumpTo('#/protected');
+    browser.fire('hashchange');
+    await flushBrowserNavigation();
+    assertEquals(guardCalls, 1);
+    assertEquals(trap.rejections, []);
+  } finally {
+    router.dispose();
+    browser.restore();
+    trap.restore();
+  }
+});
+
+Deno.test('client router navigate rejects on a synchronously-throwing guard without corrupting state (#1146-3c/3d)', async () => {
+  const trap = trapUnhandledRejections();
+  const browser = installFakeBrowser('/');
+  let changes = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/', tagName: 'home-page' },
+      {
+        path: '/boom',
+        tagName: 'boom-page',
+        guard: () => {
+          throw new Error('guard boom');
+        },
+      },
+      { path: '/ok', tagName: 'ok-page' },
+    ],
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    // Contract: a sync-throwing guard surfaces as a rejection of the
+    // navigate() promise (same as an async rejection), before any commit.
+    await assertRejects(() => router.navigate('/boom'), Error, 'guard boom');
+    assertEquals(browser.applied, []);
+    assertEquals(router.currentPath, '/');
+    assertEquals(router.currentRoute?.tagName, 'home-page');
+    assertEquals(changes, 0);
+    // The router is not corrupted: a later navigation still commits.
+    await router.navigate('/ok');
+    assertEquals(router.currentPath, '/ok');
+    assertEquals(router.currentRoute?.tagName, 'ok-page');
+    assertEquals(changes, 1);
+    assertEquals(trap.rejections, []);
+  } finally {
+    router.dispose();
+    browser.restore();
+    trap.restore();
+  }
+});
+
+Deno.test('client router popstate with a synchronously-throwing guard fails open without wedging the queue (#1146-3c/3d)', async () => {
+  const trap = trapUnhandledRejections();
+  const browser = installFakeBrowser('/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/boom',
+        tagName: 'boom-page',
+        guard: () => {
+          events.push('guard');
+          throw new Error('guard boom');
+        },
+      },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    browser.jumpTo('/boom');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    // Documented fail-open: the queue catch logs the error, rematches to the
+    // real URL and notifies — the address bar wins over the crashed guard.
+    assertEquals(events, ['guard', 'change']);
+    assertEquals(router.currentPath, '/boom');
+    assertEquals(router.currentRoute?.tagName, 'boom-page');
+    assertEquals(browser.path(), '/boom');
+    // The serialized browser-navigation queue is not wedged by the throw:
+    // a later popstate still processes.
+    browser.jumpTo('/public');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, ['guard', 'change', 'change']);
+    assertEquals(router.currentPath, '/public');
+    assertEquals(router.currentRoute?.tagName, 'public-page');
+    assertEquals(trap.rejections, []);
+  } finally {
+    router.dispose();
+    browser.restore();
+    trap.restore();
+  }
+});
+
+Deno.test('client router never leaks unhandled rejections across dispose and guard-failure storms (#1146-3d)', async () => {
+  const trap = trapUnhandledRejections();
+  const browser = installFakeBrowser('/public');
+  let rejectBrowserGuard!: (err: Error) => void;
+  let rejectChainGuard!: (err: Error) => void;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () =>
+          new Promise<boolean>((_resolve, reject) => {
+            rejectBrowserGuard = reject;
+          }),
+      },
+      { path: '/a', tagName: 'a-page', guard: () => Promise.resolve('/b') },
+      {
+        path: '/b',
+        tagName: 'b-page',
+        guard: () =>
+          new Promise<string>((_resolve, reject) => {
+            rejectChainGuard = reject;
+          }),
+      },
+    ],
+  });
+  try {
+    // A browser-driven guard suspends...
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    // ...and a programmatic redirect chain suspends on its second hop.
+    const navigation = router.navigate('/a');
+    await flushBrowserNavigation();
+    // Disposing invalidates both; both guards then reject late.
+    router.dispose();
+    rejectBrowserGuard(new Error('late browser guard failure'));
+    rejectChainGuard(new Error('late chain guard failure'));
+    // The browser-queue rejection is swallowed post-dispose; the navigate()
+    // rejection still surfaces to its caller (handled here), so nothing is
+    // left unhandled.
+    await assertRejects(() => navigation, Error, 'late chain guard failure');
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/public');
+    assertEquals(browser.applied, []);
+    assertEquals(trap.rejections, []);
+  } finally {
+    router.dispose();
+    browser.restore();
+    trap.restore();
+  }
+});
