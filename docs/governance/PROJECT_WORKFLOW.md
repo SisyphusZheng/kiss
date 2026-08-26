@@ -15,7 +15,7 @@ Current execution anchor:
 
 - source package line `v0.43.2`;
 - npm registry line `v0.43.2` (published);
-- active target `v0.43.1`.
+- active target `v0.43.2`.
 
 Waves A, B and C close the cumulative maintenance baseline under
 `docs/current/VERSION_PLAN.md`; no next minor is scheduled after this patch,
