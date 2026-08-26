@@ -220,15 +220,16 @@ export function applyWebResponseHeaders(
 /**
  * Write a web Response onto a node ServerResponse: status, headers (with the
  * Set-Cookie array handling of applyWebResponseHeaders), then the streamed
- * body. A body pump failure ends the response instead of hanging.
+ * body. A body pump failure ends the response instead of hanging. A response
+ * that is already closed/destroyed on entry — the client disconnected while
+ * the handler was still running (#1152) — cancels the body and cleans up
+ * without writing.
  */
 export function writeWebResponse(
   response: Response,
   res: ServerResponse,
   request?: Request,
 ): void {
-  res.statusCode = response.status;
-  applyWebResponseHeaders(response.headers, (key, value) => res.setHeader(key, value));
   const requestState = nodeBridgeRequestState(request);
   let finished = false;
   let settled = false;
@@ -246,14 +247,20 @@ export function writeWebResponse(
     settled = true;
     cleanup();
   };
-  const cancelBody = async (reason: unknown) => {
+  const cancelBody = (reason: unknown): void => {
     if (settled) return;
     settled = true;
     requestState?.abort(reason);
+    // #1154 (ADR-0141): initiate the body cancel first, but never gate
+    // listener cleanup on it settling — a source cancel() may hang (e.g. it
+    // awaits a dead upstream), and a hung cancel must not pin the bridge
+    // listeners.
     try {
-      await reader?.cancel(reason);
+      void reader?.cancel(reason).catch(() => {
+        // The source may already have errored or closed; cancellation is best-effort.
+      });
     } catch {
-      // The source may already have errored or closed; cancellation is best-effort.
+      // A released or errored stream may throw synchronously; still best-effort.
     }
     cleanup();
   };
@@ -262,15 +269,30 @@ export function writeWebResponse(
     if (!finished) {
       const reason = new DOMException('Client disconnected', 'AbortError');
       requestState?.abort(reason);
-      void cancelBody(reason);
+      cancelBody(reason);
       return;
     }
     cleanup();
   };
   const onError = (error: Error) => {
     requestState?.abort(error);
-    void cancelBody(error);
+    cancelBody(error);
   };
+
+  // #1152 (ADR-0141): the client may have disconnected while the handler was
+  // still running — res 'close'/'finish' then fired before the once-listeners
+  // below exist and would never be observed: the pump would write into a dead
+  // socket (a destroyed res accepts writes that never drain) and neither the
+  // body cancel nor the listener cleanup would ever run. Detect an
+  // already-terminal response up front: cancel the body source, run cleanup
+  // and skip the write entirely.
+  if (res.destroyed || res.closed || res.writableEnded) {
+    cancelBody(new DOMException('Client disconnected', 'AbortError'));
+    return;
+  }
+
+  res.statusCode = response.status;
+  applyWebResponseHeaders(response.headers, (key, value) => res.setHeader(key, value));
   res.once('finish', onFinish);
   res.once('close', onClose);
   res.once('error', onError);
@@ -316,8 +338,8 @@ export function writeWebResponse(
       if (!res.write(value)) await waitForDrain();
     }
   };
-  pump().catch(async (error) => {
-    await cancelBody(error);
+  pump().catch((error) => {
+    cancelBody(error);
     if (!res.destroyed && !res.writableEnded) res.end();
   });
 }

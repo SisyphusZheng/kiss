@@ -39,6 +39,12 @@ semantics.
 - Aborts, disconnects and backpressure are observable through existing web and
   Node stream semantics instead of a new OpenElement API.
 - Tests lock request abort, response cancellation, `drain`, listener cleanup,
-  keep-alive reuse and repeated-run resource behavior.
+  keep-alive reuse and repeated-run resource behavior
+  (`packages/adapter-vite/__tests__/node-bridge-lifecycle.test.ts`,
+  `packages/adapter-vite/__tests__/node-bridge-adversarial-http.test.ts`),
+  including the two terminal-race holes closed in #1152 (a disconnect that
+  precedes `writeWebResponse` is detected from the response's terminal state,
+  not a missed event) and #1154 (listener cleanup is never gated on a hanging
+  `reader.cancel()`).
 - Future changes to first-mile request-pipeline meaning still require a
   separate amendment to ADR-0122.
