@@ -1,0 +1,83 @@
+{
+  "id": "publish-existing-v0.43.3-2026-08-26T13-24-34-655Z",
+  "kind": "publish-existing",
+  "policyVersion": "autoflow3-v0",
+  "currentVersion": "0.43.2",
+  "targetVersion": "0.43.3",
+  "status": "running",
+  "startedAt": "2026-08-26T13:24:34.655Z",
+  "steps": [
+    {
+      "name": "verify published source version",
+      "status": "passed",
+      "startedAt": "2026-08-26T13:24:34.739Z",
+      "completedAt": "2026-08-26T13:24:34.770Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify main CI success for HEAD",
+      "status": "passed",
+      "startedAt": "2026-08-26T13:24:34.771Z",
+      "completedAt": "2026-08-26T13:24:37.177Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify prepare record",
+      "status": "passed",
+      "startedAt": "2026-08-26T13:24:37.180Z",
+      "completedAt": "2026-08-26T13:24:37.181Z",
+      "exitCode": 0
+    },
+    {
+      "name": "package artifact gate",
+      "command": [
+        "deno",
+        "task",
+        "package-artifacts:check"
+      ],
+      "status": "passed",
+      "startedAt": "2026-08-26T13:24:37.183Z",
+      "completedAt": "2026-08-26T13:24:51.033Z",
+      "exitCode": 0
+    },
+    {
+      "name": "stage release evidence",
+      "command": [
+        "git",
+        "add",
+        "docs/release/autoflow3/v0.43.3.json",
+        "docs/release/v0.43.3.md"
+      ],
+      "status": "passed",
+      "startedAt": "2026-08-26T13:24:51.034Z",
+      "completedAt": "2026-08-26T13:24:51.053Z",
+      "exitCode": 0
+    },
+    {
+      "name": "commit release evidence",
+      "status": "passed",
+      "startedAt": "2026-08-26T13:24:51.070Z",
+      "completedAt": "2026-08-26T13:24:51.123Z",
+      "exitCode": 0
+    },
+    {
+      "name": "tag release",
+      "status": "pending"
+    },
+    {
+      "name": "push tag",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "v0.43.3"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "create GitHub release",
+      "status": "pending"
+    }
+  ],
+  "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/32971532753"
+}
