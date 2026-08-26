@@ -14,8 +14,10 @@
  * - Visuals consume Open Props scale values through --oe-* semantic tokens
  *   (mirroring packages/ui/src/open-props-tokens.css conventions).
  *
- * Zag dependencies resolve ONLY through this fixture's own deno.json import
- * map; no published package manifest references them.
+ * Zag dependencies resolve through the ROOT deno.json import map — every
+ * fixture gate (build, dev SSR, e2e) runs with the root config, and Vite
+ * finds the packages in the root node_modules materialized by `deno install`.
+ * No published package manifest references them.
  */
 
 import * as combobox from '@zag-js/combobox';

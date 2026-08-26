@@ -659,9 +659,22 @@ Deno.test({
         } else if (!checkpoint.ran) {
           // Client stalled: nothing is read from the socket while this hook
           // pends, so kernel buffers fill; res.write() must have returned
-          // false and the pump must be parked in waitForDrain.
+          // false and the pump must be parked in waitForDrain. Production may
+          // still legitimately continue into remaining kernel buffer capacity
+          // right at the stall point (platform-dependent: ~830 chunks on macOS
+          // loopback, ~2560 on Linux CI), so an absolute snapshot bound is not
+          // portable. Instead poll /stats until two consecutive reads agree —
+          // quiescence is the platform-robust signal that the pump has parked.
           checkpoint.ran = true;
-          checkpoint.produced = (await stats(port)).bigProduced;
+          const deadline = Date.now() + 10_000;
+          let previous = -1;
+          for (;;) {
+            checkpoint.produced = (await stats(port)).bigProduced;
+            if (checkpoint.produced === previous) break; // quiesced: pump parked
+            previous = checkpoint.produced;
+            if (Date.now() > deadline) break; // the assertions below report the failure
+            await sleep(50);
+          }
           await sleep(300); // keep stalling — a live pump would add ~300 chunks
           checkpoint.producedAfterStall = (await stats(port)).bigProduced;
         }
@@ -687,14 +700,17 @@ Deno.test({
       );
       // Bounded proof: with the client at 64 consumed chunks a non-draining
       // pump would have pulled all 8192 chunks into user space; a draining
-      // pump stops at transport buffer capacity (~830 on macOS loopback —
-      // 2048 = 25% of the body gives cross-platform headroom).
+      // pump stops at transport buffer capacity. The ceiling is platform-
+      // dependent (~830 chunks on macOS loopback, ~2560 on Linux CI with the
+      // default 4 MiB tcp_wmem ceiling), so the bound sits at 75% of the body:
+      // above every observed platform ceiling, far below the 8192 a
+      // non-draining pump reaches.
       assert(
-        checkpoint.produced < 2048,
+        checkpoint.produced < 6144,
         `server produced ${checkpoint.produced} chunks (of 8192) for a client stalled at 64 KiB — the response is being buffered, not drained`,
       );
       evidence(
-        `1d-drain: bigProduced at 64 KiB consumed = ${checkpoint.produced} and halted (still ${checkpoint.producedAfterStall} after a 300ms stall); total ${
+        `1d-drain: bigProduced quiesced at ${checkpoint.produced} with 64 KiB consumed and halted (still ${checkpoint.producedAfterStall} after a further 300ms stall); total ${
           (await stats(port)).bigProduced
         }`,
       );

@@ -126,12 +126,8 @@
     }
   },
   "workspace": {
-    "dependencies": [
-      "npm:@zag-js/combobox@1.43.3",
-      "npm:@zag-js/vanilla@1.43.3"
-    ],
     "links": {
-      "jsr:@openelement/adapter-vite@0.43.2": {
+      "jsr:@openelement/adapter-vite@0.43.3": {
         "dependencies": [
           "npm:@hono/vite-dev-server@~0.25.3",
           "npm:@mdx-js/rollup@^3.1.1",
@@ -143,14 +139,14 @@
           "npm:vite@8.0.16"
         ]
       },
-      "jsr:@openelement/app@0.43.2": {
+      "jsr:@openelement/app@0.43.3": {
         "dependencies": [
           "npm:preact-render-to-string@^6.5.0"
         ]
       },
-      "jsr:@openelement/create@0.43.2": {},
-      "jsr:@openelement/element@0.43.2": {},
-      "jsr:@openelement/ui@0.43.2": {}
+      "jsr:@openelement/create@0.43.3": {},
+      "jsr:@openelement/element@0.43.3": {},
+      "jsr:@openelement/ui@0.43.3": {}
     }
   }
 }

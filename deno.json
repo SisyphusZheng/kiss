@@ -23,6 +23,8 @@
     "@playwright/test": "npm:@playwright/test@1.59.1",
     "preact": "npm:preact@^10.28.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
+    "@zag-js/combobox": "npm:@zag-js/combobox@1.43.3",
+    "@zag-js/vanilla": "npm:@zag-js/vanilla@1.43.3",
     "pagefind": "npm:pagefind@1.5.2",
     "nitro": "npm:nitro@3.0.0",
     "@rollup/plugin-terser": "npm:@rollup/plugin-terser@1.0.0",

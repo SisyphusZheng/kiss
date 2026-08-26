@@ -3,8 +3,9 @@
 Evidence record for GitHub issue #1149 (`experiment(ui): prove Zag Vanilla +
 Open Props + OpenElement composition`, milestone v0.43.3, **NON-BLOCKING**,
 P3). This is a spike: it adds no public Zag adapter, no public API, and no
-published-package dependency. All Zag imports resolve only through the
-fixture-local import map.
+published-package dependency. All Zag imports resolve through the root import
+map (`deno.json`, not a published manifest), which is the config every fixture
+gate (build, dev SSR, e2e) actually runs against.
 
 ## Baseline and environment
 
@@ -14,8 +15,8 @@ fixture-local import map.
 - Date: 2026-08-26
 - Deno 2.9.0 (aarch64-apple-darwin), Vite 8.0.16, Playwright 1.59.1
 - Browsers: Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4
-- `@zag-js/combobox@1.43.3`, `@zag-js/vanilla@1.43.3` (locked in
-  `packages/adapter-vite/__fixtures__/request-time/deno.lock`)
+- `@zag-js/combobox@1.43.3`, `@zag-js/vanilla@1.43.3` (pinned in the root
+  `deno.json` import map, locked in the root `deno.lock`)
 - Open Props: consumed the way this repo already consumes it — the vendored
   token sheet in `packages/ui/src/open-props-tokens.css`. The request-time
   fixture deliberately does not depend on `@openelement/ui`, so the spike's
@@ -45,15 +46,16 @@ under `packages/adapter-vite/__fixtures__/request-time/`:
   islands (`machine-id` shadow-a/shadow-b), one light island inside a native
   unenhanced `<form method="post">`, plus a `#move-target` container.
 - `e2e/zag-combobox.spec.ts` — 9 tests, run on all three browsers.
-- `deno.json` (fixture-local) — the only place Zag versions are named; it
-  also mirrors the root fmt/lint/compiler options so repo-wide gates behave
-  identically inside the fixture subtree. `deno.lock` (fixture-local) pins
-  the resolved tree.
+- `deno.json` (fixture-local) — mirrors the root fmt/lint/compiler options so
+  repo-wide gates behave identically inside the fixture subtree; Zag versions
+  were initially named only here, which broke cold-cache CI (nothing in the
+  gates resolves the fixture config) and moved to the root import map.
+  `deno.lock` (fixture-local) pins the resolved tree.
 
 The island client pipeline imports npm packages without any adapter change:
 `open:deno-import-map-resolve` defers `npm:` targets to Vite, which resolves
-`@zag-js/*` from the fixture's `node_modules` (materialized with
-`nodeModulesDir: "auto"` + `deno cache` of the app files — see the command
+`@zag-js/*` from the root `node_modules` (materialized by the workspace
+`deno install --node-modules-dir`, same as CI's frozen step — see the command
 list; do **not** run bare `deno install` in the fixture, which installs the
 whole workspace graph including a second Playwright copy that breaks the e2e
 runner with a dual-instance conflict). The fixture config excludes `e2e/` so
@@ -78,10 +80,8 @@ same module instance as the Playwright CLI.
 ### Commands
 
 ```sh
-# dependency materialization (fixture-local import map only)
-cd packages/adapter-vite/__fixtures__/request-time && deno cache \
-  app/islands/zag-combobox.tsx app/islands/zag-combobox-light.tsx \
-  app/components/zag-combobox-shared.tsx app/routes/combobox.tsx
+# dependency materialization (root import map; same step CI runs)
+deno install --node-modules-dir
 
 # build + full 3-browser e2e gate (includes the 9 new spike tests)
 deno task fixture:request-time:gate          # 213 passed (36.5s)

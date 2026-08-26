@@ -34,8 +34,6 @@
     }
   },
   "imports": {
-    "@zag-js/combobox": "npm:@zag-js/combobox@1.43.3",
-    "@zag-js/vanilla": "npm:@zag-js/vanilla@1.43.3",
     "@openelement/app": "../../../app/src/index.ts",
     "@openelement/element": "../../../element/src/index.ts",
     "@openelement/element/jsx-runtime": "../../../element/src/jsx-runtime.ts",
