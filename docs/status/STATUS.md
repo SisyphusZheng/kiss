@@ -1,6 +1,6 @@
 # OpenElement Status
 
-> Updated: 2026-08-24\
+> Updated: 2026-08-26\
 > Repository package line: `v0.43.3`\
 > npm registry line: `v0.43.3` (published 2026-08-24, dist-tag `latest`)\
 > Latest landed train: `v0.43.3`\
@@ -13,7 +13,12 @@
 ## Current position
 
 OpenElement is a Web Components-native application framework, stable at
-`0.43.2` as the runtime stabilization patch over the cumulative `0.43.1`
+`0.43.3`: renderer-owned light DOM is now hydrated in place across SSR upgrade
+(ADR-0142 — node identity, focus, selection, live form values, nested
+custom-element instances and pre-upgrade clicks survive), and the final
+robustness adversarial audit of the frozen line closed with committed per-case
+evidence and two Node bridge terminal-race fixes (#1146, #1148, #1152, #1154).
+`0.43.2` is the runtime stabilization patch over the cumulative `0.43.1`
 maintenance baseline and ADR-0135: the 0.41.x static freeze (ADR-0119 — `defineElement`,
 `definePage`, `buildApp`, the five-package graph, the supported subpaths and
 the static/SPA semantics of `defineApp`) and the request-time Application Loop

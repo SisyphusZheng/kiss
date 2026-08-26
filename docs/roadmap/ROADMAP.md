@@ -13,7 +13,7 @@ Execution and release state follow the
 > ADR-0135; the #1002 production closure is complete.\
 > Planned line: `0.43.x` patch maintenance; no later minor is
 > scheduled. `0.43.0` (Universal WC SSR) shipped 2026-08-20 under ADR-0135.\
-> Maturity stage: stable (0.43.2 runtime stabilization over the 0.43.1 cumulative baseline — the 0.41.x interface freeze under
+> Maturity stage: stable (0.43.3 renderer-owned light-DOM hydration + robustness audit closure over the 0.43.2 runtime stabilization and 0.43.1 cumulative baseline — the 0.41.x interface freeze under
 > ADR-0119, the request-time loop freeze under ADR-0122, and the Universal
 > WC admission freeze under ADR-0135); the
 > abandoned beta naming is retired.
