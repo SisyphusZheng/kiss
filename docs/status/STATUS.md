@@ -1,10 +1,10 @@
 # OpenElement Status
 
 > Updated: 2026-08-24\
-> Repository package line: `v0.43.2`\
-> npm registry line: `v0.43.2` (published 2026-08-24, dist-tag `latest`)\
-> Latest landed train: `v0.43.2`\
-> Active release target: `v0.43.2`\
+> Repository package line: `v0.43.3`\
+> npm registry line: `v0.43.3` (published 2026-08-24, dist-tag `latest`)\
+> Latest landed train: `v0.43.3`\
+> Active release target: `v0.43.3`\
 > Next planned train: `not scheduled (maintenance mode)`\
 > Next release line: `not scheduled (maintenance mode)`\
 > Product graph: five packages\

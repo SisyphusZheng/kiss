@@ -1,9 +1,9 @@
 # v0.43.2 — runtime failure containment and stabilization closure
 
-> Current source package line: `v0.43.2`\
-> Current npm registry line: `v0.43.2` (published 2026-08-24, dist-tag `latest`)\
-> Latest landed train: `v0.43.2`\
-> Active release target: `v0.43.2`\
+> Current source package line: `v0.43.3`\
+> Current npm registry line: `v0.43.3` (published 2026-08-24, dist-tag `latest`)\
+> Latest landed train: `v0.43.3`\
+> Active release target: `v0.43.3`\
 > Next planned train: `not scheduled (maintenance mode)`\
 > Planning release target: `v0.43.2` (compatible runtime and release hardening)\
 > Current maturity stage: stable (`0.43.x`, frozen by ADR-0119, ADR-0122,

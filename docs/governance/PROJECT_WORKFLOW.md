@@ -13,8 +13,8 @@ the implementation, and the gates that prove the claim.
 
 Current execution anchor:
 
-- source package line `v0.43.2`;
-- npm registry line `v0.43.2` (published);
+- source package line `v0.43.3`;
+- npm registry line `v0.43.3` (published);
 - active target `v0.43.2`.
 
 Waves A, B and C close the cumulative maintenance baseline under

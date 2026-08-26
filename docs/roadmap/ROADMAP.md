@@ -4,10 +4,10 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Source package line: `v0.43.2`.\
-> npm registry line: `v0.43.2` (published 2026-08-24, dist-tag `latest` — see Current release state).\
-> Latest landed train: `v0.43.2`.\
-> Active execution target: `v0.43.2`.\
+> Source package line: `v0.43.3`.\
+> npm registry line: `v0.43.3` (published 2026-08-24, dist-tag `latest` — see Current release state).\
+> Latest landed train: `v0.43.3`.\
+> Active execution target: `v0.43.3`.\
 > Next planned train: `not scheduled (maintenance mode)`.\
 > Current implementation state: the 0.43 line is shipped and frozen under
 > ADR-0135; the #1002 production closure is complete.\

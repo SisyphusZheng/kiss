@@ -329,7 +329,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.2',
+      version: 'v0.43.3',
       theme: 'runtime failure containment — stabilization closure',
       copy:
         'This compatible patch contains failure paths across the Node bridge, Preact ownership, router disposal and action wire, then hardens Notes token renewal, upload cleanup intent and bounded Stripe webhook reads in the Supabase × Cloudflare starter. Clean-clone, declaration-graph and loopback parity gates make the release reproducible. ADR-0140 keeps 0.43.x in patch maintenance mode, with no 0.44 feature train scheduled.',

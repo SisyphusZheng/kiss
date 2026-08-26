@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "packageName": "@openelement/ui",
-  "version": "0.43.2",
+  "version": "0.43.3",
   "description": "Open Props Web Component library for openElement",
   "author": "openElement",
   "license": "MIT",
