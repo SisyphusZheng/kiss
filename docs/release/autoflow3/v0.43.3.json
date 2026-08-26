@@ -41,6 +41,52 @@
       "exitCode": 0
     },
     {
+      "name": "publish npm packages",
+      "command": [
+        "deno",
+        "task",
+        "publish:npm"
+      ],
+      "status": "passed",
+      "startedAt": "2026-08-26T13:36:58.947Z",
+      "completedAt": "2026-08-26T13:37:49.440Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify npm versions and dist-tags",
+      "status": "passed",
+      "startedAt": "2026-08-26T13:37:49.441Z",
+      "completedAt": "2026-08-26T13:38:29.521Z",
+      "exitCode": 0
+    },
+    {
+      "name": "post-publish npm consumer smoke",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/consumer-smoke.ts",
+        "--version",
+        "0.43.3"
+      ],
+      "status": "passed",
+      "startedAt": "2026-08-26T13:38:29.523Z",
+      "completedAt": "2026-08-26T13:40:30.605Z",
+      "exitCode": 0
+    },
+    {
+      "name": "post-publish third-party Web Component smoke",
+      "command": [
+        "deno",
+        "task",
+        "third-party-wc:smoke"
+      ],
+      "status": "passed",
+      "startedAt": "2026-08-26T13:40:30.606Z",
+      "completedAt": "2026-08-26T13:40:34.828Z",
+      "exitCode": 0
+    },
+    {
       "name": "stage release evidence",
       "command": [
         "git",
@@ -89,5 +135,5 @@
     }
   ],
   "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/32971532753",
-  "completedAt": "2026-08-26T13:24:58.156Z"
+  "completedAt": "2026-08-26T13:40:34.852Z"
 }
