@@ -311,20 +311,35 @@ function resolvePath(root: Node, path: number[], where: string): Element {
   return node;
 }
 
+/**
+ * Structural view of an Element carrying writable DOM properties. A compiled
+ * property Part owns the named property on its target element by construction,
+ * so this single-step structural assertion is honest: no double cast, no
+ * `unknown` laundering, and the sink stays generic for any Element.
+ */
+interface SpikePropertySink extends Element {
+  [property: string]: unknown;
+}
+
+function propertySink(el: Element): SpikePropertySink {
+  return el as SpikePropertySink;
+}
+
 /** Attach path-addressed prop/event parts. */
 function attachPathParts(ctx: MountContext, root: Node, mode: 'fresh' | 'claim'): void {
   for (const part of ctx.program.parts) {
     if (part.k === 'prop') {
       const el = resolvePath(root, part.path, 'prop part');
+      const sink = propertySink(el);
       if (mode === 'fresh') {
         const initial = signalOf(ctx, part.signal).value;
         el.setAttribute(part.name, String(initial));
-        (el as unknown as Record<string, unknown>)[part.name] = initial;
+        sink[part.name] = initial;
       }
       // claim deliberately does not write the initial value: live DOM state
       // (e.g. a user-edited input value) survives a successful claim.
       subscribeWrites(ctx, part.signal, (value) => {
-        (el as unknown as Record<string, unknown>)[part.name] = value;
+        sink[part.name] = value;
       });
       continue;
     }

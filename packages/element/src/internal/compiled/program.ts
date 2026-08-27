@@ -255,5 +255,10 @@ export function validateSpikeProgram(raw: unknown): PartProgramSpike {
     }
   }
 
-  return raw as unknown as PartProgramSpike;
+  return {
+    version: PART_PROGRAM_SPIKE_VERSION,
+    tag: raw.tag,
+    template: raw.template as SpikeTreeNode[],
+    parts,
+  };
 }
