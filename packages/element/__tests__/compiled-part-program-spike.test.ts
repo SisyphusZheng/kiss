@@ -291,6 +291,7 @@ function build043Equivalent(doc: FDocument, state: FixtureState): FElement {
   input.setAttribute('value', state.label);
   div.appendChild(input);
   const button = doc.createElement('button');
+  button.setAttribute('type', 'button');
   button.appendChild(doc.createTextNode('+'));
   div.appendChild(button);
   div.appendChild(doc.createComment('oe:p3'));
@@ -467,7 +468,7 @@ Deno.test('compiled part program spike - one program, three execution modes', as
       '<div class="spike">' +
         '<h1>Count: <!--oe:p0-->0</h1>' +
         '<input value="ready">' +
-        '<button>+</button>' +
+        '<button type="button">+</button>' +
         '<!--oe:p3--><p class="parity">zero</p><!--oe:/p3-->' +
         '<ul><!--oe:p4--><li>alpha</li><li>beta</li><!--oe:/p4--></ul>' +
         '</div>',
@@ -635,6 +636,19 @@ Deno.test('compiled part program spike - one program, three execution modes', as
     assertEquals(doc.counts.textWrites, 0);
     assertEquals(doc.counts.valueWrites, 0);
     assertEquals(doc.counts.elements, 0);
+  });
+
+  await t.step('program validation still fails closed after the cast removal (repair-2)', () => {
+    const broken = JSON.parse(programJson);
+    broken.parts[0] = { ...broken.parts[0], index: 7 };
+    assertThrows(
+      () => programModule.validateSpikeProgram(broken),
+      Error,
+      'parts[0].index must equal its position',
+    );
+    const wrongVersion = JSON.parse(programJson);
+    wrongVersion.version = 2;
+    assertThrows(() => programModule.validateSpikeProgram(wrongVersion), Error, 'version');
   });
 
   await t.step('measurement evidence against the frozen 0.43-equivalent proxy', () => {

@@ -36,7 +36,12 @@
         {
           "k": "el",
           "tag": "button",
-          "attrs": [],
+          "attrs": [
+            [
+              "type",
+              "button"
+            ]
+          ],
           "children": [
             {
               "k": "text",

@@ -34,7 +34,7 @@ export class SpikeCounter extends OpenElement {
       <div class='spike'>
         <h1>Count: {this.count}</h1>
         <input value={this.label} />
-        <button onClick={this.increment}>+</button>
+        <button type='button' onClick={this.increment}>+</button>
         {this.count > 0 ? <p class='parity'>positive</p> : <p class='parity'>zero</p>}
         <ul>{this.items.map((item) => <li key={item.id}>{item.text}</li>)}</ul>
       </div>
