@@ -122,7 +122,6 @@ The canonical command shape is:
 kimi \
   --model kimi-code/k3-256k \
   --agent-file .agents/v044-kimi-implementer.md \
-  --auto \
   --output-format stream-json \
   --prompt "Execute the repository dispatch packet at <absolute-dispatch-path>."
 ```
@@ -203,7 +202,6 @@ Sol freezes and records:
 kimi \
   --model kimi-code/k3-256k \
   --agent-file .agents/v044-kimi-release-verifier.md \
-  --auto \
   --output-format stream-json \
   --prompt "Independently verify the version closure packet at <absolute-closure-path>."
 ```

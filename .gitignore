@@ -111,6 +111,10 @@ examples/deno-desktop-mastodon/stress-report.json
 
 # Local agent-skill tooling (installed via `npx skills add`, user-local only)
 /.agents/
+!/.agents/
+/.agents/*
+!/.agents/v044-kimi-implementer.md
+!/.agents/v044-kimi-release-verifier.md
 /.codebuddy/
 /.grok/
 /.trae/

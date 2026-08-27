@@ -28,6 +28,31 @@ async function run(args: string[]): Promise<string> {
   return stdout;
 }
 
+async function smokeAgentProfile(path: string, marker: string): Promise<void> {
+  const output = await run([
+    '--model',
+    'kimi-code/k3-256k',
+    '--agent-file',
+    path,
+    '--output-format',
+    'stream-json',
+    '--prompt',
+    `Profile-load preflight only. Do not use tools or edit files. Include ${marker} in your response.`,
+  ]);
+  const assistantContent = output.split(/\r?\n/).flatMap((line) => {
+    if (!line.trim()) return [];
+    try {
+      const event = JSON.parse(line) as { role?: string; content?: unknown };
+      return event.role === 'assistant' && typeof event.content === 'string' ? [event.content] : [];
+    } catch {
+      return [];
+    }
+  });
+  if (!assistantContent.some((content) => content.includes(marker))) {
+    throw new Error(`${path} loaded but did not return the required ${marker} marker`);
+  }
+}
+
 const version = (await run(['--version'])).trim();
 const providerJson = JSON.parse(await run(['provider', 'list', '--json'])) as {
   models?: Record<string, KimiModel> | KimiModel[];
@@ -65,6 +90,15 @@ if (failures.length > 0) {
   throw new Error(`K3-256k capability mismatch:\n${failures.map((x) => `- ${x}`).join('\n')}`);
 }
 
+await smokeAgentProfile(
+  '.agents/v044-kimi-implementer.md',
+  'V044_IMPLEMENTER_PROFILE_OK',
+);
+await smokeAgentProfile(
+  '.agents/v044-kimi-release-verifier.md',
+  'V044_RELEASE_VERIFIER_PROFILE_OK',
+);
+
 console.log(
-  `v0.44 executor check passed (kimi ${version}, alias kimi-code/k3-256k, context 262144, default effort high).`,
+  `v0.44 executor check passed (kimi ${version}, alias kimi-code/k3-256k, context 262144, default effort high, both required Agent profiles loaded).`,
 );
