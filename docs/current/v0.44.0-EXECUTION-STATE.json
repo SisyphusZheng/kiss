@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "train": "0.44.0",
   "goal": "alpha.0-through-beta.2-rc-admission",
-  "status": "REVIEWED",
+  "status": "DISPATCHED",
   "candidate": "0.44.0-alpha.0",
-  "currentIssue": 1160,
-  "currentSlice": "one-component-vite-part-program-vertical-spike",
-  "loopId": "a0-001",
-  "baseSha": "e31ab34eb8cea52fe07d6d138d0b0cfbba9d0f17",
-  "branch": "codex/v044-1160-compiler-spike",
+  "currentIssue": 1156,
+  "currentSlice": "ci-evidence-tiering-and-role-neutral-docs",
+  "loopId": "a0-002",
+  "baseSha": "3563812351258ebde655326a60b2219f5c152e9c",
+  "branch": "codex/v044-1156-ci-doc-governance",
   "implementer": {
     "command": "kimi",
     "model": "kimi-code/k3-256k",
@@ -26,9 +26,9 @@
     "sessionPolicy": "fresh-per-candidate-sha",
     "sessionId": null
   },
-  "lastAcceptedLoop": "a0-000-repair-1",
-  "lastClosureEvidence": null,
+  "lastAcceptedLoop": "a0-001-repair-2",
+  "lastClosureEvidence": "docs/evidence/v0.44.0-agent-loops/a0-001/review-repair-2.md",
   "humanGate": null,
-  "nextAction": "Commit the reviewed a0-001 slice, push codex/v044-1160-compiler-spike, open a PR to dev, wait for required CI, merge, and close issue #1160 with immutable evidence.",
-  "updatedAt": "2026-08-27T12:23:48Z"
+  "nextAction": "Dispatch a bounded implementation packet for CI evidence tiering, alpha.0 release semantics, and role-neutral documentation under issue #1156.",
+  "updatedAt": "2026-08-27T16:28:36Z"
 }
