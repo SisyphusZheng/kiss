@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "train": "0.44.0",
+  "goal": "alpha.0-through-beta.2-rc-admission",
+  "status": "READY",
+  "candidate": "0.44.0-alpha.0",
+  "currentIssue": 1182,
+  "currentSlice": "control-plane-baseline",
+  "loopId": "a0-000",
+  "baseSha": null,
+  "branch": null,
+  "implementer": {
+    "command": "kimi",
+    "model": "kimi-code/k3-256k",
+    "contextTokens": 262144,
+    "effort": "high",
+    "agentFile": ".agents/v044-kimi-implementer.md",
+    "sessionId": null
+  },
+  "releaseVerifier": {
+    "command": "kimi",
+    "model": "kimi-code/k3-256k",
+    "contextTokens": 262144,
+    "effort": "high",
+    "agentFile": ".agents/v044-kimi-release-verifier.md",
+    "sessionPolicy": "fresh-per-candidate-sha",
+    "sessionId": null
+  },
+  "lastAcceptedLoop": null,
+  "lastClosureEvidence": null,
+  "humanGate": null,
+  "nextAction": "Validate and land ADR-0146 control-plane issue #1182, then dispatch #1160.",
+  "updatedAt": "2026-08-27T00:00:00Z"
+}

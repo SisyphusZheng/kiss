@@ -74,9 +74,9 @@ and the
 [31925944647](https://github.com/open-element/openelement/actions/runs/31925944647)),
 built on the
 [ADR-0129](./docs/adr/ADR-0129-response-header-channel.md) response-header
-channel. Delivered scope is the 0.43 line together with Universal WC SSR;
-framework-owned production-runtime recovery and cache semantics remain
-unfrozen and unscheduled under ADR-0140.
+channel. Delivered stable scope is the 0.43 line together with Universal WC SSR.
+ADR-0143 now opens the 0.44 compiled Element architecture train; framework-owned
+production-runtime recovery and cache semantics remain outside that train.
 
 ## Current release state
 
@@ -92,6 +92,12 @@ are not compatibility baselines. The third audit sweep completed in alpha.19 (se
 and the #390 pilot was retired by maintainer decision after zero recruitment
 (see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
 
+The active development target is `v0.44.0-alpha.0` under
+[ADR-0143](./docs/adr/ADR-0143-0-44-compiled-element-model-reentry.md): one
+mandatory compiler lowers TSX to a Part Program shared by server serialization,
+fresh browser DOM and existing-DOM claim. This does not change the installed stable
+line until a 0.44 prerelease is actually published.
+
 `0.42 = WC light fullstack`. The `0.42.0` stable line ships the request-time
 Application Loop: dynamic loader/action routes, no-JS + enhanced forms,
 `build → start`, fail-closed static prerender and a default same-origin CSRF
@@ -101,9 +107,9 @@ recipe on Web-standard `Request` headers.
 The historical 0.42 freeze explicitly excluded framework session/flash,
 cache/ISR, streaming SSR, performance SLOs, production-runtime recovery and
 auth packages. The third-party WC SSR corpus was subsequently delivered in
-0.43. Framework-owned recovery and cache semantics remain outside the current
-contract and have no assigned version; adding them requires evidence and an
-approved ADR. The current promise is static-first applications with fullstack
+0.43. Framework-owned recovery and cache semantics remain outside both the stable
+contract and the 0.44 compiled Element train; adding them requires separate evidence
+and an approved ADR. The current promise is static-first applications with fullstack
 output paths—not broad fullstack parity.
 
 The `1.0.0` path remains unscheduled. It requires a maintainer-approved ADR,

@@ -1,6 +1,7 @@
 # ADR-0140: 0.43.x Maintenance Mode and CRM-Driven Evolution
 
-- Status: ACCEPTED (2026-08-23, maintainer directive; #1132)
+- Status: SUPERSEDED FOR FORWARD SEQUENCING by ADR-0143 (2026-08-27); its
+  0.43.x maintenance and provider-boundary rules remain accepted
 - Date: 2026-08-23
 - Amends: ADR-0135 forward-train sequencing only
 - Preserves: ADR-0119, ADR-0122 and ADR-0135 frozen contracts

@@ -15,14 +15,17 @@ Current execution anchor:
 
 - source package line `v0.43.3`;
 - npm registry line `v0.43.3` (published);
-- active target `v0.43.2`.
+- active target `v0.44.0-alpha.0`;
+- next planned target `v0.44.0-alpha.1`.
 
-Waves A, B and C close the cumulative maintenance baseline under
-`docs/current/VERSION_PLAN.md`; no next minor is scheduled after this patch,
-per ADR-0140.
+ADR-0143 explicitly reopens the minor train after the 0.43 maintenance freeze.
+The compiled OpenElement execution order and alpha → beta.1 UI → beta.2 website →
+RC SaaS → Stable admission ladder live in `docs/current/VERSION_PLAN.md`; 0.43.x
+remains the stable maintenance fallback until 0.44 reaches stable.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
-second product. The abandoned beta naming is retired.
+second product. Beta names product-qualification boundaries, not a second
+architecture or product line.
 
 ## Required Reading Order
 
@@ -33,6 +36,11 @@ Read these files before starting work:
 3. `docs/roadmap/ROADMAP.md`
 4. the active version plan under `docs/current/VERSION_PLAN.md`
 5. relevant ADRs listed by the version plan
+
+For autonomous v0.44 alpha/beta execution, also read
+`docs/governance/V044_AGENT_LOOP_SOP.md`,
+`docs/governance/V044_ISSUE_SOP.md` and
+`docs/current/v0.44.0-EXECUTION-PLAN.md` before selecting work.
 
 If these documents disagree, stop and fix the documents before changing product
 code. The workflow is part of the product contract.
@@ -72,6 +80,9 @@ Required sections:
 - Remove duplicate or obsolete code instead of adding compatibility shims.
 - Do not claim a version-plan item is complete without a code, docs, test, or
   gate proof.
+- Under ADR-0146, Sol owns planning/review, K3 owns implementation, and a fresh K3
+  verifier owns test-driven alpha/beta closure. One role may not silently assume another
+  role's authority.
 - Do not bump packages until local gates for the version pass.
 - For v0.41.0 and later, npm publish is a release exit gate. See ADR-0108.
 - AutoFlow may automate patch-level mechanical work only when ADR-0101 policy

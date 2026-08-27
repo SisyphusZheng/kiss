@@ -7,8 +7,8 @@ export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
 // Release-train truth is intentionally separate from the package and registry
 // line: work may be landed on main before the next package is published.
 export const LATEST_LANDED_TRAIN = 'v0.43.3';
-export const ACTIVE_EXECUTION_VERSION = 'v0.43.3';
-export const NEXT_EXECUTION_VERSION = 'not scheduled (maintenance mode)';
+export const ACTIVE_EXECUTION_VERSION = 'v0.44.0-alpha.0';
+export const NEXT_EXECUTION_VERSION = 'v0.44.0-alpha.1';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',

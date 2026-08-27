@@ -60,8 +60,8 @@ Cloudflare 是被组合的服务提供方，不是框架内建功能。
 （绿色运行
 [31925944647](https://github.com/open-element/openelement/actions/runs/31925944647)），
 构建于 [ADR-0129](./docs/adr/ADR-0129-response-header-channel.md)
-响应头通道之上。交付范围是 0.43 线与 Universal WC SSR；框架自有生产运行时
-恢复与缓存语义在 ADR-0140 下仍未冻结，也没有已排期的后续 minor。
+响应头通道之上。已稳定交付范围是 0.43 线与 Universal WC SSR。ADR-0143
+已开启 0.44 编译型 Element 架构列车；框架自有生产运行时恢复与缓存语义仍不属于该列车。
 
 ## 当前发布状态
 
@@ -72,17 +72,22 @@ Cloudflare 是被组合的服务提供方，不是框架内建功能。
 至 beta.3 仍是已撤回的不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
 #390 试点在零招募后由 maintainer 决策退役（ADR-0119）。
 
+当前开发目标是 ADR-0143 规定的 `v0.44.0-alpha.0`：一个强制编译器将 TSX
+降为由服务端序列化、浏览器新建 DOM 与已有 DOM claim 共同消费的 Part Program。
+在 0.44 预发布版本真正发布前，这不会改变已安装的稳定线。
+
 `0.42 = WC 轻量全栈（WC light fullstack）`。`0.42.0` 稳定线交付 request-time
 Application Loop：动态 loader/action 路由、no-JS + 增强表单、`build → start`、
 fail-closed 静态预渲染，以及生成 action POST 上的默认同源 CSRF 检查。登录应用通过
 better-auth recipe（基于 Web 标准 `Request` 头）获得支持。
 
 明确**不在** 0.42 宣称范围内（ADR-0122 §5）：框架自有 session/flash、cache/ISR、
-流式 SSR、性能 SLO、第三方 WC SSR 语料（0.43）、生产运行时恢复（0.44）与 auth 包。
-当前承诺是具有 fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
+流式 SSR、性能 SLO、第三方 WC SSR 语料（随后由 0.43 交付）、生产运行时恢复与 auth 包。
+框架自有恢复与缓存语义仍不属于 0.44 编译型 Element 列车。当前承诺是具有
+fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
 
-`1.0.0` 路径是在 Application Loop、WC SSR、Production Runtime 与外部采用证据完成后，
-形成稳定的五包产品。
+`1.0.0` 路径仍未排期；只有 0.44 架构稳定、真实产品兼容性证据与外部采用证明完成后，
+五包产品面才可能获得长期兼容承诺。
 
 ## 开始使用
 
