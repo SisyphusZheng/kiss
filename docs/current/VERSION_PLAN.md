@@ -1,138 +1,318 @@
-# v0.43.3 — renderer-owned light DOM hydration and robustness audit closure
+# v0.44.0-alpha — Compiled OpenElement
 
 > Current source package line: `v0.43.3`\
-> Current npm registry line: `v0.43.3` (published 2026-08-26, dist-tag `latest`)\
+> Current npm registry line: `v0.43.3` (published, dist-tag `latest`)\
 > Latest landed train: `v0.43.3`\
-> Active release target: `v0.43.3`\
-> Next planned train: `not scheduled (maintenance mode)`\
-> Planning release target: `v0.43.3` (compatible hydration correction and audit closure)\
-> Current maturity stage: stable (`0.43.x`, frozen by ADR-0119, ADR-0122,
-> ADR-0135 and maintained under ADR-0140)
+> Active release target: `v0.44.0-alpha.0`\
+> Next planned train: `v0.44.0-alpha.1`\
+> Stable fallback: `0.43.x` remains supported while 0.44 is prerelease\
+> Maturity: architecture execution; public compatibility is intentionally unfrozen
 
-## Objective and scope
+## Objective
 
-`v0.43.3` is a compatibility-preserving correction patch over `v0.43.2`. It
-amends the ADR-0092 light-mode contract via ADR-0142 so that server-rendered
-light DOM is activated in place on client upgrade, and it closes the final
-robustness adversarial audit of the frozen line with committed, reproducible
-evidence.
-
-The patch adds no public option, lifecycle hook, package or export, changes no
-applied migration, and does not introduce a generic DOM reconciler, consumer
-projection contract, session/transaction abstraction, or a new render mode.
-The frozen application-loop, Universal WC, and first-mile start contracts
-remain in force. The Shadow/DSD default and its behavior are unchanged.
+Replace the runtime-discovered VNode/binding architecture with one compiled Custom
+Element path:
 
 ```text
 OpenElement = Web Components-native fullstack application framework
-product graph = five-package element/app/adapter-vite/create/ui boundary
-official build path = Vite + Nitro through @openelement/adapter-vite/nitro-mount
+
+TSX + standard decorators
+  -> compiler-owned Part Program
+  -> server serialization / browser creation / SSR claim
+  -> exact Signal-driven DOM updates
 ```
 
-Package responsibilities and exports remain governed by
-[`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md); ADR-0114 continues to require one
-aligned five-package release line.
+`OpenElement extends HTMLElement` is both the concrete base class and the semantic
+center. App owns page/request orchestration, Island owns client code delivery policy,
+and each Element owns its local lifecycle and reactive DOM. See ADR-0143.
+
+The source and published package line remain `v0.43.3` until the first alpha candidate
+passes its release gates; planning a prerelease does not falsely claim that it has
+already been built or published. Package responsibilities remain governed by
+[`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) and ADR-0114's coherent five-package
+release rule. The official deployment integration remains the Adapter-owned
+`nitro-mount` path; the compiler rewrite does not move deployment semantics into
+Element.
+
+## Release doctrine
+
+- Every alpha is a usable vertical increment, not an arbitrary time box.
+- Breaking changes between alphas are allowed and must carry migration notes.
+- No old renderer fallback may be added to make an alpha appear complete.
+- The final alpha proves the framework and build substrate. It does not claim that UI,
+  the website or an external product have qualified that substrate.
+- `beta.1` rebuilds `@openelement/ui` on the final-alpha contracts and admits validated
+  Zag composition. `beta.2` then rebuilds the official website and Starter on the
+  published beta.1 framework and UI artifacts.
+- RC admission follows beta.2 only when the framework, UI and website form one coherent
+  public surface. Additional beta releases fix product-integration defects; any required
+  architecture change returns the train to alpha.
+- The RC is consumed by the independent SaaS. Stable is forbidden until that SaaS
+  qualifies exact public RC artifacts without workspace or source coupling.
+- ADR-0146 governs autonomous execution: Sol selects and reviews bounded work, K3
+  implements it, and a fresh K3 session performs test-driven closure for every intended
+  alpha/beta publication. Deterministic gates and human promotion GO remain authoritative.
+- `0.43.x` accepts only compatible maintenance while 0.44 is prerelease.
+- `latest` remains on stable 0.43.x until `0.44.0` stable publishes.
+
+## Alpha line
+
+| Release   | Theme                           | Exit condition                                                                                                                                         |
+| --------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `alpha.0` | Constitution and foundations    | ADR-0143/0144/0145, roadmap, issue graph, governance replacement matrix and executable compiler spike are accepted                                     |
+| `alpha.1` | Authoring and compiler contract | `@element` + `@property` + `extends OpenElement` compile with diagnostics, source maps and HMR through the official Vite path                          |
+| `alpha.2` | Part Program and fresh DOM      | Static structure, fixed Parts, Events/Refs and Regions create browser DOM without VNodes or runtime discovery                                          |
+| `alpha.3` | Element kernel and reactivity   | Lifecycle, root ownership, styles, Context, forms and replaceable SignalEngine drive exact Parts/Regions with deterministic cleanup                    |
+| `alpha.4` | Server serialization and claim  | The same Part Program emits DSD/light HTML and claims existing DOM with state/identity preservation and bounded mismatch recovery                      |
+| `alpha.5` | Island delivery                 | Static output ships zero component runtime; generated activation modules deliver one-to-many Element capability by load/idle/visible/media/only policy |
+| `alpha.6` | App and build convergence       | Routes, layouts, loaders/actions, SSG, request-time SSR, chunks, manifests, HMR and Node/Workers output consume the compiled Element path              |
+| `alpha.7` | Migration and ecosystem         | Old rendering/binding paths are absent from distributed artifacts; codemods, migration guide, CEM and native/Lit/FAST/Stencil conformance are complete |
+| `alpha.8` | Final-alpha framework candidate | Compiler, Element, App/build, docs graph, performance budgets, browser/runtime matrices and packed framework consumers pass without legacy paths       |
+
+## Product qualification ladder
+
+| Release  | Product boundary | Exit condition                                                                                                                                         |
+| -------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `beta.1` | UI system        | `@openelement/ui` is rebuilt on final-alpha compiled Elements; admitted Zag-backed widgets pass SSR/create/claim, accessibility, lifecycle and bundles |
+| `beta.2` | Official website | The website and Starter consume exact beta.1 framework/UI artifacts and pass content, browser, accessibility, delivery and deployment qualification    |
+| `rc.1`   | Frozen candidate | The exact-SHA pre-RC matrix passes with the intended framework and UI surfaces frozen                                                                  |
+| `0.44.0` | Stable           | The independent SaaS qualifies exact RC artifacts, the RC soak passes and the coherent release is explicitly approved and published                    |
+
+Alpha numbers describe dependency order. A failed alpha may be followed by another
+alpha with the same theme; the release is not promoted merely because its checklist
+was scheduled. A failed beta produces another beta unless correcting it changes the
+compiled architecture or framework public surface, in which case the train returns to
+alpha. Beta numbering records qualification attempts, not a promise that only two beta
+artifacts can exist.
 
 ## Work packages
 
-### Framework runtime
+### WP-0 — Governance and content foundations (`alpha.0`)
 
-- [x] #1148: `renderMode = 'light'` SSR output is the authoritative initial
-      DOM; client upgrade activates matching SSR DOM in place (event, signal,
-      attribute, `Show`, keyed/unkeyed `For` bindings), preserving node
-      identity, focus, selection, live form values, nested custom-element
-      instances, and pre-upgrade interaction targets; marker/branch mismatch
-      emits the existing structured diagnostic and degrades to a clean client
-      render. Light-layer hosts carry the internal `data-oe-light` provenance
-      marker; nested light subtrees are pruned from a parent's marker walks;
-      light roots validate the exact `data-eid` multiset (`marker-id` reason);
-      the DSD-only layout fix is not scheduled for light hosts.
-- [x] #1148: pre-hydration click capture/replay covers light-mode hosts with
-      containment-checked, exactly-once replay (supersedes the #1067 skip).
-- [x] #1152: the Node bridge observes client disconnects that predate response
-      writing; the body is cancelled and listeners are cleaned up instead of
-      pumping into a dead socket.
-- [x] #1154: a never-settling request-body `cancel()` no longer blocks
-      listener cleanup on the disconnect path.
+- Replace generic custom governance with the ADR-0144 toolchain: Renovate,
+  markdownlint-cli2, lychee, actionlint, zizmor, CodeQL/OpenSSF Scorecard and existing
+  publint/Are The Types Wrong gates.
+- Produce an AutoFlow retirement matrix. Keep only OpenElement-specific conformance,
+  coherent versioning, publish ordering and immutable evidence.
+- Implement ADR-0145 adapter contracts so Markdown, `deno doc` JSON, compiler-emitted
+  Custom Elements Manifest data, ADRs, release records and roadmap metadata share
+  stable content IDs and references.
+- Split the obsolete #1151 umbrella into generated API, docs graph, i18n/SEO/link,
+  information architecture, accessibility and performance issues.
+- Reopen the v0.44 milestone and make this plan, not chat history, its authority.
+- Establish ADR-0146's repository-owned Goal, state, loop evidence and Sol/K3 role
+  profiles. Missing K3-256k/high capability fails closed rather than selecting a
+  substitute executor.
 
-### Robustness audit (#1146)
+### WP-1 — Compiler and authoring (`alpha.0`–`alpha.1`)
 
-- [x] Six coverage areas (Node bridge, Preact, router, action wire, Starter,
-      repetition/resource growth) executed to committed per-case evidence:
-      `docs/audit/2026-08-26-v0.43.3-robustness-adversarial-audit.md`.
-- [x] Every confirmed finding has a follow-up issue filed before its fix
-      (#1152, #1154, #1153) and its evidence case flipped to PASS.
-- [x] Explicit GO for the audit axis, with the safety boundary (loopback,
-      in-process fixtures, local workerd only) recorded.
+- Add a production-shaped spike proving TSX transform, Deno/Vite integration, SSR
+  serialization and browser activation on one component.
+- Define the versioned Part Program schema, feature flags and deterministic encoding.
+- Compile standard `@element` and `@property` decorators. Reject legacy/unknown
+  decorator behavior and unsupported class inheritance with actionable diagnostics.
+- Compile one TSX authoring grammar; reject constructs that would require a runtime
+  VNode fallback.
+- Preserve accurate source maps, type errors, HMR state and file/line diagnostics.
 
-### External application evidence
+### WP-2 — OpenElement kernel, Parts and Regions (`alpha.2`–`alpha.3`)
 
-- [x] The authoring-fitness evidence source formerly codenamed `nextCrm` is
-      superseded by the Electrical Export Sales SaaS slice: two-phase
-      three-browser scorecard (OE-AF-01…04) — expected-failure reproduction on
-      packed `0.43.2` artifacts, then PASS on the coherent packed `0.43.3`
-      candidate set (SHA-256-locked tarballs).
+- Make `OpenElement extends HTMLElement` own connected/disconnected/adopted lifecycle,
+  root selection, Part installation, subscriptions and cleanup.
+- Implement fixed text/attribute/property/boolean/class/style/event/ref Parts.
+- Implement bounded Regions for dynamic children, `Show`, keyed/unkeyed `For` and
+  nested element programs, with explicit node and disposer ownership.
+- Keep Preact Signals Core as the default `SignalEngine`; publish a conformance suite
+  and select one engine per build without per-update virtual dispatch.
+- Integrate context, styles, form association, property reflection and element-local
+  error boundaries without a mixin or parallel renderer system.
 
-### Experiment (non-blocking)
+### WP-3 — Server serialization and claim (`alpha.4`)
 
-- [x] #1149: Zag Vanilla + Open Props + OpenElement composition spike recorded
-      (`docs/evidence/2026-08-26-zag-composition-spike.md`); per its outcome
-      rules it does not unlock #1150 or any v0.44 contract.
+- Serialize open/closed DSD and light DOM from the same compiled program.
+- Define deterministic claim identity with minimal markers and no generic DOM scan.
+- Attach Parts, Regions, events and signals to existing DOM.
+- Preserve node identity, focus, selection, live form values, nested Custom Element
+  instances and exactly-once pre-upgrade events on a successful claim.
+- Emit structured mismatches and recover only the owning element range.
+- Prove fresh browser creation, server output and claim against one conformance corpus.
 
-## Non-goals
+### WP-4 — Islands, App and build (`alpha.5`–`alpha.6`)
 
-- No new user-facing feature, public API, public hook, package or runtime
-  default.
-- No generic DOM diff/reconciliation engine and no arbitrary light-child
-  projection contract.
-- No change to the default Shadow/DSD mode or its behavior.
-- No modification to the 23 applied Supabase migrations and no remote schema
-  deployment as part of this patch.
-- No real Stripe, Supabase, Storage, Queue, scanner or other provider write
-  during local qualification or audit.
-- No `0.44.0` feature train. A future minor still requires ADR-0140 re-entry
-  evidence from a concrete cross-application requirement.
+- Generate activation modules and page manifests from actual admitted interactive tags.
+- Define Island as a client-capability delivery boundary with `1 Island : N Elements`.
+- Keep static routes runtime-free; ship only behavior reachable from an interactive
+  island and only Region machinery when a component uses structural dynamics.
+- Remove the separate client takeover model and component-aware island hydration.
+- Integrate routes, layouts, loaders/actions, head, SSG and request-time output without
+  teaching App about Parts or Signals.
+- Prove official Vite dev/build, Nitro Node/Workers, HMR, code splitting and source maps.
 
-## Acceptance
+### WP-5 — Migration, interop and documentation (`alpha.7`)
 
-1. Milestone issues #1146, #1148 and #1149 are resolved with the evidence
-   above; #1149's spike outcome is recorded without entering the GO/NO-GO
-   calculation.
-2. Public exports and package ownership remain compatible with `0.43.2`; all
-   five packages and the Starter resolve one aligned `0.43.3` line.
-3. Root tests, coverage, build, Chromium, Firefox and WebKit E2E (including
-   the real SSR → delayed-upgrade light-mode path), request-time parity,
-   Starter, Node/Workers Nitro proofs and packed consumers pass on the exact
-   release candidate.
-4. The authoring-fitness slice proves identity preservation, exactly-once
-   replay and no-JS form correctness on the packed candidate in all three
-   browser engines.
-5. Documentation, package artifacts, npm registry, tag, GitHub Release and
-   immutable release evidence agree before milestone closure.
-6. Publication occurs only under the maintainer's explicit 2026-08-26
-   authorization.
+- Remove `defineElement`/legacy registration, runtime VNode, BindingDescriptor,
+  activation registry and generic hydration code from published artifacts.
+- Provide codemods and a 0.43-to-0.44 migration guide. Migration transforms source;
+  it does not preserve the old renderer at runtime.
+- Generate the complete public API reference with `deno doc --json --lint` and merge
+  compiler CEM metadata for attributes, events, slots, CSS parts, roots and claim.
+- Verify native elements and representative Lit, FAST and Stencil components as
+  application children and SSR admission inputs.
+- Compile/type-check documentation examples and expose stable source links/search IDs.
 
-## Verification matrix
+### WP-6 — Final-alpha framework qualification (`alpha.8`)
 
-| Boundary    | Required evidence                                                                             |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| Light DOM   | in-place activation identity (input/button/nested CE), focus/selection/value survival,        |
-|             | exactly-once click replay, marker-id integrity, mismatch degrade, three-browser e2e,          |
-|             | packed-artifact consumer scorecard (OE-AF-01…04, two-phase)                                   |
-| Node bridge | abort, close, `drain`, stream cancel, listener cleanup, keep-alive and repeated resource runs |
-| Preact      | first hydration over real SSR children, update, detach, same-tick move, reconnect, teardown   |
-| Router      | dispose during programmatic/browser guards (history + hash), redirect chains, sync throws     |
-| Action wire | identical Hono/Nitro 422 envelopes for every unsupported value on both channels               |
-| Starter     | Stripe body limits; Notes renewal/401/origin/retry; upload Storage/RPC/finalize matrix        |
-| Repository  | fmt, lint, typecheck, graph, interface, docs, migrations, coverage and clean-root tests       |
-| Outputs     | static freeze, Nitro Node/Workers, local and packed consumers, third-party WC and npm dry-run |
-| Release     | exact-SHA main CI, five npm artifacts, dist-tag, tag, GitHub notes and closure evidence       |
+- Qualify compiler, Element, App/build and Starter consumers on packed final-alpha
+  artifacts without relying on the UI package or website as compatibility glue.
+- Record cold-start, SSR, claim, update, memory and transferred-byte comparisons against
+  the 0.43.3 baseline with fixed fixtures and environments.
+- Run Chromium, Firefox and WebKit plus Node and Workers output; Deno/Bun run the
+  supported CLI/consumer subset stated by the package contract.
+- Complete governance offload, generated content, migration and security evidence before
+  declaring the framework ready for beta product qualification.
 
-## Post-v0.43.3 policy
+### WP-7 — UI qualification (`beta.1`)
 
-`0.43.x` remains the active maintenance line. Compatible correctness,
-security, dependency, runtime-compatibility, documentation, test and release
-tooling fixes may ship as later patches. No next minor is scheduled. The
-Electrical Export Sales SaaS (formerly codenamed `nextCrm`) remains the
-primary proving ground; provider-neutral requirements may propose framework
-work, while product domain logic stays outside framework packages.
+- Rebuild `@openelement/ui` on the published final-alpha compiler and Element contract.
+- Use native HTML or Element-owned behavior by default; admit Zag Vanilla machines for
+  complex headless interaction only where the validated role boundary requires them.
+- Prove SSR/create/claim, light/open/closed roots, forms, keyboard/focus/ARIA behavior,
+  cleanup, tree-shaking and transferred-byte budgets across the browser matrix.
+- Publish one coherent five-package beta.1 line; UI may not reach into private compiler
+  or workspace source paths.
+
+### WP-8 — Website qualification (`beta.2`)
+
+- Rebuild the official website and Starter with exact beta.1 framework and UI artifacts.
+- Exercise generated API/CEM, releases, roadmap, navigation, search, locales, SEO, links,
+  nested UI, SSR/claim and delayed Islands through user-visible flows.
+- Preserve zero-runtime static routes and reachability-based interactive chunks.
+- Reject website-local compatibility glue that conceals a framework or UI contract flaw.
+
+### WP-9 — RC SaaS proof and Stable (`rc.*` → `0.44.0`)
+
+- Admit beta.2 to RC only after the exact-SHA pre-RC matrix passes.
+- Build and run the independent SaaS from public npm or packed RC artifacts with no
+  workspace aliases, private imports or unpublished coupling.
+- Exercise production-shaped routing, data, forms, UI composition, SSR/claim, selective
+  delivery and the chosen deployment target; record every framework defect against the
+  exact RC.
+- Promote Stable only after SaaS qualification, the RC soak and the coherent release
+  evidence all pass.
+
+## Explicit non-goals for 0.44.0
+
+- No second authoring syntax, tagged-template public API or runtime Template object.
+- No compatibility VNode renderer, runtime Part interpreter or silent compiler fallback.
+- No framework-owned auth/session, database, cache/ISR, outbox, generic tracing or
+  streaming SSR promise solely because those issues were once labeled 0.44.
+- No new public compiler/signals package without a separate package-boundary ADR.
+- No generic CMS/query layer in Content Collections.
+- No Portal/Teleport primitive in the Element kernel; application overlays compose
+  through native DOM ownership and an app-level host only when real evidence requires it.
+- No component inheritance/mixin semantics beyond one analyzable OpenElement lineage in
+  the 0.44 compiler. Composition is the supported reuse mechanism.
+
+## Mandatory RC entry standard
+
+RC admission is a single GO/NO-GO decision. Every item below is required:
+
+### Architecture and surface
+
+- [ ] ADR-0143 semantics are implemented without exceptions hidden behind defaults.
+- [ ] One canonical authoring form and one Part Program version are documented.
+- [ ] The intended framework API and compiler grammar have been unchanged from the
+      accepted final alpha through beta.2; the intended UI surface is frozen at beta.2.
+- [ ] No shipped default path contains the runtime VNode renderer, BindingDescriptor
+      tree, activation registry, generic hydration walker or fallback interpreter.
+- [ ] Package exports, CEM, generated API reference and migration guide agree.
+
+### Correctness
+
+- [ ] The conformance corpus produces equivalent observable structure for server
+      serialization, fresh DOM creation and SSR claim.
+- [ ] Fixed Parts, Regions, keyed identity, nested lifetimes, events, refs, context,
+      forms, styles, roots and error boundaries pass adversarial tests.
+- [ ] Claim preserves DOM/user state and emits deterministic diagnostics for every
+      mismatch class.
+- [ ] SignalEngine conformance passes for Preact and one deliberately small test engine,
+      proving the seam is real rather than interface theater.
+
+### Delivery and performance
+
+- [ ] A fully static application ships zero OpenElement client runtime bytes.
+- [ ] Island output contains only reachable element behavior; unused UI elements and
+      Region logic are absent from representative chunks.
+- [ ] No agreed critical metric regresses more than 10% against the frozen candidate
+      baseline without a maintainer-approved evidence amendment; transferred JS must
+      improve on the equivalent 0.43.3 interactive fixtures.
+- [ ] Repeated connect/disconnect, list churn, route navigation and failed claim runs
+      show no unbounded listeners, subscriptions, nodes or retained instances.
+
+### Tooling and portability
+
+- [ ] Vite dev/build, HMR, source maps and compiler diagnostics are reliable on a clean
+      checkout and on packed artifacts.
+- [ ] Chromium, Firefox and WebKit pass the full component/claim matrix.
+- [ ] Nitro Node and Workers output pass; supported Deno/Bun consumer claims are tested.
+- [ ] Native/Lit/FAST/Stencil interop and CEM admission pass with documented limits.
+
+### Product proof and governance
+
+- [ ] `@openelement/ui` passes the beta.1 component, accessibility, lifecycle, root-mode
+      and bundle matrix against exact final-alpha artifacts.
+- [ ] Website and Starter pass beta.2 qualification against exact public beta.1
+      artifacts, not workspace aliases.
+- [ ] Every alpha/beta candidate carries a fresh-session K3 test-driven closure PASS,
+      followed by an independent deterministic harness PASS and exact human promotion
+      GO. The verifier changed no production code.
+- [ ] All other pre-RC milestone P0/P1 issues are closed; every lower-priority deferral
+      has an owner, rationale and non-blocking proof. The RC-admission, RC SaaS and
+      Stable-promotion issues remain open by design at the start of the decision.
+- [ ] Generic governance replacements are live and duplicate custom machinery is
+      deleted; remaining custom gates are mapped to OpenElement-specific invariants.
+- [ ] Content Graph generation is deterministic; API/JSDoc/CEM, links, SEO, locales,
+      nav and search pass drift checks.
+- [ ] Threat model, dependency review, CodeQL, Scorecard, workflow lint/security and npm
+      artifact checks are green.
+- [ ] The maintainer records an explicit RC GO against the exact commit SHA.
+
+## RC line and stable entry
+
+`rc.1` freezes the public authoring grammar, Part Program version, package exports,
+root semantics, claim behavior and migration contract. Later RCs contain release
+blocker fixes only; any architecture or public-surface change returns the line to
+alpha.
+
+Stable `0.44.0` requires:
+
+1. the independent SaaS installs, builds, tests and deploys using exact public RC
+   artifacts with no workspace aliases, private source imports or unpublished coupling;
+2. the SaaS critical journeys and the beta.2 website remain green with no unresolved
+   P0/P1 framework regression;
+3. at least fourteen days of RC soak complete;
+4. no compatibility-changing commit lands after the final RC;
+5. npm dry-run, packed consumers, provenance, tag, GitHub release and dist-tag checks;
+6. complete generated documentation and a final 0.43-to-0.44 migration rehearsal;
+7. an explicit maintainer Stable GO on the exact main-branch SHA.
+
+## Required verification matrix
+
+| Boundary  | Required evidence                                                                        |
+| --------- | ---------------------------------------------------------------------------------------- |
+| Compiler  | transform snapshots, invalid syntax diagnostics, source maps, HMR, deterministic output  |
+| Element   | lifecycle, roots, props, decorators, styles, context, forms, cleanup, errors             |
+| Parts     | every fixed sink, event replacement, refs, value equality and disposal                   |
+| Regions   | conditional, keyed/unkeyed list, moves, nested ownership, empty ranges, failures         |
+| Signals   | Preact default, alternate test engine, batching, computed/effect ordering, cleanup       |
+| SSR/claim | light/open/closed roots, three-browser identity/state preservation, mismatch matrix      |
+| Islands   | zero-JS static, load/idle/visible/media/only, one-to-many delivery, chunk reachability   |
+| App/build | routes, layouts, loaders/actions, SSG, request-time, Node/Workers, packed output         |
+| Content   | JSDoc lint, CEM, API pages, Markdown, i18n, nav, search, SEO, links, deterministic drift |
+| Release   | exact SHA, package surface, publint/ATTW, npm provenance/dist-tags, UI, website and SaaS |
+
+## Issue authority
+
+The complete issue graph and disposition of the pre-existing backlog live in
+[`../roadmap/v0.44.0-ISSUES.md`](../roadmap/v0.44.0-ISSUES.md). GitHub issues are the
+execution queue; this document is the scope and promotion authority.

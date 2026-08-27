@@ -1,19 +1,20 @@
 # OpenElement Status
 
-> Updated: 2026-08-26\
+> Updated: 2026-08-27\
 > Repository package line: `v0.43.3`\
 > npm registry line: `v0.43.3` (published 2026-08-26, dist-tag `latest`)\
 > Latest landed train: `v0.43.3`\
-> Active release target: `v0.43.3`\
-> Next planned train: `not scheduled (maintenance mode)`\
-> Next release line: `not scheduled (maintenance mode)`\
+> Active release target: `v0.44.0-alpha.0`\
+> Next planned train: `v0.44.0-alpha.1`\
+> Next release line: `v0.44.0-alpha`\
 > Product graph: five packages\
-> Current maturity stage: stable (0.43.x, Universal WC SSR + the Supabase × Cloudflare delivery path under ADR-0135; maintenance mode under ADR-0140)
+> Current maturity stage: 0.44 architecture execution; 0.43.3 remains the published stable maintenance line
 
 ## Current position
 
-OpenElement is a Web Components-native application framework, stable at
-`0.43.3`: renderer-owned light DOM is now hydrated in place across SSR upgrade
+OpenElement is a Web Components-native application framework. The published product is
+stable at
+`0.43.3`: renderer-owned light DOM is hydrated in place across SSR upgrade
 (ADR-0142 — node identity, focus, selection, live form values, nested
 custom-element instances and pre-upgrade clicks survive), and the final
 robustness adversarial audit of the frozen line closed with committed per-case
@@ -35,8 +36,10 @@ findings, and Wave C returned `GO` on the schema/runtime candidate after
 exact-SHA CI, authorized 23-migration Supabase application, post-apply
 catalog/RLS qualification, and Advisor review. `v0.43.2` adds compatible
 failure containment for the Node bridge, Preact lifecycle, router disposal,
-action serialization and Starter provider boundaries. The 0.43.x line remains
-in ADR-0140 maintenance mode. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
+action serialization and Starter provider boundaries. The 0.43.x line remains in
+compatibility maintenance while ADR-0143 opens the `0.44.0-alpha` compiled OpenElement
+architecture train. ADR-0144 and ADR-0145 also offload generic governance and make
+Content Collections the unified content graph. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
 recruitment. The `0.41.1` patch carries the third-party audit's fixable
 tooling and hygiene set with no frozen-surface change. On the 0.42 alpha
@@ -88,9 +91,9 @@ the five-package responsibility table.
    CLI runtime, logger tags) and the alpha.9 cleanup train (#632–#644).
    TP-5.9 (alpha.13, standards-as-seams) followed, and alpha.14–16 were
    remediation trains closing it.
-5. Framework session and cache remain unfrozen and unscheduled; login apps use
-   recipes and must not wait on framework session APIs. A future minor requires
-   the ADR-0140 re-entry decision.
+5. Framework session and cache remain outside 0.44.0; login apps use recipes and must
+   not wait on framework session APIs. ADR-0143 re-enters 0.44 for the Element
+   architecture correction, not the old generic Production Runtime backlog.
 6. UI remains optional until v0.46 records its stable scope.
 7. Cross-runtime claim (Deno/Node/Bun) is partially unmet: the `start` CLI
    is cross-runtime since #622 (Node 18+/Deno/Bun via `node:http`), but the
@@ -115,24 +118,30 @@ recipes).
 
 ## Release direction
 
-| Version           | Focus                                                                    |
-| ----------------- | ------------------------------------------------------------------------ |
-| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)                              |
-| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                                            |
-| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)                                     |
-| `0.41.0`          | Separate stable decision after alpha.19 evidence                         |
-| `0.42.0-alpha.8`  | Version hole: TP-5.7 cut failed npm publish; carried into alpha.9        |
-| `0.42.0-alpha.9`  | TP-5.7: light-fullstack floor + audit round 3 + hygiene #619–#623        |
-| `0.42.0-alpha.10` | Audit round 4 + remediation trains (#646–#752); milestone #17 issue-zero |
-| `0.42.0-alpha.13` | TP-5.9: standards-as-seams train + TP-6 freeze preparation (ADR-0123)    |
-| `0.42.0-alpha.16` | Starter-first remediation (round-3 audit #915–#943)                      |
-| `0.42.0-alpha.17` | Registration decoupling (#960, ADR-0128) + architect final review        |
-| `0.42.0`          | WC light fullstack stable — Application Loop frozen (ADR-0122)           |
-| `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                     |
-| `0.43.1`          | Cumulative maintenance baseline: Wave A/B/C closure                      |
-| `0.43.2`          | Runtime failure containment and stabilization closure                    |
-| future minor      | Not scheduled; requires ADR-0140 re-entry evidence                       |
-| `1.0.0`           | Stable five-package product                                              |
+| Version                    | Focus                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `0.41.0-alpha.17`          | First audit remediation baseline (ADR-0116)                                  |
+| `0.41.0-alpha.18`          | Second audit sweep (ADR-0117)                                                |
+| `0.41.0-alpha.19`          | Third audit cleanup sweep (ADR-0118)                                         |
+| `0.41.0`                   | Separate stable decision after alpha.19 evidence                             |
+| `0.42.0-alpha.8`           | Version hole: TP-5.7 cut failed npm publish; carried into alpha.9            |
+| `0.42.0-alpha.9`           | TP-5.7: light-fullstack floor + audit round 3 + hygiene #619–#623            |
+| `0.42.0-alpha.10`          | Audit round 4 + remediation trains (#646–#752); milestone #17 issue-zero     |
+| `0.42.0-alpha.13`          | TP-5.9: standards-as-seams train + TP-6 freeze preparation (ADR-0123)        |
+| `0.42.0-alpha.16`          | Starter-first remediation (round-3 audit #915–#943)                          |
+| `0.42.0-alpha.17`          | Registration decoupling (#960, ADR-0128) + architect final review            |
+| `0.42.0`                   | WC light fullstack stable — Application Loop frozen (ADR-0122)               |
+| `0.43.0`                   | Universal WC SSR + diagnostics + recipes (#624–#631)                         |
+| `0.43.1`                   | Cumulative maintenance baseline: Wave A/B/C closure                          |
+| `0.43.2`                   | Runtime failure containment and stabilization closure                        |
+| `0.44.0-alpha.0`           | Architecture constitution, governance/content foundations and compiler spike |
+| `0.44.0-alpha.1`           | Canonical decorators and compiler contract                                   |
+| `0.44.0-alpha.2`–`alpha.8` | Part Program through final-alpha framework qualification                     |
+| `0.44.0-beta.1`            | UI rebuild and validated Zag composition                                     |
+| `0.44.0-beta.2`            | Website and Starter rebuild on beta.1 public artifacts                       |
+| `0.44.0-rc.1`              | Gated by the complete framework, UI and website admission standard           |
+| `0.44.0`                   | Gated by independent SaaS qualification and Stable promotion evidence        |
+| `1.0.0`                    | Stable five-package product                                                  |
 
 > **Version hole — `0.42.0-alpha.8` is skipped / npm-unpublished.** Its git tag
 > (`0ec10568`) and GitHub release exist, but the npm publish never completed, so

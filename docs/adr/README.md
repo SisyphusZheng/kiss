@@ -193,6 +193,10 @@ git history.
 | 0140 | 0.43.x Maintenance Mode and CRM-Driven Evolution                                                                                     | Accepted                                         |
 | 0141 | Node Bridge Disconnect Propagation Preserves First-Mile Start Semantics                                                              | Accepted                                         |
 | 0142 | Light-Mode In-Place Activation of Renderer-Owned SSR DOM                                                                             | Accepted                                         |
+| 0143 | Re-enter v0.44 with the Compiled OpenElement Model                                                                                   | Accepted                                         |
+| 0144 | Offload Generic Repository Governance                                                                                                | Accepted                                         |
+| 0145 | Content Collections Become the Unified Content Graph                                                                                 | Accepted                                         |
+| 0146 | Three-Role Agent Execution Control Plane for v0.44                                                                                   | Accepted                                         |
 
 ## Superseded / Historical
 

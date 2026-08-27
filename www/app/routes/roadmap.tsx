@@ -332,40 +332,42 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       version: 'v0.43.3',
       theme: 'renderer-owned light DOM hydration — robustness audit closure',
       copy:
-        'This compatible patch activates server-rendered light DOM in place on client upgrade: marker bindings preserve node identity, focus, selection, live form values and nested element instances, with the structured hydration diagnostic and a safe degrade on mismatch, plus exactly-once pre-upgrade click replay. The final robustness adversarial audit closed with committed per-case evidence and two Node bridge cleanup fixes. ADR-0142 amends ADR-0092; ADR-0140 keeps 0.43.x in patch maintenance mode, with no 0.44 feature train scheduled.',
+        'The published stable line remains available while 0.44 is prerelease. It proves Universal WC SSR, in-place light-DOM activation and the application delivery baseline that the compiled architecture must preserve.',
       state: 'stable',
       stamp: 'CURRENT',
     },
     {
-      version: 'audit round 2',
-      theme: 'audit round 2 remediation',
+      version: 'v0.44 alpha',
+      theme: 'compiled OpenElement foundations',
       copy:
-        'The second independent review closes 18 issues: explicit form actions win on enhanced submits, morphed-in islands show the server render, morph matching is an ordered walk, and enhancement detection follows imports.',
-      state: 'stable',
+        'Architecture constitution, governance offload, unified Content Graph and a production-shaped TSX-to-Part Program compiler spike.',
+      state: 'next',
+      stamp: 'NEXT',
+      status: 'active',
     },
     {
-      version: 'v0.41.0',
-      theme: 'core interface freeze',
+      version: 'compiler → claim',
+      theme: 'Element, Parts and claim',
       copy:
-        'Scoped freeze of the proven static-first contract and SPA chain; request-time semantics stay unfrozen (ADR-0119).',
-      state: 'stable',
-      status: 'released 2026-07-26',
-    },
-    {
-      version: 'v0.42',
-      theme: 'WC application loop',
-      copy:
-        'One route-to-interaction loop: load, DSD render, progressive form, action, error or redirect, and revalidation with a no-JavaScript path.',
+        'Standard decorators, the OpenElement kernel, replaceable Signals, fixed Parts, dynamic Regions, DSD serialization and existing-DOM claim converge on one program.',
       state: 'planned',
-      status: 'planned',
+      status: 'planned sequence',
     },
     {
-      version: 'v0.43–0.46',
-      theme: 'SSR, runtime, ecosystem',
+      version: 'delivery → qualification',
+      theme: 'delivery, migration and qualification',
       copy:
-        'Earn WC fullstack leadership through compatibility diagnostics, portable runtime proof, external adoption and a stability-only release candidate.',
+        'Zero-runtime static output, generated Island delivery, App/build convergence, old-path removal, ecosystem interop and real-application qualification.',
       state: 'planned',
-      status: 'direction',
+      status: 'planned sequence',
+    },
+    {
+      version: 'v0.44 release candidate',
+      theme: 'frozen candidate',
+      copy:
+        'Entered only after the complete architecture, correctness, delivery, portability, documentation, governance and real-application gate passes. Any public or architecture change returns to alpha.',
+      state: 'planned',
+      status: 'gated',
     },
     {
       version: 'v1.0.0',
@@ -381,40 +383,42 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       version: 'v0.43.3',
       theme: '渲染方所有的 light DOM 水合 — 鲁棒性审计闭环',
       copy:
-        '这个兼容 patch 让 light 模式的 SSR 输出在客户端升级时原地激活：标记绑定保持节点身份、焦点、选区、表单实时值与嵌套元素实例；标记不匹配时走既有的结构化 hydration 诊断并安全降级，升级前点击恰好重放一次。最终鲁棒性对抗审计以可复现的逐案证据闭环，并修复两个 Node bridge 清理缺陷。ADR-0142 修订 ADR-0092；ADR-0140 继续将 0.43.x 置于 patch 维护模式，不预排 0.44 功能列车。',
+        '已发布稳定线会在 0.44 预发布期间继续可用。它证明了 Universal WC SSR、light DOM 原地激活与应用交付基线；新的编译架构必须保持这些能力。',
       state: 'stable',
       stamp: 'CURRENT',
     },
     {
-      version: 'audit round 2',
-      theme: '第二轮审计整改',
+      version: 'v0.44 alpha',
+      theme: '编译型 OpenElement 地基',
       copy:
-        '第二轮独立评审关闭 18 个 issue：显式 form action 在增强提交时优先，morph 进来的 island 展示服务端渲染结果，morph 匹配是有序遍历，增强检测跟随 import。',
-      state: 'stable',
+        '冻结架构宪法、治理减负、统一 Content Graph，并完成具备生产形态的 TSX 到 Part Program 编译器纵切。',
+      state: 'next',
+      stamp: 'NEXT',
+      status: '执行中',
     },
     {
-      version: 'v0.41.0',
-      theme: '核心接口冻结',
+      version: '编译器 → claim',
+      theme: 'Element、Parts 与 claim',
       copy:
-        '对已验证的 static-first 契约与 SPA 链做有范围的冻结；请求时语义保持不冻结（ADR-0119）。',
-      state: 'stable',
-      status: '2026-07-26 发布',
-    },
-    {
-      version: 'v0.42',
-      theme: 'WC 应用循环',
-      copy:
-        '一条从路由到交互的闭环：loader、DSD 渲染、渐进增强表单、action、错误或重定向，以及带无 JavaScript 路径的重新校验。',
+        '标准装饰器、OpenElement 内核、可替换 Signal、固定 Part、动态 Region、DSD 序列化与已有 DOM claim 收束到同一程序。',
       state: 'planned',
-      status: '规划中',
+      status: '规划序列',
     },
     {
-      version: 'v0.43–0.46',
-      theme: 'SSR、运行时与生态',
+      version: '交付 → 资格验证',
+      theme: '交付、迁移与验证',
       copy:
-        '通过兼容性诊断、可移植运行时证明、外部采用，以及只修稳定性的候选发布，赢得 WC 全栈领先地位。',
+        '零运行时静态输出、生成式 Island 交付、App/构建收束、旧路径删除、生态互操作与真实应用验证。',
       state: 'planned',
-      status: '方向',
+      status: '规划序列',
+    },
+    {
+      version: 'v0.44 发布候选',
+      theme: '冻结候选',
+      copy:
+        '只有架构、正确性、交付、可移植性、文档、治理与真实应用门禁全部通过才可进入；任何公开面或架构变化都会退回 alpha。',
+      state: 'planned',
+      status: '受门禁约束',
     },
     {
       version: 'v1.0.0',
@@ -434,10 +438,10 @@ const content = {
     railItems:
       '[{"id":"release-line","label":"Release line"},{"id":"product-boundary","label":"Product boundary"},{"id":"decision-matrix","label":"Decision matrix"},{"id":"system-visual","label":"System visual"}]',
     architecture: 'Architecture',
-    freezeBadge: 'ADR-0140 maintenance mode',
-    nowTitle: '0.43.3 hydrates renderer-owned light DOM in place and closes the robustness audit.',
+    freezeBadge: 'ADR-0143 — v0.44 alpha active',
+    nowTitle: '0.43.3 remains stable while the compiled OpenElement train begins.',
     nowCopy: (version: string) =>
-      `${version} is the published stable maintenance line. ADR-0119, ADR-0122, and ADR-0135 keep the framework contracts frozen; ADR-0140 admits compatible patches and requires a new maintainer decision before any minor feature train.`,
+      `${version} is the published stable maintenance line. ADR-0143 explicitly opens the 0.44 alpha line for the compiled Element architecture; the Version Plan owns every numbered alpha and the RC gate.`,
     releaseLineIndex: '01 / release line',
     releaseLineTitle: 'From shipped evidence to v1.0 freeze.',
     releaseLineCopy:
@@ -512,10 +516,10 @@ const content = {
     railItems:
       '[{"id":"release-line","label":"发布线"},{"id":"product-boundary","label":"产品边界"},{"id":"decision-matrix","label":"决策矩阵"},{"id":"system-visual","label":"系统图示"}]',
     architecture: '架构',
-    freezeBadge: 'ADR-0140 维护模式',
-    nowTitle: '0.43.3 原地水合渲染方所有的 light DOM，并闭环鲁棒性审计。',
+    freezeBadge: 'ADR-0143 — v0.44 alpha 执行中',
+    nowTitle: '0.43.3 保持稳定，编译型 OpenElement 列车已经启动。',
     nowCopy: (version: string) =>
-      `${version} 是已发布的稳定维护线。ADR-0119、ADR-0122 与 ADR-0135 继续冻结框架契约；ADR-0140 只准入兼容 patch，任何 minor 功能列车都必须重新经过维护者决策。`,
+      `${version} 是已发布的稳定维护线。ADR-0143 已明确开启 0.44 alpha 编译型 Element 架构列车；每个编号 alpha 与 RC 门禁均以 Version Plan 为准。`,
     releaseLineIndex: '01 / 发布线',
     releaseLineTitle: '从已交付证据，到 v1.0 冻结。',
     releaseLineCopy: '这条线刻意收窄：只有经得起文档、包导出与构建验证检验的表述，才会留在这里。',

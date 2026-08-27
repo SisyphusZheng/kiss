@@ -1,8 +1,13 @@
 # ADR-0095: Data / Database Boundary
 
-Status: Accepted
+Status: SUPERSEDED (2026-08-27 by ADR-0143 and the current composition rule)
 
 Date: 2026-06-10
+
+> Historical note: the proposed `@openelement/core/data` package was retired and
+> `MemoryDataAdapter` never shipped. Current route loader/action contracts remain in
+> App/Element ownership, while database implementations compose through recipes. The
+> unimplemented generic adapter is not reintroduced into the 0.44 Element kernel.
 
 ## Context
 

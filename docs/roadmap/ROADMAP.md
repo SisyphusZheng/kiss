@@ -1,168 +1,123 @@
-# openElement Roadmap
+# OpenElement Roadmap
 
 Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
-> Source of truth for forward product planning.\
 > Source package line: `v0.43.3`.\
-> npm registry line: `v0.43.3` (published 2026-08-26, dist-tag `latest` — see Current release state).\
+> npm registry line: `v0.43.3` (published 2026-08-26, dist-tag `latest`).\
 > Latest landed train: `v0.43.3`.\
-> Active execution target: `v0.43.3`.\
-> Next planned train: `not scheduled (maintenance mode)`.\
-> Current implementation state: the 0.43 line is shipped and frozen under
-> ADR-0135; the #1002 production closure is complete.\
-> Planned line: `0.43.x` patch maintenance; no later minor is
-> scheduled. `0.43.0` (Universal WC SSR) shipped 2026-08-20 under ADR-0135.\
-> Maturity stage: stable (0.43.3 renderer-owned light-DOM hydration + robustness audit closure over the 0.43.2 runtime stabilization and 0.43.1 cumulative baseline — the 0.41.x interface freeze under
-> ADR-0119, the request-time loop freeze under ADR-0122, and the Universal
-> WC admission freeze under ADR-0135); the
-> abandoned beta naming is retired.
+> Active execution target: `v0.44.0-alpha.0`.\
+> Next planned train: `v0.44.0-alpha.1`.\
+> Stable support line: `0.43.x` maintenance while 0.44 is prerelease.
+
+`0.43.3` is both the current source package line and the published stable npm line;
+the active execution target is planning and implementation truth, not a published
+package claim.
 
 ## Product direction
 
 ```text
 OpenElement = Web Components-native fullstack application framework
-current proven scope = static-first applications with fullstack output paths
-component contract = standard Custom Elements
-authoring = JSX + Basic Element
-rendering = DSD/shadow default + explicit light DOM
-interactivity = selective element upgrade
-official build path = Vite + Nitro
+
+Element = native component model and local reactive DOM owner
+Island  = client capability delivery boundary
+App     = route, data, server rendering and deployment orchestration
 ```
 
-OpenElement makes Custom Elements the durable application contract rather than
-a renderer integration or a leaf-widget format. `@openelement/element` supports
-standalone element authors; `@openelement/app` and
-`@openelement/adapter-vite` add routes, rendering, islands, static generation
-and deployable output around the same contract.
+The 0.43 line proved the application loop, Universal WC SSR, DSD/light activation and
+portable application delivery, then entered maintenance under ADR-0140. Architecture
+review subsequently established that its runtime reconstructs compile-time knowledge
+through too many overlapping concepts. ADR-0143 is the explicit re-entry decision:
+0.44 replaces that path with a mandatory compiler and a single Part Program.
 
-The current product graph has five packages:
+## Current and forward lines
 
-| Package                     | Product role                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------ |
-| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  |
-| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      |
-| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation |
-| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     |
-| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 |
+| Version           | State                | Product claim and exit evidence                                                                      |
+| ----------------- | -------------------- | ---------------------------------------------------------------------------------------------------- |
+| `0.41.0`          | Shipped              | Scoped five-package interface freeze                                                                 |
+| `0.42.0`          | Shipped              | WC Application Loop: loader/action, progressive forms, build-to-start                                |
+| `0.43.0`          | Shipped              | Universal WC SSR admission, DSD/light/client-only classification and diagnostics                     |
+| `0.43.1`–`0.43.3` | Stable maintenance   | Cumulative qualification, runtime containment and in-place light-DOM activation                      |
+| `0.44.0-alpha.0`  | Active               | Architecture constitution, governance offload, Content Graph and executable compiler spike           |
+| `0.44.0-alpha.1`  | Planned next         | Standard decorators and canonical OpenElement compiler contract                                      |
+| `0.44.0-alpha.2`  | Planned              | Part Program and fresh browser DOM without VNodes                                                    |
+| `0.44.0-alpha.3`  | Planned              | Element kernel, SignalEngine, lifecycle, roots, context and forms                                    |
+| `0.44.0-alpha.4`  | Planned              | Same-program server serialization and existing-DOM claim                                             |
+| `0.44.0-alpha.5`  | Planned              | Runtime-free static output and generated Island delivery                                             |
+| `0.44.0-alpha.6`  | Planned              | App, SSG/request-time, Vite and Nitro convergence                                                    |
+| `0.44.0-alpha.7`  | Planned              | Old-path removal, migration, CEM and ecosystem interop                                               |
+| `0.44.0-alpha.8`  | Planned              | Final-alpha framework, performance, portability and packed-consumer qualification                    |
+| `0.44.0-beta.1`   | Gated                | Rebuilt UI system and validated Zag composition on final-alpha artifacts                             |
+| `0.44.0-beta.2`   | Gated                | Rebuilt website and Starter on exact beta.1 framework and UI artifacts                               |
+| `0.44.0-rc.1`     | Gated, not automatic | Exact-SHA framework, UI and website matrix passes and freezes the candidate                          |
+| `0.44.0`          | Gated                | Independent SaaS qualifies the RC; soak, release evidence and explicit Stable GO pass                |
+| `1.0.0`           | Long-term goal       | External production evidence proves the Element/App/build contracts deserve compatibility permanence |
 
-Responsibility wording follows
-[`STACK_CONTRACT.md`](../current/STACK_CONTRACT.md), the source of truth for
-the five-package responsibility table.
+Qualification expands deliberately: final alpha proves the framework, beta.1 proves UI,
+beta.2 proves the website, and RC proves the independent SaaS before Stable. Failures may
+produce additional betas or RCs. A required architecture/framework-surface change after
+final alpha returns the line to alpha; a public-surface change after RC also returns it.
 
-`core`, `signal`, `router`, `protocol`, `content` and `ssg` are retired public
-packages. Their historical names remain in ADRs and release evidence only.
+## 0.44 architecture
 
-## North Star: WC fullstack leadership
+```text
+source                               delivery
+-------------------------------      ------------------------------------
+@element class extends OpenElement   App -> HTML/DSD
+@property fields                     static -> done, zero client runtime
+TSX                                  interactive -> Island activation module
+       |                                          |
+       v                                          v
+compiler -> Part Program             browser Custom Element upgrade
+              |                                   |
+       +------+-------+                           v
+       |      |       |                    Element-owned Parts/Regions
+      SSR   create   claim                         ^
+                                                  |
+                                             SignalEngine
+```
 
-The goal is not to outgrow every general-purpose framework. The goal is to make
-OpenElement the first choice when a team wants Web Components to define the
-whole application architecture: component authorship, SSR, DSD, forms, routing,
-selective upgrades and deployment.
+The architecture has one public authoring grammar, one generated program and three
+execution modes. It has no runtime Template layer, VNode renderer, binding-descriptor
+tree or application-wide Client model.
 
-The claim is earned through evidence, not feature count:
+## Parallel foundation work
 
-1. **WC authoring** — ordinary authors learn the small supported surface:
-   `defineElement`, `definePage`, `defineApp` and `buildApp`.
-2. **WC SSR correctness** — builds explain whether a component can use DSD,
-   light DOM or client-only rendering, and why.
-3. **Interop** — native, Lit, FAST, Stencil and representative third-party
-   elements are continuously tested across supported browsers.
-4. **Continuity** — the same page model works from static HTML through
-   request-time rendering and selective upgrade.
-5. **Application interaction** — standard `Request`, `Response`, `FormData`
-   and Custom Element semantics support load, action, errors and redirects.
-6. **Portable operations** — packed artifacts build and deploy predictably to
-   Node and Workers with actionable diagnostics.
+The compiler rewrite does not excuse repository debt. `alpha.0` also starts two
+foundational tracks:
 
-Astro, Fresh and other static-first frameworks set a high application baseline;
-Lit, FAST and Stencil set a high component baseline; Enhance is the closest
-HTML-first Custom Elements fullstack comparison. OpenElement differentiates by
-making the standard Custom Element contract span both layers. See the official
-[Astro integrations](https://docs.astro.build/en/guides/integrations/),
-[Fresh islands](https://fresh.deno.dev/docs/1.x/concepts/islands),
-[Lit SSR](https://lit.dev/docs/ssr/server-usage/),
-[FAST SSR](https://fast.design/docs/3.x/declarative-templates/server-rendering/),
-[Stencil output targets](https://stenciljs.com/docs/output-targets),
-[Enhance](https://enhance.dev/) and
-[open-wc testing](https://open-wc.org/guides/developing-components/testing/).
+1. **Governance offload (ADR-0144).** Deno and mature open-source tools own generic
+   formatting, dependencies, Markdown, links, workflow validation, workflow security,
+   security posture and package quality. AutoFlow shrinks to OE-specific conformance,
+   coherent versioning, publish ordering and evidence.
+2. **Unified Content Graph (ADR-0145).** `deno doc` extracts TypeScript/JSDoc, the
+   compiler emits Custom Elements Manifest metadata, Markdown supplies authored
+   explanation, and Content Collections normalizes them into API docs, nav, search,
+   SEO, release and roadmap outputs.
 
-## Forward versions
-
-> Rows through `0.41.2` are **already published** and kept here only as
-> release-history context; their authoritative evidence lives in
-> [`docs/release/`](../release/). Forward planning starts at `0.42.0`.
-
-| Version           | Theme                           | Required evidence                                                                                                                                                                                                                                                                         |
-| ----------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0.41.0-alpha.10` | Five-package convergence        | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                                                                                                                                                                           |
-| `0.41.0-alpha.11` | Audit remediation               | Runtime regressions, Workers, artifacts, protocol seam, coverage, and two-phase release truth                                                                                                                                                                                             |
-| `0.41.0-alpha.14` | Release recovery                | Exact-version starter, published consumers and honest two-stage evidence                                                                                                                                                                                                                  |
-| `0.41.0-alpha.15` | Adoption and interface proof    | #390, current CI runtime, cross-platform consumers and stable-interface rehearsal                                                                                                                                                                                                         |
-| `0.41.0-alpha.16` | Correctness reset               | ADR-0116 audit findings: hydration/props correctness, island chunk matching, npm `latest` policy, #460, drift clearance                                                                                                                                                                   |
-| `0.41.0-alpha.17` | Remediation completion          | Real-browser test credibility, convergence hygiene, release-tooling evidence fixes, #390 pilot launch                                                                                                                                                                                     |
-| `0.41.0-alpha.18` | Second audit sweep              | ADR-0117: sibling-path closures, evidence honesty, reflect-prop correctness, redundancy cleanup                                                                                                                                                                                           |
-| `0.41.0-alpha.19` | Third audit sweep               | ADR-0118 cleanup sweep: stale-claim clearance, evidence and tooling hygiene; full AutoFlow3 publish evidence                                                                                                                                                                              |
-| `0.41.0`          | Core interface freeze           | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change                                                                                                                                                   |
-| `0.41.1`          | Stable-line tooling hardening   | Shared path constants, repo-hygiene gate, vite pin alignment; no public API, package-topology or runtime-default change                                                                                                                                                                   |
-| `0.41.2`          | Release tooling self-repair     | TP-0: patch-resume mis-bump fix, release line-prose gate, mechanized active-target anchors, two-phase tag provenance                                                                                                                                                                      |
-| `0.42.0`          | WC light fullstack              | ADR-0120 loop (load → DSD → form → action → revalidate, no-JS) + first-mile `start`, fail-closed SSG, default CSRF same-origin; login via recipes (better-auth), not framework session                                                                                                    |
-| `0.43.0`          | Universal WC SSR                | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus, hydration-mismatch developer diagnostics (#631), recipes: rate-limit (#627), auth-guard (#630), file-data (#629); plus the OpenElement × Supabase × Cloudflare delivery path (epic #981) |
-| `0.43.1`          | Cumulative maintenance baseline | Requalify 33 Wave A issues, remediate six Wave B findings, independent Wave C closure, then enter patch-only maintenance under ADR-0140                                                                                                                                                   |
-| `0.43.2`          | Runtime stabilization closure   | Contain Node, Preact, router and action failure paths; harden Starter token, upload and Stripe boundaries; make clean-clone and parity evidence reproducible                                                                                                                              |
-| future minor      | Not scheduled                   | Requires an ADR-0140 re-entry decision backed by a concrete cross-application need, compatibility analysis, migration plan and real-product evidence                                                                                                                                      |
-| `1.0.0`           | Long-term stable product goal   | Not scheduled; external production use must first prove that the five-package interfaces and support policy are ready for a compatibility commitment                                                                                                                                      |
+These tracks block RC because they remove duplicate authorities and make the new
+public surface mechanically visible. They do not block early compiler experiments.
 
 ## Roadmap rules
 
-- No new package is created by default.
-- A public adapter seam requires two real adapters or an ADR backed by runtime
-  isolation, dependency-cycle, artifact-size or independent-consumer evidence.
-- Auth, OAuth, ORM, databases and storage remain recipes. OpenElement owns the
-  application contract, not those service products. Signed-in apps on 0.42 use
-  recipes (e.g. better-auth on Web-standard `Request`); they do not wait for
-  framework session APIs.
-- Framework session, cache, generic outbox/recovery and observability semantics
-  are unscheduled. They do not get speculative packages; a future minor may
-  reconsider them only through ADR-0140's evidence gate.
-- The separate CRM is global-first product work and a framework proving ground.
-  CRM domain models and China-market integrations stay outside this repository;
-  only provider-neutral, cross-application seams are framework candidates.
-- `@openelement/ui` must have two non-site consumers by v0.46 or shrink to
-  proven primitives outside the v1 compatibility promise.
-- A feature is complete only when starter, docs, packed artifacts, dogfood and
-  an external adopter can use its public interface.
+- OpenElement itself is the core Custom Element model; it is not replaced by a
+  decorator, a generated function or the App layer.
+- Mechanism belongs to Element, delivery policy to Island, orchestration to App.
+- One fact has one owner. Generated views replace handwritten copies.
+- No new public package without an independent consumer or a package-boundary ADR.
+- No abstraction is called pluggable without a second conformance implementation or
+  test engine.
+- No fallback renderer is shipped to hide unsupported compiler syntax.
+- Composition is the default. Auth, databases, storage, queues, telemetry backends and
+  provider products remain recipes unless repeated provider-neutral evidence proves a
+  framework seam.
+- A layer is complete only when the next product boundary consumes its public artifacts:
+  UI consumes final alpha, the website consumes beta.1 and the SaaS consumes RC.
 
-## Current release state
+## Release governance
 
-`0.43.3` is both the current source package line and the published npm
-line (2026-08-26, dist-tag `latest`). It is a compatibility-preserving patch
-over the `v0.43.2` runtime stabilization patch: renderer-owned light DOM now
-hydrates in place across SSR upgrade (ADR-0142), and the robustness
-adversarial audit closed with committed per-case evidence. No later minor is
-scheduled; `0.43.x` remains in maintenance mode under ADR-0140. These are
-separate facts by design: landed work is not described as published until the
-registry and immutable release evidence prove it.
-npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn
-from the active release story. The planned beta name was cancelled so the
-version label honestly reflects that breaking architecture and interface
-changes are still allowed.
-
-Alpha.17 completed the first audit remediation (test credibility, convergence,
-release tooling). Alpha.18 completed the second audit sweep (ADR-0117):
-sibling-path closures, evidence honesty, reflect-prop correctness and
-redundancy cleanup. Alpha.19 completed the third audit cleanup sweep
-(ADR-0118). Stable `0.41.0` is published under ADR-0119 as a scoped interface
-freeze; the #390 pilot requirement was retired by maintainer decision. The
-`0.42.0` WC Application Loop line is scoped by ADR-0120 — standard form POST
-wire format, the 303/422 status rule, the throw/return error dichotomy and
-the after-action revalidation invariant, evidence-backed by the archived
-six-framework study — with its task packages and entry/exit criteria in the
-active version plan.
-
-## Historical record
-
-Older version plans, package graphs and product doctrines are preserved in
-[`docs/release/`](../release/), [`docs/adr/`](../adr/) and
-[`docs/audit/`](../audit/). They describe their original decisions and are not
-current consumer documentation.
+The authoritative release ladder, RC gate, Stable gate and verification matrix are in
+[`VERSION_PLAN.md`](../current/VERSION_PLAN.md). The executable task graph is in
+[`v0.44.0-ISSUES.md`](./v0.44.0-ISSUES.md). Historical plans and superseded product
+doctrines remain in [`docs/release/`](../release/) and [`docs/adr/`](../adr/); they are
+evidence of their own time, not current instructions.

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "train": "0.44.0",
+  "goal": "alpha.0-through-beta.2-rc-admission",
+  "status": "VERIFIED",
+  "candidate": "0.44.0-alpha.0",
+  "currentIssue": 1182,
+  "currentSlice": "control-plane-bootstrap-repair",
+  "loopId": "a0-000-repair-1",
+  "baseSha": "1fef7199f0d7b14842dc9231f9c75fa3a098e744",
+  "branch": "codex/v044-1182-control-plane",
+  "implementer": {
+    "command": "kimi",
+    "model": "kimi-code/k3-256k",
+    "contextTokens": 262144,
+    "effort": "high",
+    "agentFile": ".agents/v044-kimi-implementer.md",
+    "sessionId": null
+  },
+  "releaseVerifier": {
+    "command": "kimi",
+    "model": "kimi-code/k3-256k",
+    "contextTokens": 262144,
+    "effort": "high",
+    "agentFile": ".agents/v044-kimi-release-verifier.md",
+    "sessionPolicy": "fresh-per-candidate-sha",
+    "sessionId": null
+  },
+  "lastAcceptedLoop": "a0-000-repair-1",
+  "lastClosureEvidence": null,
+  "humanGate": null,
+  "nextAction": "Commit and push the accepted #1182 bootstrap evidence, open a PR to dev, wait for required CI, merge it, then complete #1182 issue-level closure before dispatching #1160.",
+  "updatedAt": "2026-08-27T05:48:23Z"
+}
