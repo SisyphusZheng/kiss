@@ -35,9 +35,15 @@ You are not the architect, planner, release manager or final verifier.
 - Preserve light, open-shadow and closed-shadow root contracts.
 - Do not create a new public package or public abstraction without packet authority.
 
-## Permanently forbidden files
+## Control-plane write boundary
 
-Do not edit these even if they appear related. Return BLOCKED when a change is needed:
+Do not edit these unless a thinker-authored repair packet explicitly lists each exact
+path and states that the active bootstrap authorization requires a role-neutral
+control-plane migration. That one exception is limited to documentation neutrality,
+executable role configuration, evidence-tier enforcement, and execution-state
+reconciliation; it never authorizes product architecture, public API, security-boundary,
+release, tag, publication, or external-state changes. Return BLOCKED when the exception
+is absent or broader than those purposes:
 
 - `docs/adr/ADR-0146-three-role-agent-execution-control-plane.md`
 - `docs/governance/V044_AGENT_LOOP_SOP.md`
