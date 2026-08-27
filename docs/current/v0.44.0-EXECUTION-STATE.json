@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "train": "0.44.0",
   "goal": "alpha.0-through-beta.2-rc-admission",
-  "status": "VERIFIED",
+  "status": "REVIEWED",
   "candidate": "0.44.0-alpha.0",
-  "currentIssue": 1182,
-  "currentSlice": "control-plane-bootstrap-repair",
-  "loopId": "a0-000-repair-1",
-  "baseSha": "1fef7199f0d7b14842dc9231f9c75fa3a098e744",
-  "branch": "codex/v044-1182-control-plane",
+  "currentIssue": 1160,
+  "currentSlice": "one-component-vite-part-program-vertical-spike",
+  "loopId": "a0-001",
+  "baseSha": "e31ab34eb8cea52fe07d6d138d0b0cfbba9d0f17",
+  "branch": "codex/v044-1160-compiler-spike",
   "implementer": {
     "command": "kimi",
     "model": "kimi-code/k3-256k",
@@ -29,6 +29,6 @@
   "lastAcceptedLoop": "a0-000-repair-1",
   "lastClosureEvidence": null,
   "humanGate": null,
-  "nextAction": "Commit and push the accepted #1182 bootstrap evidence, open a PR to dev, wait for required CI, merge it, then complete #1182 issue-level closure before dispatching #1160.",
-  "updatedAt": "2026-08-27T05:48:23Z"
+  "nextAction": "Commit the reviewed a0-001 slice, push codex/v044-1160-compiler-spike, open a PR to dev, wait for required CI, merge, and close issue #1160 with immutable evidence.",
+  "updatedAt": "2026-08-27T12:23:48Z"
 }

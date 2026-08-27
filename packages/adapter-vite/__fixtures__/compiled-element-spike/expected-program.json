@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "tag": "oe-spike-counter",
+  "template": [
+    {
+      "k": "el",
+      "tag": "div",
+      "attrs": [
+        [
+          "class",
+          "spike"
+        ]
+      ],
+      "children": [
+        {
+          "k": "el",
+          "tag": "h1",
+          "attrs": [],
+          "children": [
+            {
+              "k": "text",
+              "value": "Count: "
+            },
+            {
+              "k": "part",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "k": "el",
+          "tag": "input",
+          "attrs": [],
+          "children": []
+        },
+        {
+          "k": "el",
+          "tag": "button",
+          "attrs": [],
+          "children": [
+            {
+              "k": "text",
+              "value": "+"
+            }
+          ]
+        },
+        {
+          "k": "part",
+          "index": 3
+        },
+        {
+          "k": "el",
+          "tag": "ul",
+          "attrs": [],
+          "children": [
+            {
+              "k": "part",
+              "index": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "k": "text",
+      "index": 0,
+      "signal": "count"
+    },
+    {
+      "k": "prop",
+      "index": 1,
+      "signal": "label",
+      "name": "value",
+      "path": [
+        0,
+        1
+      ]
+    },
+    {
+      "k": "event",
+      "index": 2,
+      "event": "click",
+      "handler": "increment",
+      "path": [
+        0,
+        2
+      ]
+    },
+    {
+      "k": "when",
+      "index": 3,
+      "signal": "count",
+      "gt": 0,
+      "on": [
+        {
+          "k": "el",
+          "tag": "p",
+          "attrs": [
+            [
+              "class",
+              "parity"
+            ]
+          ],
+          "children": [
+            {
+              "k": "text",
+              "value": "positive"
+            }
+          ]
+        }
+      ],
+      "off": [
+        {
+          "k": "el",
+          "tag": "p",
+          "attrs": [
+            [
+              "class",
+              "parity"
+            ]
+          ],
+          "children": [
+            {
+              "k": "text",
+              "value": "zero"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "k": "each",
+      "index": 4,
+      "signal": "items",
+      "key": "id",
+      "field": "text",
+      "item": [
+        {
+          "k": "el",
+          "tag": "li",
+          "attrs": [],
+          "children": [
+            {
+              "k": "ival"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

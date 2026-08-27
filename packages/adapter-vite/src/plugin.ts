@@ -35,6 +35,7 @@ import {
 } from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
 import { islandTransformPlugin } from './island-transform.ts';
+import { compiledElementPlugin } from './internal/compiler/plugin.ts';
 import { devIslandClientPlugin, RESOLVED_CLIENT_ENTRY_ID } from './dev-island-client.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
@@ -117,7 +118,7 @@ export function optionalPackageStubsPlugin(): Plugin {
  * @internal
  */
 export function createOpenPlugin(
-  options: FrameworkOptions & { ssg?: SsgBehaviorOptions } = {},
+  options: FrameworkOptions & { ssg?: SsgBehaviorOptions; compiledSpike?: boolean } = {},
   externalCtx?: OpenElementBuildContext,
 ): Plugin[] {
   // Build head extras (validated HTML fragments, stylesheets, scripts)
@@ -126,6 +127,7 @@ export function createOpenPlugin(
   const resolvedOptions: FrameworkOptions & {
     allowHeadExtrasScripts?: boolean;
     ssg?: SsgBehaviorOptions;
+    compiledSpike?: boolean;
   } = {
     ...options,
     routesDir: options.routesDir || DEFAULT_ROUTES_DIR,
@@ -638,6 +640,13 @@ export function createOpenPlugin(
     // URL the production build emits (<base>client/islands/client.js).
     devIslandClientPlugin(resolvedOptions, ctx),
   );
+
+  // #1160 (v0.44.0-alpha.0 spike): opt-in compiled-element transform. The
+  // flag keeps the internal spike isolated from the default 0.43 pipeline;
+  // plugin ordering/count for the default pipeline is unchanged.
+  if (resolvedOptions.compiledSpike) {
+    plugins.push(compiledElementPlugin());
+  }
 
   return plugins;
 }
