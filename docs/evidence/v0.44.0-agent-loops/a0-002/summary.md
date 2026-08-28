@@ -7,6 +7,13 @@ SHA `90880a5153a3dd5366eaa1f9ff784ab474b54e52`. The final PR head will be the
 evidence-only descendant containing this record; PR CI must prove that exact
 head before the slice may advance to `dev`.
 
+Exact-SHA PR CI run `33140997895` rejected that head because `arch:check` found a forbidden
+parser type escape; every other selected matrix gate passed. Repair 6 replaced the escape with
+explicit validated construction at implementation SHA
+`76f6e55935b5a06b4b6a8a1e49e534ed7505c295` and passed implementer plus thinker bounded review.
+The next evidence-only descendant requires completely fresh exact-SHA PR CI. Neither the rejected
+SHA nor its failed run may be reused.
+
 ## Accepted behavior
 
 - PR CI is the sole full-matrix authority and tests the exact PR head SHA.

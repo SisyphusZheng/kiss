@@ -7,7 +7,7 @@
   "currentIssue": 1156,
   "currentSlice": "ci-evidence-tiering-and-role-neutral-docs-pr-ci",
   "loopId": "a0-002",
-  "baseSha": "90880a5153a3dd5366eaa1f9ff784ab474b54e52",
+  "baseSha": "76f6e55935b5a06b4b6a8a1e49e534ed7505c295",
   "branch": "v044/1156-ci-doc-governance-repair",
   "implementer": {
     "roleProfile": "implementer",
@@ -23,6 +23,6 @@
   "lastAcceptedLoop": "a0-001-repair-2",
   "lastClosureEvidence": "docs/evidence/v0.44.0-agent-loops/a0-001/review-repair-2.md",
   "humanGate": null,
-  "nextAction": "Commit this local-acceptance evidence, push the neutral branch, open the PR to dev, and require full CI plus the matching exact-SHA evidence artifact.",
-  "updatedAt": "2026-08-28T11:45:00+08:00"
+  "nextAction": "Push the repair-6 evidence descendant to PR #1186 and require fresh full CI plus the matching exact-SHA evidence artifact before fast-forward-only dev integration.",
+  "updatedAt": "2026-08-28T12:32:00+08:00"
 }
