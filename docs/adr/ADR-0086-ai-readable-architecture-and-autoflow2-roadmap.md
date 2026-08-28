@@ -240,6 +240,6 @@ Neutral:
 - GitHub protected branches:
   <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches>
 - SWE-bench Verified:
-  <https://openai.com/index/introducing-swe-bench-verified/>
+  [vendor publication URL redacted by the role-neutral migration; recoverable from Git history]
 - SWE-bench limitation analysis:
-  <https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/>
+  [vendor publication URL redacted by the role-neutral migration; recoverable from Git history]

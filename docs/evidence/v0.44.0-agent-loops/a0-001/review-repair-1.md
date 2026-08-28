@@ -1,7 +1,7 @@
-# Sol review — a0-001 repair 1
+# Thinker review — a0-001 repair 1
 
 ```yaml
-reviewer: gpt-5.6-sol/low
+reviewer: thinker/low-effort
 candidate: 0.44.0-alpha.0
 issue: 1160
 loopId: a0-001-repair-1
@@ -23,7 +23,8 @@ reviewedAt: 2026-08-27T12:23:48Z
   output is parsed and asserted. No runtime reflection, public export or schema freeze was
   introduced.
 - **R3 closed:** the adapter opt-in assertion executes before the compiler-module import.
-  Sol independently created an immutable `e31ab34e` worktree and ran the assertion probe;
+  The thinker independently created an immutable `e31ab34e` worktree and ran the assertion
+  probe;
   it exited 1 with `Actual false / Expected true`, proving absent behavior rather than a
   module, dependency or harness failure. The temporary worktree was removed.
 - **R4 closed:** the original result corrects the lazy-engine claim and updates generated
@@ -38,12 +39,13 @@ reviewedAt: 2026-08-27T12:23:48Z
 - Searches found no VNode, BindingDescriptor, HydrationScope, generic discovery walker,
   compatibility renderer or interpreter in the production implementation. Matching words
   occur only in explanatory comments and negative assertions.
-- The 0.43 renderer and all forbidden paths remain untouched by K3. Sol-owned execution
+- The 0.43 renderer and all forbidden paths remain untouched by the implementer.
+  Thinker-owned execution
   state and evidence are the only control-plane changes.
 
 ## Independent verification
 
-Sol reran the following on the repaired worktree:
+The thinker reran the following on the repaired worktree:
 
 - adapter spike test: exit 0, 4 tests / 13 steps;
 - element spike test: exit 0, 2 tests / 10 steps;
@@ -63,6 +65,6 @@ acceptance slice. The result is an internal alpha.0 proof, not a frozen schema, 
 contract, browser matrix or general performance claim. Those explicitly remain with
 #1161/#1162/#1163 and later runtime/claim issues.
 
-Sol decision: **GO** for committing the #1160 slice and entering PR/CI review against `dev`.
+Thinker decision: **GO** for committing the #1160 slice and entering PR/CI review against `dev`.
 This is not the alpha.0 version-closure GO; the remaining alpha.0 issues must still land and
-a fresh K3 release verifier is required at the scheduled version boundary.
+a fresh release verifier is required at the scheduled version boundary.

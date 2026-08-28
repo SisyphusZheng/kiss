@@ -122,6 +122,22 @@ const GATES: readonly GateDefinition[] = [
     tiers: ['ci', 'release'],
   },
   {
+    // #1156/ADR-0146: role-neutral documentation gate. The prohibited
+    // identifier set loads from tools/config/v044-roles.json; the gate joins
+    // the fast push tier so brand regressions fail before the PR matrix.
+    name: 'docs:check-role-neutral',
+    command: ['deno', 'task', 'docs:check-role-neutral'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [
+      /^docs\//,
+      /^README/,
+      /^\.agents\//,
+      /^tools\/config\//,
+      /^tools\/check-role-neutral-docs(?:\.test)?\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-current',
     command: ['deno', 'task', 'docs:check-current'],
     tiers: ['ci', 'release'],

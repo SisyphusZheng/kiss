@@ -47,7 +47,8 @@ maxRepairAttempts: 5
 - No public entry point, package config, version, workspace alias or private cross-package
   import.
 - No VNode, BindingDescriptor, hydration walker, compatibility renderer or interpreter.
-- No edits to Sol-owned dispatch, review, execution state, governance, ADR or roadmap files.
+- No edits to thinker-owned dispatch, review, execution state, governance, ADR or roadmap
+  files.
 - No weakening/removal of existing assertions. No production changes outside the two
   identified repairs.
 

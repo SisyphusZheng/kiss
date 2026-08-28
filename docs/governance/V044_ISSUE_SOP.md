@@ -5,8 +5,9 @@
 ## Purpose
 
 GitHub issues are the execution queue, not the source of architectural truth. This SOP
-defines how Sol may claim, update, close and reopen v0.44 issues while K3 performs
-implementation and independent version verification.
+defines how the thinker may claim, update, close and reopen v0.44 issues while the
+implementer performs implementation and the release verifier performs independent
+version verification.
 
 ## Authority order
 
@@ -16,8 +17,8 @@ implementation and independent version verification.
 4. issue body acceptance criteria;
 5. issue comments and model summaries.
 
-When a lower layer conflicts with a higher layer, Sol records `BLOCKED_TRUTH_DRIFT` and
-repairs the lower layer before dispatch.
+When a lower layer conflicts with a higher layer, the thinker records
+`BLOCKED_TRUTH_DRIFT` and repairs the lower layer before dispatch.
 
 ## Ready test
 
@@ -32,7 +33,7 @@ An issue is ready only when:
 
 ## Claim comment
 
-Before implementation, Sol adds one issue comment:
+Before implementation, the thinker adds one issue comment:
 
 ```text
 [ADR-0146 CLAIM]
@@ -45,14 +46,14 @@ Owned paths: <paths>
 Risk: low | medium | high | critical
 ```
 
-A stale claim may be superseded only by another Sol comment that links the previous loop
-and explains recovery. K3 never comments on issues directly.
+A stale claim may be superseded only by another thinker comment that links the previous
+loop and explains recovery. The implementer never comments on issues directly.
 
 ## Progress comments
 
-Sol writes comments only at durable transitions:
+The thinker writes comments only at durable transitions:
 
-- `[ADR-0146 PASS]` — packet accepted by Sol and deterministic harness;
+- `[ADR-0146 PASS]` — packet accepted by the thinker and deterministic harness;
 - `[ADR-0146 REPAIR]` — reproducible failure returned to implementer;
 - `[ADR-0146 BLOCKED]` — SOP blocker with exact missing authority/capability;
 - `[ADR-0146 ISSUE-CLOSE]` — complete issue matrix and merged PR evidence;
@@ -63,7 +64,7 @@ PR and evidence links are required.
 
 ## Pull request mapping
 
-- Branch: `codex/v044-<issue>-<slice-slug>`.
+- Branch: `v044/<issue>-<slice-slug>`.
 - PR base: `dev`.
 - PR title begins with the candidate and issue, for example
   `[0.44 alpha.1][#1161] Freeze Part Program v1`.
@@ -71,12 +72,13 @@ PR and evidence links are required.
   architecture impact.
 - One PR may contain several slices of one issue when they share a coherent boundary.
 - Do not combine unrelated issues in one PR.
-- K3 does not commit or push; Sol stages only reviewed files and owns Git/GitHub actions.
-- Required CI must pass before Sol merges to `dev`; never auto-merge to `main`.
+- The implementer does not commit or push; the thinker stages only reviewed files and
+  owns Git/GitHub actions.
+- Required CI must pass before the thinker merges to `dev`; never auto-merge to `main`.
 
 ## Issue closing test
 
-Sol closes an issue only when:
+The thinker closes an issue only when:
 
 1. every deliverable and acceptance checkbox is backed by code/test/docs/evidence;
 2. all owned PRs are merged to `dev` and required CI is green;
@@ -92,11 +94,14 @@ A passing slice never closes an incomplete umbrella issue.
 
 - The last implementation issue becoming green moves state to `VERSION_CLOSURE`; it does
   not close the version.
-- Sol prepares the closure packet and fresh K3 verifier run.
+- The thinker prepares the closure packet and the fresh release verifier run.
 - Verifier FAIL reopens or keeps open the issue that owns the defect, with a reproducible
   repair slice.
-- Verifier PASS plus Sol harness PASS produces a human GO packet.
-- Only the human-approved exact SHA may be promoted.
+- Verifier PASS plus thinker harness PASS completes the unanimous
+  implementer/release-verifier/thinker GO that authorizes the `alpha.1`–`beta.2`
+  release flow; at #1178 it instead produces the human GO packet.
+- Prerelease promotion uses the recorded unanimous loop GO; only the human-approved
+  exact SHA may be promoted to RC.
 
 ## Blocked and deferred work
 

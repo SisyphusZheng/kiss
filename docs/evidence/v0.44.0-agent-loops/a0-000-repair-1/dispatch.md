@@ -7,13 +7,13 @@ candidate: 0.44.0-alpha.0
 issue: 1182
 acceptanceSlice: agent-profile-repository-hygiene
 baseSha: 1fef7199f0d7b14842dc9231f9c75fa3a098e744
-branch: codex/v044-1182-control-plane
+branch: v044/1182-control-plane
 risk: low
 ownedPaths:
   - .gitignore
 forbiddenPaths:
-  - .agents/v044-kimi-implementer.md
-  - .agents/v044-kimi-release-verifier.md
+  - .agents/ (both v0.44 role profile files; exact paths redacted by the role-neutral
+    migration, recoverable from Git history)
   - docs/adr/
   - docs/current/
   - docs/governance/
@@ -26,8 +26,8 @@ requiredTests:
   - Prove both profiles remain tracked and are no longer ignored after the smallest coherent `.gitignore` change.
 requiredCommands:
   - deno task repo:hygiene
-  - git check-ignore .agents/v044-kimi-implementer.md .agents/v044-kimi-release-verifier.md
-  - git ls-files --error-unmatch .agents/v044-kimi-implementer.md .agents/v044-kimi-release-verifier.md
+  - git check-ignore <both v0.44 role profile paths>
+  - git ls-files --error-unmatch <both v0.44 role profile paths>
   - deno task v044:orchestration:check
   - deno task v044:executor:check
   - deno fmt --check .gitignore
@@ -63,5 +63,5 @@ Do not commit, push, update GitHub, or invoke another agent.
 ## Output contract
 
 Return the exact structured headings required by
-`.agents/v044-kimi-implementer.md`, including every command and exit code and an
+the implementer role profile, including every command and exit code and an
 explicit confirmation that only `.gitignore` changed.

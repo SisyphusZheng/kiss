@@ -4,12 +4,12 @@ STATUS: PASS
 
 PACKET:
 docs/evidence/v0.44.0-agent-loops/a0-001/repair-1.md (loopId a0-001-repair-1, parentLoop
-a0-001, issue #1160, candidate 0.44.0-alpha.0). Sol review (decision NO-GO-REPAIR, findings
+a0-001, issue #1160, candidate 0.44.0-alpha.0). The thinker review (decision NO-GO-REPAIR, findings
 R1–R3) was read first: docs/evidence/v0.44.0-agent-loops/a0-001/review.md.
 
 BASE_SHA:
 e31ab34eb8cea52fe07d6d138d0b0cfbba9d0f17 (verified: `git rev-parse HEAD` matched; the only
-pre-existing tracked modification remains the Sol-owned
+pre-existing tracked modification remains the thinker-owned
 docs/current/v0.44.0-EXECUTION-STATE.json)
 
 CHANGED_FILES:
@@ -120,15 +120,15 @@ RESIDUAL_RISKS:
 
 SCOPE_CONFIRMATION:
 All edits are inside repair-packet-owned paths (the two compiler/runtime trees, the two spike
-test files, the fixture dir, and the two evidence files). No Sol-owned dispatch/review/
+test files, the fixture dir, and the two evidence files). No thinker-owned dispatch/review/
 execution-state file was modified; the pre-existing EXECUTION-STATE.json modification is
-Sol-owned and untouched. No public entry point, package config, version, workspace alias or
+thinker-owned and untouched. No public entry point, package config, version, workspace alias or
 private cross-package import was added; no VNode/BindingDescriptor/hydration-walker/
 compatibility-renderer/interpreter was introduced; no existing assertion was weakened or
 removed. No commit, push or GitHub update was performed; the temporary probe worktree was
 created outside the repo and removed.
 
 NEXT_REQUIRED_ACTION:
-Sol re-review of a0-001-repair-1 against findings R1–R3 (and the R4 record correction):
+Thinker re-review of a0-001-repair-1 against findings R1–R3 (and the R4 record correction):
 independently re-run the eleven commands above and the R3 base-SHA probe, then issue the
 GO/NO-GO decision for #1160 alpha.0 evidence.

@@ -16,19 +16,20 @@ implementation to a separate coding agent and resume safely in a new conversatio
 The desired operating model is:
 
 ```text
-GPT-5.6 Sol / low reasoning       KimiCode K3-256k / high
-architecture thinker             implementation executor
-            |                              |
-            +---------- evidence ----------+
+thinker / low reasoning effort    implementer / high effort
+                                   |
+            +---------- evidence --+
             |
             v
-fresh KimiCode K3-256k / high release verifier
+fresh high-effort release verifier
             |
             v
-deterministic repository harness -> human promotion GO
+deterministic repository harness -> unanimous loop GO (human GO at RC)
 ```
 
-Using the same K3 model for implementation and release verification is acceptable only
+Exact model, provider and profile identity for every role lives in executable
+configuration (`tools/config/v044-roles.json`), never in documentation. Using the same
+configured executor for implementation and release verification is acceptable only
 when the verifier is a fresh session with a different role contract, no executor
 conversation history and no authority to repair production code. The separation is
 epistemic and procedural, not merely a different name in one conversation.
@@ -52,27 +53,28 @@ never infer completion from a previous conversation.
 
 ### 2. Three roles have non-overlapping authority
 
-#### Sol thinker
+#### Thinker
 
-The thinker uses `gpt-5.6-sol` with low reasoning effort. It may inspect all project
-evidence, select the next topologically ready work packet, dispatch K3, review diffs,
-rerun deterministic gates, update issue/evidence/control-plane records and recommend a
-version GO/NO-GO. While the K3 executor is available, the thinker does not implement
-product code or silently repair an executor failure itself.
+The thinker runs as the configured thinker model with low reasoning effort. It may
+inspect all project evidence, select the next topologically ready work packet, dispatch
+the implementer, review diffs, rerun deterministic gates, update
+issue/evidence/control-plane records and recommend a version GO/NO-GO. While the
+configured executor is available, the thinker does not implement product code or
+silently repair an executor failure itself.
 
-#### K3 implementer
+#### Implementer
 
-The implementer uses the configured `kimi-code/k3-256k` model, whose local provider
-record must report a 262144-token context and default `high` effort. It receives exactly
+The implementer uses the configured executor model, whose local provider record must
+report a 262144-token context and default `high` effort. It receives exactly
 one bounded dispatch packet, writes tests before or with implementation, edits only the
 owned paths, and returns a structured result. It cannot choose the next issue, change
 architecture/scope, edit promotion rules, close issues, commit, push, merge, tag or
 publish.
 
-#### K3 release verifier
+#### Release verifier
 
-Every published alpha or beta candidate is closed by a new K3-256k/high session using
-the verifier profile. It receives the version exit contract, candidate SHA, packed
+Every published alpha or beta candidate is closed by a fresh high-effort executor
+session using the verifier profile. It receives the version exit contract, candidate SHA, packed
 artifacts and repository state, but not the implementer's conversation. It must:
 
 1. derive a closure test plan from acceptance criteria;
@@ -100,7 +102,7 @@ A version candidate is accepted only when:
 
 ```text
 all version issues carry evidence
-AND fresh K3 release verifier passes
+AND fresh release verifier passes
 AND thinker independently reruns the closure harness
 AND repository/GitHub truth agrees
 ```
@@ -127,36 +129,41 @@ READY -> DISPATCHED -> IMPLEMENTED -> REVIEWED -> VERIFIED -> RECORDED -> READY
 
 At a version boundary, `VERSION_CLOSURE` runs between `VERIFIED` and `RECORDED`.
 
-### 5. Promotion remains human-owned
+### 5. Prerelease promotion is delegated; RC admission remains human-owned
 
 The autonomous loop may create local commits, push an explicitly scoped feature branch,
 open/update its PR and update GitHub issue evidence when the bootstrap prompt grants that
-authority. It may not merge `dev` to `main`, tag, publish npm, publish a GitHub Release,
-move a dist-tag, or declare an alpha/beta/RC/Stable promotion without an explicit human
+authority. Under the active bootstrap authorization, the loop also executes the complete
+`alpha.1`–`beta.2` prerelease release flow — merging `dev` to `main`, tagging, npm and
+GitHub Release publication, dist-tag moves, evidence/issue updates and cursor
+advancement — after a unanimous implementer/release-verifier/thinker GO against the
+exact candidate SHA with every deterministic gate green. `alpha.0` remains strictly
+unpublished. The loop may not declare an RC or Stable promotion, change architecture or
+public surface, waive a gate, or accept a security exception without an explicit human
 GO against the exact candidate SHA.
 
-The loop stops at `AWAITING_HUMAN_GO` with a complete decision packet. After approval it
-may execute only the specifically approved promotion steps.
+Only #1178 RC admission stops the loop at `AWAITING_HUMAN_GO` with a complete decision
+packet. After approval it may execute only the specifically approved promotion steps.
 
 ### 6. Model and capability failures fail closed
 
 Startup must verify both roles rather than assuming them:
 
-- thinker: exact `gpt-5.6-sol`, reasoning effort `low`;
-- executor/verifier: `kimi` CLI available, model `kimi-code/k3-256k`, 262144 context,
-  default effort `high`, tool use and thinking capabilities.
+- thinker: the configured thinker model, reasoning effort `low`;
+- executor/verifier: the configured executor CLI available, the configured model alias,
+  262144 context, default effort `high`, tool use and thinking capabilities.
 
-If the configured K3 profile is missing, unauthenticated or different, the state becomes
-`BLOCKED_EXECUTOR_UNAVAILABLE`. No substitute model is selected automatically.
+If the configured executor profile is missing, unauthenticated or different, the state
+becomes `BLOCKED_EXECUTOR_UNAVAILABLE`. No substitute model is selected automatically.
 
 ## Consequences
 
 - A new conversation can resume the train from repository state and one bootstrap
   prompt.
-- Low-effort Sol spends tokens on architecture, routing and evidence rather than bulk
-  implementation.
-- K3 performs implementation and a separate K3 session attacks each release candidate
-  with test-driven closure checks.
+- The low-effort thinker spends tokens on architecture, routing and evidence rather
+  than bulk implementation.
+- The implementer performs implementation and a separate fresh verifier session attacks
+  each release candidate with test-driven closure checks.
 - The protocol is slower at release boundaries, but executor self-certification can no
   longer promote a version.
 - The system is autonomous inside a declared work packet, not sovereign over project
@@ -166,18 +173,20 @@ If the configured K3 profile is missing, unauthenticated or different, the state
 
 - One agent plans, implements and verifies: correlated blind spots and no independent
   closure evidence.
-- Sol implements small fixes after K3 failure: destroys role separation and makes cost
-  and responsibility impossible to audit.
-- Reuse the implementer K3 session as verifier: preserves the same assumptions and
+- The thinker implements small fixes after an implementer failure: destroys role
+  separation and makes cost and responsibility impossible to audit.
+- Reuse the implementer session as verifier: preserves the same assumptions and
   violates independent closure.
-- Automatically substitute another model when K3 is unavailable: silently changes the
-  user's chosen execution contract.
+- Automatically substitute another model when the configured executor is unavailable:
+  silently changes the user's chosen execution contract.
 - Let passing tests automatically publish a prerelease: deterministic tests do not own
   product scope, package publication or release risk.
 
 ## Verification
 
 - `deno task v044:orchestration:check` validates the control-plane files and state.
-- `deno task v044:executor:check` validates the local Kimi K3-256k/high capability.
+- `deno task v044:executor:check` validates the configured local executor capability
+  (262144 context, default high effort, thinking and tool use).
 - Every loop produces a schema-conforming evidence directory.
-- Every alpha/beta release note links a fresh verifier result and human GO SHA.
+- Every alpha/beta release note links a fresh verifier result and the unanimous loop GO
+  SHA; RC admission links the human GO SHA.

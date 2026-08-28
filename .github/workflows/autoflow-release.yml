@@ -6,6 +6,9 @@ on:
       version:
         description: 'Target version (e.g., 0.41.0-alpha.1)'
         required: true
+      pr_ci_run_id:
+        description: 'Run id of the AutoFlow CI pull_request run whose exact-SHA evidence artifact authorizes this release'
+        required: true
       dry_run:
         description: 'Validate the release plan without publishing, pushing, tagging, or writing evidence'
         required: false
@@ -57,6 +60,27 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
           echo "registry=https://registry.npmjs.org/" >> "$HOME/.npmrc"
+      - name: Download the exact named PR CI evidence artifact
+        # #1156 (ADR-0146): publication fails closed unless the exact-SHA PR
+        # full-CI record, produced by the named source run for the exact HEAD
+        # this job checked out, is present. The artifact name is derived from
+        # HEAD, never from free-form input, and the release CLI independently
+        # resolves the run through the GitHub API before publishing.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_CI_RUN_ID: ${{ inputs.pr_ci_run_id }}
+        run: |
+          set -eu
+          PR_CI_ARTIFACT="pr-full-ci-evidence-$(git rev-parse HEAD)"
+          echo "evidence artifact: ${PR_CI_ARTIFACT} from run ${PR_CI_RUN_ID}"
+          rm -rf .artifacts/pr-ci
+          gh run download "$PR_CI_RUN_ID" --name "$PR_CI_ARTIFACT" --dir .artifacts/pr-ci
+          test -f .artifacts/pr-ci/pr-full-ci-evidence.json
+          count="$(find .artifacts/pr-ci -type f | wc -l | tr -d ' ')"
+          if [ "$count" -ne 1 ]; then
+            echo "ambiguous evidence artifact contents: expected exactly one file, got $count"
+            exit 1
+          fi
       - name: Publish version already merged to main
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -64,5 +88,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ inputs.version }}
           RELEASE_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+          PR_CI_EVIDENCE: .artifacts/pr-ci/pr-full-ci-evidence.json
         run: |
-          deno task autoflow:publish-existing --to "$RELEASE_VERSION" $RELEASE_DRY_RUN
+          deno task autoflow:publish-existing --to "$RELEASE_VERSION" --pr-ci "$PR_CI_EVIDENCE" $RELEASE_DRY_RUN

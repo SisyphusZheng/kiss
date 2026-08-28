@@ -8,7 +8,7 @@
   "resultSha": "a58be1a88f93a5c2a2b42f373313ba23c6bc0d95",
   "status": "PASS",
   "implementer": null,
-  "bootstrapAuthorization": "User explicitly requested that Sol repair the unusable Kimi control-plane bootstrap after the required K3 profiles failed to load.",
+  "bootstrapAuthorization": "User explicitly requested that the thinker repair the unusable executor control-plane bootstrap after the required role profiles failed to load.",
   "commands": [
     {
       "command": "deno task v044:executor:check",
@@ -52,20 +52,19 @@
     }
   ],
   "changedFiles": [
-    ".agents/v044-kimi-implementer.md",
-    ".agents/v044-kimi-release-verifier.md",
+    ".agents/ (both v0.44 role profile files; exact paths redacted by the role-neutral migration, recoverable from Git history)",
     ".gitignore",
     "docs/governance/V044_AGENT_LOOP_SOP.md",
     "tools/check-v044-executor.ts"
   ],
   "evidence": [
-    "Both exact K3 Agent profiles loaded through prompt mode and returned role-specific markers.",
+    "Both exact executor role profiles loaded through prompt mode and returned role-specific markers.",
     "The v0.44 profiles remain tracked and no longer match .gitignore.",
     "Unrelated local Agent tooling under .agents remains ignored.",
     "Prompt-mode canonical commands no longer pass mutually exclusive permission flags."
   ],
   "residualRisks": [
-    "The profile smoke requires authenticated Kimi network access and is intentionally a local capability gate rather than a credential-free CI gate."
+    "The profile smoke requires authenticated executor network access and is intentionally a local capability gate rather than a credential-free CI gate."
   ],
   "recordedAt": "2026-08-27T05:48:23Z"
 }

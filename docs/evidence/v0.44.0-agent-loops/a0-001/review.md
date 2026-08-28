@@ -1,7 +1,7 @@
-# Sol review — a0-001 initial implementation
+# Thinker review — a0-001 initial implementation
 
 ```yaml
-reviewer: gpt-5.6-sol/low
+reviewer: thinker/low-effort
 candidate: 0.44.0-alpha.0
 issue: 1160
 loopId: a0-001
@@ -15,16 +15,17 @@ reviewedAt: 2026-08-27T11:58:57Z
 ## Accepted evidence
 
 - The implementation stayed inside packet-owned product paths. The existing
-  `docs/current/v0.44.0-EXECUTION-STATE.json` change and dispatch packet are Sol-owned.
+  `docs/current/v0.44.0-EXECUTION-STATE.json` change and dispatch packet are thinker-owned.
 - The compiler uses the TypeScript AST, fails closed for tested unsupported syntax and
   emits deterministic program data without a VNode, BindingDescriptor, hydration walker
   or fallback interpreter.
 - The same frozen program artifact is structurally pinned by the adapter test and consumed
   by the element runtime test for server serialization, fresh DOM and claim.
-- K3 reported all eight packet gates with exit code 0. Sol independently reran all eight;
-  every command also exited 0. Sol additionally confirmed the package entry point does not
+- The implementer reported all eight packet gates with exit code 0. The thinker independently
+  reran all eight; every command also exited 0. The thinker additionally confirmed the
+  package entry point does not
   expose `compiledSpike`; `createOpenPlugin` is the documented internal factory.
-- Full K3 regressions passed: adapter-vite 638 tests and element 294 tests.
+- Full regressions passed: adapter-vite 638 tests and element 294 tests.
 
 ## Rejected findings
 
@@ -67,7 +68,7 @@ record; add the stronger supplemental evidence.
 
 ## Independent commands
 
-All exited 0 on the initial K3 result:
+All exited 0 on the initial implementer result:
 
 - `deno test -A packages/adapter-vite/__tests__/compiled-element-spike.test.ts`
 - `deno test -A packages/element/__tests__/compiled-part-program-spike.test.ts`

@@ -9,7 +9,7 @@ candidate: 0.44.0-alpha.0
 issue: 1160
 acceptanceSlice: replace-with-one-observable-slice
 baseSha: replace-with-full-sha
-branch: codex/v044-1160-replace-slug
+branch: v044/1160-replace-slug
 risk: critical
 ownedPaths: []
 forbiddenPaths: []
@@ -40,7 +40,7 @@ candidateSha: replace-with-full-sha
 artifactFingerprints: {}
 issues: []
 freshVerifierRequired: true
-verifierModel: kimi-code/k3-256k
+verifierRole: release-verifier
 verifierEffort: high
 requiredCommands: []
 ```
@@ -68,7 +68,8 @@ List exact test, fixture and evidence paths. Production paths are always forbidd
   "resultSha": "full-sha",
   "status": "PASS",
   "implementer": {
-    "model": "kimi-code/k3-256k",
+    "roleProfile": "implementer",
+    "executorConfig": "tools/config/v044-roles.json",
     "effort": "high",
     "sessionId": "record-if-available"
   },

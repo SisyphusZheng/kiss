@@ -26,8 +26,8 @@ TSX + standard decorators
 center. App owns page/request orchestration, Island owns client code delivery policy,
 and each Element owns its local lifecycle and reactive DOM. See ADR-0143.
 
-The source and published package line remain `v0.43.3` until the first alpha candidate
-passes its release gates; planning a prerelease does not falsely claim that it has
+The source and published package line remain `v0.43.3` until the first published alpha
+candidate passes its release gates; planning a prerelease does not falsely claim that it has
 already been built or published. Package responsibilities remain governed by
 [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) and ADR-0114's coherent five-package
 release rule. The official deployment integration remains the Adapter-owned
@@ -49,9 +49,16 @@ Element.
   architecture change returns the train to alpha.
 - The RC is consumed by the independent SaaS. Stable is forbidden until that SaaS
   qualifies exact public RC artifacts without workspace or source coupling.
-- ADR-0146 governs autonomous execution: Sol selects and reviews bounded work, K3
-  implements it, and a fresh K3 session performs test-driven closure for every intended
-  alpha/beta publication. Deterministic gates and human promotion GO remain authoritative.
+- ADR-0146 governs autonomous execution: the thinker selects and reviews bounded work,
+  the implementer implements it, and a fresh verifier session performs test-driven
+  closure for every intended alpha/beta publication. Deterministic gates and the
+  unanimous loop GO remain authoritative for `alpha.1`–`beta.2`; #1178 RC admission
+  remains a human decision.
+- `alpha.0` is an internal integration baseline, not a release boundary: no tag, no
+  package publish, no release entry and no external promotion. Every planned version
+  from `alpha.1` through `beta.2` requires an actual release closure (packed artifacts,
+  fresh release verifier, deterministic harness and unanimous
+  implementer/release-verifier/thinker GO) after its exact-SHA PR CI checks pass.
 - `0.43.x` accepts only compatible maintenance while 0.44 is prerelease.
 - `latest` remains on stable 0.43.x until `0.44.0` stable publishes.
 
@@ -100,9 +107,9 @@ artifacts can exist.
 - Split the obsolete #1151 umbrella into generated API, docs graph, i18n/SEO/link,
   information architecture, accessibility and performance issues.
 - Reopen the v0.44 milestone and make this plan, not chat history, its authority.
-- Establish ADR-0146's repository-owned Goal, state, loop evidence and Sol/K3 role
-  profiles. Missing K3-256k/high capability fails closed rather than selecting a
-  substitute executor.
+- Establish ADR-0146's repository-owned Goal, state, loop evidence and three-role
+  profiles. Missing configured executor capability (262144 context, default high
+  effort) fails closed rather than selecting a substitute executor.
 
 ### WP-1 — Compiler and authoring (`alpha.0`–`alpha.1`)
 
@@ -263,9 +270,11 @@ RC admission is a single GO/NO-GO decision. Every item below is required:
       and bundle matrix against exact final-alpha artifacts.
 - [ ] Website and Starter pass beta.2 qualification against exact public beta.1
       artifacts, not workspace aliases.
-- [ ] Every alpha/beta candidate carries a fresh-session K3 test-driven closure PASS,
-      followed by an independent deterministic harness PASS and exact human promotion
-      GO. The verifier changed no production code.
+- [ ] Every published alpha/beta candidate (`alpha.1`–`beta.2`) carries a fresh-session
+      test-driven release-verifier PASS, followed by an independent deterministic harness
+      PASS and the unanimous implementer/release-verifier/thinker GO against the exact
+      candidate SHA. The verifier changed no production code. The only prerelease human
+      promotion stop is #1178 RC admission.
 - [ ] All other pre-RC milestone P0/P1 issues are closed; every lower-priority deferral
       has an owner, rationale and non-blocking proof. The RC-admission, RC SaaS and
       Stable-promotion issues remain open by design at the start of the decision.

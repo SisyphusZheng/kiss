@@ -1,41 +1,72 @@
-# v0.44 Sol/K3 Autonomous Loop SOP
+# v0.44 Three-Role Autonomous Loop SOP
 
 > Status: Mandatory for ADR-0146 execution. This SOP governs implementation from
 > `v0.44.0-alpha.0` through `v0.44.0-beta.2`.
 
 ## 1. Roles
 
+Exact model, provider, CLI and role-profile identity for every role lives in executable
+configuration (`tools/config/v044-roles.json`), never in documentation. Documentation
+and check output refer only to `thinker`, `implementer` and `release verifier`.
+
 ### Human maintainer
 
 Owns architecture changes, public-surface exceptions, release promotion and expansion
 of the autonomy envelope. Silence is not approval.
 
-### Sol thinker
+### Thinker
 
-Runs as `gpt-5.6-sol` with reasoning effort `low`. It owns state reconciliation,
-topological scheduling, dispatch packets, architectural review, independent harness
-execution, issue/evidence updates and GO/NO-GO preparation. It does not implement
-product code while the configured K3 executor is available.
+Runs as the configured thinker model with reasoning effort `low`. It owns state
+reconciliation, topological scheduling, dispatch packets, architectural review,
+independent harness execution, issue/evidence updates and GO/NO-GO preparation. It does
+not implement product code while the configured executor is available.
 
-### K3 implementer
+### Implementer
 
-Runs as a fresh or explicitly resumed `kimi-code/k3-256k` session with provider-default
-`high` effort and `.agents/v044-kimi-implementer.md`. It writes tests and implementation
-for one packet. It cannot change scope, control-plane files or external state.
+Runs as a fresh or explicitly resumed configured executor session with provider-default
+`high` effort and the configured implementer profile. It writes tests and
+implementation for one packet. It cannot change scope, control-plane files or external
+state.
 
-### K3 release verifier
+### Release verifier
 
-Runs as a **fresh** `kimi-code/k3-256k` session with provider-default `high` effort and
-`.agents/v044-kimi-release-verifier.md`. It closes one alpha/beta candidate by deriving
+Runs as a **fresh** configured executor session with provider-default `high` effort and
+the configured release-verifier profile. It closes one alpha/beta candidate by deriving
 tests from the exit contract. It may add tests, fixtures and verification evidence, but
 must never repair production code.
 
-## 2. Startup preflight
+## 2. CI evidence tiers
 
-Sol performs these checks before selecting work:
+One exact-SHA full CI matrix exists and it belongs to the pull request. No role may
+claim a full-matrix PASS from a different SHA, and no role replays the matrix locally.
 
-1. Confirm the task model is exactly `gpt-5.6-sol` and reasoning effort is `low`. If the
-   host cannot prove this, report the configuration requirement and stop.
+| Tier             | Owner                      | Content                                                                                        | Authority                         |
+| ---------------- | -------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------- |
+| Packet RED/GREEN | implementer                | The dispatch packet's focused failing/passing tests and checks                                 | Proves only the packet slice      |
+| Fast pre-push    | implementer                | `deno task autoflow:push` fast tier                                                            | Local hygiene before review       |
+| Reviewer replay  | thinker                    | Independent rerun of the bounded packet harness                                                | Acceptance review, not the matrix |
+| PR full CI       | pull request               | `deno task autoflow:ci` full matrix on the exact PR SHA                                        | The single full-matrix authority  |
+| Release closure  | release verifier + thinker | Exact-SHA PR CI result plus release-only, adversarial, packed-artifact and version-exit checks | Version GO/NO-GO input            |
+
+Rules:
+
+- The implementer must not run `autoflow:ci`; it runs the bounded packet plus the fast
+  push tier.
+- The reviewer independently reruns the bounded acceptance harness, not the full
+  matrix.
+- Release closure consumes/links the exact-SHA PR CI result and runs only missing,
+  adversarial, release-only, packed-public-artifact or version-exit checks. Absent,
+  stale, failing or SHA-mismatched CI evidence fails closed; there is no compatibility
+  path that skips it.
+- The machine-readable contract lives in `tools/autoflow/loop-evidence.ts` and is
+  covered by focused tests.
+
+## 3. Startup preflight
+
+The thinker performs these checks before selecting work:
+
+1. Confirm the task model is the configured thinker model and reasoning effort is
+   `low`. If the host cannot prove this, report the configuration requirement and stop.
 2. Read the files in the execution plan's required order.
 3. Run `deno task v044:orchestration:check`.
 4. Run `deno task v044:executor:check`.
@@ -46,24 +77,25 @@ Sol performs these checks before selecting work:
    `BLOCKED_DIRTY_WORKTREE`.
 8. Confirm no other implementer/verifier process is writing the shared worktree.
 
-The executor preflight must prove:
+`deno task v044:executor:check` must prove the configured executor contract:
 
 ```text
-kimi CLI is callable
-model alias: kimi-code/k3-256k
-model id: k3-256k
+configured executor CLI is callable
+configured model alias resolves
 context: 262144
 default effort: high
 capabilities include thinking and tool_use
+both role profiles load
 ```
 
 Missing or different capability sets state to `BLOCKED_EXECUTOR_UNAVAILABLE`. Never
-silently substitute a Codex subagent, another Kimi model or another effort level.
+silently substitute another host subagent, another executor model or another effort
+level.
 
-## 3. State reconciliation
+## 4. State reconciliation
 
-`docs/current/v0.44.0-EXECUTION-STATE.json` is a cursor, not sole proof. Sol derives the
-effective state from:
+`docs/current/v0.44.0-EXECUTION-STATE.json` is a cursor, not sole proof. The thinker
+derives the effective state from:
 
 1. accepted ADR and Version Plan;
 2. Git commit and worktree;
@@ -71,8 +103,8 @@ effective state from:
 4. loop and version evidence;
 5. the JSON cursor.
 
-Higher items win. Sol updates stale lower items before dispatching implementation. It
-must not rewrite historical evidence to make it match the present.
+Higher items win. The thinker updates stale lower items before dispatching
+implementation. It must not rewrite historical evidence to make it match the present.
 
 Allowed state values:
 
@@ -92,7 +124,7 @@ BLOCKED_EXTERNAL
 COMPLETE
 ```
 
-## 4. Dispatch packet
+## 5. Dispatch packet
 
 Each packet lives under:
 
@@ -111,32 +143,30 @@ It must name:
 - output contract;
 - stop conditions and maximum five repair attempts.
 
-Sol rejects a packet whose acceptance cannot be proved mechanically or whose path scope
-is broad enough to hide unrelated refactoring.
+The thinker rejects a packet whose acceptance cannot be proved mechanically or whose
+path scope is broad enough to hide unrelated refactoring.
 
-## 5. Invoke the implementer
+## 6. Invoke the implementer
 
-The canonical command shape is:
+Roles are invoked through the single repository-owned role runner, which reads the
+exact executor invocation from `tools/config/v044-roles.json`:
 
 ```sh
-kimi \
-  --model kimi-code/k3-256k \
-  --agent-file .agents/v044-kimi-implementer.md \
-  --output-format stream-json \
+deno task v044:role -- implementer \
   --prompt "Execute the repository dispatch packet at <absolute-dispatch-path>."
 ```
 
 Rules:
 
-- Run exactly one writing K3 process in the shared worktree.
+- Run exactly one writing implementer process in the shared worktree.
 - Use an absolute dispatch path and the repository root as working directory.
 - A packet starts a fresh session by default. Resume only the same implementer role for
-  a repair of the same packet and record the session ID.
+  a repair of the same packet via `--session <id>` and record the session ID.
 - Capture the command result in the loop evidence; do not treat conversational prose as
   a gate result.
 - Never pass secrets in the prompt or evidence.
 
-## 6. Implementer TDD contract
+## 7. Implementer TDD contract
 
 The implementer performs:
 
@@ -159,9 +189,10 @@ The implementer result must report:
 - residual risks and unsupported acceptance items;
 - confirmation that it did not commit, push, update GitHub or edit forbidden files.
 
-## 7. Sol review and independent harness
+## 8. Thinker review and independent harness
 
-Sol never accepts the implementer's summary without inspecting the actual worktree.
+The thinker never accepts the implementer's summary without inspecting the actual
+worktree.
 
 Required review:
 
@@ -170,26 +201,28 @@ Required review:
    import and workspace-alias regressions relevant to the issue;
 3. inspect tests for false positives, missing assertions and implementation-coupled
    behavior;
-4. run the packet commands independently;
+4. run the packet commands independently (reviewer replay tier);
 5. run risk-tier gates:
    - low: format, targeted lint/test;
    - medium: low plus package typecheck/tests;
    - high: medium plus integration/browser or packed-consumer gates;
    - critical/version boundary: full repository and release matrix.
 
-Sol writes `review.md`. FAIL creates a repair packet. Sol must not edit production code
-to rescue the executor.
+The thinker writes `review.md`. FAIL creates a repair packet. The thinker must not edit
+production code to rescue the executor.
 
-## 8. Version closure with a fresh K3 verifier
+## 9. Version closure with a fresh release verifier
 
 Closure occurs for every intended alpha and beta publication, including repeated
-`alpha.N+1` or `beta.N+1` repair candidates.
+`alpha.N+1` or `beta.N+1` repair candidates. The internal `alpha.0` integration
+baseline receives loop review only; the first release closure is `alpha.1`.
 
 ### Closure input
 
-Sol freezes and records:
+The thinker freezes and records:
 
 - candidate SHA, package versions and artifact fingerprints;
+- the exact-SHA PR full-CI result link (required, fail closed when absent or stale);
 - all issues and acceptance items in the candidate;
 - architecture/public-surface diff;
 - packed artifacts and consumer commands;
@@ -199,15 +232,12 @@ Sol freezes and records:
 ### Canonical verifier command
 
 ```sh
-kimi \
-  --model kimi-code/k3-256k \
-  --agent-file .agents/v044-kimi-release-verifier.md \
-  --output-format stream-json \
+deno task v044:role -- release-verifier \
   --prompt "Independently verify the version closure packet at <absolute-closure-path>."
 ```
 
-The command must start a new session. `--continue` and `--session` are forbidden for
-release verification.
+The command must start a new session. The runner rejects `--session` for the release
+verifier; resuming is forbidden for release verification.
 
 ### Test-driven verifier sequence
 
@@ -230,11 +260,12 @@ production-code change invalidates the run and becomes `VERIFIER_SCOPE_VIOLATION
 - FAIL/BLOCKED produces `closure-review.md` and a new implementer repair packet.
 - A repaired candidate has a new SHA and requires another fresh verifier session.
 - The original verifier evidence remains immutable.
-- Three closure failures with the same architectural cause stop for Sol design review.
+- Three closure failures with the same architectural cause stop for thinker design
+  review.
 
-## 9. Recording and GitHub updates
+## 10. Recording and GitHub updates
 
-After an ordinary loop PASS, Sol writes:
+After an ordinary loop PASS, the thinker writes:
 
 - `result.json` with commands, exit codes, SHA and status;
 - `summary.md` explaining acceptance evidence and residual risk;
@@ -244,29 +275,42 @@ After an ordinary loop PASS, Sol writes:
 Issue closure requires all issue acceptance items, not merely one packet. Version
 closure requires all issues plus the independent verifier.
 
-## 10. Git and external-write policy
+## 11. Git and external-write policy
 
-The bootstrap prompt may explicitly authorize Sol to create scoped branches, local
-commits, pushes, PRs and issue comments/closure after gates pass. K3 roles never perform
-those actions.
+The bootstrap prompt may explicitly authorize the thinker to create scoped branches,
+local commits, pushes, PRs and issue comments/closure after gates pass. Executor roles
+never perform those actions.
 
-Always forbidden without a new human message naming the exact candidate SHA:
+The active bootstrap authorizes the full prerelease release flow for `alpha.1` through
+`beta.2` — `dev`→`main` integration, version tag, npm publication, dist-tag change,
+GitHub Release, evidence and issue updates, and execution-cursor advancement — after a
+unanimous implementer/release-verifier/thinker GO against the exact candidate SHA with
+every deterministic gate green. `alpha.0` is the internal integration baseline and
+stays strictly unpublished: no tag, no publish, no release entry.
 
-- merge `dev` to `main`;
-- create/push version tags;
-- publish GitHub Releases or npm packages;
-- change npm dist-tags;
-- record a version promotion GO;
-- waive a gate, security finding or public-contract mismatch.
+Exact-SHA integration topology: PR CI proves the exact PR head SHA, and that SHA is the
+candidate. `dev` advances only by fast-forward to the proved PR head (`git merge
+--ff-only` or an equivalent explicit fast-forward ref update); at version closure
+`main` advances only by fast-forward to the same frozen SHA. Forbidden: merge commits,
+squash merges, rebase-created SHAs, force pushes and evidence relabeling. If a
+fast-forward is impossible because the base moved, the candidate is stale: refreeze a
+new candidate head and require a new exact-SHA PR CI run; never relabel old evidence.
 
-## 11. Loop continuation and stopping
+These decisions remain human-owned regardless of bootstrap authorization:
 
-After recording PASS, Sol immediately selects the next topologically ready packet. It
-does not ask “continue?” between routine loops.
+- RC admission (#1178) and every Stable promotion step;
+- architecture, public API/surface or release-doctrine changes;
+- accepting a security exception;
+- waiving a gate, security finding or public-contract mismatch.
+
+## 12. Loop continuation and stopping
+
+After recording PASS, the thinker immediately selects the next topologically ready
+packet. It does not ask “continue?” between routine loops.
 
 Stop only when:
 
-- a human GO is required;
+- the #1178 RC admission requires a human GO;
 - an allowed BLOCKED state is proven;
 - the Goal completion condition is reached;
 - the user interrupts or changes scope.

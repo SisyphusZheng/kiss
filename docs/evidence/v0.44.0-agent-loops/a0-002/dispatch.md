@@ -7,7 +7,7 @@ candidate: 0.44.0-alpha.0
 issue: 1156
 acceptanceSlice: ci-evidence-tiering-and-role-neutral-docs
 baseSha: 3563812351258ebde655326a60b2219f5c152e9c
-branch: codex/v044-1156-ci-doc-governance
+branch: v044/1156-ci-doc-governance
 risk: high
 ownedPaths:
   - tools/check-v044-orchestration.ts

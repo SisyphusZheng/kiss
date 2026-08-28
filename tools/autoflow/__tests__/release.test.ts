@@ -278,13 +278,24 @@ Deno.test('two-phase release: prepare never publishes, tags, or pushes main', ()
   const commands = steps.map((step) => step.command?.join(' ') ?? '');
   assert(names.includes('bump patch version'));
   assert(names.includes('regenerate versioned artifacts'));
-  assert(names.includes('run release gates after bump'));
+  assert(names.includes('run fast preparation gates after bump'));
   assertFalse(names.includes('publish npm packages'));
   assertFalse(names.includes('tag release'));
   assertFalse(commands.some((command) => command.includes('git push')));
   const stage = steps.find((step) => step.name === 'stage release bump');
   assert(stage?.command?.includes('packages/create/src/version.ts'));
   assert(stage?.command?.includes('examples/supabase-cloudflare-starter/deno.json'));
+});
+
+Deno.test('R9: preparation runs the fast tier only, never the local full matrix', () => {
+  const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
+  const commands = steps.map((step) => step.command?.join(' ') ?? '');
+  assert(
+    !commands.some((command) => command.includes('autoflow:ci')),
+    'preparation must not invoke the local full matrix; the PR workflow owns the ci tier',
+  );
+  const gates = steps.find((step) => step.name === 'run fast preparation gates after bump');
+  assertEquals(gates?.command, ['deno', 'task', 'autoflow:push']);
 });
 
 Deno.test('two-phase release: publish-existing never bumps and verifies main CI first', () => {
@@ -317,8 +328,8 @@ Deno.test('two-phase release: publish-existing never bumps and verifies main CI 
 Deno.test('two-phase release: prepare folds the gated record into the bump commit (#684, #869)', () => {
   const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
   const names = steps.map((step) => step.name);
-  const gates = names.indexOf('run release gates after bump');
-  // The record is written only after the release gates passed, then folded
+  const gates = names.indexOf('run fast preparation gates after bump');
+  // The record is written only after the fast preparation gates passed, then folded
   // into the bump commit by amend (4→2, #869) so publish-existing can verify
   // it from a main checkout without a separate prepare commit.
   assert(gates !== -1);
@@ -351,7 +362,7 @@ function completedPrepareRecord(overrides: Partial<ReleaseEvidence> = {}): Relea
     completedAt: '2026-01-01T00:10:00.000Z',
     steps: [
       { name: 'bump patch version', status: 'passed' },
-      { name: 'run release gates after bump', status: 'passed' },
+      { name: 'run fast preparation gates after bump', status: 'passed' },
       { name: 'record prepare evidence', status: 'passed' },
     ],
     ...overrides,
@@ -447,7 +458,7 @@ Deno.test('verifyPrepareRecord: the record must prove the release gates ran', as
   await withPrepareRecordDir(
     JSON.stringify(
       completedPrepareRecord({
-        steps: [{ name: 'run release gates after bump', status: 'failed' }],
+        steps: [{ name: 'run fast preparation gates after bump', status: 'failed' }],
       }),
     ),
     () =>
@@ -456,6 +467,20 @@ Deno.test('verifyPrepareRecord: the record must prove the release gates ran', as
         Error,
         'does not record a passed run of the release gates',
       ),
+  );
+});
+
+Deno.test('verifyPrepareRecord: legacy pre-R9 records keep their passed gate proof', async () => {
+  // Historical prepare records name the step 'run release gates after bump';
+  // the prepare-record check is preserved for them (#684), while new prepares
+  // write the fast-tier step name.
+  await withPrepareRecordDir(
+    JSON.stringify(
+      completedPrepareRecord({
+        steps: [{ name: 'run release gates after bump', status: 'passed' }],
+      }),
+    ),
+    () => verifyPrepareRecord(PACKAGE_VERSION),
   );
 });
 
@@ -1249,7 +1274,7 @@ Deno.test('verifyMainCiSuccessForHead: an evidence-only chain to a CI-less ances
 Deno.test('two-phase release: prepare folds the regenerated starter lockfile into the bump commit (#1083)', () => {
   const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
   const names = steps.map((step) => step.name);
-  const gates = names.indexOf('run release gates after bump');
+  const gates = names.indexOf('run fast preparation gates after bump');
   const fold = names.indexOf('fold starter lockfile into bump commit');
   // The gates rewrite the starter lockfile; the fold runs after them and
   // before the prepare-record amend, so both land in the bump commit.

@@ -7,7 +7,7 @@ candidate: 0.44.0-alpha.0
 issue: 1160
 acceptanceSlice: one-component-vite-part-program-vertical-spike
 baseSha: e31ab34eb8cea52fe07d6d138d0b0cfbba9d0f17
-branch: codex/v044-1160-compiler-spike
+branch: v044/1160-compiler-spike
 risk: critical
 ownedPaths:
   - packages/adapter-vite/src/internal/compiler/
@@ -110,7 +110,7 @@ not commit, push, update GitHub, invoke another agent or alter control-plane fil
 
 ## Output contract
 
-Write the structured headings required by `.agents/v044-kimi-implementer.md` to
+Write the structured headings required by the implementer role profile to
 `docs/evidence/v0.44.0-agent-loops/a0-001/implementer-result.md` and return the same
 content in the final response. Include changed files, tests, RED evidence, implementation
 summary, every command with exact exit code, residual risks and scope confirmation.

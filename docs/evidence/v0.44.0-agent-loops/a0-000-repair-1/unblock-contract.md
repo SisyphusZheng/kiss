@@ -1,6 +1,6 @@
 # #1182 executor bootstrap unblock contract
 
-## Confirmed KimiCode 0.38.0 contract
+## Confirmed executor CLI 0.38.0 contract
 
 The installed CLI and its official documentation establish two requirements that the
 current repository baseline violates:
@@ -13,22 +13,22 @@ current repository baseline violates:
 
 Official references:
 
-- <https://moonshotai.github.io/kimi-code/en/customization/agents>
-- <https://moonshotai.github.io/kimi-code/en/reference/kimi-command>
+- [vendor CLI documentation URL redacted by the role-neutral migration; recoverable from Git history]
+- [vendor CLI command reference URL redacted by the role-neutral migration; recoverable from Git history]
 
 ## Minimum authorized bootstrap change
 
-This change cannot be performed by Sol under ADR-0146, and K3 cannot load the current
-profile to perform it. A human/bootstrap commit must:
+This change cannot be performed by the thinker under ADR-0146, and the implementer
+cannot load the current profile to perform it. A human/bootstrap commit must:
 
-1. add valid YAML frontmatter with a non-empty `description` to both exact files:
-   `.agents/v044-kimi-implementer.md` and
-   `.agents/v044-kimi-release-verifier.md`;
+1. add valid YAML frontmatter with a non-empty `description` to both repository-owned
+   v0.44 role profile files under `.agents/` (exact paths redacted by the role-neutral
+   migration, recoverable from Git history);
 2. add `subagents: []` or an equivalently enforced no-delegation rule if supported by
    the installed CLI, preserving the profiles' existing prohibition on invoking another
    coding agent;
 3. change every canonical prompt-mode command to omit `--auto` while retaining
-   `--model kimi-code/k3-256k`, the exact `--agent-file`, `--output-format stream-json`,
+   the configured `--model` alias, the exact `--agent-file`, `--output-format stream-json`,
    and `--prompt`;
 4. narrowly unignore only the two repository-owned profile files while keeping the rest
    of `/.agents/` ignored;
@@ -58,7 +58,7 @@ deno check tools/check-v044-orchestration.ts tools/check-v044-executor.ts
 ```
 
 It must also run a harmless, profile-backed prompt-mode smoke for each exact Agent file
-using `kimi-code/k3-256k`. The smoke must return successfully without editing the
+using the configured model alias. The smoke must return successfully without editing the
 worktree and must prove the profile identifier/role in structured output or other
 deterministic evidence. After this bootstrap passes, redispatch
-`a0-000-repair-1/dispatch.md` to a new K3 implementer session.
+`a0-000-repair-1/dispatch.md` to a new implementer session.

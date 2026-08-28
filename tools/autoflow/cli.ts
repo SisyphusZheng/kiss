@@ -7,6 +7,13 @@ import {
   selectGates,
 } from './policy.ts';
 import {
+  type GitHubRunQuery,
+  loadPrCiEvidence,
+  selectComplementaryReleaseGates,
+  verifyPrCiProvenance,
+} from './loop-evidence.ts';
+import { createGhCliRunQuery } from './pr-ci-github.ts';
+import {
   backfillPrepareRecordFromMain,
   createPreparePlan,
   createPublishExistingPlan,
@@ -23,6 +30,7 @@ interface CliOptions {
   dryRun: boolean;
   approvedPlan?: string;
   targetVersion?: string;
+  prCiEvidence?: string;
 }
 
 interface GateResult {
@@ -45,7 +53,9 @@ export function parseArgs(args: string[]): CliOptions {
   const targetVersion = targetIndex === -1
     ? undefined
     : normalizeReleaseVersion(args[targetIndex + 1]);
-  return { command, dryRun, approvedPlan, targetVersion };
+  const prCiIndex = args.indexOf('--pr-ci');
+  const prCiEvidence = prCiIndex === -1 ? undefined : args[prCiIndex + 1];
+  return { command, dryRun, approvedPlan, targetVersion, prCiEvidence };
 }
 
 type GitOutput = (args: string[]) => Promise<string | undefined>;
@@ -120,9 +130,12 @@ async function runGate(gate: GateDefinition, dryRun: boolean): Promise<GateResul
   return { name: gate.name, passed: output.code === 0, output: text };
 }
 
-async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
-  const changedPaths = await gitChangedPaths(tier);
-  const gates = selectGates(tier, changedPaths);
+async function runGateList(
+  tier: AutoFlowTier,
+  gates: GateDefinition[],
+  changedPaths: string[],
+  dryRun: boolean,
+): Promise<void> {
   console.log(`AutoFlow3 ${tier} (${AUTOFLOW3_POLICY_VERSION})`);
   console.log(`Changed paths: ${changedPaths.length}`);
   for (const path of changedPaths) console.log(`- ${path}`);
@@ -145,17 +158,82 @@ async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
   }
 }
 
-async function runReleasePrepare(
+async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
+  const changedPaths = await gitChangedPaths(tier);
+  await runGateList(tier, selectGates(tier, changedPaths), changedPaths, dryRun);
+}
+
+/**
+ * Release-closure gate resolution (#1156 R3/R8): the exact-SHA PR full-CI
+ * record is a mandatory fail-closed input, and its fields are never trusted
+ * directly — the recorded GitHub run is independently resolved through the
+ * GitHub API (injectable for tests) and must match repository, workflow, event,
+ * head SHA, run attempt, artifact identity and the complete required-job set.
+ * When everything verifies, the release lane runs only complementary gates —
+ * everything the PR matrix already proved for that SHA is skipped, and every
+ * release-only gate is preserved. There is no environment-variable or argument
+ * fallback that accepts absent evidence.
+ */
+export async function resolveReleaseGateSelection(
+  prCiEvidencePath: string | undefined,
+  candidateSha: string,
+  changedPaths: string[],
+  queryRun?: GitHubRunQuery,
+): Promise<GateDefinition[]> {
+  if (!prCiEvidencePath) {
+    throw new Error(
+      'release commands require --pr-ci <path> naming the exact-SHA PR full-CI evidence record',
+    );
+  }
+  const evidence = await loadPrCiEvidence(prCiEvidencePath, candidateSha);
+  const query = queryRun ?? await createGhCliRunQuery(evidence.runAttempt);
+  await verifyPrCiProvenance(evidence, candidateSha, query);
+  const gates = selectComplementaryReleaseGates(evidence, changedPaths);
+  console.log(
+    `PR CI evidence verified: run ${evidence.runId} (attempt ${evidence.runAttempt}) ` +
+      `${evidence.conclusion} at ${evidence.sha}` +
+      (evidence.url ? ` (${evidence.url})` : ''),
+  );
+  return gates;
+}
+
+async function runReleaseTier(
+  prCiEvidence: string | undefined,
+  dryRun: boolean,
+): Promise<void> {
+  const candidateSha = (await gitOutput(['rev-parse', 'HEAD']))?.trim();
+  if (!candidateSha) throw new Error('Unable to determine the exact candidate SHA for release');
+  const changedPaths = await gitChangedPaths('release');
+  const gates = await resolveReleaseGateSelection(prCiEvidence, candidateSha, changedPaths);
+  await runGateList('release', gates, changedPaths, dryRun);
+}
+
+/**
+ * Release preparation (#1156 R9): creates the reviewable bump candidate only.
+ * It consumes no PR CI evidence — the bump SHA does not exist yet, so any
+ * prior evidence would name the wrong SHA — and it runs no local full matrix;
+ * the prepare plan itself runs the fast tier after the bump, and the resulting
+ * bump SHA must then pass the authoritative PR workflow. Publication
+ * (publish-existing) is the first release entry that consumes the exact
+ * bump-SHA PR CI evidence.
+ */
+export async function runReleasePrepare(
   approvedPlan: string | undefined,
   targetVersion: string | undefined,
   dryRun: boolean,
+  prCiEvidence: string | undefined,
 ): Promise<void> {
+  if (prCiEvidence) {
+    throw new Error(
+      'release-prepare does not consume PR CI evidence: the bump SHA it creates must pass ' +
+        'the PR workflow first; pass --pr-ci to publish-existing instead',
+    );
+  }
   if (!targetVersion || !approvedPlan) {
     throw new Error('release-prepare requires --to and --approved-plan');
   }
   const decision = evaluateVersionAuthority('minor', approvedPlan);
   if (!decision.allowed) throw new Error(decision.reason);
-  await runTier('release', dryRun);
   await executeReleasePlan(
     'release-prepare',
     targetVersion,
@@ -169,11 +247,12 @@ async function runReleasePrepare(
 async function runPublishExisting(
   targetVersion: string | undefined,
   dryRun: boolean,
+  prCiEvidence: string | undefined,
 ): Promise<void> {
   if (!targetVersion) throw new Error('publish-existing requires --to');
-  // Same gate tier as every other release path: the CI workflow that invokes
-  // publish-existing must not publish from an unvalidated main HEAD.
-  await runTier('release', dryRun);
+  // Same gate lane as every other release path, plus the mandatory exact-SHA
+  // PR CI record: publish-existing must not publish from an unvalidated HEAD.
+  await runReleaseTier(prCiEvidence, dryRun);
   await executeReleasePlan(
     'publish-existing',
     targetVersion,
@@ -216,6 +295,7 @@ async function executePatchRelease(dryRun: boolean): Promise<void> {
 async function runPatchRelease(
   dryRun: boolean,
   approvedPlan: string | undefined,
+  prCiEvidence: string | undefined,
 ): Promise<void> {
   const changedPaths = await gitChangedPaths('release');
   const decision = evaluatePatchEligibility({ changedPaths, approvedPlanId: approvedPlan });
@@ -225,7 +305,7 @@ async function runPatchRelease(
   console.log(`Required evidence: ${decision.requiredEvidence.join(', ')}`);
   if (!decision.allowed) Deno.exit(1);
 
-  await runTier('release', dryRun);
+  await runReleaseTier(prCiEvidence, dryRun);
   await executePatchRelease(dryRun);
 }
 
@@ -233,6 +313,7 @@ async function runApprovedRelease(
   approvedPlan: string | undefined,
   targetVersion: string | undefined,
   dryRun: boolean,
+  prCiEvidence: string | undefined,
 ): Promise<void> {
   if (!targetVersion) {
     console.error('Approved release requires a target version: --to <version>');
@@ -246,7 +327,7 @@ async function runApprovedRelease(
   console.log(`Required evidence: ${decision.requiredEvidence.join(', ')}`);
   if (!decision.allowed) Deno.exit(1);
 
-  await runTier('release', dryRun);
+  await runReleaseTier(prCiEvidence, dryRun);
   await executeReleasePlan('approved-release', targetVersion, approvedPlan, dryRun);
 }
 
@@ -264,23 +345,33 @@ export async function main(args: string[]): Promise<void> {
       await runTier('ci', options.dryRun);
       break;
     case 'patch-release':
-      await runPatchRelease(options.dryRun, options.approvedPlan);
+      await runPatchRelease(options.dryRun, options.approvedPlan, options.prCiEvidence);
       break;
     case 'release':
-      await runApprovedRelease(options.approvedPlan, options.targetVersion, options.dryRun);
+      await runApprovedRelease(
+        options.approvedPlan,
+        options.targetVersion,
+        options.dryRun,
+        options.prCiEvidence,
+      );
       break;
     case 'release-prepare':
-      await runReleasePrepare(options.approvedPlan, options.targetVersion, options.dryRun);
+      await runReleasePrepare(
+        options.approvedPlan,
+        options.targetVersion,
+        options.dryRun,
+        options.prCiEvidence,
+      );
       break;
     case 'publish-existing':
-      await runPublishExisting(options.targetVersion, options.dryRun);
+      await runPublishExisting(options.targetVersion, options.dryRun, options.prCiEvidence);
       break;
     case 'release-record':
       await runReleaseRecord(options.targetVersion, options.dryRun);
       break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION]',
+        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION] [--pr-ci PATH]',
       );
       Deno.exit(1);
   }

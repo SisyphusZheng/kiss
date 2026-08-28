@@ -18,7 +18,7 @@ External academic evidence:
 
 | Paper                  | Venue      | Key Finding                                                                                                             |
 | ---------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| R1 (arXiv 2402.13521)  | ASE 2024   | Including tests in prompt → consistent LLM code-gen success rate increase (MBPP + HumanEval, GPT-4 + Llama 3)           |
+| R1 (arXiv 2402.13521)  | ASE 2024   | Including tests in prompt → consistent LLM code-gen success rate increase (MBPP + HumanEval, frontier code models)      |
 | R7 (arXiv 2312.04687)  | IEEE 2024  | LLM4TDD: iterative test-first generation outperforms direct code-gen                                                    |
 | R2 (arXiv 2402.02172)  | EMNLP 2024 | CodeAgent: multi-agent review with supervisory QA-Checker detects inconsistencies, vulnerabilities, and incorrect fixes |
 | R3 (arXiv 2504.20093)  | 2025       | Self-Healing loop: Monitor→Diagnose→Plan→Repair→Verify requires verification before merge                               |

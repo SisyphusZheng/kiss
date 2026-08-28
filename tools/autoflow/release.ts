@@ -425,8 +425,17 @@ const PREPARE_STEP_NAMES = new Set([
   'format release bump',
   'stage release bump',
   'commit release bump',
-  'run release gates after bump',
 ]);
+
+/**
+ * The one gated step a prepare run records (#1156 R9): the fast tier after the
+ * bump. The full ci matrix is never run locally — the PR workflow is the sole
+ * full-matrix authority for the resulting bump SHA.
+ */
+export const PREPARE_GATES_STEP = 'run fast preparation gates after bump';
+
+/** Historical pre-R9 step name; existing prepare records still verify. */
+export const LEGACY_PREPARE_GATES_STEP = 'run release gates after bump';
 
 /** Lockfile the release gates rewrite when they rebuild the reference starter. */
 export const STARTER_LOCKFILE = 'examples/supabase-cloudflare-starter/deno.lock';
@@ -470,10 +479,10 @@ export function createPreparePlan(
 ): ReleaseCommandStep[] {
   const steps = createReleasePlan(targetVersion, approvalId)
     .filter((step) => PREPARE_STEP_NAMES.has(step.name));
-  if (!steps.some((step) => step.name === 'run release gates after bump')) {
+  if (!steps.some((step) => step.name === PREPARE_GATES_STEP)) {
     steps.push({
-      name: 'run release gates after bump',
-      command: ['deno', 'task', 'autoflow:ci'],
+      name: PREPARE_GATES_STEP,
+      command: ['deno', 'task', 'autoflow:push'],
     });
   }
   // The gates rewrite the starter lockfile against the bumped versions; fold
@@ -642,8 +651,11 @@ export async function verifyPrepareRecord(targetVersion: string): Promise<void> 
         'by the recorded prepare.',
     );
   }
-  const gates = record.steps.find((step) => step.name === 'run release gates after bump');
-  if (gates?.status !== 'passed') {
+  const gates = record.steps.find((step) =>
+    (step.name === PREPARE_GATES_STEP || step.name === LEGACY_PREPARE_GATES_STEP) &&
+    step.status === 'passed'
+  );
+  if (gates === undefined) {
     throw new Error(
       `Refusing publish-existing for ${targetVersion}: prepare record ${path} does not ` +
         'record a passed run of the release gates after the bump.',

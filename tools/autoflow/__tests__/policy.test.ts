@@ -108,6 +108,7 @@ Deno.test('cli: parse approved plan for release command', () => {
     dryRun: true,
     approvedPlan: 'ADR-0101/v0.40',
     targetVersion: undefined,
+    prCiEvidence: undefined,
   });
 });
 
@@ -172,6 +173,7 @@ Deno.test('cli: parses two-phase release commands', () => {
       dryRun: true,
       approvedPlan: 'docs/current/VERSION_PLAN.md',
       targetVersion: '0.41.0-alpha.11',
+      prCiEvidence: undefined,
     },
   );
   assertEquals(
@@ -181,6 +183,7 @@ Deno.test('cli: parses two-phase release commands', () => {
       dryRun: false,
       approvedPlan: undefined,
       targetVersion: '0.41.0-alpha.11',
+      prCiEvidence: undefined,
     },
   );
 });

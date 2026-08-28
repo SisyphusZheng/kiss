@@ -80,7 +80,8 @@ Required sections:
 - Remove duplicate or obsolete code instead of adding compatibility shims.
 - Do not claim a version-plan item is complete without a code, docs, test, or
   gate proof.
-- Under ADR-0146, Sol owns planning/review, K3 owns implementation, and a fresh K3
+- Under ADR-0146, the thinker owns planning/review, the implementer owns
+  implementation, and a fresh release verifier
   verifier owns test-driven alpha/beta closure. One role may not silently assume another
   role's authority.
 - Do not bump packages until local gates for the version pass.
