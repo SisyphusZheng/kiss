@@ -17,6 +17,7 @@ import {
 } from '../lib/git.ts';
 import { runCaptured } from '../lib/process.ts';
 import { npmView, verifyNpmRelease } from '../lib/npm-release-verifier.ts';
+import { verifyPublishClosureEvidence } from './closure-evidence.ts';
 import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
 import {
   closureFile,
@@ -72,6 +73,13 @@ export interface ReleaseCommandStep {
   command?: string[];
   cwd?: string;
   run?: (evidence: ReleaseEvidence) => Promise<void>;
+  /**
+   * Authorization gates that must be re-proven on every attempt: a resume
+   * re-executes the step even when the prior run recorded it as passed, so
+   * stale, missing or changed evidence cannot ride a stale passed status
+   * (#1187). Publishing steps keep the default skip-on-resume semantics.
+   */
+  revalidateOnResume?: boolean;
 }
 
 export function nextPatchVersion(version: string): string {
@@ -783,7 +791,10 @@ const PUBLISH_STEP_NAMES = new Set([
 ]);
 
 /** Publish an already-reviewed version from a clean, CI-green main HEAD. */
-export function createPublishExistingPlan(targetVersion: string): ReleaseCommandStep[] {
+export function createPublishExistingPlan(
+  targetVersion: string,
+  closureEvidencePath?: string,
+): ReleaseCommandStep[] {
   const releaseSteps = createReleasePlan(targetVersion)
     .filter((step) => PUBLISH_STEP_NAMES.has(step.name));
   return [
@@ -805,6 +816,24 @@ export function createPublishExistingPlan(targetVersion: string): ReleaseCommand
       // publishes a bump with zero proof the prepare gates ever ran (#684).
       name: 'verify prepare record',
       run: () => verifyPrepareRecord(targetVersion),
+    },
+    {
+      // #1187: publish-existing may publish only a candidate the three loop
+      // roles unanimously closed on — an operator-supplied, machine-readable
+      // record (never committed into the candidate tree) bound to the target
+      // version, the exact repository, the exact candidate SHA and the
+      // authoritative PR CI workflow run, plus each role's digest-pinned GO
+      // artifact on its own post-CI closure-evidence run. Absent, malformed,
+      // stale, wrong-version, wrong-repository, wrong-workflow, wrong-event,
+      // mismatched-SHA, weakened, non-unanimous or unsupported evidence fails
+      // closed. revalidateOnResume: the authorization is re-proven before
+      // every publish-side attempt; a resume may not skip it on a stale
+      // passed status.
+      name: 'verify unanimous closure evidence',
+      revalidateOnResume: true,
+      run: async () => {
+        await verifyPublishClosureEvidence(targetVersion, closureEvidencePath);
+      },
     },
     ...releaseSteps,
   ];
@@ -1377,7 +1406,10 @@ export async function executeReleasePlan(
   try {
     for (const step of plan) {
       const record = evidence.steps.find((item) => item.name === step.name);
-      if (record?.status === 'passed') {
+      // Authorization gates (revalidateOnResume) are re-executed even when a
+      // prior attempt recorded them as passed: the evidence they check may
+      // have changed or gone stale between attempts (#1187).
+      if (record?.status === 'passed' && step.revalidateOnResume !== true) {
         console.log(`[resume] skipping already-passed step: ${step.name}`);
         if (persistsEvidence) await persistReleaseEvidenceAfterStep(evidence, step.name, false);
         continue;

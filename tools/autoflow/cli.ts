@@ -31,6 +31,7 @@ interface CliOptions {
   approvedPlan?: string;
   targetVersion?: string;
   prCiEvidence?: string;
+  closureEvidence?: string;
 }
 
 interface GateResult {
@@ -55,7 +56,9 @@ export function parseArgs(args: string[]): CliOptions {
     : normalizeReleaseVersion(args[targetIndex + 1]);
   const prCiIndex = args.indexOf('--pr-ci');
   const prCiEvidence = prCiIndex === -1 ? undefined : args[prCiIndex + 1];
-  return { command, dryRun, approvedPlan, targetVersion, prCiEvidence };
+  const closureIndex = args.indexOf('--closure-evidence');
+  const closureEvidence = closureIndex === -1 ? undefined : args[closureIndex + 1];
+  return { command, dryRun, approvedPlan, targetVersion, prCiEvidence, closureEvidence };
 }
 
 type GitOutput = (args: string[]) => Promise<string | undefined>;
@@ -248,8 +251,16 @@ async function runPublishExisting(
   targetVersion: string | undefined,
   dryRun: boolean,
   prCiEvidence: string | undefined,
+  closureEvidence: string | undefined,
 ): Promise<void> {
   if (!targetVersion) throw new Error('publish-existing requires --to');
+  // #1187: the unanimous three-role closure record is a mandatory fail-closed
+  // input, exactly like the exact-SHA PR CI record.
+  if (!closureEvidence) {
+    throw new Error(
+      'publish-existing requires --closure-evidence <path> naming the unanimous closure record',
+    );
+  }
   // Same gate lane as every other release path, plus the mandatory exact-SHA
   // PR CI record: publish-existing must not publish from an unvalidated HEAD.
   await runReleaseTier(prCiEvidence, dryRun);
@@ -258,7 +269,7 @@ async function runPublishExisting(
     targetVersion,
     undefined,
     dryRun,
-    createPublishExistingPlan(targetVersion),
+    createPublishExistingPlan(targetVersion, closureEvidence),
     'main',
   );
 }
@@ -364,14 +375,19 @@ export async function main(args: string[]): Promise<void> {
       );
       break;
     case 'publish-existing':
-      await runPublishExisting(options.targetVersion, options.dryRun, options.prCiEvidence);
+      await runPublishExisting(
+        options.targetVersion,
+        options.dryRun,
+        options.prCiEvidence,
+        options.closureEvidence,
+      );
       break;
     case 'release-record':
       await runReleaseRecord(options.targetVersion, options.dryRun);
       break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION] [--pr-ci PATH]',
+        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION] [--pr-ci PATH] [--closure-evidence PATH]',
       );
       Deno.exit(1);
   }

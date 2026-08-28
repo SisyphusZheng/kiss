@@ -332,17 +332,25 @@ export interface GitHubRunInfo {
 export type GitHubRunQuery = (runId: number) => Promise<GitHubRunInfo>;
 
 /**
+ * Injectable seam for fetching the content of one named artifact of a workflow
+ * run (closure role GO evidence, #1187). Throws when the artifact cannot be
+ * resolved; the consumer fails closed. Production uses the gh CLI transport.
+ */
+export type ArtifactContentQuery = (runId: number, artifactName: string) => Promise<string>;
+
+/**
  * Independently verify the record against the resolved GitHub run (#1156 R8).
  * Repository, workflow path, pull-request event, exact head SHA, completed /
  * success state, run attempt, artifact identity and the complete required-job
  * set must all match; unresolvable, unsupported, duplicate, skipped, cancelled
- * or unsuccessful jobs fail closed.
+ * or unsuccessful jobs fail closed. Returns the resolved run so consumers
+ * (#1187 closure evidence) can bind further evidence to its artifact list.
  */
 export async function verifyPrCiProvenance(
   evidence: PrCiEvidenceRecord,
   candidateSha: string,
   queryRun: GitHubRunQuery,
-): Promise<void> {
+): Promise<GitHubRunInfo> {
   let run: GitHubRunInfo;
   try {
     run = await queryRun(evidence.runId);
@@ -417,6 +425,7 @@ export async function verifyPrCiProvenance(
       throw new Error(`PR CI run ${evidence.runId} is missing required job ${required}`);
     }
   }
+  return run;
 }
 
 /**
