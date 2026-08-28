@@ -5,6 +5,21 @@ OpenElement = Web Components-native fullstack application framework.
 The published stable line remains `v0.43.3`. The active target is an unpublished
 `v0.44.0-alpha.0` internal integration baseline on `dev`.
 
+- Repository package line: `v0.43.3`
+- npm registry line: `v0.43.3`
+- Current source package line: `v0.43.3`
+- Current npm registry line: `v0.43.3`
+- Latest landed train: `v0.43.3`
+- Active release target: `v0.44.0-alpha.0`
+- Next planned train: `v0.44.0-alpha.1`
+
+The coherent five-package distribution contract follows
+[PACKAGE_SURFACE.md](./PACKAGE_SURFACE.md) and ADR-0114. The supported server
+integration remains `nitro-mount`. Browser qualification covers Chromium, Firefox,
+and WebKit.
+
+Required browser matrix: Chromium, Firefox and WebKit.
+
 ## Alpha.0 exit
 
 Alpha.0 closes only when one exact candidate SHA has:

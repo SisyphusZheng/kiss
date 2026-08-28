@@ -2,6 +2,11 @@
 
 Updated: 2026-08-28
 
+- Repository package line: `v0.43.3`
+- npm registry line: `v0.43.3` (dist-tag `latest`)
+- Latest landed train: `v0.43.3`
+- Active release target: `v0.44.0-alpha.0`
+- Next planned train: `v0.44.0-alpha.1`
 - Published stable package line: `v0.43.3` on npm `latest`
 - Repository development target: unpublished `0.44.0-alpha.0` internal closure
 - Accepted Alpha.0 foundations: #1160 and #1182
@@ -28,3 +33,4 @@ and npm provenance will identify future published package origins.
 
 See [VERSION_PLAN.md](../current/VERSION_PLAN.md) and the
 [v0.44 issue graph](../roadmap/v0.44.0-ISSUES.md).
+Contributor execution follows [PROJECT_WORKFLOW.md](../governance/PROJECT_WORKFLOW.md).

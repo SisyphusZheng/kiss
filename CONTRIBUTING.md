@@ -2,6 +2,7 @@
 
 Read [SECURITY.md](./SECURITY.md), [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md),
 and [MAINTAINERS.md](./MAINTAINERS.md) before contributing.
+The repository workflow is [PROJECT_WORKFLOW.md](./docs/governance/PROJECT_WORKFLOW.md).
 
 ## Normal changes
 

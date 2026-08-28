@@ -2,6 +2,12 @@
 
 OpenElement = Web Components-native fullstack application framework.
 
+Source package line: `v0.43.3`.
+npm registry line: `v0.43.3` (dist-tag `latest`).
+Active execution target: `v0.44.0-alpha.0`.
+Latest landed train: `v0.43.3`.
+Next planned train: `v0.44.0-alpha.1`.
+
 OpenElement `v0.43.3` is the published stable maintenance line. The active 0.44
 train rebuilds the element model around a compiler-owned Part Program.
 
@@ -34,3 +40,4 @@ The `1.0.0` target remains unscheduled.
 
 Detailed live state belongs to GitHub issue #1155 and the
 [v0.44 issue graph](./v0.44.0-ISSUES.md).
+Execution follows [PROJECT_WORKFLOW.md](../governance/PROJECT_WORKFLOW.md).

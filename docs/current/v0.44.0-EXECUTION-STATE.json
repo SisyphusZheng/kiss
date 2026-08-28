@@ -7,7 +7,7 @@
   "baselineSha": "0ae65853a8e807b1b31da8752b434167219d25d6",
   "currentIssue": 1156,
   "currentPacket": "alpha0-truth-and-roadmap-reframe",
-  "branch": "codex/v044-alpha0-reframe",
+  "branch": "v044/alpha0-reframe",
   "acceptedFoundations": [1160, 1182],
   "openAlpha0Issues": [1156, 1187, 1188, 1189],
   "implementer": {

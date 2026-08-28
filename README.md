@@ -11,6 +11,14 @@ The published stable line is `v0.43.3`. Work on `dev` is preparing an unpublishe
 `0.44.0-alpha.0` internal foundation. Alpha.0 is not a package release.
 The `1.0.0` target remains unscheduled and requires separate evidence and approval.
 
+```text
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
+```
+
+Source package line: `0.43.3` (`v0.43.3`).
+npm registry line: `v0.43.3` (dist-tag `latest`).
+
 ## Why
 
 OpenElement lets one Custom Element contract work in a standalone library and
@@ -55,3 +63,5 @@ for questions and design discussion. Report vulnerabilities privately as
 described in [SECURITY.md](./SECURITY.md).
 
 OpenElement is available under the MIT license.
+
+Repository workflow: [PROJECT_WORKFLOW.md](./docs/governance/PROJECT_WORKFLOW.md).
