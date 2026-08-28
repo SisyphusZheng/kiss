@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "train": "0.44.0",
   "goal": "alpha.0-through-beta.2-rc-admission",
-  "status": "REPAIR",
+  "status": "REVIEWED",
   "candidate": "0.44.0-alpha.0",
   "currentIssue": 1156,
-  "currentSlice": "ci-evidence-tiering-and-role-neutral-docs-repair-5",
-  "loopId": "a0-002-repair-5",
-  "baseSha": "0f8d78991ab8d9840f3852fe1b9e7691f470f1ed",
+  "currentSlice": "ci-evidence-tiering-and-role-neutral-docs-pr-ci",
+  "loopId": "a0-002",
+  "baseSha": "90880a5153a3dd5366eaa1f9ff784ab474b54e52",
   "branch": "v044/1156-ci-doc-governance-repair",
   "implementer": {
     "roleProfile": "implementer",
@@ -23,6 +23,6 @@
   "lastAcceptedLoop": "a0-001-repair-2",
   "lastClosureEvidence": "docs/evidence/v0.44.0-agent-loops/a0-001/review-repair-2.md",
   "humanGate": null,
-  "nextAction": "Resume the same implementer session for the final release-doctrine and exact-SHA topology repair, then inspect every diff and replay the bounded acceptance harness.",
-  "updatedAt": "2026-08-28T11:05:00+08:00"
+  "nextAction": "Commit this local-acceptance evidence, push the neutral branch, open the PR to dev, and require full CI plus the matching exact-SHA evidence artifact.",
+  "updatedAt": "2026-08-28T11:45:00+08:00"
 }
