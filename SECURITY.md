@@ -1,24 +1,31 @@
 # Security policy
 
-Do not report suspected vulnerabilities in public issues or discussions. Use
-[GitHub private vulnerability reporting](https://github.com/open-element/openelement/security/advisories/new)
-instead; it creates a private conversation with repository maintainers.
+Report suspected vulnerabilities through
+[GitHub private vulnerability reporting](https://github.com/open-element/openelement/security/advisories/new),
+not a public issue or discussion. Include the affected package and version,
+reproduction steps, impact, and any proposed mitigation.
 
-We acknowledge reports within five business days and aim to provide a status
-update within ten business days. Please include affected package and version,
-reproduction steps, impact, and any proposed mitigation. We coordinate a fix,
-credit reporters when requested, and publish an advisory when users need to act.
+Maintainers aim to acknowledge reports within five business days and provide a
+status update within ten business days. Advisories are published when users
+need to act, with reporter credit when requested.
 
-Only the latest published release on the current alpha line is supported.
-Pre-release packages may change before stable release; security fixes are made
-on the active release line whenever practical.
+The latest stable release is supported. Prerelease code may change before
+stable, and security fixes are applied to the active supported line when
+practical.
 
-## Dependency policy
+## Repository controls
 
-GitHub Dependabot alerts are enabled for this repository, and Dependabot opens
-weekly update proposals for GitHub Actions. Deno dependencies
-(`deno.json`/`deno.lock`) have no automated update channel; they are bumped
-manually and guarded by CI checks. Pull requests that change dependencies run
-immutable `actions/dependency-review-action`; high or critical findings fail
-the check. An open high/critical alert blocks a release until it is remediated
-or a maintainer records a time-bounded exception in the release evidence.
+- Renovate proposes supported dependency updates, including Deno and GitHub
+  Actions inputs.
+- Dependency review, CodeQL, Gitleaks, actionlint, zizmor, and OpenSSF Scorecard
+  provide complementary automated checks.
+- GitHub Secret Scanning and Push Protection are enabled where repository
+  entitlement permits.
+- Publication uses npm Trusted Publishing/OIDC; long-lived npm publication
+  tokens are not an authorized release path.
+- Protected `dev` and `main` branches require reviewed pull requests and
+  exact-SHA checks.
+
+Tool configuration never replaces review of OpenElement-specific public
+boundaries, provenance, server rendering, claim, packed consumers, or release
+ordering.

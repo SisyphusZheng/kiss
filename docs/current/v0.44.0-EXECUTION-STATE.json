@@ -1,14 +1,15 @@
 {
   "schemaVersion": 1,
   "train": "0.44.0",
-  "goal": "alpha.0-through-beta.2-rc-admission",
+  "goal": "alpha.0-internal-closure",
   "status": "REVIEWED",
   "candidate": "0.44.0-alpha.0",
+  "baselineSha": "0ae65853a8e807b1b31da8752b434167219d25d6",
   "currentIssue": 1156,
-  "currentSlice": "ci-evidence-tiering-and-role-neutral-docs-pr-ci",
-  "loopId": "a0-002",
-  "baseSha": "76f6e55935b5a06b4b6a8a1e49e534ed7505c295",
-  "branch": "v044/1156-ci-doc-governance-repair",
+  "currentPacket": "alpha0-truth-and-roadmap-reframe",
+  "branch": "codex/v044-alpha0-reframe",
+  "acceptedFoundations": [1160, 1182],
+  "openAlpha0Issues": [1156, 1187, 1188, 1189],
   "implementer": {
     "roleProfile": "implementer",
     "executorConfig": "tools/config/v044-roles.json",
@@ -20,9 +21,9 @@
     "sessionPolicy": "fresh-per-candidate-sha",
     "sessionId": null
   },
-  "lastAcceptedLoop": "a0-001-repair-2",
-  "lastClosureEvidence": "docs/evidence/v0.44.0-agent-loops/a0-001/review-repair-2.md",
-  "humanGate": null,
-  "nextAction": "Push the repair-6 evidence descendant to PR #1186 and require fresh full CI plus the matching exact-SHA evidence artifact before fast-forward-only dev integration.",
-  "updatedAt": "2026-08-28T12:32:00+08:00"
+  "finalCandidateSha": null,
+  "authoritativeCiRun": null,
+  "nextAction": "Open the truth-and-roadmap reframe PR to dev and require exact-SHA CI before selecting the first implementation packet.",
+  "nextCursorAfterClosure": "alpha.1-planning",
+  "updatedAt": "2026-08-28T22:50:00+08:00"
 }

@@ -1,215 +1,28 @@
-# ADR Index
+# Active decisions
 
-Architecture Decision Records for openElement. Each ADR documents a significant
-architectural decision, its context, and consequences.
+Current product facts live in [docs/architecture](../architecture/README.md).
+This directory is being reduced to decisions that remain active and cannot yet
+graduate into current architecture.
 
-## Current Decision Set
+ADR history is identified by original path plus Git blob SHA. Number collisions
+are not renumbered. The deterministic migration manifest records whether each ADR
+graduated, remains active, became historical/superseded, or was withdrawn, and its
+canonical destination when applicable.
 
-The ADR directory is append-only project history. Not every accepted ADR is
-current product truth. For the v0.41 alpha line, start with these current
-documents:
+## When to write an ADR
 
-| Area                | Current ADR / doc                                                | Notes                                                                |
-| ------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Product doctrine    | ADR-0110, ADR-0113                                               | Two-product framing; five-package boundary.                          |
-| App ownership       | ADR-0111                                                         | OpenElement-owned app concepts; Vite/Hono/Nitro as drivers.          |
-| Protocol runtime    | ADR-0112                                                         | Contracts plus a tiny host-API-free runtime.                         |
-| Distribution        | ADR-0108                                                         | npm-primary distribution via `deno pack` for v0.41+.                 |
-| Release evolution   | ADR-0135, ADR-0140                                               | Stable 0.43.x maintenance; no next feature train is scheduled.       |
-| Authoring helper    | ADR-0115                                                         | Single element authoring helper; `defineLayout` removed.             |
-| Alpha.16 scope      | ADR-0116                                                         | Audit-driven correctness reset before stable freeze.                 |
-| Stable 0.41 freeze  | ADR-0119                                                         | Scoped interface freeze for the 0.41.x line.                         |
-| 0.42 loop scope     | ADR-0120                                                         | WC Application Loop scope boundary and action protocol.              |
-| 0.42 protocol fix   | ADR-0121                                                         | Audit round 1 hardening amendment to the ADR-0120 protocol.          |
-| 0.42 stable freeze  | ADR-0122                                                         | 0.42.0 stable scope freeze — light fullstack boundaries.             |
-| Seam standards      | ADR-0123                                                         | Standards-as-seams evolution plan (URLPattern, fetch mw, Cache API). |
-| Content collections | ADR-0136                                                         | Generic, sanitized generated-content collections.                    |
-| Package ownership   | ADR-0137                                                         | Public facades and five-package ownership boundaries.                |
-| Cleanup governance  | ADR-0105, ADR-0106                                               | Approved cleanup train and audit-driven quality work.                |
-| Active stack truth  | `docs/current/STACK_CONTRACT.md`, `docs/current/VERSION_PLAN.md` | Operational version and stack contract for current work.             |
+Use an ADR only for a public API or package boundary, architecture topology,
+security or trust boundary, compatibility or migration promise, or another
+hard-to-reverse decision. Normal fixes, refactors, tests, documentation updates,
+and tool configuration do not require an ADR.
 
-Older ADRs remain useful evidence, but they are historical when they conflict
-with ADR-0110 through ADR-0116, or docs under `docs/current/`.
+## Current 0.44 decisions
 
-## Format
+- `ADR-0143-0-44-compiled-element-model-reentry.md`
+- `ADR-0144-governance-offload.md`
+- `ADR-0145-unified-content-graph.md` (scheduled for Alpha.7)
+- `ADR-0146-three-role-agent-execution-control-plane.md`
 
-```
-# ADR-NNNN: Title
-
-- Status: PROPOSED | ACCEPTED | DEPRECATED | SUPERSEDED
-- Date: YYYY-MM-DD
-
-## Context
-(Why was this decision needed?)
-
-## Decision
-(What was decided?)
-
-## Consequences
-(What are the positive, negative, and neutral outcomes?)
-```
-
-## ADR Catalog
-
-This catalog preserves historical status labels from each ADR. Use the current
-decision set above to decide which records are authoritative for new work.
-Numbers 0058, 0059, 0070 and 0072 each collide across two or three distinct
-LessJS-era decisions; the collided records carry mutual-reference notes in
-their headers and are listed here with filenames. Number 0066 was never
-assigned — the gap in the sequence is intentional, not a missing file.
-Entries marked _(file removed)_ survive as catalog rows only: their ADR files
-were deleted in the v0.40 documentation cleanup and remain available through
-git history.
-
-| ADR  | Title                                                                                                                                | Status                                           |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| 0006 | Version Roadmap                                                                                                                      | Accepted _(file removed)_                        |
-| 0007 | npm Publishing Strategy                                                                                                              | Accepted _(file removed)_                        |
-| 0010 | Eliminate .less/ temp files                                                                                                          | Accepted, Implemented _(file removed)_           |
-| 0011 | Eliminate globalThis bridge                                                                                                          | Accepted, Implemented _(file removed)_           |
-| 0016 | Dual-mode subpath resolution                                                                                                         | Accepted, Implemented _(file removed)_           |
-| 0017 | Runtime/Build separation                                                                                                             | Accepted, Implemented _(file removed)_           |
-| 0018 | Virtual Data Modules                                                                                                                 | Accepted, Implemented _(file removed)_           |
-| 0024 | Standards-first WC Renderer Roadmap                                                                                                  | Accepted _(file removed)_                        |
-| 0025 | Renderer Protocol                                                                                                                    | Accepted (v0.15 partial, v0.16 deferred)         |
-| 0026 | Structured Render Pipeline (v0.16)                                                                                                   | Proposed                                         |
-| 0027 | Roadmap Reorder: Engine Before Hub                                                                                                   | Accepted                                         |
-| 0028 | Conservative Third-Party WC SSR Admission                                                                                            | Proposed                                         |
-| 0029 | Happy DOM for v0.18.3 DOM Simulation                                                                                                 | Superseded by ADR-0032                           |
-| 0030 | Hub Architecture + Submission Pipeline                                                                                               | Proposed                                         |
-| 0031 | Hub v2 Component Browser Workflow                                                                                                    | Proposed                                         |
-| 0032 | Real Browser Snapshot Rendering                                                                                                      | Proposed                                         |
-| 0033 | Architecture Positioning: SSG Islands                                                                                                | Accepted                                         |
-| 0034 | Hermetic Hub Snapshots                                                                                                               | Proposed                                         |
-| 0035 | SSG Resilient Rendering + Visual Overhaul                                                                                            | Accepted                                         |
-| 0036 | Ocean-Island Architecture                                                                                                            | Accepted / Implemented                           |
-| 0037 | DSD-First Strategic Boundary                                                                                                         | Accepted                                         |
-| 0038 | ISR + Edge KV Architecture                                                                                                           | Accepted                                         |
-| 0039 | DsdElement + Signals Reactive Architecture                                                                                           | Accepted                                         |
-| 0040 | Streaming DSD                                                                                                                        | Accepted                                         |
-| 0041 | ESM Module Graph First for JSR Consumer Builds                                                                                       | Accepted                                         |
-| 0042 | Import Map Universal Resolution                                                                                                      | Accepted                                         |
-| 0043 | SSG Phase 3 Dependency Strategy                                                                                                      | Accepted                                         |
-| 0044 | SSR Browser API Polyfill Strategy                                                                                                    | Accepted                                         |
-| 0045 | Native Web API First-Class                                                                                                           | Accepted                                         |
-| 0046 | Phase 2 Import Map Resolution                                                                                                        | Accepted                                         |
-| 0047 | Deno Pre-Resolution External Dependencies                                                                                            | Accepted                                         |
-| 0048 | CI and Release Gate Separation                                                                                                       | Accepted                                         |
-| 0049 | Architecture Debt First Roadmap Reset                                                                                                | Accepted                                         |
-| 0050 | Layered Package Architecture                                                                                                         | Accepted                                         |
-| 0051 | Self-Built `html` Template System Strengthening                                                                                      | Accepted (v0.24.0)                               |
-| 0052 | Signal-DOM Deep Integration                                                                                                          | Accepted (v0.24.0)                               |
-| 0053 | Unified Error Handling Architecture                                                                                                  | Accepted (v0.24.0)                               |
-| 0054 | AST-Based External Specifier Resolution                                                                                              | Accepted                                         |
-| 0055 | SSR Bundle Self-Containment                                                                                                          | SUPERSEDED by ADR-0056                           |
-| 0056 | External Dependencies, Consumer Import Map + AST                                                                                     | Accepted                                         |
-| 0057 | JSX + Signal Component Model (`0057-jsx-signal-component-model.md`)                                                                  | Implemented (v0.24.1)                            |
-| 0058 | Signal→DOM Direct Binding (`0058-real-dom-signal-binding.md`)                                                                        | Implemented (v0.26.1)                            |
-| 0058 | BuildPipeline Declarative API (`ADR-0058-build-pipeline-declarative.md`)                                                             | Proposed                                         |
-| 0058 | Remove TemplateResult Render Path (`ADR-0058-remove-templateresult-render-path.md`)                                                  | Implemented (2026-05-29)                         |
-| 0059 | VNode Control-Flow Components `<Show>` / `<For>` (`0059-show-for-control-flow.md`)                                                   | Implemented (v0.26.1)                            |
-| 0059 | Route Params Reactive + `static head`/`static client` + `data-keep-alive` (`ADR-0059-static-head-client-route-params-keep-alive.md`) | Proposed                                         |
-| 0060 | DOM-Tree-Based SignalContext                                                                                                         | Proposed                                         |
-| 0061 | Framework ↔ Vite Virtual Module Decoupling                                                                                           | Proposed                                         |
-| 0062 | DSD-First Real DOM Signal Architecture                                                                                               | Proposed                                         |
-| 0063 | Unified Router — Hono + URLPattern + Content-Driven SSG                                                                              | Proposed                                         |
-| 0064 | Static Content Injection Model                                                                                                       | Proposed                                         |
-| 0065 | Unified VNode Rendering Pipeline                                                                                                     | Accepted                                         |
-| 0067 | DSD-Native SSR/SSG Ocean + Island Architecture                                                                                       | Accepted                                         |
-| 0068 | Show/For Activation + `data-signal-attr` / `data-signal-html`                                                                        | Accepted                                         |
-| 0069 | Wipe Workaround Chains — 23 Architectural Debt Items                                                                                 | Accepted                                         |
-| 0070 | Three-Layer Bridge Contracts (`0070-bridge-contracts.md`)                                                                            | Proposed                                         |
-| 0071 | Same Input, Same Semantics, Backend Renderers                                                                                        | Accepted                                         |
-| 0072 | MDX in LessJS (`ADR-0072-mdx-in-lessjs.md`)                                                                                          | Implemented                                      |
-| 0072 | Unified Render API Surface (`ADR-0072-unified-render-api-surface.md`)                                                                | Accepted                                         |
-| 0070 | Generated Data Namespace and App Shell Boundary                                                                                      | Accepted                                         |
-| 0073 | AppShell Protocol                                                                                                                    | Accepted, Implemented                            |
-| 0074 | @openelement/ui Dual-Track Ocean and Island Architecture                                                                             | Proposed                                         |
-| 0075 | Fork daisyUI 5 Compiled CSS for DSD Shell Components                                                                                 | Proposed                                         |
-| 0076 | Open Props and daisyUI Token Merge                                                                                                   | Proposed                                         |
-| 0077 | Structured Render IR and Single Renderer Pipeline                                                                                    | Accepted, Implemented                            |
-| 0078 | Core Package Simplification and Module Merge                                                                                         | Accepted                                         |
-| 0079 | v0.29.6 Architecture Debt Closure                                                                                                    | Accepted                                         |
-| 0080 | Architecture Contract Freeze                                                                                                         | Accepted                                         |
-| 0081 | VNode-Only Dynamic UI and Trusted HTML Boundary                                                                                      | Accepted                                         |
-| 0082 | JSX-first Application API                                                                                                            | Accepted                                         |
-| 0083 | Deferred Public Surface Reset                                                                                                        | Accepted                                         |
-| 0084 | Product Closure Version Line                                                                                                         | Accepted; sequencing superseded by 0086          |
-| 0085 | App Lifecycle Contract                                                                                                               | Accepted                                         |
-| 0086 | AI-Readable Architecture and AutoFlow2 Roadmap                                                                                       | Accepted; v0.37-v1 sequencing superseded by 0091 |
-| 0087 | TDD + AI Cross-Review as Cell Execution Subphases                                                                                    | Proposed                                         |
-| 0088 | AutoFlow-First Strategy — v0.35-0.37 Precede Product Features                                                                        | Proposed                                         |
-| 0089 | Agent Code Generator — File-System Protocol for L2 Cell Execution                                                                    | Proposed                                         |
-| 0090 | SSG Package Extraction — @openelement/ssg                                                                                            | Proposed                                         |
-| 0091 | Four-Product Platform Roadmap                                                                                                        | Accepted                                         |
-| 0092 | DsdElement Render Mode Contract                                                                                                      | Accepted                                         |
-| 0093 | SSR / ISR Runtime Contract                                                                                                           | Accepted                                         |
-| 0094 | Core Type Consolidation — Eliminate `types.ts`                                                                                       | Accepted                                         |
-| 0095 | Data / Database Boundary                                                                                                             | Accepted                                         |
-| 0096 | Protocol-First Vite + Nitro Runtime Architecture                                                                                     | Accepted                                         |
-| 0097 | JSR Best-Effort Release Gate                                                                                                         | Accepted                                         |
-| 0098 | EntryDescriptor Route Manifest Contract                                                                                              | Accepted                                         |
-| 0099 | Four-Product Matrix and Elements Reset                                                                                               | Accepted; heavy-island scope superseded by 0101  |
-| 0100 | JSR Publish Exit Gate Restored                                                                                                       | Accepted; superseded by 0107 for v0.41+          |
-| 0101 | Product-Line Reset and AutoFlow3 Governance Boundary                                                                                 | Accepted                                         |
-| 0102 | Elements Package Product Surface                                                                                                     | Accepted                                         |
-| 0103 | Archive-Candidate Package Reduction                                                                                                  | Accepted                                         |
-| 0104 | Signal Engine Default Policy                                                                                                         | Accepted                                         |
-| 0105 | v0.40.x Cleanup Train Exception                                                                                                      | Accepted                                         |
-| 0106 | Audit-Driven Quality Cleanup for v0.40.6                                                                                             | Accepted                                         |
-| 0107 | npm-Only Distribution                                                                                                                | Accepted                                         |
-| 0108 | npm Distribution via `deno pack`                                                                                                     | Accepted                                         |
-| 0109 | Unified Signal-DOM Activation Layer                                                                                                  | Accepted                                         |
-| 0110 | Two-Product Doctrine and Package Truth                                                                                               | Accepted                                         |
-| 0111 | OpenElement App Ownership Boundary                                                                                                   | Accepted                                         |
-| 0112 | Protocol Types and Tiny Runtime                                                                                                      | Accepted                                         |
-| 0113 | Beta Four Product Boundary                                                                                                           | Accepted; beta naming superseded by 0114         |
-| 0114 | Continue Alpha After Five-Package Convergence                                                                                        | Accepted                                         |
-| 0115 | Single Element Authoring Helper                                                                                                      | Accepted                                         |
-| 0116 | Audit-Driven Alpha.16 Correctness Reset                                                                                              | Accepted                                         |
-| 0117 | Second Audit Round and Alpha.18 Sweep                                                                                                | Accepted                                         |
-| 0118 | Third Audit Round Alpha.19 Cleanup Sweep                                                                                             | Accepted                                         |
-| 0119 | Stable 0.41.0 Scoped Interface Freeze                                                                                                | Accepted                                         |
-| 0120 | 0.42.0 WC Application Loop Scope and Action Protocol                                                                                 | Accepted                                         |
-| 0121 | 0.42 Action Protocol Hardening Amendment (Audit Round 1)                                                                             | Accepted                                         |
-| 0122 | 0.42.0 Stable Scope Freeze — WC Light Fullstack                                                                                      | Proposed (TP-6)                                  |
-| 0123 | Standards as Seams — Evolution Plan                                                                                                  | Proposed (alpha.13)                              |
-| 0124 | Keyed List Reconciliation for `<For>`                                                                                                | Accepted                                         |
-| 0125 | Hydration Does Not Serialize or Cache the SSR Instance                                                                               | Accepted                                         |
-| 0126 | Built-in Allow-List HTML Sanitizer (`sanitizeHtml`)                                                                                  | Accepted                                         |
-| 0127 | Unify Island Hydration Option Name (`strategy` → `hydrate`)                                                                          | Accepted                                         |
-| 0128 | Decouple Page Registration from the `tagName` Export                                                                                 | Accepted                                         |
-| 0129 | Response-Header Channel for Loaders and Actions                                                                                      | Accepted                                         |
-| 0130 | Retire the Duplicate `/_data` Loader Endpoint                                                                                        | Accepted                                         |
-| 0131 | 2026-08-19 P3 Batch Touches to Frozen Paths Preserve ADR-0122 Contracts                                                              | Accepted                                         |
-| 0132 | Defer Real Scan-Engine Evidence to v0.44 — Attachment Scanning Is Optional Hardening                                                 | Accepted                                         |
-| 0133 | 2026-08-20 Client-Router Guard Concurrency Fixes Preserve ADR-0122 Contracts                                                         | Accepted                                         |
-| 0134 | Manual workflow_dispatch Greens Count as Release Evidence — Freshness Gate Evaluation Fix                                            | Accepted                                         |
-| 0135 | 0.43.0 Stable Scope Freeze — Universal WC SSR + Supabase × Cloudflare Delivery Path                                                  | Accepted                                         |
-| 0136 | Content Collections — Generalize the Blog Content Pipeline                                                                           | Accepted (v0.43.1, #1087)                        |
-| 0137 | Public Package Ownership Boundaries                                                                                                  | Accepted (v0.43.1, #1097)                        |
-| 0138 | Require Real Scanner Evidence for v0.43.1                                                                                            | Superseded by ADR-0139                           |
-| 0139 | Provider-Neutral Attachment Scanning and v0.44 Qualification                                                                         | Accepted                                         |
-| 0140 | 0.43.x Maintenance Mode and CRM-Driven Evolution                                                                                     | Accepted                                         |
-| 0141 | Node Bridge Disconnect Propagation Preserves First-Mile Start Semantics                                                              | Accepted                                         |
-| 0142 | Light-Mode In-Place Activation of Renderer-Owned SSR DOM                                                                             | Accepted                                         |
-| 0143 | Re-enter v0.44 with the Compiled OpenElement Model                                                                                   | Accepted                                         |
-| 0144 | Offload Generic Repository Governance                                                                                                | Accepted                                         |
-| 0145 | Content Collections Become the Unified Content Graph                                                                                 | Accepted                                         |
-| 0146 | Three-Role Agent Execution Control Plane for v0.44                                                                                   | Accepted                                         |
-
-## Superseded / Historical
-
-Historical ADRs are intentionally kept in place rather than deleted. They are
-release evidence and design context, but current docs should not cite them as
-active product doctrine when a newer ADR or `docs/current/` page supersedes
-them.
-
-## New ADRs
-
-Write new ADRs as `ADR-NNNN-kebab-case-title.md` in this directory.
-
-Next ADR candidates:
-
-- Signal engine interoperability contract (align with TC39 Signals proposal
-  shape where practical).
+The Alpha.0 ADR migration packet will replace this transitional list with the
+final active-decision set and manifest. No new ADR is required for that governance
+cleanup.
