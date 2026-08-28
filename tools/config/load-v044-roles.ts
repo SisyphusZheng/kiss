@@ -76,47 +76,66 @@ export function parseV044RoleConfig(text: string): V044RoleConfig {
   }
 
   if (raw.schemaVersion !== 1) fail('schemaVersion must be 1');
+  const purpose = requireString(raw.purpose, 'purpose');
 
   const thinker = raw.thinker as Record<string, unknown> | undefined;
   if (!thinker) fail('thinker block is required');
-  requireString(thinker.model, 'thinker.model');
-  requireString(thinker.reasoningEffort, 'thinker.reasoningEffort');
+  if (thinker.role !== 'thinker') fail('thinker.role must be "thinker"');
+  const thinkerModel = requireString(thinker.model, 'thinker.model');
+  const thinkerReasoningEffort = requireString(thinker.reasoningEffort, 'thinker.reasoningEffort');
 
   const executor = raw.executor as Record<string, unknown> | undefined;
   if (!executor) fail('executor block is required');
-  requireString(executor.command, 'executor.command');
-  requireString(executor.provider, 'executor.provider');
-  requireString(executor.model, 'executor.model');
-  requireString(executor.modelAlias, 'executor.modelAlias');
-  requireString(executor.defaultEffort, 'executor.defaultEffort');
+  const executorCommand = requireString(executor.command, 'executor.command');
+  const executorProvider = requireString(executor.provider, 'executor.provider');
+  const executorModel = requireString(executor.model, 'executor.model');
+  const executorModelAlias = requireString(executor.modelAlias, 'executor.modelAlias');
+  const executorDefaultEffort = requireString(executor.defaultEffort, 'executor.defaultEffort');
   if (
     typeof executor.contextTokens !== 'number' || !Number.isInteger(executor.contextTokens) ||
     executor.contextTokens <= 0
   ) {
     fail('executor.contextTokens must be a positive integer');
   }
-  requireStringArray(executor.requiredCapabilities, 'executor.requiredCapabilities');
+  const executorContextTokens = executor.contextTokens;
+  const executorRequiredCapabilities = requireStringArray(
+    executor.requiredCapabilities,
+    'executor.requiredCapabilities',
+  );
 
-  const profiles = raw.profiles as Record<string, Record<string, unknown>> | undefined;
-  if (!profiles?.implementer || !profiles.releaseVerifier) {
+  const profiles = raw.profiles as
+    | Record<string, Record<string, unknown> | undefined>
+    | undefined;
+  const implementerProfile = profiles?.implementer;
+  const releaseVerifierProfile = profiles?.releaseVerifier;
+  if (!implementerProfile || !releaseVerifierProfile) {
     fail('profiles.implementer and profiles.releaseVerifier are required');
   }
-  for (const key of ['implementer', 'releaseVerifier'] as const) {
-    const profile = profiles[key];
+
+  function parseProfile(profile: Record<string, unknown>, key: string): RoleProfile {
     const agentFile = requireString(profile.agentFile, `profiles.${key}.agentFile`);
     if (agentFile.startsWith('docs/') || !agentFile.startsWith('.agents/')) {
       fail(`profiles.${key}.agentFile must live under .agents/, never under docs/`);
     }
-    requireString(profile.smokeMarker, `profiles.${key}.smokeMarker`);
-    requireString(profile.sessionPolicy, `profiles.${key}.sessionPolicy`);
+    return {
+      agentFile,
+      smokeMarker: requireString(profile.smokeMarker, `profiles.${key}.smokeMarker`),
+      sessionPolicy: requireString(profile.sessionPolicy, `profiles.${key}.sessionPolicy`),
+    };
   }
 
-  requireString(raw.roleRunnerTask, 'roleRunnerTask');
+  const roleRunnerTask = requireString(raw.roleRunnerTask, 'roleRunnerTask');
 
-  const prohibited = raw.prohibitedDocIdentifiers as ProhibitedDocIdentifiers | undefined;
+  const prohibited = raw.prohibitedDocIdentifiers as Record<string, unknown> | undefined;
   if (!prohibited) fail('prohibitedDocIdentifiers is required');
-  requireStringArray(prohibited.literals, 'prohibitedDocIdentifiers.literals');
-  requireStringArray(prohibited.tokens, 'prohibitedDocIdentifiers.tokens');
+  const prohibitedLiterals = requireStringArray(
+    prohibited.literals,
+    'prohibitedDocIdentifiers.literals',
+  );
+  const prohibitedTokens = requireStringArray(
+    prohibited.tokens,
+    'prohibitedDocIdentifiers.tokens',
+  );
 
   // No allowlist escape for documentation: the configuration must not carry an
   // exemption facility at all.
@@ -124,7 +143,33 @@ export function parseV044RoleConfig(text: string): V044RoleConfig {
     fail('docScanExemptions is not supported: documentation has no exemption facility');
   }
 
-  return raw as unknown as V044RoleConfig;
+  return {
+    schemaVersion: 1,
+    purpose,
+    thinker: {
+      role: 'thinker',
+      model: thinkerModel,
+      reasoningEffort: thinkerReasoningEffort,
+    },
+    executor: {
+      command: executorCommand,
+      provider: executorProvider,
+      model: executorModel,
+      modelAlias: executorModelAlias,
+      contextTokens: executorContextTokens,
+      defaultEffort: executorDefaultEffort,
+      requiredCapabilities: executorRequiredCapabilities,
+    },
+    profiles: {
+      implementer: parseProfile(implementerProfile, 'implementer'),
+      releaseVerifier: parseProfile(releaseVerifierProfile, 'releaseVerifier'),
+    },
+    roleRunnerTask,
+    prohibitedDocIdentifiers: {
+      literals: prohibitedLiterals,
+      tokens: prohibitedTokens,
+    },
+  };
 }
 
 export async function loadV044RoleConfig(
