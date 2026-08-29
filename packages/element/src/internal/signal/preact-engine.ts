@@ -9,14 +9,15 @@
  */
 
 import {
+  batch as preactBatch,
   computed as preactComputed,
   effect as preactEffect,
   signal as preactSignal,
 } from '@preact/signals-core';
-import type { SignalEngine } from './types.ts';
+import type { BatchedSignalEngine } from './types.ts';
 import { SIGNAL_BRAND } from '../protocol/signal.ts';
 
-export function createPreactEngine(): SignalEngine {
+export function createPreactEngine(): BatchedSignalEngine {
   return {
     signal<T>(initialValue: T) {
       const s = preactSignal(initialValue);
@@ -59,6 +60,10 @@ export function createPreactEngine(): SignalEngine {
         cleanup?.();
         dispose();
       };
+    },
+
+    batch<T>(run: () => T): T {
+      return preactBatch(run);
     },
   };
 }

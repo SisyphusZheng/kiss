@@ -36,18 +36,21 @@ function isShadowRoot(root: CompiledStyleRoot): root is ShadowRoot {
 /**
  * Owns the style sink for one compiled element activation. Shadow roots use
  * constructable sheets; light DOM uses one document-head style node so the
- * compiled template's child-node claim shape remains untouched.
+ * compiled template's child-node claim shape remains untouched. Sheets this
+ * scope applied are tracked so disconnect removes exactly those, preserving
+ * sheets the root already had.
  */
 export class CompiledStyleScope {
   #root?: CompiledStyleRoot;
   #styles: StyleSheetLike[] = [];
   #lightStyle?: HTMLStyleElement;
+  #adoptedSheets: StyleSheetLike[] = [];
 
   connect(root: CompiledStyleRoot, component?: StyleSheetLike | StyleSheetLike[]): void {
     const styles = asStyleList(component);
     if (this.#root !== root) {
-      this.#lightStyle?.parentNode?.removeChild(this.#lightStyle);
-      this.#lightStyle = undefined;
+      this.#removeLightStyle();
+      this.#removeAdoptedSheets();
     }
     this.#root = root;
     this.#styles = styles;
@@ -57,12 +60,12 @@ export class CompiledStyleScope {
         throw new Error('[compiled-styles] shadow root does not support adoptedStyleSheets');
       }
       themeManager.applyStyles(root, component);
+      this.#adoptedSheets = styles;
       return;
     }
 
     if (styles.length === 0) {
-      this.#lightStyle?.parentNode?.removeChild(this.#lightStyle);
-      this.#lightStyle = undefined;
+      this.#removeLightStyle();
       return;
     }
     const document = root.ownerDocument;
@@ -82,8 +85,8 @@ export class CompiledStyleScope {
   }
 
   disconnect(): void {
-    this.#lightStyle?.parentNode?.removeChild(this.#lightStyle);
-    this.#lightStyle = undefined;
+    this.#removeLightStyle();
+    this.#removeAdoptedSheets();
     this.#root = undefined;
     this.#styles = [];
   }
@@ -94,5 +97,18 @@ export class CompiledStyleScope {
 
   get styles(): StyleSheetLike[] {
     return [...this.#styles];
+  }
+
+  #removeLightStyle(): void {
+    this.#lightStyle?.parentNode?.removeChild(this.#lightStyle);
+    this.#lightStyle = undefined;
+  }
+
+  #removeAdoptedSheets(): void {
+    const root = this.#root;
+    const applied: Set<unknown> = new Set(this.#adoptedSheets);
+    this.#adoptedSheets = [];
+    if (!root || applied.size === 0 || !isShadowRoot(root)) return;
+    root.adoptedStyleSheets = root.adoptedStyleSheets.filter((sheet) => !applied.has(sheet));
   }
 }

@@ -8,12 +8,8 @@
  */
 
 import { SIGNAL_BRAND } from '../protocol/signal.ts';
-import type {
-  ReadonlySignal,
-  SignalEngine,
-  Unsubscribe,
-  WritableSignal,
-} from '../protocol/signal.ts';
+import type { ReadonlySignal, Unsubscribe, WritableSignal } from '../protocol/signal.ts';
+import type { BatchedSignalEngine } from './types.ts';
 
 interface ReactiveSource {
   addInvalidation(listener: () => void): Unsubscribe;
@@ -207,7 +203,7 @@ class TestEffect {
   }
 }
 
-export interface TestSignalEngine extends SignalEngine {
+export interface TestSignalEngine extends BatchedSignalEngine {
   /** Coalesce all signal/computed/effect work performed by `run`. */
   batch<T>(run: () => T): T;
 }

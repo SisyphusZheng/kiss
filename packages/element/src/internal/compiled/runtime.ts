@@ -9,6 +9,7 @@
  */
 
 import type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
+import { noteCompiledProgramActivated } from '../signal/selection.ts';
 import {
   partAnchorEndMarker,
   partAnchorMarker,
@@ -1146,6 +1147,7 @@ export function createFreshDom(
   host: CompiledSpikeHost,
   root: Node,
 ): CompiledSpikeInstance {
+  noteCompiledProgramActivated();
   const ctx = createContext(validateSpikeProgram(program), host);
   const doc = root.ownerDocument;
   if (!doc) throw new Error('[compiled-runtime] root must have an ownerDocument');
@@ -1630,6 +1632,7 @@ export function claimExistingDom(
   host: CompiledSpikeHost,
   root: Node,
 ): CompiledSpikeInstance {
+  noteCompiledProgramActivated();
   const ctx = createContext(validateSpikeProgram(program), host);
   try {
     const consumed = claimNodes(ctx, root, 0, ctx.program.template, 'template', [], ctx.rootScope);

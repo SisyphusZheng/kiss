@@ -26,6 +26,19 @@ export { isSignalLike, unwrapSignalLike } from './types.ts';
 // statically and never dispatch through this test implementation per update.
 export { createTestEngine } from './test-engine.ts';
 export type { TestSignalEngine } from './test-engine.ts';
+export type { BatchedSignalEngine } from './types.ts';
+export { isBatchCapable } from './types.ts';
+
+// Internal static engine-selection seam (#723). One engine per application,
+// selected before signals exist; also not re-exported from the package root.
+export {
+  selectedSignalEngine,
+  selectSignalEngine,
+  SIGNAL_ENGINE_ACTIVATED,
+  SIGNAL_ENGINE_INVALID,
+  SIGNAL_ENGINE_LOCKED,
+  SignalEngineSelectionError,
+} from './selection.ts';
 
 // ─── Framework layer ────────────────────────────────────────────
 export { computed, effect, signal } from './framework.ts';

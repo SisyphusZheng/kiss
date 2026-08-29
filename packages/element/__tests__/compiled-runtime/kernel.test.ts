@@ -4,7 +4,7 @@ import { ElementFormController } from '../../src/open-element-form.ts';
 import { CompiledElementKernel } from '../../src/internal/compiled/runtime/kernel.ts';
 import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
-import { TestDocument, type TestElement, toHtml } from './test-dom.ts';
+import { TestDocument, type TestElement, type TestShadowRoot, toHtml } from './test-dom.ts';
 
 const KERNEL_PROGRAM = validateSpikeProgram({
   version: 1,
@@ -88,6 +88,53 @@ Deno.test('compiled kernel keeps light-DOM styles outside the claimed template',
   assertEquals(document.head.childNodes.length, 0);
 });
 
+Deno.test('compiled kernel applies styles into open and closed shadow roots', () => {
+  for (const mode of ['open', 'closed'] as const) {
+    const document = new TestDocument();
+    const element = document.createElement('oe-kernel-test');
+    const message = signal(mode);
+    const preExisting = {
+      replaceSync(_text: string): void {},
+      cssRules: [{ cssText: 'oe-pre-existing { color: blue; }' }],
+    };
+    const sheet = {
+      replaceSync(_text: string): void {},
+      cssRules: [{ cssText: `oe-${mode}-test { color: red; }` }],
+    };
+    const attached = element.attachShadow({ mode });
+    (attached as { adoptedStyleSheets: unknown[] }).adoptedStyleSheets = [preExisting];
+    const kernel = new CompiledElementKernel(element as unknown as HTMLElement, KERNEL_PROGRAM, {
+      signals: { message },
+      handlers: {},
+      rootMode: mode,
+      root: mode === 'closed' ? attached as unknown as ShadowRoot : undefined,
+      styles: sheet,
+    });
+
+    kernel.connect();
+    const root = kernel.root as unknown as TestShadowRoot;
+    assertStrictEquals(root, attached);
+    assertEquals(
+      root.adoptedStyleSheets,
+      [preExisting, sheet],
+      `${mode} root adopts scope sheets after pre-existing ones`,
+    );
+    assertEquals(document.head.childNodes.length, 0, `${mode} root leaves light DOM untouched`);
+
+    kernel.disconnect();
+    assertEquals(
+      root.adoptedStyleSheets,
+      [preExisting],
+      `${mode} disconnect removes only scope-applied sheets`,
+    );
+
+    kernel.connect();
+    assertEquals(root.adoptedStyleSheets, [preExisting, sheet], `${mode} reconnect re-applies`);
+    kernel.dispose();
+    assertEquals(root.adoptedStyleSheets, [preExisting], `${mode} dispose cleans up`);
+  }
+});
+
 Deno.test('compiled kernel retains a closed root without aliasing light DOM', () => {
   const document = new TestDocument();
   const element = document.createElement('oe-kernel-test');
@@ -108,6 +155,50 @@ Deno.test('compiled kernel retains a closed root without aliasing light DOM', ()
   kernel.connect();
   assertStrictEquals(kernel.root, root);
   kernel.dispose();
+});
+
+Deno.test('kernel reconnect cycles never duplicate event listeners', () => {
+  const document = new TestDocument();
+  const element = document.createElement('oe-kernel-test');
+  const message = signal('x');
+  const handler = signal<unknown>(() => {});
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-kernel-test',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
+    parts: [
+      { k: 'text', index: 0, signal: 'message' },
+      { k: 'event', index: 1, event: 'click', signal: 'handler', path: [0] },
+    ],
+  });
+  const kernel = new CompiledElementKernel(element as unknown as HTMLElement, program, {
+    signals: { message, handler },
+    handlers: {},
+    rootMode: 'light',
+  });
+  const calls: string[] = [];
+  handler.value = () => calls.push('clicked');
+  const div = () => element.childNodes[0] as TestElement;
+  const listenerCount = () => div().listeners.get('click')?.size ?? 0;
+
+  kernel.connect();
+  assertEquals(listenerCount(), 1);
+  div().dispatch('click');
+  assertEquals(calls, ['clicked']);
+
+  kernel.disconnect();
+  assertEquals(listenerCount(), 0, 'disconnect removes the listener');
+
+  kernel.connect();
+  assertEquals(listenerCount(), 1, 'reconnect into the claimed DOM adds exactly one listener');
+  div().dispatch('click');
+  assertEquals(calls, ['clicked', 'clicked'], 'one dispatch fires the handler exactly once');
+
+  kernel.disconnect();
+  kernel.connect();
+  assertEquals(listenerCount(), 1);
+  kernel.dispose();
+  assertEquals(listenerCount(), 0, 'dispose leaves no listener behind');
 });
 
 Deno.test('compiled form and error controllers remain element-local', () => {

@@ -6,6 +6,7 @@ import {
   createFreshDom,
 } from '../runtime.ts';
 import { CompiledErrorBoundary, type CompiledErrorBoundaryOptions } from './error-boundary.ts';
+import { CompiledContextService } from './context.ts';
 import { ElementFormController } from '../../../open-element-form.ts';
 import { ElementLifecycle } from '../../../open-element-lifecycle.ts';
 import {
@@ -30,13 +31,14 @@ export interface CompiledElementKernelOptions extends CompiledSpikeHost {
 /**
  * Element-local owner for one compiled Part Program instance. It selects one
  * root, runs claim or fresh creation against that same root, and ties the
- * runtime instance, lifecycle signal, form internals, styles, and errors to
- * the element's connect/disconnect boundary.
+ * runtime instance, lifecycle signal, form internals, styles, context
+ * consumption, and errors to the element's connect/disconnect boundary.
  */
 export class CompiledElementKernel {
   readonly lifecycle = new ElementLifecycle();
   readonly form = new ElementFormController();
   readonly errors: CompiledErrorBoundary;
+  readonly context: CompiledContextService;
 
   #element: HTMLElement;
   #program: PartProgram;
@@ -52,6 +54,7 @@ export class CompiledElementKernel {
     this.#program = program;
     this.#options = options;
     this.errors = new CompiledErrorBoundary(options.errorBoundary);
+    this.context = new CompiledContextService(element);
   }
 
   get element(): HTMLElement {
@@ -91,9 +94,15 @@ export class CompiledElementKernel {
       this.#instance = root.childNodes.length > 0
         ? claimExistingDom(this.#program, this.#options, root)
         : createFreshDom(this.#program, this.#options, root);
+      this.context.connect();
       if (this.errors.hasError) this.errors.reset();
       this.#active = true;
     } catch (error) {
+      try {
+        this.context.disconnect();
+      } catch {
+        // Preserve the original construction/claim error.
+      }
       try {
         this.#instance?.dispose();
       } catch {
@@ -115,6 +124,7 @@ export class CompiledElementKernel {
       this.#instance?.dispose();
     } finally {
       this.#instance = undefined;
+      this.context.disconnect();
       themeManager.disconnect(this.#element);
       this.#styleScope.disconnect();
       this.lifecycle.dispose();
@@ -130,6 +140,7 @@ export class CompiledElementKernel {
   dispose(): void {
     if (this.#destroyed) return;
     this.disconnect();
+    this.context.dispose();
     this.form.dispose();
     this.errors.dispose();
     this.#destroyed = true;

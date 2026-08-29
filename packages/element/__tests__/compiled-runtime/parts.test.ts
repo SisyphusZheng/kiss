@@ -191,6 +191,44 @@ Deno.test('an empty fixed-Part path targets the sole template root element', () 
   claimed.dispose();
 });
 
+Deno.test('signal-driven event Parts replace handlers without duplicating listeners', () => {
+  const handler = signal<unknown>(() => {});
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-event-replace',
+    template: [{ k: 'el', tag: 'button', attrs: [], children: [] }],
+    parts: [{ k: 'event', index: 0, event: 'click', signal: 'handler', path: [0] }],
+  });
+  const host = { signals: { handler }, handlers: {} } as unknown as CompiledSpikeHost;
+
+  const document = new TestDocument();
+  const root = document.createElement('host');
+  const instance = createFreshDom(program, host, asNode(root));
+  const button = root.childNodes[0] as TestElement;
+  const listenerCount = () => button.listeners.get('click')?.size ?? 0;
+
+  const calls: string[] = [];
+  handler.value = () => calls.push('first');
+  assertEquals(listenerCount(), 1);
+  button.dispatch('click');
+  assertEquals(calls, ['first']);
+
+  handler.value = () => calls.push('second');
+  assertEquals(listenerCount(), 1, 'replacement removes the previous listener');
+  button.dispatch('click');
+  assertEquals(calls, ['first', 'second'], 'the replaced handler no longer fires');
+
+  handler.value = () => calls.push('third');
+  assertEquals(listenerCount(), 1);
+  button.dispatch('click');
+  assertEquals(calls, ['first', 'second', 'third']);
+
+  instance.dispose();
+  assertEquals(listenerCount(), 0, 'dispose removes the listener');
+  button.dispatch('click');
+  assertEquals(calls, ['first', 'second', 'third']);
+});
+
 Deno.test('style Parts normalize vendor-prefixed and custom declarations', () => {
   const styles = signal<unknown>({
     WebkitTransform: 'scale(1)',

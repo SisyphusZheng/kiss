@@ -17,6 +17,21 @@ import { SIGNAL_BRAND } from '../protocol/signal.ts';
 
 export type { ReadonlySignal, Signal, SignalEngine, SignalLike, Unsubscribe, WritableSignal };
 
+/**
+ * Engine capability for coalescing signal, computed, and effect work into one
+ * notification pass. Both shipped engines (the Preact adapter and the lazy
+ * conformance engine) implement it; the base SignalEngine contract does not
+ * require it, so consumers go through the isBatchCapable guard.
+ */
+export interface BatchedSignalEngine extends SignalEngine {
+  batch<T>(run: () => T): T;
+}
+
+/** Type guard for engines implementing the batch capability. */
+export function isBatchCapable(engine: SignalEngine): engine is BatchedSignalEngine {
+  return typeof (engine as Partial<BatchedSignalEngine>).batch === 'function';
+}
+
 /** Type guard for the protocol signal shape. */
 export function isSignalLike(value: unknown): value is SignalLike {
   return Boolean(

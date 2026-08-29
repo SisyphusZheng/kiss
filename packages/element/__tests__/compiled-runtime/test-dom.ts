@@ -30,6 +30,13 @@ abstract class TestNodeBase {
     return index >= 0 ? this.parentNode.childNodes[index + 1] ?? null : null;
   }
 
+  getRootNode(): TestNodeBase {
+    let root = this.parentNode;
+    if (!root) return this;
+    while (root.parentNode) root = root.parentNode;
+    return root;
+  }
+
   appendChild(node: TestNode): TestNode {
     this.detach(node);
     node.parentNode = this as unknown as TestElement;
