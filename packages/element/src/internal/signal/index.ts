@@ -21,5 +21,11 @@ export type {
 } from '../protocol/signal.ts';
 export { isSignalLike, unwrapSignalLike } from './types.ts';
 
+// Internal alpha.2 conformance seam. The alternate engine is intentionally
+// not re-exported from the package root; generated consumers select one engine
+// statically and never dispatch through this test implementation per update.
+export { createTestEngine } from './test-engine.ts';
+export type { TestSignalEngine } from './test-engine.ts';
+
 // ─── Framework layer ────────────────────────────────────────────
 export { computed, effect, signal } from './framework.ts';

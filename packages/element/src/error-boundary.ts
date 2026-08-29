@@ -190,3 +190,8 @@ export abstract class ErrorBoundary extends OpenElement {
     this._error = toBoundaryError(error);
   }
 }
+
+export {
+  CompiledErrorBoundary,
+  type CompiledErrorBoundaryOptions,
+} from './internal/compiled/runtime/error-boundary.ts';

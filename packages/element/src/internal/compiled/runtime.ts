@@ -1,16 +1,11 @@
 /**
- * @openelement/element — compiled Part Program spike runtime (#1160).
+ * @openelement/element — compiled Part Program runtime (v0.44 alpha.2).
  *
- * Executes the alpha.0 spike Part Program in the three ADR-0143 modes:
- *   - serializeToHtml:    server serialization (pure string output)
- *   - createFreshDom:     fresh browser DOM creation
- *   - claimExistingDom:   attach to existing SSR DOM, preserving node identity
- *
- * Signal -> Part/Region is the only reactive path: a Signal write reaches
- * exactly its subscribed Part or Region. There is no VNode tree, no binding
- * discovery walk and no interpreter fallback here.
- *
- * Internal alpha.0 spike only — not exported from the package entry points.
+ * A Part Program is executed by three entry points in this file:
+ * `serializeToHtml`, `createFreshDom`, and `claimExistingDom`. They share the
+ * same tree/Part/Region semantics. The browser path never performs selector or
+ * marker discovery: markers are emitted and claimed only at compiler-owned
+ * dynamic anchors, while fixed Parts resolve their compiler-owned paths once.
  */
 
 import type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
@@ -18,17 +13,28 @@ import {
   partAnchorEndMarker,
   partAnchorMarker,
   type PartProgramSpike,
+  type SpikeAttributePart,
+  type SpikeBooleanPart,
+  type SpikeChildPart,
+  type SpikeClassPart,
   type SpikeEachPart,
   type SpikeElementNode,
+  type SpikeEventPart,
+  type SpikeFixedPart,
   type SpikePropPart,
+  type SpikeRefPart,
+  type SpikeStylePart,
+  type SpikeTextPart,
   type SpikeTreeNode,
   type SpikeWhenPart,
+  validateSpikeProgram,
 } from './program.ts';
 
-/** Structured diagnostic for claim-time structure/identity drift (#631-class). */
+/** Structured diagnostic for claim-time structure/identity drift. */
 export class PartProgramClaimError extends Error {
   readonly code = 'OPEN_ELEMENT_COMPILED_CLAIM_MISMATCH';
   readonly path: string;
+
   constructor(path: string, message: string) {
     super(`[compiled-claim] ${path}: ${message}`);
     this.name = 'PartProgramClaimError';
@@ -36,35 +42,103 @@ export class PartProgramClaimError extends Error {
   }
 }
 
-/** Host-provided reactive state and behavior, keyed by compiled names. */
+export type CompiledEventHandler = (event: unknown) => void;
+export type CompiledRefHandler = (element: Element | null) => void | Unsubscribe;
+
+/** Host-provided state and behavior keyed by compiler-emitted names. */
 export interface CompiledSpikeHost {
   signals: Record<string, SignalLike<unknown>>;
-  handlers: Record<string, (event: unknown) => void>;
+  handlers: Record<string, CompiledEventHandler>;
+  refs?: Record<string, CompiledRefHandler>;
 }
 
 export interface CompiledSpikeInstance {
   dispose(): void;
 }
 
+/**
+ * A scope is the lifetime owner for one Part or Region. Parent scopes own
+ * nested scopes, so removing a Region disposes all nested subscriptions,
+ * event listeners, and refs exactly once.
+ */
+class ResourceScope {
+  #parent?: ResourceScope;
+  #children = new Set<ResourceScope>();
+  #cleanups: Array<() => void> = [];
+  #disposed = false;
+
+  constructor(parent?: ResourceScope) {
+    this.#parent = parent;
+    if (parent) parent.#children.add(this);
+  }
+
+  child(): ResourceScope {
+    return new ResourceScope(this);
+  }
+
+  get disposed(): boolean {
+    return this.#disposed;
+  }
+
+  add(cleanup: () => void): void {
+    if (this.#disposed) {
+      cleanup();
+      return;
+    }
+    this.#cleanups.push(cleanup);
+  }
+
+  dispose(): void {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    let firstError: unknown;
+    let hasError = false;
+
+    for (const child of [...this.#children]) {
+      try {
+        child.dispose();
+      } catch (error) {
+        hasError = true;
+        firstError ??= error;
+      }
+    }
+    this.#children.clear();
+
+    for (const cleanup of this.#cleanups.splice(0).reverse()) {
+      try {
+        cleanup();
+      } catch (error) {
+        hasError = true;
+        firstError ??= error;
+      }
+    }
+    if (this.#parent) this.#parent.#children.delete(this);
+    if (hasError) throw firstError;
+  }
+}
+
 interface MountContext {
   program: PartProgramSpike;
   host: CompiledSpikeHost;
-  unsubs: Unsubscribe[];
-  listeners: Array<{ el: Element; type: string; fn: EventListener }>;
-  /** Prop parts keyed by `path.join('.')` for attribute/serialization lookup. */
-  propPartsByPath: Map<string, SpikePropPart[]>;
+  rootScope: ResourceScope;
+  fixedPartsByPath: Map<string, SpikeFixedPart[]>;
 }
 
 function createContext(program: PartProgramSpike, host: CompiledSpikeHost): MountContext {
-  const propPartsByPath = new Map<string, SpikePropPart[]>();
+  const fixedPartsByPath = new Map<string, SpikeFixedPart[]>();
   for (const part of program.parts) {
-    if (part.k !== 'prop') continue;
+    if (!isFixedPart(part)) continue;
     const key = part.path.join('.');
-    const list = propPartsByPath.get(key) ?? [];
+    const list = fixedPartsByPath.get(key) ?? [];
     list.push(part);
-    propPartsByPath.set(key, list);
+    fixedPartsByPath.set(key, list);
   }
-  return { program, host, unsubs: [], listeners: [], propPartsByPath };
+  return {
+    program,
+    host,
+    rootScope: new ResourceScope(),
+    fixedPartsByPath,
+  };
 }
 
 function signalOf(ctx: MountContext, name: string): SignalLike<unknown> {
@@ -74,19 +148,14 @@ function signalOf(ctx: MountContext, name: string): SignalLike<unknown> {
 }
 
 /**
- * Subscribe to future writes only, engine-neutrally. Build and claim have
- * already applied the current value, so a subscription-time echo would double
- * write — and, for claim, would clobber live DOM state such as a user-edited
- * input value. The public Signal protocol does not require immediate delivery
- * (preact-engine delivers immediately via effect(); a conforming engine may be
- * lazy), so suppression is precise: only a callback delivered synchronously
- * before `subscribe()` returns, whose value equals the snapshot read
- * immediately before subscribing, is treated as the echo. Any callback
- * delivered after `subscribe()` returns is a real update and is applied —
- * including a first write from a lazy-delivery engine.
+ * Subscribe to future writes only. Preact's adapter delivers a synchronous
+ * initial effect; a conforming lazy engine may not. Only that exact
+ * subscription-time echo is ignored, so a lazy engine's first real write is
+ * never lost.
  */
 function subscribeWrites(
   ctx: MountContext,
+  scope: ResourceScope,
   name: string,
   fn: (value: unknown) => void,
 ): void {
@@ -94,214 +163,579 @@ function subscribeWrites(
   const snapshot = signal.value;
   let subscribeReturned = false;
   const unsub = signal.subscribe((value) => {
-    if (!subscribeReturned && Object.is(value, snapshot)) return; // sync initial echo
-    fn(value);
+    if (!subscribeReturned && Object.is(value, snapshot)) return;
+    if (!scope.disposed) fn(value);
   });
   subscribeReturned = true;
-  ctx.unsubs.push(unsub);
+  if (typeof unsub !== 'function') {
+    throw new Error(`[compiled-runtime] signal "${name}" returned an invalid unsubscribe`);
+  }
+  scope.add(unsub);
+}
+
+function isFixedPart(part: PartProgramSpike['parts'][number]): part is SpikeFixedPart {
+  return (
+    part.k === 'attr' || part.k === 'prop' || part.k === 'boolean' || part.k === 'class' ||
+    part.k === 'style' || part.k === 'event' || part.k === 'ref'
+  );
 }
 
 function isComment(node: Node): node is Comment {
   return node.nodeType === 8;
 }
+
 function isText(node: Node): node is Text {
   return node.nodeType === 3;
 }
+
 function isElement(node: Node): node is Element {
   return node.nodeType === 1;
 }
 
-// ─── Shared node construction ────────────────────────────────────────
+function isDomNode(value: unknown): value is Node {
+  return typeof value === 'object' && value !== null &&
+    typeof (value as { nodeType?: unknown }).nodeType === 'number';
+}
 
-function buildStaticNodes(doc: Document, nodes: SpikeTreeNode[], where: string): Node[] {
-  const out: Node[] = [];
-  for (const node of nodes) {
-    if (node.k === 'text') {
-      out.push(doc.createTextNode(node.value));
-    } else if (node.k === 'el') {
-      const el = doc.createElement(node.tag);
-      for (const [name, value] of node.attrs) el.setAttribute(name, value);
-      for (const child of buildStaticNodes(doc, node.children, where)) el.appendChild(child);
-      out.push(el);
-    } else {
-      throw new Error(`[compiled-runtime] ${where} must be fully static (found "${node.k}")`);
-    }
+function displayValue(value: unknown): string {
+  return value === null || value === undefined ? '' : String(value);
+}
+
+function attributeValue(value: unknown): string | null {
+  return value === null || value === undefined ? null : String(value);
+}
+
+function classValue(value: unknown): string {
+  if (value === null || value === undefined || value === false) return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return value.map(classValue).filter(Boolean).join(' ');
+  if (typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .filter((key) => Boolean((value as Record<string, unknown>)[key]))
+      .join(' ');
   }
-  return out;
+  throw new Error('[compiled-runtime] class Part expects a string, array, or record');
 }
 
-interface BuiltItem {
-  nodes: Node[];
-  texts: Text[];
+function cssName(name: string): string {
+  if (name.startsWith('--')) return name;
+  return name
+    .replace(/^Webkit/, '-webkit-')
+    .replace(/^Moz/, '-moz-')
+    .replace(/^ms-/, '-ms-')
+    .replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
-function buildItem(doc: Document, part: SpikeEachPart, item: Record<string, unknown>): BuiltItem {
-  const texts: Text[] = [];
-  const buildItemNodes = (nodes: SpikeTreeNode[]): Node[] => {
-    const out: Node[] = [];
-    for (const node of nodes) {
-      if (node.k === 'ival') {
-        const text = doc.createTextNode(String(item[part.field]));
-        texts.push(text);
-        out.push(text);
-      } else if (node.k === 'text') {
-        out.push(doc.createTextNode(node.value));
-      } else if (node.k === 'el') {
-        const el = doc.createElement(node.tag);
-        for (const [name, value] of node.attrs) el.setAttribute(name, value);
-        for (const child of buildItemNodes(node.children)) el.appendChild(child);
-        out.push(el);
-      } else {
-        throw new Error('[compiled-runtime] item templates may not contain part anchors');
-      }
-    }
-    return out;
-  };
-  return { nodes: buildItemNodes(part.item), texts };
+function styleValue(value: unknown): string {
+  if (value === null || value === undefined || value === false) return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return value.map(styleValue).filter(Boolean).join(';');
+  if (typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .filter((key) => {
+        const item = (value as Record<string, unknown>)[key];
+        return item !== null && item !== undefined && item !== false;
+      })
+      .map((key) => `${cssName(key)}:${String((value as Record<string, unknown>)[key])}`)
+      .join(';');
+  }
+  throw new Error('[compiled-runtime] style Part expects CSS text or a declaration record');
 }
 
-// ─── Regions ─────────────────────────────────────────────────────────
+function removeNodes(nodes: readonly Node[]): void {
+  for (const node of nodes) node.parentNode?.removeChild(node);
+}
+
+function insertNodesBefore(parent: Node, nodes: readonly Node[], reference: Node): void {
+  for (const node of nodes) parent.insertBefore(node, reference);
+}
+
+function itemValue(part: SpikeEachPart, item: unknown): unknown {
+  if (part.field === undefined) return item;
+  if (typeof item !== 'object' || item === null) return undefined;
+  return (item as Record<string, unknown>)[part.field];
+}
+
+function itemKey(part: SpikeEachPart, item: unknown, index: number): string {
+  if (part.key === undefined || part.keyed === false) return `index:${index}`;
+  if (typeof item !== 'object' || item === null) {
+    throw new Error(`[compiled-runtime] each part ${part.index} keyed items must be records`);
+  }
+  const value = (item as Record<string, unknown>)[part.key];
+  if (
+    (value !== null && typeof value === 'object') || typeof value === 'function' ||
+    typeof value === 'symbol'
+  ) {
+    throw new Error(`[compiled-runtime] each part ${part.index} keys must be serializable values`);
+  }
+  return `${typeof value}:${String(value)}`;
+}
 
 interface WhenRegion {
+  ctx: MountContext;
   part: SpikeWhenPart;
+  scope: ResourceScope;
   anchor: Comment;
   end: Comment;
   current: boolean;
+  branchScope: ResourceScope;
+  nodes: Node[];
+  item: unknown;
+  itemPart?: SpikeEachPart;
 }
 
-interface EachEntry extends BuiltItem {
+interface TextPartSlot {
+  scope: ResourceScope;
+  anchor: Comment;
+  text?: Text;
+  current: string;
+}
+
+interface ChildRegion {
+  ctx: MountContext;
+  part: SpikeChildPart;
+  scope: ResourceScope;
+  anchor: Comment;
+  end: Comment;
+  currentValue: unknown;
+  nodes: Node[];
+}
+
+interface EachEntry {
   key: string;
+  scope: ResourceScope;
+  nodes: Node[];
+  valueTexts: Text[];
 }
 
 interface EachRegion {
+  ctx: MountContext;
   part: SpikeEachPart;
+  scope: ResourceScope;
   anchor: Comment;
   end: Comment;
+  entries: EachEntry[];
   byKey: Map<string, EachEntry>;
+  item: unknown;
 }
 
 function whenActive(part: SpikeWhenPart, value: unknown): boolean {
   return Number(value) > part.gt;
 }
 
-function updateWhen(region: WhenRegion, value: unknown): void {
-  const next = whenActive(region.part, value);
-  if (next === region.current) return;
-  const parent = region.end.parentNode;
-  if (!parent) return;
-  let node = region.anchor.nextSibling;
-  while (node && node !== region.end) {
-    const after = node.nextSibling;
-    parent.removeChild(node);
-    node = after;
-  }
-  const branch = next ? region.part.on : region.part.off;
-  for (const built of buildStaticNodes(region.end.ownerDocument, branch, 'when branch')) {
-    parent.insertBefore(built, region.end);
-  }
-  region.current = next;
+function buildDynamicValue(doc: Document, value: unknown): Node[] {
+  const out: Node[] = [];
+  let pendingText = '';
+  let hasPendingText = false;
+  const flushText = (): void => {
+    if (!hasPendingText) return;
+    if (pendingText.length > 0) out.push(doc.createTextNode(pendingText));
+    pendingText = '';
+    hasPendingText = false;
+  };
+  const append = (next: unknown): void => {
+    if (Array.isArray(next)) {
+      for (const item of next) append(item);
+      return;
+    }
+    if (next === null || next === undefined) return;
+    if (
+      typeof next === 'string' || typeof next === 'number' || typeof next === 'boolean' ||
+      typeof next === 'bigint'
+    ) {
+      pendingText += String(next);
+      hasPendingText = true;
+      return;
+    }
+    flushText();
+    if (isDomNode(next)) {
+      out.push(next);
+      return;
+    }
+    throw new Error(
+      '[compiled-runtime] child Region values must be primitives, DOM nodes, or arrays of those',
+    );
+  };
+  append(value);
+  flushText();
+  return out;
 }
 
-function updateEach(region: EachRegion, value: unknown): void {
-  if (!Array.isArray(value)) {
-    throw new Error(`[compiled-runtime] each part ${region.part.index} expects an array signal`);
+function serializeDynamicValue(value: unknown): string {
+  if (Array.isArray(value)) return value.map(serializeDynamicValue).join('');
+  if (value === null || value === undefined) return '';
+  if (isDomNode(value)) {
+    throw new Error('[compiled-runtime] DOM nodes cannot be serialized by a Part Program');
   }
-  const items = value as Array<Record<string, unknown>>;
-  const parent = region.end.parentNode;
-  if (!parent) return;
-  const seen = new Set<string>();
-  // `current` walks the live DOM inside the Region; the end anchor bounds it.
-  let current: Node = region.anchor.nextSibling ?? region.end;
-  for (const item of items) {
-    const key = String(item[region.part.key]);
-    seen.add(key);
-    let entry = region.byKey.get(key);
-    if (!entry) {
-      const built = buildItem(region.end.ownerDocument, region.part, item);
-      entry = { key, nodes: built.nodes, texts: built.texts };
-      region.byKey.set(key, entry);
-    } else {
-      const nextText = String(item[region.part.field]);
-      if (entry.texts.length > 0 && entry.texts[0].data !== nextText) {
-        entry.texts[0].data = nextText;
-      }
-    }
-    for (const node of entry.nodes) {
-      if (node === current) {
-        current = current.nextSibling ?? region.end;
-        continue;
-      }
-      parent.insertBefore(node, current);
-    }
+  if (
+    typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' &&
+    typeof value !== 'bigint'
+  ) {
+    throw new Error('[compiled-runtime] child Region value is not serializable');
   }
-  for (const [key, entry] of region.byKey) {
-    if (seen.has(key)) continue;
-    for (const node of entry.nodes) node.parentNode?.removeChild(node);
-    region.byKey.delete(key);
-  }
+  return escapeText(String(value));
 }
 
-// ─── Fresh DOM creation ──────────────────────────────────────────────
-
-function buildNodes(ctx: MountContext, doc: Document, nodes: SpikeTreeNode[]): Node[] {
+function mountNodes(
+  ctx: MountContext,
+  scope: ResourceScope,
+  doc: Document,
+  nodes: SpikeTreeNode[],
+  item: unknown = NO_ITEM,
+  itemPart?: SpikeEachPart,
+  itemValueTexts?: Text[],
+): Node[] {
   const out: Node[] = [];
   for (const node of nodes) {
     if (node.k === 'text') {
       out.push(doc.createTextNode(node.value));
       continue;
     }
+    if (node.k === 'ival') {
+      if (item === NO_ITEM) {
+        throw new Error('[compiled-runtime] item value slot outside an each Region');
+      }
+      if (!itemPart) throw new Error('[compiled-runtime] item value slot has no item Region');
+      const value = displayValue(itemValue(itemPart, item));
+      if (value.length > 0) {
+        const text = doc.createTextNode(value);
+        itemValueTexts?.push(text);
+        out.push(text);
+      }
+      continue;
+    }
     if (node.k === 'el') {
       const el = doc.createElement(node.tag);
       for (const [name, value] of node.attrs) el.setAttribute(name, value);
-      for (const child of buildNodes(ctx, doc, node.children)) el.appendChild(child);
+      for (
+        const child of mountNodes(ctx, scope, doc, node.children, item, itemPart, itemValueTexts)
+      ) {
+        el.appendChild(child);
+      }
       out.push(el);
       continue;
     }
-    if (node.k !== 'part') {
-      throw new Error('[compiled-runtime] item value slot outside an each Region');
-    }
-    const part = ctx.program.parts[node.index];
-    if (part.k === 'text') {
-      const text = doc.createTextNode(String(signalOf(ctx, part.signal).value));
-      subscribeWrites(ctx, part.signal, (value) => {
-        text.data = String(value);
-      });
-      out.push(doc.createComment(partAnchorMarker(part.index)), text);
-      continue;
-    }
-    if (part.k === 'when') {
-      const anchor = doc.createComment(partAnchorMarker(part.index));
-      const end = doc.createComment(partAnchorEndMarker(part.index));
-      const active = whenActive(part, signalOf(ctx, part.signal).value);
-      const region: WhenRegion = { part, anchor, end, current: active };
-      subscribeWrites(ctx, part.signal, (value) => updateWhen(region, value));
-      out.push(anchor, ...buildStaticNodes(doc, active ? part.on : part.off, 'when branch'), end);
-      continue;
-    }
-    if (part.k === 'each') {
-      const anchor = doc.createComment(partAnchorMarker(part.index));
-      const end = doc.createComment(partAnchorEndMarker(part.index));
-      const region: EachRegion = { part, anchor, end, byKey: new Map() };
-      const items = signalOf(ctx, part.signal).value as Array<Record<string, unknown>>;
-      const itemNodes: Node[] = [];
-      for (const item of items) {
-        const built = buildItem(doc, part, item);
-        region.byKey.set(String(item[part.key]), { key: String(item[part.key]), ...built });
-        itemNodes.push(...built.nodes);
-      }
-      subscribeWrites(ctx, part.signal, (value) => updateEach(region, value));
-      out.push(anchor, ...itemNodes, end);
-      continue;
-    }
-    throw new Error(`[compiled-runtime] part ${node.index} has no anchor representation`);
+    out.push(...mountPart(ctx, scope, doc, node.index, item, itemPart));
   }
   return out;
 }
 
+/** The sentinel distinguishes an undefined item from no item context. */
+const NO_ITEM = Symbol('compiled-runtime.no-item');
+
+function buildItem(
+  ctx: MountContext,
+  regionScope: ResourceScope,
+  doc: Document,
+  part: SpikeEachPart,
+  item: unknown,
+): { nodes: Node[]; valueTexts: Text[]; scope: ResourceScope } {
+  const scope = regionScope.child();
+  const valueTexts: Text[] = [];
+  return {
+    nodes: mountNodes(ctx, scope, doc, part.item, item, part, valueTexts),
+    valueTexts,
+    scope,
+  };
+}
+
+function buildWhen(
+  ctx: MountContext,
+  parentScope: ResourceScope,
+  doc: Document,
+  part: SpikeWhenPart,
+  item: unknown,
+  itemPart?: SpikeEachPart,
+): Node[] {
+  const scope = parentScope.child();
+  const anchor = doc.createComment(partAnchorMarker(part.index));
+  const end = doc.createComment(partAnchorEndMarker(part.index));
+  const current = whenActive(part, signalOf(ctx, part.signal).value);
+  const region: WhenRegion = {
+    ctx,
+    part,
+    scope,
+    anchor,
+    end,
+    current,
+    branchScope: scope.child(),
+    nodes: [],
+    item,
+    itemPart,
+  };
+  region.nodes = mountNodes(
+    ctx,
+    region.branchScope,
+    doc,
+    current ? part.on : part.off,
+    item,
+    itemPart,
+  );
+  subscribeWrites(ctx, scope, part.signal, (value) => updateWhen(region, value));
+  return [anchor, ...region.nodes, end];
+}
+
+function updateWhen(region: WhenRegion, value: unknown): void {
+  if (region.scope.disposed) return;
+  const next = whenActive(region.part, value);
+  if (next === region.current) return;
+  const parent = region.end.parentNode;
+  if (!parent) return;
+  try {
+    region.branchScope.dispose();
+  } finally {
+    removeNodes(region.nodes);
+  }
+  const branchScope = region.scope.child();
+  let nodes: Node[];
+  try {
+    nodes = mountNodes(
+      region.ctx,
+      branchScope,
+      region.end.ownerDocument,
+      next ? region.part.on : region.part.off,
+      region.item,
+      region.itemPart,
+    );
+    insertNodesBefore(parent, nodes, region.end);
+  } catch (error) {
+    try {
+      branchScope.dispose();
+    } catch {
+      // Preserve the branch construction error.
+    }
+    region.branchScope = branchScope;
+    region.nodes = [];
+    region.current = next;
+    throw error;
+  }
+  region.branchScope = branchScope;
+  region.nodes = nodes;
+  region.current = next;
+}
+
+function buildChild(
+  ctx: MountContext,
+  parentScope: ResourceScope,
+  doc: Document,
+  part: SpikeChildPart,
+): Node[] {
+  const scope = parentScope.child();
+  const anchor = doc.createComment(partAnchorMarker(part.index));
+  const end = doc.createComment(partAnchorEndMarker(part.index));
+  const currentValue = signalOf(ctx, part.signal).value;
+  const region: ChildRegion = {
+    ctx,
+    part,
+    scope,
+    anchor,
+    end,
+    currentValue,
+    nodes: buildDynamicValue(doc, currentValue),
+  };
+  subscribeWrites(ctx, scope, part.signal, (value) => updateChild(region, value));
+  return [anchor, ...region.nodes, end];
+}
+
+function updateChild(region: ChildRegion, value: unknown): void {
+  if (region.scope.disposed || Object.is(region.currentValue, value)) return;
+  const parent = region.end.parentNode;
+  if (!parent) return;
+  removeNodes(region.nodes);
+  region.nodes = buildDynamicValue(region.end.ownerDocument, value);
+  insertNodesBefore(parent, region.nodes, region.end);
+  region.currentValue = value;
+}
+
+function updateTextPart(slot: TextPartSlot, value: unknown): void {
+  if (slot.scope.disposed) return;
+  const next = displayValue(value);
+  if (next === slot.current) return;
+  const parent = slot.anchor.parentNode;
+  if (!parent) {
+    slot.current = next;
+    return;
+  }
+  if (next.length === 0) {
+    slot.text?.parentNode?.removeChild(slot.text);
+    slot.text = undefined;
+  } else if (slot.text) {
+    slot.text.data = next;
+  } else {
+    slot.text = slot.anchor.ownerDocument.createTextNode(next);
+    parent.insertBefore(slot.text, slot.anchor.nextSibling);
+  }
+  slot.current = next;
+}
+
+function buildTextPart(
+  ctx: MountContext,
+  parentScope: ResourceScope,
+  doc: Document,
+  part: SpikeTextPart,
+): Node[] {
+  const scope = parentScope.child();
+  const anchor = doc.createComment(partAnchorMarker(part.index));
+  const current = displayValue(signalOf(ctx, part.signal).value);
+  const slot: TextPartSlot = {
+    scope,
+    anchor,
+    text: current.length > 0 ? doc.createTextNode(current) : undefined,
+    current,
+  };
+  subscribeWrites(ctx, scope, part.signal, (value) => updateTextPart(slot, value));
+  return [anchor, ...(slot.text ? [slot.text] : [])];
+}
+
+function buildEach(
+  ctx: MountContext,
+  parentScope: ResourceScope,
+  doc: Document,
+  part: SpikeEachPart,
+): Node[] {
+  const scope = parentScope.child();
+  const anchor = doc.createComment(partAnchorMarker(part.index));
+  const end = doc.createComment(partAnchorEndMarker(part.index));
+  const region: EachRegion = {
+    ctx,
+    part,
+    scope,
+    anchor,
+    end,
+    entries: [],
+    byKey: new Map(),
+    item: NO_ITEM,
+  };
+  const value = signalOf(ctx, part.signal).value;
+  if (!Array.isArray(value)) {
+    throw new Error(`[compiled-runtime] each part ${part.index} expects an array signal`);
+  }
+  const nodes: Node[] = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < value.length; index++) {
+    const key = itemKey(part, value[index], index);
+    if (seen.has(key)) {
+      throw new Error(`[compiled-runtime] each part ${part.index} has duplicate key`);
+    }
+    seen.add(key);
+    const entry = buildItem(ctx, scope, doc, part, value[index]);
+    const stored = { key, scope: entry.scope, nodes: entry.nodes, valueTexts: entry.valueTexts };
+    region.entries.push(stored);
+    region.byKey.set(key, stored);
+    nodes.push(...entry.nodes);
+  }
+  subscribeWrites(ctx, scope, part.signal, (next) => updateEach(region, next));
+  return [anchor, ...nodes, end];
+}
+
+function updateItemValues(part: SpikeEachPart, entry: EachEntry, item: unknown): void {
+  const next = displayValue(itemValue(part, item));
+  for (const text of entry.valueTexts) {
+    if (text.data !== next) text.data = next;
+  }
+}
+
+function disposeEntry(entry: EachEntry): void {
+  try {
+    entry.scope.dispose();
+  } finally {
+    removeNodes(entry.nodes);
+  }
+}
+
+function moveEntries(region: EachRegion, parent: Node, entries: EachEntry[]): void {
+  let cursor: Node = region.anchor.nextSibling ?? region.end;
+  for (const entry of entries) {
+    for (const node of entry.nodes) {
+      if (node === cursor) {
+        cursor = node.nextSibling ?? region.end;
+      } else {
+        parent.insertBefore(node, cursor);
+        cursor = node.nextSibling ?? region.end;
+      }
+    }
+  }
+}
+
+function updateEach(region: EachRegion, value: unknown): void {
+  if (region.scope.disposed) return;
+  if (!Array.isArray(value)) {
+    throw new Error(`[compiled-runtime] each part ${region.part.index} expects an array signal`);
+  }
+  const parent = region.end.parentNode;
+  if (!parent) return;
+
+  const descriptors: Array<{ key: string; item: unknown; existing?: EachEntry }> = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < value.length; index++) {
+    const item = value[index];
+    const key = itemKey(region.part, item, index);
+    if (seen.has(key)) {
+      throw new Error(`[compiled-runtime] each part ${region.part.index} has duplicate key`);
+    }
+    seen.add(key);
+    descriptors.push({ key, item, existing: region.byKey.get(key) });
+  }
+
+  const created: EachEntry[] = [];
+  try {
+    for (const descriptor of descriptors) {
+      if (descriptor.existing) continue;
+      const built = buildItem(
+        region.ctx,
+        region.scope,
+        region.end.ownerDocument,
+        region.part,
+        descriptor.item,
+      );
+      const entry = { key: descriptor.key, ...built };
+      descriptor.existing = entry;
+      created.push(entry);
+    }
+  } catch (error) {
+    for (const entry of created) disposeEntry(entry);
+    throw error;
+  }
+
+  for (const entry of region.entries) {
+    if (seen.has(entry.key)) continue;
+    disposeEntry(entry);
+  }
+  for (const descriptor of descriptors) {
+    if (descriptor.existing && !created.includes(descriptor.existing)) {
+      updateItemValues(region.part, descriptor.existing, descriptor.item);
+    }
+  }
+  const nextEntries = descriptors.map((descriptor) => descriptor.existing!);
+  region.entries = nextEntries;
+  region.byKey = new Map(nextEntries.map((entry) => [entry.key, entry]));
+  moveEntries(region, parent, nextEntries);
+}
+
+function mountPart(
+  ctx: MountContext,
+  parentScope: ResourceScope,
+  doc: Document,
+  index: number,
+  item: unknown,
+  itemPart?: SpikeEachPart,
+): Node[] {
+  const part = ctx.program.parts[index];
+  if (!part) throw new Error(`[compiled-runtime] missing Part ${index}`);
+  if (part.k === 'text') return buildTextPart(ctx, parentScope, doc, part);
+  if (part.k === 'when') return buildWhen(ctx, parentScope, doc, part, item, itemPart);
+  if (part.k === 'child') return buildChild(ctx, parentScope, doc, part);
+  if (part.k === 'each') return buildEach(ctx, parentScope, doc, part);
+  throw new Error(`[compiled-runtime] fixed Part ${part.index} cannot be used as an anchor`);
+}
+
+/** Resolve a compiler-owned static path without any selector/discovery walk. */
 function resolvePath(root: Node, path: number[], where: string): Element {
   let node: Node = root;
   for (const index of path) {
-    const child: ChildNode | undefined = node.childNodes[index];
+    const child = node.childNodes[index];
     if (!child) throw new Error(`[compiled-runtime] ${where}: path [${path.join(',')}] unresolved`);
     node = child;
   }
@@ -311,47 +745,206 @@ function resolvePath(root: Node, path: number[], where: string): Element {
   return node;
 }
 
-/**
- * Structural view of an Element carrying writable DOM properties. A compiled
- * property Part owns the named property on its target element by construction,
- * so this single-step structural assertion is honest: no double cast, no
- * `unknown` laundering, and the sink stays generic for any Element.
- */
-interface SpikePropertySink extends Element {
+interface PropertySink extends Element {
   [property: string]: unknown;
 }
 
-function propertySink(el: Element): SpikePropertySink {
-  return el as SpikePropertySink;
+function propertySink(element: Element): PropertySink {
+  return element as PropertySink;
 }
 
-/** Attach path-addressed prop/event parts. */
-function attachPathParts(ctx: MountContext, root: Node, mode: 'fresh' | 'claim'): void {
-  for (const part of ctx.program.parts) {
-    if (part.k === 'prop') {
-      const el = resolvePath(root, part.path, 'prop part');
-      const sink = propertySink(el);
-      if (mode === 'fresh') {
-        const initial = signalOf(ctx, part.signal).value;
-        el.setAttribute(part.name, String(initial));
-        sink[part.name] = initial;
-      }
-      // claim deliberately does not write the initial value: live DOM state
-      // (e.g. a user-edited input value) survives a successful claim.
-      subscribeWrites(ctx, part.signal, (value) => {
-        sink[part.name] = value;
-      });
-      continue;
+function applyProperty(element: Element, name: string, value: unknown, initial: boolean): void {
+  const sink = propertySink(element);
+  if (initial) {
+    const serialized = attributeValue(value);
+    if (serialized === null) element.removeAttribute(name);
+    else element.setAttribute(name, serialized);
+  }
+  sink[name] = value;
+}
+
+function applyAttribute(element: Element, name: string, value: string | null): void {
+  if (value === null) element.removeAttribute(name);
+  else element.setAttribute(name, value);
+}
+
+function applyBoolean(element: Element, name: string, value: boolean): void {
+  propertySink(element)[name] = value;
+  if (value) element.setAttribute(name, '');
+  else element.removeAttribute(name);
+}
+
+function installValuePart(
+  ctx: MountContext,
+  root: Node,
+  part: SpikeAttributePart | SpikePropPart | SpikeBooleanPart | SpikeClassPart | SpikeStylePart,
+  mode: 'fresh' | 'claim',
+): void {
+  const element = resolvePath(root, part.path, `${part.k} Part`);
+  const scope = ctx.rootScope.child();
+  const initial = signalOf(ctx, part.signal).value;
+
+  if (part.k === 'attr') {
+    let current = attributeValue(initial);
+    if (mode === 'fresh') applyAttribute(element, part.name, current);
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      const next = attributeValue(value);
+      if (Object.is(next, current)) return;
+      applyAttribute(element, part.name, next);
+      current = next;
+    });
+    return;
+  }
+
+  if (part.k === 'prop') {
+    let current = initial;
+    if (mode === 'fresh') applyProperty(element, part.name, current, true);
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      if (Object.is(value, current)) return;
+      applyProperty(element, part.name, value, false);
+      current = value;
+    });
+    return;
+  }
+
+  if (part.k === 'boolean') {
+    let current = Boolean(initial);
+    if (mode === 'fresh') applyBoolean(element, part.name, current);
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      const next = Boolean(value);
+      if (Object.is(next, current)) return;
+      applyBoolean(element, part.name, next);
+      current = next;
+    });
+    return;
+  }
+
+  if (part.k === 'class') {
+    let current = classValue(initial);
+    if (mode === 'fresh') applyAttribute(element, 'class', current || null);
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      const next = classValue(value);
+      if (Object.is(next, current)) return;
+      applyAttribute(element, 'class', next || null);
+      current = next;
+    });
+    return;
+  }
+
+  let current = styleValue(initial);
+  if (mode === 'fresh') applyAttribute(element, 'style', current || null);
+  subscribeWrites(ctx, scope, part.signal, (value) => {
+    const next = styleValue(value);
+    if (Object.is(next, current)) return;
+    applyAttribute(element, 'style', next || null);
+    current = next;
+  });
+}
+
+function eventHandler(
+  ctx: MountContext,
+  part: SpikeEventPart,
+  value?: unknown,
+): CompiledEventHandler {
+  if (part.handler !== undefined) {
+    const handler = ctx.host.handlers?.[part.handler];
+    if (!handler) throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
+    return handler;
+  }
+  const handler = value ?? signalOf(ctx, part.signal as string).value;
+  if (typeof handler !== 'function') {
+    throw new Error(`[compiled-runtime] event Part ${part.index} signal must contain a function`);
+  }
+  return handler as CompiledEventHandler;
+}
+
+function installEventPart(ctx: MountContext, root: Node, part: SpikeEventPart): void {
+  const element = resolvePath(root, part.path, 'event Part');
+  const scope = ctx.rootScope.child();
+  const options = part.options;
+  let listener: EventListener | undefined;
+  let current: CompiledEventHandler;
+
+  const add = (handler: CompiledEventHandler): void => {
+    const next: EventListener = (event) => handler(event);
+    element.addEventListener(part.event, next, options);
+    listener = next;
+    current = handler;
+  };
+  const remove = (): void => {
+    if (!listener) return;
+    element.removeEventListener(part.event, listener, options);
+    listener = undefined;
+  };
+
+  current = eventHandler(ctx, part);
+  add(current);
+  scope.add(remove);
+  if (part.signal !== undefined) {
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      const next = eventHandler(ctx, part, value);
+      if (next === current) return;
+      remove();
+      add(next);
+    });
+  }
+}
+
+function refHandler(ctx: MountContext, part: SpikeRefPart, value?: unknown): CompiledRefHandler {
+  if (part.ref !== undefined) {
+    const ref = ctx.host.refs?.[part.ref];
+    if (!ref) throw new Error(`[compiled-runtime] missing host ref "${part.ref}"`);
+    return ref;
+  }
+  if (part.handler !== undefined) {
+    const handler = ctx.host.handlers?.[part.handler];
+    if (!handler) throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
+    return handler as CompiledRefHandler;
+  }
+  const ref = value ?? signalOf(ctx, part.signal as string).value;
+  if (typeof ref !== 'function') {
+    throw new Error(`[compiled-runtime] ref Part ${part.index} signal must contain a function`);
+  }
+  return ref as CompiledRefHandler;
+}
+
+function installRefPart(ctx: MountContext, root: Node, part: SpikeRefPart): void {
+  const element = resolvePath(root, part.path, 'ref Part');
+  const scope = ctx.rootScope.child();
+  let current = refHandler(ctx, part);
+  let cleanup = current(element);
+
+  const detach = (): void => {
+    try {
+      if (typeof cleanup === 'function') cleanup();
+    } finally {
+      cleanup = undefined;
+      current(null);
     }
-    if (part.k === 'event') {
-      const el = resolvePath(root, part.path, 'event part');
-      const handler = ctx.host.handlers[part.handler];
-      if (!handler) {
-        throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
-      }
-      const fn: EventListener = (event) => handler(event);
-      el.addEventListener(part.event, fn);
-      ctx.listeners.push({ el, type: part.event, fn });
+  };
+  scope.add(detach);
+  if (part.signal !== undefined) {
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      const next = refHandler(ctx, part, value);
+      if (next === current) return;
+      detach();
+      current = next;
+      cleanup = current(element);
+    });
+  }
+}
+
+function attachFixedParts(ctx: MountContext, root: Node, mode: 'fresh' | 'claim'): void {
+  for (const part of ctx.program.parts) {
+    if (
+      part.k === 'attr' || part.k === 'prop' || part.k === 'boolean' || part.k === 'class' ||
+      part.k === 'style'
+    ) {
+      installValuePart(ctx, root, part, mode);
+    } else if (part.k === 'event') {
+      installEventPart(ctx, root, part);
+    } else if (part.k === 'ref') {
+      installRefPart(ctx, root, part);
     }
   }
 }
@@ -362,27 +955,43 @@ function instance(ctx: MountContext): CompiledSpikeInstance {
     dispose(): void {
       if (disposed) return;
       disposed = true;
-      for (const unsub of ctx.unsubs.splice(0)) unsub();
-      for (const { el, type, fn } of ctx.listeners.splice(0)) el.removeEventListener(type, fn);
+      ctx.rootScope.dispose();
     },
   };
 }
 
-/** Fresh browser DOM creation: build the program under `root`. */
+/** Fresh browser DOM creation from the validated Part Program. */
 export function createFreshDom(
   program: PartProgramSpike,
   host: CompiledSpikeHost,
   root: Node,
 ): CompiledSpikeInstance {
-  const ctx = createContext(program, host);
+  const ctx = createContext(validateSpikeProgram(program), host);
   const doc = root.ownerDocument;
   if (!doc) throw new Error('[compiled-runtime] root must have an ownerDocument');
-  for (const node of buildNodes(ctx, doc, program.template)) root.appendChild(node);
-  attachPathParts(ctx, root, 'fresh');
-  return instance(ctx);
+  if (root.childNodes.length > 0) {
+    throw new Error('[compiled-runtime] fresh DOM root must be empty');
+  }
+  let created: Node[] = [];
+  try {
+    created = mountNodes(ctx, ctx.rootScope, doc, ctx.program.template);
+    for (const node of created) {
+      root.appendChild(node);
+    }
+    attachFixedParts(ctx, root, 'fresh');
+    return instance(ctx);
+  } catch (error) {
+    removeNodes(created);
+    try {
+      ctx.rootScope.dispose();
+    } catch {
+      // Preserve the construction error; every cleanup was still attempted.
+    }
+    throw error;
+  }
 }
 
-// ─── Server serialization ────────────────────────────────────────────
+// ─── Server serialization ──────────────────────────────────────────
 
 const VOID_TAGS = new Set([
   'area',
@@ -403,87 +1012,114 @@ const VOID_TAGS = new Set([
 function escapeText(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
+
 function escapeAttr(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
+}
+
+function serializedFixedAttributes(
+  ctx: MountContext,
+  node: SpikeElementNode,
+  path: number[],
+): Array<[string, string]> {
+  const attrs = new Map<string, string>();
+  for (const [name, value] of node.attrs) attrs.set(name, value);
+  for (const part of ctx.fixedPartsByPath.get(path.join('.')) ?? []) {
+    if (part.k === 'attr' || part.k === 'prop') {
+      const value = signalOf(ctx, part.signal).value;
+      const next = attributeValue(value);
+      if (next === null) attrs.delete(part.name);
+      else attrs.set(part.name, next);
+    } else if (part.k === 'boolean') {
+      const value = signalOf(ctx, part.signal).value;
+      if (value) attrs.set(part.name, '');
+      else attrs.delete(part.name);
+    } else if (part.k === 'class') {
+      const value = signalOf(ctx, part.signal).value;
+      const next = classValue(value);
+      if (next) attrs.set('class', next);
+      else attrs.delete('class');
+    } else if (part.k === 'style') {
+      const value = signalOf(ctx, part.signal).value;
+      const next = styleValue(value);
+      if (next) attrs.set('style', next);
+      else attrs.delete('style');
+    }
+  }
+  return [...attrs.entries()];
 }
 
 function serializeElement(
   ctx: MountContext,
   node: SpikeElementNode,
   programPath: number[],
+  item: unknown,
+  itemPart?: SpikeEachPart,
 ): string {
-  const attrs = node.attrs.map(([name, value]) => ` ${name}="${escapeAttr(value)}"`);
-  for (const part of ctx.propPartsByPath.get(programPath.join('.')) ?? []) {
-    attrs.push(` ${part.name}="${escapeAttr(String(signalOf(ctx, part.signal).value))}"`);
-  }
-  const open = `<${node.tag}${attrs.join('')}`;
+  const attrs = serializedFixedAttributes(ctx, node, programPath)
+    .map(([name, value]) => ` ${name}="${escapeAttr(value)}"`)
+    .join('');
+  const open = `<${node.tag}${attrs}`;
   if (VOID_TAGS.has(node.tag)) return `${open}>`;
   const children = node.children
-    .map((child, index) => serializeNode(ctx, child, [...programPath, index]))
+    .map((child, index) => serializeNode(ctx, child, [...programPath, index], item, itemPart))
     .join('');
   return `${open}>${children}</${node.tag}>`;
 }
 
-function serializeItemNodes(
-  nodes: SpikeTreeNode[],
-  part: SpikeEachPart,
-  item: Record<string, unknown>,
+function serializeNode(
+  ctx: MountContext,
+  node: SpikeTreeNode,
+  programPath: number[],
+  item: unknown = NO_ITEM,
+  itemPart?: SpikeEachPart,
 ): string {
-  return nodes
-    .map((node) => {
-      if (node.k === 'ival') return escapeText(String(item[part.field]));
-      if (node.k === 'text') return escapeText(node.value);
-      if (node.k === 'el') {
-        const attrs = node.attrs.map(([name, value]) => ` ${name}="${escapeAttr(value)}"`).join('');
-        const inner = serializeItemNodes(node.children, part, item);
-        return VOID_TAGS.has(node.tag)
-          ? `<${node.tag}${attrs}>`
-          : `<${node.tag}${attrs}>${inner}</${node.tag}>`;
-      }
-      throw new Error('[compiled-runtime] item templates may not contain part anchors');
-    })
-    .join('');
-}
-
-function serializeNode(ctx: MountContext, node: SpikeTreeNode, programPath: number[]): string {
-  switch (node.k) {
-    case 'text':
-      return escapeText(node.value);
-    case 'el':
-      return serializeElement(ctx, node, programPath);
-    case 'part': {
-      const part = ctx.program.parts[node.index];
-      const open = `<!--${partAnchorMarker(part.index)}-->`;
-      if (part.k === 'text') {
-        return open + escapeText(String(signalOf(ctx, part.signal).value));
-      }
-      const close = `<!--${partAnchorEndMarker(part.index)}-->`;
-      if (part.k === 'when') {
-        const active = whenActive(part, signalOf(ctx, part.signal).value);
-        const branch = (active ? part.on : part.off)
-          .map((branchNode, index) => serializeNode(ctx, branchNode, [...programPath, index]))
-          .join('');
-        return open + branch + close;
-      }
-      if (part.k === 'each') {
-        const items = signalOf(ctx, part.signal).value as Array<Record<string, unknown>>;
-        return open + items.map((item) => serializeItemNodes(part.item, part, item)).join('') +
-          close;
-      }
-      throw new Error(`[compiled-runtime] part ${part.index} has no serialized anchor`);
-    }
-    case 'ival':
+  if (node.k === 'text') return escapeText(node.value);
+  if (node.k === 'ival') {
+    if (item === NO_ITEM) {
       throw new Error('[compiled-runtime] item value slot outside an each Region');
+    }
+    if (!itemPart) throw new Error('[compiled-runtime] item value slot has no item Region');
+    return escapeText(displayValue(itemValue(itemPart, item)));
   }
+  if (node.k === 'el') return serializeElement(ctx, node, programPath, item, itemPart);
+
+  const part = ctx.program.parts[node.index];
+  if (!part) throw new Error(`[compiled-runtime] missing Part ${node.index}`);
+  const open = `<!--${partAnchorMarker(part.index)}-->`;
+  if (part.k === 'text') return open + escapeText(displayValue(signalOf(ctx, part.signal).value));
+  const close = `<!--${partAnchorEndMarker(part.index)}-->`;
+  if (part.k === 'child') {
+    return open + serializeDynamicValue(signalOf(ctx, part.signal).value) + close;
+  }
+  if (part.k === 'when') {
+    const branch = whenActive(part, signalOf(ctx, part.signal).value) ? part.on : part.off;
+    return open + branch.map((child, index) =>
+      serializeNode(ctx, child, [...programPath, index], item, itemPart)
+    ).join('') +
+      close;
+  }
+  if (part.k === 'each') {
+    const value = signalOf(ctx, part.signal).value;
+    if (!Array.isArray(value)) {
+      throw new Error(`[compiled-runtime] each part ${part.index} expects an array signal`);
+    }
+    return open + value.map((entry) =>
+      part.item.map((child, index) =>
+        serializeNode(ctx, child, [...programPath, index], entry, part)
+      ).join('')
+    ).join('') + close;
+  }
+  throw new Error(`[compiled-runtime] fixed Part ${part.index} has no serialized anchor`);
 }
 
-/** Server serialization: the same program rendered to deterministic HTML. */
+/** Server serialization: the same program renders deterministic HTML. */
 export function serializeToHtml(program: PartProgramSpike, host: CompiledSpikeHost): string {
-  const ctx = createContext(program, host);
-  return program.template.map((node, index) => serializeNode(ctx, node, [index])).join('');
+  const ctx = createContext(validateSpikeProgram(program), host);
+  return ctx.program.template.map((node, index) => serializeNode(ctx, node, [index])).join('');
 }
 
-// ─── Existing-DOM claim ──────────────────────────────────────────────
+// ─── Existing-DOM claim ─────────────────────────────────────────────
 
 function claimFailure(path: string, message: string): never {
   throw new PartProgramClaimError(path, message);
@@ -496,110 +1132,102 @@ function expectComment(node: Node, marker: string, path: string): Comment {
   return node;
 }
 
-function claimItemNodes(
-  part: SpikeEachPart,
-  nodes: SpikeTreeNode[],
+function dynamicAttributeNames(ctx: MountContext, path: number[]): Set<string> {
+  const names = new Set<string>();
+  for (const part of ctx.fixedPartsByPath.get(path.join('.')) ?? []) {
+    if (part.k === 'attr' || part.k === 'prop' || part.k === 'boolean') names.add(part.name);
+    if (part.k === 'class') names.add('class');
+    if (part.k === 'style') names.add('style');
+  }
+  return names;
+}
+
+function claimElementAttributes(
+  ctx: MountContext,
+  element: Element,
+  node: SpikeElementNode,
+  path: string,
+  programPath: number[],
+): void {
+  const dynamic = dynamicAttributeNames(ctx, programPath);
+  for (const [name, value] of node.attrs) {
+    if (dynamic.has(name)) continue;
+    if (element.getAttribute(name) !== value) {
+      claimFailure(path, `attribute drift on "${name}": expected ${JSON.stringify(value)}`);
+    }
+  }
+  const getNames = (element as Element & { getAttributeNames?: () => string[] }).getAttributeNames;
+  if (getNames) {
+    const expected = new Set(node.attrs.map(([name]) => name));
+    for (const name of dynamic) expected.add(name);
+    for (const name of getNames.call(element)) {
+      if (!expected.has(name)) claimFailure(path, `unexpected attribute "${name}"`);
+    }
+  }
+}
+
+function claimDynamicValue(
   parent: Node,
   cursor: number,
-  item: Record<string, unknown>,
+  value: unknown,
   path: string,
-): { consumed: number; entryNodes: Node[]; texts: Text[] } {
-  const entryNodes: Node[] = [];
-  const texts: Text[] = [];
-  let used = 0;
-  for (const node of nodes) {
-    const dom = parent.childNodes[cursor + used];
-    if (!dom) claimFailure(path, 'missing item node');
-    if (node.k === 'ival') {
-      if (!isText(dom)) claimFailure(path, 'expected item value text');
-      const expected = String(item[part.field]);
-      if (dom.data !== expected) {
-        claimFailure(path, `item text drift: expected ${JSON.stringify(expected)}`);
-      }
-      texts.push(dom);
-      entryNodes.push(dom);
-      used++;
-      continue;
+): number {
+  const expectedTexts: string[] = [];
+  let pendingText = '';
+  let hasPendingText = false;
+  const flushText = (): void => {
+    if (!hasPendingText) return;
+    if (pendingText.length > 0) expectedTexts.push(pendingText);
+    pendingText = '';
+    hasPendingText = false;
+  };
+  const collect = (next: unknown): void => {
+    if (Array.isArray(next)) {
+      for (const item of next) collect(item);
+      return;
     }
-    if (node.k === 'text') {
-      if (!isText(dom) || dom.data !== node.value) claimFailure(path, 'item text drift');
-      entryNodes.push(dom);
-      used++;
-      continue;
+    if (next === null || next === undefined) return;
+    if (
+      typeof next === 'string' || typeof next === 'number' || typeof next === 'boolean' ||
+      typeof next === 'bigint'
+    ) {
+      pendingText += String(next);
+      hasPendingText = true;
+      return;
     }
-    if (node.k === 'el') {
-      if (!isElement(dom) || dom.tagName.toLowerCase() !== node.tag) {
-        claimFailure(path, `expected item element <${node.tag}>`);
-      }
-      for (const [name, value] of node.attrs) {
-        if ((dom as Element).getAttribute(name) !== value) {
-          claimFailure(path, `item attribute "${name}" drift`);
-        }
-      }
-      texts.push(...claimItemChildren(part, node, dom, item, path));
-      entryNodes.push(dom);
-      used++;
-      continue;
+    flushText();
+    if (isDomNode(next)) {
+      claimFailure(path, 'DOM node values are not claimable from serialized HTML');
     }
-    claimFailure(path, 'item templates may not contain part anchors');
+    claimFailure(path, 'dynamic value is not claimable');
+  };
+  collect(value);
+  flushText();
+  for (const expected of expectedTexts) {
+    const node = parent.childNodes[cursor];
+    if (!node || !isText(node)) claimFailure(path, 'expected dynamic text node');
+    if (node.data !== expected) {
+      claimFailure(path, `dynamic text drift: expected ${JSON.stringify(expected)}`);
+    }
+    cursor++;
   }
-  return { consumed: used, entryNodes, texts };
+  return cursor;
 }
 
-function claimItemChildren(
-  part: SpikeEachPart,
-  node: SpikeElementNode,
-  el: Node,
-  item: Record<string, unknown>,
-  path: string,
-): Text[] {
-  const texts: Text[] = [];
-  if (el.childNodes.length !== node.children.length) {
-    claimFailure(path, 'item element child count drift');
-  }
-  node.children.forEach((child, index) => {
-    const dom = el.childNodes[index];
-    if (child.k === 'ival') {
-      if (!isText(dom)) claimFailure(path, 'expected item value text');
-      const expected = String(item[part.field]);
-      if (dom.data !== expected) {
-        claimFailure(path, `item text drift: expected ${JSON.stringify(expected)}`);
-      }
-      texts.push(dom);
-      return;
-    }
-    if (child.k === 'text') {
-      if (!isText(dom) || dom.data !== child.value) claimFailure(path, 'item text drift');
-      return;
-    }
-    if (child.k === 'el') {
-      if (!isElement(dom) || dom.tagName.toLowerCase() !== child.tag) {
-        claimFailure(path, `expected item element <${child.tag}>`);
-      }
-      texts.push(...claimItemChildren(part, child, dom, item, path));
-      return;
-    }
-    claimFailure(path, 'item templates may not contain part anchors');
-  });
-  return texts;
-}
-
-/**
- * Claim `nodes` against `parent`'s existing children starting at `cursor`.
- * Returns the cursor after the consumed children. `programPath` tracks
- * template child indices so prop-driven attributes can skip verification.
- */
-function claimChildren(
+function claimNodes(
   ctx: MountContext,
   parent: Node,
   cursor: number,
   nodes: SpikeTreeNode[],
   path: string,
   programPath: number[],
+  scope: ResourceScope,
+  item: unknown = NO_ITEM,
+  itemPart?: SpikeEachPart,
+  itemValueTexts?: Text[],
 ): number {
-  const kids = parent.childNodes;
   const at = (index: number): Node => {
-    const node = kids[index];
+    const node = parent.childNodes[index];
     if (!node) claimFailure(path, `missing child at DOM index ${index}`);
     return node;
   };
@@ -608,7 +1236,6 @@ function claimChildren(
     const node = nodes[index];
     const nodePath = `${path}[${index}]`;
     const nodeProgramPath = [...programPath, index];
-
     if (node.k === 'text') {
       const dom = at(cursor++);
       if (!isText(dom)) claimFailure(nodePath, 'expected a text node');
@@ -620,29 +1247,38 @@ function claimChildren(
       }
       continue;
     }
-
+    if (node.k === 'ival') {
+      if (item === NO_ITEM) claimFailure(nodePath, 'item value slot outside an each Region');
+      if (!itemPart) claimFailure(nodePath, 'item value slot has no item Region');
+      const expected = displayValue(itemValue(itemPart, item));
+      if (expected.length > 0) {
+        const dom = at(cursor++);
+        if (!isText(dom)) claimFailure(nodePath, 'expected item value text');
+        if (dom.data !== expected) {
+          claimFailure(nodePath, `item text drift: expected ${JSON.stringify(expected)}`);
+        }
+        itemValueTexts?.push(dom);
+      }
+      continue;
+    }
     if (node.k === 'el') {
       const dom = at(cursor++);
       if (!isElement(dom)) claimFailure(nodePath, 'expected an element');
       if (dom.tagName.toLowerCase() !== node.tag) {
         claimFailure(nodePath, `expected <${node.tag}>, found <${dom.tagName.toLowerCase()}>`);
       }
-      const propDriven = new Set(
-        (ctx.propPartsByPath.get(nodeProgramPath.join('.')) ?? []).map((part) => part.name),
-      );
-      for (const [name, value] of node.attrs) {
-        if (propDriven.has(name)) continue; // live property state wins over SSR drift
-        if (dom.getAttribute(name) !== value) {
-          claimFailure(nodePath, `attribute drift on "${name}": expected ${JSON.stringify(value)}`);
-        }
-      }
-      const consumed = claimChildren(
+      claimElementAttributes(ctx, dom, node, nodePath, nodeProgramPath);
+      const consumed = claimNodes(
         ctx,
         dom,
         0,
         node.children,
         `${nodePath}.children`,
         nodeProgramPath,
+        scope,
+        item,
+        itemPart,
+        itemValueTexts,
       );
       if (consumed !== dom.childNodes.length) {
         claimFailure(`${nodePath}.children`, 'unexpected trailing nodes');
@@ -650,78 +1286,160 @@ function claimChildren(
       continue;
     }
 
-    if (node.k === 'part') {
-      const part = ctx.program.parts[node.index];
-      if (part.k === 'text') {
-        expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
-        const text = at(cursor++);
-        if (!isText(text)) claimFailure(nodePath, 'expected a text node after the part anchor');
-        const expected = String(signalOf(ctx, part.signal).value);
+    const part = ctx.program.parts[node.index];
+    if (!part) claimFailure(nodePath, `missing Part ${node.index}`);
+    if (part.k === 'text') {
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
+      const expected = displayValue(signalOf(ctx, part.signal).value);
+      let text: Text | undefined;
+      if (expected.length > 0) {
+        const next = at(cursor++);
+        if (!isText(next)) claimFailure(nodePath, 'expected a text node after the part anchor');
+        text = next;
         if (text.data !== expected) {
-          claimFailure(
-            nodePath,
-            `part text drift: expected ${JSON.stringify(expected)}, found ${
-              JSON.stringify(text.data)
-            }`,
-          );
+          claimFailure(nodePath, `part text drift: expected ${JSON.stringify(expected)}`);
         }
-        subscribeWrites(ctx, part.signal, (value) => {
-          text.data = String(value);
-        });
-        continue;
       }
-      if (part.k === 'when') {
-        const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
-        const active = whenActive(part, signalOf(ctx, part.signal).value);
-        const branch = active ? part.on : part.off;
-        cursor = claimChildren(ctx, parent, cursor, branch, `${nodePath}.branch`, []);
-        const end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
-        const region: WhenRegion = { part, anchor, end, current: active };
-        subscribeWrites(ctx, part.signal, (value) => updateWhen(region, value));
-        continue;
-      }
-      if (part.k === 'each') {
-        const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
-        const region: EachRegion = { part, anchor, end: anchor, byKey: new Map() };
-        const items = signalOf(ctx, part.signal).value as Array<Record<string, unknown>>;
-        for (const item of items) {
-          const claimed = claimItemNodes(part, part.item, parent, cursor, item, `${nodePath}.item`);
-          cursor += claimed.consumed;
-          region.byKey.set(String(item[part.key]), {
-            key: String(item[part.key]),
-            nodes: claimed.entryNodes,
-            texts: claimed.texts,
-          });
-        }
-        region.end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
-        subscribeWrites(ctx, part.signal, (value) => updateEach(region, value));
-        continue;
-      }
-      claimFailure(nodePath, `part ${node.index} has no claimable anchor`);
+      const partScope = scope.child();
+      const slot: TextPartSlot = { scope: partScope, anchor, text, current: expected };
+      subscribeWrites(ctx, partScope, part.signal, (value) => {
+        updateTextPart(slot, value);
+      });
+      continue;
     }
-
-    claimFailure(nodePath, 'item value slot outside an each Region');
+    if (part.k === 'child') {
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
+      const start = cursor;
+      cursor = claimDynamicValue(
+        parent,
+        cursor,
+        signalOf(ctx, part.signal).value,
+        `${nodePath}.value`,
+      );
+      const end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
+      const partScope = scope.child();
+      const region: ChildRegion = {
+        ctx,
+        part,
+        scope: partScope,
+        anchor,
+        end,
+        currentValue: signalOf(ctx, part.signal).value,
+        nodes: Array.from(parent.childNodes).slice(start, cursor - 1),
+      };
+      subscribeWrites(ctx, partScope, part.signal, (value) => updateChild(region, value));
+      continue;
+    }
+    if (part.k === 'when') {
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
+      const active = whenActive(part, signalOf(ctx, part.signal).value);
+      const partScope = scope.child();
+      const branchScope = partScope.child();
+      const before = cursor;
+      cursor = claimNodes(
+        ctx,
+        parent,
+        cursor,
+        active ? part.on : part.off,
+        `${nodePath}.branch`,
+        [],
+        branchScope,
+        item,
+        itemPart,
+        itemValueTexts,
+      );
+      const end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
+      const region: WhenRegion = {
+        ctx,
+        part,
+        scope: partScope,
+        anchor,
+        end,
+        current: active,
+        branchScope,
+        nodes: Array.from(parent.childNodes).slice(before, cursor - 1),
+        item,
+      };
+      subscribeWrites(ctx, partScope, part.signal, (value) => updateWhen(region, value));
+      continue;
+    }
+    if (part.k === 'each') {
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
+      const value = signalOf(ctx, part.signal).value;
+      if (!Array.isArray(value)) claimFailure(nodePath, 'each Part signal is not an array');
+      const partScope = scope.child();
+      const region: EachRegion = {
+        ctx,
+        part,
+        scope: partScope,
+        anchor,
+        end: anchor,
+        entries: [],
+        byKey: new Map(),
+        item: NO_ITEM,
+      };
+      const seen = new Set<string>();
+      for (let itemIndex = 0; itemIndex < value.length; itemIndex++) {
+        const currentItem = value[itemIndex];
+        const key = itemKey(part, currentItem, itemIndex);
+        if (seen.has(key)) claimFailure(`${nodePath}.item[${itemIndex}]`, 'duplicate item key');
+        seen.add(key);
+        const itemScope = partScope.child();
+        const itemTexts: Text[] = [];
+        const before = cursor;
+        cursor = claimNodes(
+          ctx,
+          parent,
+          cursor,
+          part.item,
+          `${nodePath}.item[${itemIndex}]`,
+          [],
+          itemScope,
+          currentItem,
+          part,
+          itemTexts,
+        );
+        const entry: EachEntry = {
+          key,
+          scope: itemScope,
+          nodes: Array.from(parent.childNodes).slice(before, cursor),
+          valueTexts: itemTexts,
+        };
+        region.entries.push(entry);
+        region.byKey.set(key, entry);
+      }
+      region.end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
+      subscribeWrites(ctx, partScope, part.signal, (next) => updateEach(region, next));
+      continue;
+    }
+    claimFailure(nodePath, `Part ${node.index} has no claimable anchor`);
   }
-
   return cursor;
 }
 
-/**
- * Claim existing SSR DOM: verify exact structure and attach Parts, Regions,
- * events and subscriptions without recreating nodes. Structural drift fails
- * with a PartProgramClaimError carrying the template path; bounded recovery of
- * the owning element range is owned by #1169 and is intentionally absent here.
- */
+/** Claim existing SSR DOM without allocating or overwriting live values. */
 export function claimExistingDom(
   program: PartProgramSpike,
   host: CompiledSpikeHost,
   root: Node,
 ): CompiledSpikeInstance {
-  const ctx = createContext(program, host);
-  const consumed = claimChildren(ctx, root, 0, program.template, 'template', []);
-  if (consumed !== root.childNodes.length) {
-    claimFailure('template', 'unexpected trailing nodes');
+  const ctx = createContext(validateSpikeProgram(program), host);
+  try {
+    const consumed = claimNodes(ctx, root, 0, ctx.program.template, 'template', [], ctx.rootScope);
+    if (consumed !== root.childNodes.length) claimFailure('template', 'unexpected trailing nodes');
+    attachFixedParts(ctx, root, 'claim');
+    return instance(ctx);
+  } catch (error) {
+    try {
+      ctx.rootScope.dispose();
+    } catch {
+      // Keep the structural diagnostic while still attempting every cleanup.
+    }
+    throw error;
   }
-  attachPathParts(ctx, root, 'claim');
-  return instance(ctx);
 }
+
+/** Canonical alpha.2 entry-point aliases. */
+export const createPartProgram = createFreshDom;
+export const serializePartProgram = serializeToHtml;
+export const claimPartProgram = claimExistingDom;

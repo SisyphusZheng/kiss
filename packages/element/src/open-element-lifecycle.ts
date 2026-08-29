@@ -9,14 +9,28 @@
  */
 export class ElementLifecycle {
   #controller = new AbortController();
+  #connected = false;
 
   /** Aborted when the element disconnects (fresh signal on reconnect). */
   get signal(): AbortSignal {
     return this.#controller.signal;
   }
 
+  /** Arm this lifecycle box once for one connected/adopted activation. */
+  connect(): void {
+    if (this.#connected) return;
+    if (this.#controller.signal.aborted) this.#controller = new AbortController();
+    this.#connected = true;
+  }
+
+  get active(): boolean {
+    return this.#connected;
+  }
+
   /** Abort the current signal; a reconnect gets a fresh, non-aborted one. */
   dispose(): void {
+    if (!this.#connected && this.#controller.signal.aborted) return;
+    this.#connected = false;
     this.#controller.abort();
     this.#controller = new AbortController();
   }
