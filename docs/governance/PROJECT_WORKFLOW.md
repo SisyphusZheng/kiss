@@ -16,11 +16,12 @@ Current execution anchor:
 - source package line `v0.43.3`;
 - npm registry line `v0.43.3` (published);
 - active target `v0.44.0-alpha.0`;
-- next planned target `v0.44.0-alpha.1`.
+- next public prerelease: the first coherent compiled-framework alpha.
 
 ADR-0143 explicitly reopens the minor train after the 0.43 maintenance freeze.
-The compiled OpenElement execution order and alpha → beta.1 UI → beta.2 website →
-RC SaaS → Stable admission ladder live in `docs/current/VERSION_PLAN.md`; 0.43.x
+The compiled OpenElement execution order and final alpha → beta.1 UI → beta.2 website
+→ beta.3 hardening → RC SaaS → Stable admission ladder live in
+`docs/current/VERSION_PLAN.md`; 0.43.x
 remains the stable maintenance fallback until 0.44 reaches stable.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a

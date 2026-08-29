@@ -2,7 +2,7 @@ import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import { loadV044RoleConfig, V044_ROLE_CONFIG_PATH } from './config/load-v044-roles.ts';
 import {
   type ReleaseDoctrineTexts,
-  validateAlphaZeroOrdering,
+  validateAcceleratedTopology,
   validateExecutionState,
   validateExecutorContract,
   validateReleaseDoctrine,
@@ -59,14 +59,92 @@ Deno.test('executor capability contract is pinned to 262144 context and high def
   assert(validateExecutorContract(drifted).length >= 2);
 });
 
-Deno.test('alpha.0 wave orders #1156 immediately after #1160', () => {
-  const good =
-    '| `alpha.0` | #1160 → #1156 → #1157 → #1158 → #1159 → #1182 closure | fresh release verifier |';
-  assertEquals(validateAlphaZeroOrdering(good), []);
-  const stale =
-    '| `alpha.0` | #1160 → #1157 → #1158 → #1159 → #1156 → #1182 closure | fresh release verifier |';
-  assert(validateAlphaZeroOrdering(stale).length > 0);
-  assert(validateAlphaZeroOrdering('no wave table here').length > 0);
+function acceleratedPlan(): string {
+  return [
+    'The train uses parallel development and serial integration.',
+    '',
+    '| Phase | Work | Exit |',
+    '| --- | --- | --- |',
+    '| `alpha.0` | #1160 accepted -> #1182 accepted -> #1193 branch safety | one base SHA |',
+    '',
+    '| Lane | Issues | Input |',
+    '| --- | --- | --- |',
+    '| Compiler / Part Program | #1161 #1162 #1163 | frozen schema |',
+    '| Element Runtime / Signals | #1164 #1165 #1166 #723 #1167 | frozen program |',
+    '| SSR / DOM Claim | #1168 #1169 #1170 | marker contract |',
+    '| App / Islands / Delivery | #1088 #1171 #1172 #1173 | Integration I program/runtime path |',
+    '',
+    '## Integration I',
+    '',
+    'one end-to-end vertical path.',
+    '',
+    '## Integration II',
+    '',
+    'Only after this checkpoint may #1174 aggressively remove replaced primary paths.',
+    '',
+    '## Final Alpha',
+    '',
+    '#1174, #1175, #1176 and #1181 prove legacy absence and migration.',
+    '',
+    '- Beta.3: #1192, #1156, #1187, #1188, #1189',
+  ].join('\n');
+}
+
+Deno.test('accelerated topology accepts the minimal alpha.0 parallel-lane plan', () => {
+  assertEquals(validateAcceleratedTopology(acceleratedPlan()), []);
+});
+
+Deno.test('accelerated topology matches the live execution plan', async () => {
+  const plan = await Deno.readTextFile('docs/current/v0.44.0-EXECUTION-PLAN.md');
+  assertEquals(validateAcceleratedTopology(plan), []);
+});
+
+Deno.test('accelerated topology rejects governance hardening moved back into alpha.0', () => {
+  const stale = acceleratedPlan().replace(
+    '#1193 branch safety',
+    '#1193 branch safety -> #1156 loop hardening',
+  );
+  const failures = validateAcceleratedTopology(stale);
+  assert(failures.some((failure) => failure.includes('#1156')));
+});
+
+Deno.test('accelerated topology rejects missing Runtime or SSR/Claim lane ownership', () => {
+  const noRuntime = acceleratedPlan()
+    .split('\n')
+    .filter((line) => !line.includes('Runtime'))
+    .join('\n');
+  assert(
+    validateAcceleratedTopology(noRuntime).some((failure) => failure.includes('Runtime')),
+  );
+  const noSsr = acceleratedPlan()
+    .split('\n')
+    .filter((line) => !line.includes('SSR'))
+    .join('\n');
+  assert(validateAcceleratedTopology(noSsr).some((failure) => failure.includes('SSR')));
+});
+
+Deno.test('accelerated topology rejects broad App/Delivery work before Integration I', () => {
+  const early = acceleratedPlan().replace(
+    'Integration I program/runtime path',
+    'frozen program',
+  );
+  assert(
+    validateAcceleratedTopology(early).some((failure) => failure.includes('Integration I')),
+  );
+});
+
+Deno.test('accelerated topology rejects Final Alpha legacy removal before Integration II', () => {
+  const plan = acceleratedPlan();
+  const integrationTwo = plan.slice(
+    plan.indexOf('## Integration II'),
+    plan.indexOf('## Final Alpha'),
+  );
+  const reordered = plan
+    .replace(integrationTwo, '')
+    .replace('- Beta.3:', `${integrationTwo}\n- Beta.3:`);
+  assert(
+    validateAcceleratedTopology(reordered).some((failure) => failure.includes('Integration II')),
+  );
 });
 
 Deno.test('R4: control-plane corpus records the authorized prerelease flow and the #1178 human stop', async () => {
@@ -77,10 +155,10 @@ Deno.test('R4: control-plane corpus records the authorized prerelease flow and t
       !text.includes('Always forbidden without a new human message'),
       `${name} still carries stale per-prerelease human-gate prose`,
     );
-    assertStringIncludes(text, 'alpha.1');
-    assertStringIncludes(text, 'beta.2');
+    assertStringIncludes(text, '`beta.1` through `beta.3`');
     assertStringIncludes(text, '#1178');
   }
+  assertStringIncludes(sop, 'alpha.1');
   assertStringIncludes(sop, 'unanimous');
 });
 
@@ -102,7 +180,7 @@ Deno.test('R12: the issue map never describes alpha.0 as publishable and states 
   );
 });
 
-Deno.test('R13: the version plan requires the unanimous three-role GO for alpha.1-beta.2, not a human GO per candidate', async () => {
+Deno.test('R13: the version plan requires the unanimous three-role GO for alpha.1-beta.3, not a human GO per candidate', async () => {
   const failures = validateReleaseDoctrine(await doctrineCorpus());
   assertEquals(
     failures.filter((failure) => failure.startsWith('version plan')),
@@ -140,10 +218,12 @@ Deno.test('release doctrine validator rejects stale publishable, human-GO and no
     sop: 'advance `dev` by fast-forward only (`git merge --ff-only`); merge commits, squash ' +
       'merges, rebase-created SHAs, force pushes and evidence relabeling are forbidden; if ' +
       'fast-forward is impossible the candidate is stale and needs a new exact-SHA PR CI run; ' +
+      'the prerelease release flow covers alpha candidates and `beta.1` through `beta.3`; ' +
       '`alpha.0` stays strictly unpublished.',
     prompt: 'advance `main` by fast-forward only (`git merge --ff-only`); merge commits, squash ' +
       'merges, rebase-created SHAs, force pushes and evidence relabeling are forbidden; if ' +
-      'fast-forward is impossible the candidate is stale and needs a new exact-SHA PR CI run.',
+      'fast-forward is impossible the candidate is stale and needs a new exact-SHA PR CI run; ' +
+      'the prerelease release flow covers alpha candidates and `beta.1` through `beta.3`.',
     plan: 'integrate by fast-forward only (`git merge --ff-only`).',
   };
   assertEquals(validateReleaseDoctrine(good), []);
@@ -168,4 +248,19 @@ Deno.test('release doctrine validator rejects stale publishable, human-GO and no
   assert(topologyFailures.some((failure) => failure.startsWith('agent loop SOP')));
   assert(topologyFailures.some((failure) => failure.startsWith('bootstrap prompt')));
   assert(topologyFailures.some((failure) => failure.startsWith('execution plan')));
+
+  // Deleting `beta.3` from either corpus fails closed on the publication boundary.
+  const sopStale = structuredClone(good);
+  sopStale.sop = good.sop.replace('`beta.1` through `beta.3`', '`beta.1` through `beta.2`');
+  assert(
+    validateReleaseDoctrine(sopStale).some((failure) => failure.startsWith('agent loop SOP')),
+  );
+  const promptStale = structuredClone(good);
+  promptStale.prompt = good.prompt.replace(
+    '`beta.1` through `beta.3`',
+    '`beta.1` through `beta.2`',
+  );
+  assert(
+    validateReleaseDoctrine(promptStale).some((failure) => failure.startsWith('bootstrap prompt')),
+  );
 });

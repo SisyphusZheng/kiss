@@ -41,7 +41,7 @@ Loop: <loop-id>
 Candidate: <version>
 Base SHA: <full-sha>
 Acceptance slice: <one observable outcome>
-Dispatch: <repository path/link>
+Dispatch: <local uncommitted packet path>
 Owned paths: <paths>
 Risk: low | medium | high | critical
 ```
@@ -64,12 +64,12 @@ PR and evidence links are required.
 
 ## Pull request mapping
 
-- Branch: `v044/<issue>-<slice-slug>`.
+- Branch: `v044/<issue>-<slice-slug>` (the host may add its configured namespace).
 - PR base: `dev`.
 - PR title begins with the candidate and issue, for example
   `[0.44 alpha.1][#1161] Freeze Part Program v1`.
-- The PR body links the dispatch, result evidence, issue acceptance slice, commands and
-  architecture impact.
+- The PR body records the issue acceptance slice, exact commands/check links and
+  architecture impact. It does not copy a raw prompt or transcript.
 - One PR may contain several slices of one issue when they share a coherent boundary.
 - Do not combine unrelated issues in one PR.
 - The implementer does not commit or push; the thinker stages only reviewed files and
@@ -98,8 +98,9 @@ A passing slice never closes an incomplete umbrella issue.
 - Verifier FAIL reopens or keeps open the issue that owns the defect, with a reproducible
   repair slice.
 - Verifier PASS plus thinker harness PASS completes the unanimous
-  implementer/release-verifier/thinker GO that authorizes the `alpha.1`–`beta.2`
-  release flow; at #1178 it instead produces the human GO packet.
+  implementer/release-verifier/thinker GO that authorizes meaningful public alpha
+  candidates and the `beta.1`–`beta.3` release flow; at #1178 it instead produces the
+  human GO packet.
 - Prerelease promotion uses the recorded unanimous loop GO; only the human-approved
   exact SHA may be promoted to RC.
 

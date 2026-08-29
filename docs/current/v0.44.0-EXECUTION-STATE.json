@@ -1,15 +1,29 @@
 {
   "schemaVersion": 1,
   "train": "0.44.0",
-  "goal": "alpha.0-internal-closure",
-  "status": "REVIEWED",
+  "goal": "alpha-architecture-acceleration",
+  "status": "READY",
   "candidate": "0.44.0-alpha.0",
-  "baselineSha": "0ae65853a8e807b1b31da8752b434167219d25d6",
-  "currentIssue": 1156,
-  "currentPacket": "alpha0-truth-and-roadmap-reframe",
-  "branch": "v044/alpha0-reframe",
+  "baselineSha": "979ae6830f097902b82ff835fd4e2e626578a4b0",
+  "currentIssue": 1193,
+  "currentPacket": "minimal-branch-safety",
   "acceptedFoundations": [1160, 1182],
-  "openAlpha0Issues": [1156, 1187, 1188, 1189],
+  "minimalAlpha0Issue": 1193,
+  "deferredBeta2Issues": [1157, 1158, 1159, 1177],
+  "deferredBeta3Issues": [1156, 1187, 1188, 1189, 1192],
+  "integrationBaseSha": null,
+  "parallelReady": false,
+  "parallelPrerequisites": [
+    "minimum dev/main branch safety is active",
+    "shared Part Program and claim contracts are frozen",
+    "real path ownership is recorded"
+  ],
+  "lanes": {
+    "compiler": "PENDING_CONTRACT",
+    "runtime": "PENDING_CONTRACT",
+    "ssrClaim": "PENDING_CONTRACT",
+    "appDelivery": "WAITING_FOR_INTEGRATION_I"
+  },
   "implementer": {
     "roleProfile": "implementer",
     "executorConfig": "tools/config/v044-roles.json",
@@ -23,7 +37,7 @@
   },
   "finalCandidateSha": null,
   "authoritativeCiRun": null,
-  "nextAction": "Open the truth-and-roadmap reframe PR to dev and require exact-SHA CI before selecting the first implementation packet.",
-  "nextCursorAfterClosure": "alpha.1-planning",
-  "updatedAt": "2026-08-28T22:50:00+08:00"
+  "nextAction": "Merge the accelerated topology, complete #1193 minimum branch safety, record the exact integration base, then freeze the shared contract and path ownership before starting Compiler, Runtime, and SSR/Claim lanes.",
+  "nextCursorAfterClosure": "parallel-alpha-contract-freeze",
+  "updatedAt": "2026-08-29T00:00:00+08:00"
 }

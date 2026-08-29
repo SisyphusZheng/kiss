@@ -1,7 +1,7 @@
 # v0.44 Three-Role Autonomous Loop SOP
 
 > Status: Mandatory for ADR-0146 execution. This SOP governs implementation from
-> `v0.44.0-alpha.0` through `v0.44.0-beta.2`.
+> the unpublished `v0.44.0-alpha.0` baseline through `v0.44.0-beta.3`.
 
 ## 1. Roles
 
@@ -126,10 +126,10 @@ COMPLETE
 
 ## 5. Dispatch packet
 
-Each packet lives under:
+Each active packet lives outside version control under:
 
 ```text
-docs/evidence/v0.44.0-agent-loops/<loop-id>/dispatch.md
+.v044-tmp/loops/<loop-id>/dispatch.md
 ```
 
 It must name:
@@ -144,7 +144,11 @@ It must name:
 - stop conditions and maximum five repair attempts.
 
 The thinker rejects a packet whose acceptance cannot be proved mechanically or whose
-path scope is broad enough to hide unrelated refactoring.
+path scope is broad enough to hide unrelated refactoring. Raw prompts, transcripts,
+retry logs and per-attempt packets are operational data and must not be committed.
+Durable truth belongs in the issue, pull request, exact-SHA check run and published
+release; repository evidence is limited to compact current contracts and release
+metadata that cannot be reconstructed from those systems.
 
 ## 6. Invoke the implementer
 
@@ -158,7 +162,8 @@ deno task v044:role -- implementer \
 
 Rules:
 
-- Run exactly one writing implementer process in the shared worktree.
+- Run exactly one writing implementer process in each isolated lane worktree. Never
+  run two writers in one checkout.
 - Use an absolute dispatch path and the repository root as working directory.
 - A packet starts a fresh session by default. Resume only the same implementer role for
   a repair of the same packet via `--session <id>` and record the session ID.
@@ -206,14 +211,16 @@ Required review:
    - low: format, targeted lint/test;
    - medium: low plus package typecheck/tests;
    - high: medium plus integration/browser or packed-consumer gates;
-   - critical/version boundary: full repository and release matrix.
+   - critical/version boundary: consume the exact-SHA PR full matrix, then run only
+     missing adversarial, release-only, packed-artifact and version-exit checks.
 
-The thinker writes `review.md`. FAIL creates a repair packet. The thinker must not edit
-production code to rescue the executor.
+The thinker records the verdict and exact commands in the owned issue/PR. FAIL creates
+an uncommitted repair packet. The thinker must not edit production code to rescue the
+executor.
 
 ## 9. Version closure with a fresh release verifier
 
-Closure occurs for every intended alpha and beta publication, including repeated
+Closure occurs for every real public alpha and beta publication, including repeated
 `alpha.N+1` or `beta.N+1` repair candidates. The internal `alpha.0` integration
 baseline receives loop review only; the first release closure is `alpha.1`.
 
@@ -265,12 +272,16 @@ production-code change invalidates the run and becomes `VERIFIER_SCOPE_VIOLATION
 
 ## 10. Recording and GitHub updates
 
-After an ordinary loop PASS, the thinker writes:
+After an ordinary loop PASS, the thinker records:
 
-- `result.json` with commands, exit codes, SHA and status;
-- `summary.md` explaining acceptance evidence and residual risk;
-- the updated execution-state cursor;
-- the GitHub issue checklist/evidence comment when external writes are authorized.
+- the exact commands, exit codes, SHA, status and residual risk in the GitHub issue/PR;
+- the updated compact execution-state cursor;
+- immutable check-run or release links when they exist.
+
+Do not commit raw execution transcripts, conversation-derived summaries, or a growing
+per-attempt evidence tree. Beta.3 may migrate durable historical records only after it
+proves the replacement source is complete and records any required before/after blob
+identity without copying prohibited identifiers into current documentation.
 
 Issue closure requires all issue acceptance items, not merely one packet. Version
 closure requires all issues plus the independent verifier.
@@ -281,8 +292,9 @@ The bootstrap prompt may explicitly authorize the thinker to create scoped branc
 local commits, pushes, PRs and issue comments/closure after gates pass. Executor roles
 never perform those actions.
 
-The active bootstrap authorizes the full prerelease release flow for `alpha.1` through
-`beta.2` — `dev`→`main` integration, version tag, npm publication, dist-tag change,
+The active bootstrap authorizes the full prerelease release flow for meaningful public
+alpha candidates and `beta.1` through `beta.3` — `dev`→`main` integration, version tag,
+npm publication, dist-tag change,
 GitHub Release, evidence and issue updates, and execution-cursor advancement — after a
 unanimous implementer/release-verifier/thinker GO against the exact candidate SHA with
 every deterministic gate green. `alpha.0` is the internal integration baseline and

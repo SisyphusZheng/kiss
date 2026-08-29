@@ -159,27 +159,105 @@ const REQUIRED_ISSUES = [
   1178,
   1181,
   1182,
+  1187,
+  1188,
+  1189,
+  1192,
+  1193,
 ];
 
+/** Accelerated Alpha topology: minimal alpha.0, parallel lanes, serial integration. */
+const MINIMAL_ALPHA_ZERO_ISSUES = [1160, 1182, 1193] as const;
+const BETA_THREE_ISSUES = [1192, 1156, 1187, 1188, 1189] as const;
+const ACCELERATED_LANES = [
+  { lane: 'Compiler', issues: [1161, 1162, 1163] },
+  { lane: 'Runtime', issues: [1164, 1165, 1166, 723, 1167] },
+  { lane: 'SSR', issues: [1168, 1169, 1170] },
+  { lane: 'App', issues: [1088, 1171, 1172, 1173] },
+] as const;
+const FINAL_ALPHA_ISSUES = [1174, 1175, 1176, 1181] as const;
+
+function sectionRange(plan: string, heading: RegExp): [number, number] | null {
+  const match = heading.exec(plan);
+  if (!match) return null;
+  const end = plan.indexOf('\n## ', match.index + 1);
+  return [match.index, end === -1 ? plan.length : end];
+}
+
 /**
- * #1156 moved immediately after #1160 in the alpha.0 wave: it removes repeated
- * per-loop matrix cost before the remaining train and makes later
- * documentation inherit the neutral rule.
+ * Accelerated topology contract: alpha.0 is reduced to the accepted compiler
+ * proof, exact-SHA baseline and branch safety; governance hardening moved to
+ * Beta.3; lanes develop in parallel and integrate serially at Integration I
+ * (gating broad App/Delivery work) and Integration II (gating Final Alpha
+ * legacy removal).
  */
-export function validateAlphaZeroOrdering(plan: string): string[] {
-  const row = plan.split('\n').find((line) => line.startsWith('| `alpha.0`'));
-  if (!row) return ['execution plan has no alpha.0 wave row'];
-  const order = [...row.matchAll(/#(\d+)/g)].map((match) => Number(match[1]));
-  const expected = [1160, 1156, 1157, 1158, 1159, 1182];
-  const actual = order.slice(0, expected.length);
-  if (actual.length < expected.length || expected.some((issue, index) => actual[index] !== issue)) {
-    return [
-      `alpha.0 wave must order #1160 → #1156 → #1157 → #1158 → #1159 → #1182, got ${
-        actual.map((issue) => `#${issue}`).join(' → ') || 'none'
-      }`,
-    ];
+export function validateAcceleratedTopology(plan: string): string[] {
+  const failures: string[] = [];
+  const lines = plan.split('\n');
+
+  const alphaZeroRow = lines.find((line) => line.startsWith('| `alpha.0`'));
+  if (!alphaZeroRow) {
+    failures.push('execution plan has no minimal alpha.0 phase row');
+  } else {
+    for (const issue of MINIMAL_ALPHA_ZERO_ISSUES) {
+      if (!alphaZeroRow.includes(`#${issue}`)) {
+        failures.push(`minimal alpha.0 phase omits #${issue}`);
+      }
+    }
+    for (const issue of BETA_THREE_ISSUES) {
+      if (alphaZeroRow.includes(`#${issue}`)) {
+        failures.push(`minimal alpha.0 phase still carries deferred hardening issue #${issue}`);
+      }
+    }
   }
-  return [];
+
+  const betaThreeLine = lines.find((line) => /Beta\.3\s*:/u.test(line));
+  if (!betaThreeLine) {
+    failures.push('execution plan has no Beta.3 hardening assignment');
+  } else {
+    for (const issue of BETA_THREE_ISSUES) {
+      if (!betaThreeLine.includes(`#${issue}`)) {
+        failures.push(`Beta.3 hardening omits #${issue}`);
+      }
+    }
+  }
+
+  for (const { lane, issues } of ACCELERATED_LANES) {
+    const row = lines.find((line) => line.startsWith('|') && line.includes(lane));
+    if (!row) {
+      failures.push(`execution plan has no ${lane} lane row`);
+      continue;
+    }
+    for (const issue of issues) {
+      if (!row.includes(`#${issue}`)) failures.push(`${lane} lane omits #${issue}`);
+    }
+    if (lane === 'App' && !row.includes('Integration I')) {
+      failures.push('App/Delivery lane starts broad work before Integration I');
+    }
+  }
+
+  const integrationOne = sectionRange(plan, /^## Integration I\s*$/mu);
+  const integrationTwo = sectionRange(plan, /^## Integration II\s*$/mu);
+  const finalAlpha = sectionRange(plan, /^## Final Alpha\s*$/mu);
+  if (!integrationOne) failures.push('execution plan omits the Integration I checkpoint');
+  if (!integrationTwo) failures.push('execution plan omits the Integration II checkpoint');
+  if (!finalAlpha) failures.push('execution plan omits the Final Alpha phase');
+  if (integrationOne && finalAlpha && integrationOne[0] > finalAlpha[0]) {
+    failures.push('Integration I must precede broad App/Delivery and Final Alpha work');
+  }
+  if (integrationTwo && finalAlpha && integrationTwo[0] > finalAlpha[0]) {
+    failures.push('Integration II must precede Final Alpha legacy removal');
+  }
+  if (integrationTwo && !plan.slice(...integrationTwo).includes('#1174')) {
+    failures.push('Integration II must gate Final Alpha legacy removal (#1174)');
+  }
+  if (finalAlpha) {
+    const section = plan.slice(...finalAlpha);
+    for (const issue of FINAL_ALPHA_ISSUES) {
+      if (!section.includes(`#${issue}`)) failures.push(`Final Alpha omits #${issue}`);
+    }
+  }
+  return failures;
 }
 
 /**
@@ -230,7 +308,7 @@ export function validateReleaseDoctrine(texts: ReleaseDoctrineTexts): string[] {
     }
   }
 
-  // R13: alpha.1–beta.2 close on the unanimous three-role GO; the only human
+  // R13: alpha.1–beta.3 close on the unanimous three-role GO; the only human
   // stop on the prerelease train is #1178 RC admission.
   if (versionPlan.includes('exact human promotion GO')) {
     failures.push(
@@ -271,6 +349,19 @@ export function validateReleaseDoctrine(texts: ReleaseDoctrineTexts): string[] {
   for (const required of ['fast-forward', '--ff-only']) {
     if (!plan.includes(required)) {
       failures.push(`execution plan omits "${required}"`);
+    }
+  }
+
+  // Beta.3 publication boundary: the authorized public prerelease range runs
+  // through the Beta.3 governance/release-hardening wave, not beta.2.
+  for (
+    const [name, text] of [
+      ['agent loop SOP', sop],
+      ['bootstrap prompt', prompt],
+    ] as const
+  ) {
+    if (!text.includes('`beta.1` through `beta.3`')) {
+      failures.push(`${name} omits the Beta.3 publication boundary`);
     }
   }
 
@@ -315,8 +406,17 @@ async function main(): Promise<void> {
     if (!plan.includes(`#${issue}`)) failures.push(`execution plan omits #${issue}`);
     if (!issueMap.includes(`#${issue}`)) failures.push(`issue map omits #${issue}`);
   }
-  failures.push(...validateAlphaZeroOrdering(plan));
-  for (const required of ['CI evidence tier', 'immediately after #1160']) {
+  failures.push(...validateAcceleratedTopology(plan));
+  for (
+    const required of [
+      'CI evidence tier',
+      'parallel development',
+      'serial integration',
+      'Integration I',
+      'Integration II',
+      'Beta.3',
+    ]
+  ) {
     if (!plan.includes(required)) failures.push(`execution plan omits "${required}"`);
   }
 
