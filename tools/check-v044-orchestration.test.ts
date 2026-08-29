@@ -1,8 +1,8 @@
-import { assert, assertEquals, assertStringIncludes } from '@std/assert';
+import { assert, assertEquals } from '@std/assert';
 import { loadV044RoleConfig, V044_ROLE_CONFIG_PATH } from './config/load-v044-roles.ts';
 import {
   type ReleaseDoctrineTexts,
-  validateAcceleratedTopology,
+  validateAlphaWorkspaceTopology,
   validateExecutionState,
   validateExecutorContract,
   validateReleaseDoctrine,
@@ -12,46 +12,50 @@ const config = await loadV044RoleConfig();
 
 function validState(): Record<string, unknown> {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     train: '0.44.0',
-    status: 'REPAIR',
-    currentIssue: 1156,
-    implementer: {
-      roleProfile: 'implementer',
-      executorConfig: V044_ROLE_CONFIG_PATH,
-      sessionId: null,
-    },
-    releaseVerifier: {
-      roleProfile: 'releaseVerifier',
-      executorConfig: V044_ROLE_CONFIG_PATH,
-      sessionPolicy: 'fresh-per-candidate-sha',
-      sessionId: null,
-    },
+    status: 'READY',
+    currentIssue: 1193,
+    executionMode: 'independent-alpha-workspaces',
+    threeRoleLoopActive: false,
+    integrationBaseSha: null,
+    workspaces: Object.fromEntries([
+      ...Array.from({ length: 7 }, (_, index) => [`alpha.${index + 1}`, 'PENDING_BASE']),
+      ['alpha.8', 'WAITING_FOR_WORKSPACE_SHAS'],
+    ]),
+    authoritativeCiOwner: 'alpha.8 exact-SHA pull request',
+    betaThreeRoleExecutorConfig: V044_ROLE_CONFIG_PATH,
   };
 }
 
-Deno.test('execution state referencing the executable role configuration validates', () => {
+Deno.test('Alpha workspace execution state validates without three-role sessions', () => {
   assertEquals(validateExecutionState(validState(), config), []);
 });
 
-Deno.test('execution state must not embed executor identity', () => {
-  const state = validState();
-  (state.implementer as Record<string, unknown>).model = 'embedded-model';
-  (state.implementer as Record<string, unknown>).command = 'embedded-cli';
-  const failures = validateExecutionState(state, config);
+Deno.test('Alpha state rejects an active three-role loop or embedded role sessions', () => {
+  const active = validState();
+  active.threeRoleLoopActive = true;
+  assert(validateExecutionState(active, config).some((failure) => failure.includes('disabled')));
+
+  const embedded = validState();
+  embedded.implementer = { sessionId: 'forbidden' };
+  embedded.releaseVerifier = { sessionId: 'forbidden' };
+  const failures = validateExecutionState(embedded, config);
   assert(failures.some((failure) => failure.includes('implementer')));
+  assert(failures.some((failure) => failure.includes('releaseVerifier')));
 });
 
-Deno.test('execution state rejects unknown role profiles and stale config refs', () => {
-  const state = validState();
-  (state.releaseVerifier as Record<string, unknown>).roleProfile = 'thinker';
-  (state.releaseVerifier as Record<string, unknown>).executorConfig = 'docs/current/elsewhere.json';
-  const failures = validateExecutionState(state, config);
-  assert(failures.some((failure) => failure.includes('roleProfile')));
-  assert(failures.some((failure) => failure.includes('executorConfig')));
+Deno.test('Alpha state rejects a missing workspace or non-alpha.8 CI owner', () => {
+  const missing = validState();
+  delete (missing.workspaces as Record<string, unknown>)['alpha.4'];
+  assert(validateExecutionState(missing, config).some((failure) => failure.includes('alpha.4')));
+
+  const wrongOwner = validState();
+  wrongOwner.authoritativeCiOwner = 'every workspace';
+  assert(validateExecutionState(wrongOwner, config).some((failure) => failure.includes('alpha.8')));
 });
 
-Deno.test('executor capability contract is pinned to 262144 context and high default effort', () => {
+Deno.test('Beta executor capability remains pinned but is not activated by Alpha state', () => {
   assertEquals(validateExecutorContract(config), []);
   const drifted = structuredClone(config);
   drifted.executor.contextTokens = 128000;
@@ -59,208 +63,110 @@ Deno.test('executor capability contract is pinned to 262144 context and high def
   assert(validateExecutorContract(drifted).length >= 2);
 });
 
-function acceleratedPlan(): string {
+function alphaPlan(): string {
   return [
-    'The train uses parallel development and serial integration.',
-    '',
-    '| Phase | Work | Exit |',
-    '| --- | --- | --- |',
-    '| `alpha.0` | #1160 accepted -> #1182 accepted -> #1193 branch safety | one base SHA |',
-    '',
-    '| Lane | Issues | Input |',
-    '| --- | --- | --- |',
-    '| Compiler / Part Program | #1161 #1162 #1163 | frozen schema |',
-    '| Element Runtime / Signals | #1164 #1165 #1166 #723 #1167 | frozen program |',
-    '| SSR / DOM Claim | #1168 #1169 #1170 | marker contract |',
-    '| App / Islands / Delivery | #1088 #1171 #1172 #1173 | Integration I program/runtime path |',
-    '',
-    '## Integration I',
-    '',
-    'one end-to-end vertical path.',
-    '',
-    '## Integration II',
-    '',
-    'Only after this checkpoint may #1174 aggressively remove replaced primary paths.',
-    '',
-    '## Final Alpha',
-    '',
-    '#1174, #1175, #1176 and #1181 prove legacy absence and migration.',
-    '',
-    '- Beta.3: #1192, #1156, #1187, #1188, #1189',
+    'The Alpha train uses parallel development in independent workspaces and one final integration workspace.',
+    'It does not use the three-role release loop.',
+    '| `alpha.0` | #1160 #1182 #1193 | common base |',
+    '| alpha.1 | Compiler | #1161 #1162 #1163 |',
+    '| alpha.2 | Runtime | #1164 #1165 #1166 #723 #1167 |',
+    '| alpha.3 | SSR / Claim | #1168 #1169 #1170 |',
+    '| alpha.4 | App / Delivery | #1088 #1171 #1172 #1173 #1163 |',
+    '| alpha.5 | Migration | #1174 |',
+    '| alpha.6 | Interoperability | #1175 |',
+    '| alpha.7 | Qualification | #1176 |',
+    '| alpha.8 | Final Integration | #1181 |',
+    'One agent owns each alpha.1-alpha.7 workspace end-to-end.',
+    'The alpha.8 integration agent is the only aggregator.',
+    'The alpha.8 pull request to `dev` runs the only full matrix for its exact SHA.',
+    'No internal Alpha ID causes a tag, npm publication, GitHub Release, dist-tag change, `main` promotion, three-role GO or fresh release-verifier run.',
+    'Beta.1 activates the three-role release loop. Beta.3 owns #1192 #1156 #1187 #1188 #1189.',
+    '#1150 #1157 #1158 #1159 #1177 #1178',
   ].join('\n');
 }
 
-Deno.test('accelerated topology accepts the minimal alpha.0 parallel-lane plan', () => {
-  assertEquals(validateAcceleratedTopology(acceleratedPlan()), []);
+Deno.test('internal Alpha workspace topology accepts alpha.1-alpha.8 and one aggregator', () => {
+  assertEquals(validateAlphaWorkspaceTopology(alphaPlan()), []);
 });
 
-Deno.test('accelerated topology matches the live execution plan', async () => {
+Deno.test('internal Alpha workspace topology matches the live execution plan', async () => {
   const plan = await Deno.readTextFile('docs/current/v0.44.0-EXECUTION-PLAN.md');
-  assertEquals(validateAcceleratedTopology(plan), []);
+  assertEquals(validateAlphaWorkspaceTopology(plan), []);
 });
 
-Deno.test('accelerated topology rejects governance hardening moved back into alpha.0', () => {
-  const stale = acceleratedPlan().replace(
-    '#1193 branch safety',
-    '#1193 branch safety -> #1156 loop hardening',
+Deno.test('workspace topology rejects missing workspaces and missing final aggregator', () => {
+  const missing = alphaPlan().replace(
+    '| alpha.4 | App / Delivery | #1088 #1171 #1172 #1173 #1163 |\n',
+    '',
   );
-  const failures = validateAcceleratedTopology(stale);
-  assert(failures.some((failure) => failure.includes('#1156')));
-});
+  assert(validateAlphaWorkspaceTopology(missing).some((failure) => failure.includes('alpha.4')));
 
-Deno.test('accelerated topology rejects missing Runtime or SSR/Claim lane ownership', () => {
-  const noRuntime = acceleratedPlan()
-    .split('\n')
-    .filter((line) => !line.includes('Runtime'))
-    .join('\n');
+  const noAggregator = alphaPlan().replace('is the only aggregator', 'is an aggregator');
   assert(
-    validateAcceleratedTopology(noRuntime).some((failure) => failure.includes('Runtime')),
-  );
-  const noSsr = acceleratedPlan()
-    .split('\n')
-    .filter((line) => !line.includes('SSR'))
-    .join('\n');
-  assert(validateAcceleratedTopology(noSsr).some((failure) => failure.includes('SSR')));
-});
-
-Deno.test('accelerated topology rejects broad App/Delivery work before Integration I', () => {
-  const early = acceleratedPlan().replace(
-    'Integration I program/runtime path',
-    'frozen program',
-  );
-  assert(
-    validateAcceleratedTopology(early).some((failure) => failure.includes('Integration I')),
+    validateAlphaWorkspaceTopology(noAggregator).some((failure) =>
+      failure.includes('only aggregator')
+    ),
   );
 });
 
-Deno.test('accelerated topology rejects Final Alpha legacy removal before Integration II', () => {
-  const plan = acceleratedPlan();
-  const integrationTwo = plan.slice(
-    plan.indexOf('## Integration II'),
-    plan.indexOf('## Final Alpha'),
+Deno.test('workspace topology rejects three-role Alpha execution and per-workspace full matrices', () => {
+  const roles = alphaPlan().replace(
+    'It does not use the three-role release loop.',
+    'Invoke the configured implementer and a fresh release verifier session for Alpha.',
   );
-  const reordered = plan
-    .replace(integrationTwo, '')
-    .replace('- Beta.3:', `${integrationTwo}\n- Beta.3:`);
-  assert(
-    validateAcceleratedTopology(reordered).some((failure) => failure.includes('Integration II')),
-  );
-});
+  assert(validateAlphaWorkspaceTopology(roles).some((failure) => failure.includes('three-role')));
 
-Deno.test('R4: control-plane corpus records the authorized prerelease flow and the #1178 human stop', async () => {
-  const sop = await Deno.readTextFile('docs/governance/V044_AGENT_LOOP_SOP.md');
-  const prompt = await Deno.readTextFile('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md');
-  for (const [name, text] of [['SOP', sop], ['prompt', prompt]] as const) {
-    assert(
-      !text.includes('Always forbidden without a new human message'),
-      `${name} still carries stale per-prerelease human-gate prose`,
-    );
-    assertStringIncludes(text, '`beta.1` through `beta.3`');
-    assertStringIncludes(text, '#1178');
-  }
-  assertStringIncludes(sop, 'alpha.1');
-  assertStringIncludes(sop, 'unanimous');
+  const matrices = alphaPlan().replace(
+    'alpha.8 pull request to `dev` runs the only full matrix',
+    'every workspace runs the full matrix',
+  );
+  assert(validateAlphaWorkspaceTopology(matrices).some((failure) => failure.includes('alpha.8')));
 });
 
 async function doctrineCorpus(): Promise<ReleaseDoctrineTexts> {
   return {
     issueMap: await Deno.readTextFile('docs/roadmap/v0.44.0-ISSUES.md'),
     versionPlan: await Deno.readTextFile('docs/current/VERSION_PLAN.md'),
-    sop: await Deno.readTextFile('docs/governance/V044_AGENT_LOOP_SOP.md'),
-    prompt: await Deno.readTextFile('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md'),
+    alphaSop: await Deno.readTextFile('docs/governance/V044_ALPHA_WORKSPACE_SOP.md'),
+    betaSop: await Deno.readTextFile('docs/governance/V044_AGENT_LOOP_SOP.md'),
+    betaPrompt: await Deno.readTextFile('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md'),
     plan: await Deno.readTextFile('docs/current/v0.44.0-EXECUTION-PLAN.md'),
   };
 }
 
-Deno.test('R12: the issue map never describes alpha.0 as publishable and states the full internal-only prohibition', async () => {
-  const failures = validateReleaseDoctrine(await doctrineCorpus());
-  assertEquals(
-    failures.filter((failure) => failure.startsWith('issue map')),
-    [],
-  );
+Deno.test('real doctrine disables three-role Alpha and activates it at Beta.1', async () => {
+  assertEquals(validateReleaseDoctrine(await doctrineCorpus()), []);
 });
 
-Deno.test('R13: the version plan requires the unanimous three-role GO for alpha.1-beta.3, not a human GO per candidate', async () => {
-  const failures = validateReleaseDoctrine(await doctrineCorpus());
-  assertEquals(
-    failures.filter((failure) => failure.startsWith('version plan')),
-    [],
+Deno.test('doctrine rejects publishable Alpha, Alpha verifier use, executor preflight and missing Beta activation', async () => {
+  const publishable = await doctrineCorpus();
+  publishable.issueMap += '\nAlpha.4 may publish to npm.';
+  assert(validateReleaseDoctrine(publishable).some((failure) => failure.includes('publishable')));
+
+  const verifier = await doctrineCorpus();
+  verifier.alphaSop += '\nStart a fresh release verifier for alpha.8.';
+  assert(validateReleaseDoctrine(verifier).some((failure) => failure.includes('release verifier')));
+
+  const preflight = await doctrineCorpus();
+  preflight.alphaSop = preflight.alphaSop.replace(
+    'Do not run `v044:executor:check` during Alpha',
+    'The executor preflight is optional during Alpha',
   );
+  assert(
+    validateReleaseDoctrine(preflight).some((failure) => failure.includes('v044:executor:check')),
+  );
+
+  const noBeta = await doctrineCorpus();
+  noBeta.versionPlan = noBeta.versionPlan.replace('It begins at Beta.1', 'It stays disabled');
+  assert(validateReleaseDoctrine(noBeta).some((failure) => failure.includes('Beta.1')));
 });
 
-Deno.test('R14: the SOP, bootstrap and execution plan enforce fast-forward-only exact-SHA integration', async () => {
-  const failures = validateReleaseDoctrine(await doctrineCorpus());
-  assertEquals(
-    failures.filter((failure) =>
-      failure.startsWith('agent loop SOP') ||
-      failure.startsWith('bootstrap prompt') ||
-      failure.startsWith('execution plan')
-    ),
-    [],
-  );
-});
-
-Deno.test('alpha.0 stays excluded from version closure and publication across the corpus', async () => {
-  const failures = validateReleaseDoctrine(await doctrineCorpus());
-  assertEquals(
-    failures.filter((failure) => failure.includes('alpha.0')),
-    [],
-  );
-});
-
-Deno.test('release doctrine validator rejects stale publishable, human-GO and non-fast-forward text', () => {
-  const good: ReleaseDoctrineTexts = {
-    issueMap: '`alpha.0` is internal-only: no tag, no npm publication, no GitHub Release, ' +
-      'no dist-tag, no `main` promotion and no external release action.',
-    versionPlan:
-      'the unanimous implementer/release-verifier/thinker GO; the only prerelease human ' +
-      'promotion stop is #1178 RC admission; `alpha.0` is an internal integration baseline.',
-    sop: 'advance `dev` by fast-forward only (`git merge --ff-only`); merge commits, squash ' +
-      'merges, rebase-created SHAs, force pushes and evidence relabeling are forbidden; if ' +
-      'fast-forward is impossible the candidate is stale and needs a new exact-SHA PR CI run; ' +
-      'the prerelease release flow covers alpha candidates and `beta.1` through `beta.3`; ' +
-      '`alpha.0` stays strictly unpublished.',
-    prompt: 'advance `main` by fast-forward only (`git merge --ff-only`); merge commits, squash ' +
-      'merges, rebase-created SHAs, force pushes and evidence relabeling are forbidden; if ' +
-      'fast-forward is impossible the candidate is stale and needs a new exact-SHA PR CI run; ' +
-      'the prerelease release flow covers alpha candidates and `beta.1` through `beta.3`.',
-    plan: 'integrate by fast-forward only (`git merge --ff-only`).',
-  };
-  assertEquals(validateReleaseDoctrine(good), []);
-
-  const publishable = structuredClone(good);
-  publishable.issueMap = '`alpha.0` may publish only after foundations land.';
-  assert(
-    validateReleaseDoctrine(publishable).some((failure) => failure.startsWith('issue map')),
-  );
-
-  const humanGo = structuredClone(good);
-  humanGo.versionPlan = `${good.versionPlan} exact human promotion GO`;
-  assert(
-    validateReleaseDoctrine(humanGo).some((failure) => failure.startsWith('version plan')),
-  );
-
-  const mergey = structuredClone(good);
-  mergey.sop = 'merge the PR into `dev` and integrate `dev` into `main`.';
-  mergey.prompt = 'merge the PR into `dev` and integrate `dev` into `main`.';
-  mergey.plan = 'integrate `dev` into `main`.';
-  const topologyFailures = validateReleaseDoctrine(mergey);
-  assert(topologyFailures.some((failure) => failure.startsWith('agent loop SOP')));
-  assert(topologyFailures.some((failure) => failure.startsWith('bootstrap prompt')));
-  assert(topologyFailures.some((failure) => failure.startsWith('execution plan')));
-
-  // Deleting `beta.3` from either corpus fails closed on the publication boundary.
-  const sopStale = structuredClone(good);
-  sopStale.sop = good.sop.replace('`beta.1` through `beta.3`', '`beta.1` through `beta.2`');
-  assert(
-    validateReleaseDoctrine(sopStale).some((failure) => failure.startsWith('agent loop SOP')),
-  );
-  const promptStale = structuredClone(good);
-  promptStale.prompt = good.prompt.replace(
-    '`beta.1` through `beta.3`',
-    '`beta.1` through `beta.2`',
-  );
-  assert(
-    validateReleaseDoctrine(promptStale).some((failure) => failure.startsWith('bootstrap prompt')),
-  );
+Deno.test('Beta SOP and prompt preserve exact-SHA fast-forward and #1178 stop', async () => {
+  const texts = await doctrineCorpus();
+  for (const text of [texts.betaSop, texts.betaPrompt]) {
+    assert(text.includes('beta.1') || text.includes('Beta.1'));
+    assert(text.includes('beta.3') || text.includes('Beta.3'));
+    assert(text.includes('--ff-only'));
+    assert(text.includes('#1178'));
+  }
 });

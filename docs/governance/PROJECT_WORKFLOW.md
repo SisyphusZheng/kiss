@@ -16,13 +16,14 @@ Current execution anchor:
 - source package line `v0.43.3`;
 - npm registry line `v0.43.3` (published);
 - active target `v0.44.0-alpha.0`;
-- next public prerelease: the first coherent compiled-framework alpha.
+- next internal train: `v0.44.0-alpha.1` workspace;
+- next public prerelease: `v0.44.0-beta.1`.
 
 ADR-0143 explicitly reopens the minor train after the 0.43 maintenance freeze.
-The compiled OpenElement execution order and final alpha → beta.1 UI → beta.2 website
-→ beta.3 hardening → RC SaaS → Stable admission ladder live in
-`docs/current/VERSION_PLAN.md`; 0.43.x
-remains the stable maintenance fallback until 0.44 reaches stable.
+The compiled OpenElement execution order and internal alpha workspaces → beta.1
+UI → beta.2 website → beta.3 hardening → RC SaaS → Stable admission ladder live
+in `docs/current/VERSION_PLAN.md`; 0.43.x remains the stable maintenance fallback
+until 0.44 reaches stable.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
 second product. Beta names product-qualification boundaries, not a second
@@ -38,10 +39,11 @@ Read these files before starting work:
 4. the active version plan under `docs/current/VERSION_PLAN.md`
 5. relevant ADRs listed by the version plan
 
-For autonomous v0.44 alpha/beta execution, also read
-`docs/governance/V044_AGENT_LOOP_SOP.md`,
-`docs/governance/V044_ISSUE_SOP.md` and
-`docs/current/v0.44.0-EXECUTION-PLAN.md` before selecting work.
+For v0.44 Alpha execution, read
+`docs/governance/V044_ALPHA_WORKSPACE_SOP.md` and
+`docs/current/v0.44.0-EXECUTION-PLAN.md`. The three-role
+`docs/governance/V044_AGENT_LOOP_SOP.md` begins at Beta.1. Also read
+`docs/governance/V044_ISSUE_SOP.md` before updating GitHub state.
 
 If these documents disagree, stop and fix the documents before changing product
 code. The workflow is part of the product contract.
@@ -81,10 +83,11 @@ Required sections:
 - Remove duplicate or obsolete code instead of adding compatibility shims.
 - Do not claim a version-plan item is complete without a code, docs, test, or
   gate proof.
-- Under ADR-0146, the thinker owns planning/review, the implementer owns
-  implementation, and a fresh release verifier
-  verifier owns test-driven alpha/beta closure. One role may not silently assume another
-  role's authority.
+- Under ADR-0147, each internal Alpha workspace has one end-to-end agent and
+  alpha.8 is the sole integration workspace. Under ADR-0146, beginning at
+  Beta.1, the thinker owns planning/review, the implementer owns implementation,
+  and a fresh release verifier owns candidate closure. One Beta-or-later role
+  may not silently assume another role's authority.
 - Do not bump packages until local gates for the version pass.
 - For v0.41.0 and later, npm publish is a release exit gate. See ADR-0108.
 - AutoFlow may automate patch-level mechanical work only when ADR-0101 policy

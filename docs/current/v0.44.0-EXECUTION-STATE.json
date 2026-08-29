@@ -1,43 +1,35 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "train": "0.44.0",
-  "goal": "alpha-architecture-acceleration",
+  "goal": "internal-alpha-workspace-train",
   "status": "READY",
   "candidate": "0.44.0-alpha.0",
-  "baselineSha": "979ae6830f097902b82ff835fd4e2e626578a4b0",
+  "controlPlaneSha": "e3e7b8ae5ddc7faddb8267c36494be73f18701e8",
   "currentIssue": 1193,
-  "currentPacket": "minimal-branch-safety",
-  "acceptedFoundations": [1160, 1182],
-  "minimalAlpha0Issue": 1193,
-  "deferredBeta2Issues": [1157, 1158, 1159, 1177],
-  "deferredBeta3Issues": [1156, 1187, 1188, 1189, 1192],
+  "executionMode": "independent-alpha-workspaces",
+  "threeRoleLoopActive": false,
   "integrationBaseSha": null,
   "parallelReady": false,
   "parallelPrerequisites": [
-    "minimum dev/main branch safety is active",
-    "shared Part Program and claim contracts are frozen",
-    "real path ownership is recorded"
+    "minimum dev/main history safety is active",
+    "shared code-first contract is frozen",
+    "real path ownership is recorded",
+    "one exact common base SHA is recorded"
   ],
-  "lanes": {
-    "compiler": "PENDING_CONTRACT",
-    "runtime": "PENDING_CONTRACT",
-    "ssrClaim": "PENDING_CONTRACT",
-    "appDelivery": "WAITING_FOR_INTEGRATION_I"
+  "workspaces": {
+    "alpha.1": "PENDING_BASE",
+    "alpha.2": "PENDING_BASE",
+    "alpha.3": "PENDING_BASE",
+    "alpha.4": "PENDING_BASE",
+    "alpha.5": "PENDING_BASE",
+    "alpha.6": "PENDING_BASE",
+    "alpha.7": "PENDING_BASE",
+    "alpha.8": "WAITING_FOR_WORKSPACE_SHAS"
   },
-  "implementer": {
-    "roleProfile": "implementer",
-    "executorConfig": "tools/config/v044-roles.json",
-    "sessionId": null
-  },
-  "releaseVerifier": {
-    "roleProfile": "releaseVerifier",
-    "executorConfig": "tools/config/v044-roles.json",
-    "sessionPolicy": "fresh-per-candidate-sha",
-    "sessionId": null
-  },
-  "finalCandidateSha": null,
-  "authoritativeCiRun": null,
-  "nextAction": "Merge the accelerated topology, complete #1193 minimum branch safety, record the exact integration base, then freeze the shared contract and path ownership before starting Compiler, Runtime, and SSR/Claim lanes.",
-  "nextCursorAfterClosure": "parallel-alpha-contract-freeze",
+  "authoritativeCiOwner": "alpha.8 exact-SHA pull request",
+  "betaThreeRoleExecutorConfig": "tools/config/v044-roles.json",
+  "deferredBeta2Issues": [1157, 1158, 1159, 1177],
+  "deferredBeta3Issues": [1156, 1187, 1188, 1189, 1192],
+  "nextAction": "Freeze the shared code-first contract and path ownership, record the exact common base, then create alpha.1 through alpha.7 workspaces concurrently and reserve alpha.8 for final integration.",
   "updatedAt": "2026-08-29T00:00:00+08:00"
 }

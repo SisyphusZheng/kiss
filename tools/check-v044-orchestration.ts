@@ -1,11 +1,4 @@
-/**
- * v0.44 orchestration preflight (#1156, ADR-0146).
- *
- * Validates the control-plane files and the execution-state cursor. Exact
- * executor identity is never hardcoded here or read from documentation: the
- * executable configuration under tools/config/ is the single source, and the
- * execution state may only reference roles plus that configuration path.
- */
+/** Deterministic v0.44 Alpha-workspace and Beta-release orchestration gate. */
 
 import {
   loadV044RoleConfig,
@@ -23,14 +16,15 @@ function requiredFiles(config: V044RoleConfig): string[] {
     'tools/run-v044-role.ts',
     'tools/check-role-neutral-docs.ts',
     'docs/adr/ADR-0146-three-role-agent-execution-control-plane.md',
+    'docs/adr/ADR-0147-internal-alpha-workspace-train.md',
     'docs/current/v0.44.0-AUTONOMOUS-GOAL.md',
     'docs/current/v0.44.0-EXECUTION-PLAN.md',
     'docs/current/v0.44.0-EXECUTION-STATE.json',
     'docs/current/VERSION_PLAN.md',
-    'docs/evidence/v0.44.0-agent-loops/README.md',
-    'docs/evidence/v0.44.0-agent-loops/TEMPLATE.md',
+    'docs/governance/V044_ALPHA_WORKSPACE_SOP.md',
     'docs/governance/V044_AGENT_LOOP_SOP.md',
     'docs/governance/V044_ISSUE_SOP.md',
+    'docs/prompts/v0.44.0-ALPHA-WORKSPACE-TRAIN.md',
     'docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md',
     'docs/roadmap/v0.44.0-ISSUES.md',
   ];
@@ -52,15 +46,14 @@ const allowedStatuses = new Set([
   'COMPLETE',
 ]);
 
-/** Executor identity keys that must live only in executable configuration. */
-const FORBIDDEN_STATE_IDENTITY_KEYS = ['command', 'model', 'provider', 'agentFile'];
+const ALPHA_WORKSPACES = Array.from({ length: 8 }, (_, index) => `alpha.${index + 1}`);
 
 export function validateExecutionState(
   state: Record<string, unknown>,
   config: V044RoleConfig,
 ): string[] {
   const failures: string[] = [];
-  if (state.schemaVersion !== 1) failures.push('execution state schemaVersion must be 1');
+  if (state.schemaVersion !== 2) failures.push('execution state schemaVersion must be 2');
   if (state.train !== '0.44.0') failures.push('execution state train must be 0.44.0');
   if (typeof state.status !== 'string' || !allowedStatuses.has(state.status)) {
     failures.push(`execution state status is invalid: ${String(state.status)}`);
@@ -68,52 +61,41 @@ export function validateExecutionState(
   if (typeof state.currentIssue !== 'number' || !Number.isInteger(state.currentIssue)) {
     failures.push('execution state currentIssue must be an integer');
   }
-
-  for (
-    const [block, profileKey] of [
-      ['implementer', 'implementer'],
-      ['releaseVerifier', 'releaseVerifier'],
-    ] as const
-  ) {
-    const value = state[block];
-    if (!value || typeof value !== 'object') {
-      failures.push(`execution state ${block} must be an object`);
-      continue;
-    }
-    const record = value as Record<string, unknown>;
-    for (const key of FORBIDDEN_STATE_IDENTITY_KEYS) {
-      if (key in record) {
-        failures.push(
-          `execution state ${block}.${key} embeds executor identity; ` +
-            `it must live only in ${V044_ROLE_CONFIG_PATH}`,
-        );
-      }
-    }
-    if (record.roleProfile !== profileKey) {
-      failures.push(`execution state ${block}.roleProfile must be ${profileKey}`);
-    } else if (!(profileKey in config.profiles)) {
-      failures.push(
-        `execution state ${block}.roleProfile is missing from the executable configuration`,
-      );
-    }
-    if (record.executorConfig !== V044_ROLE_CONFIG_PATH) {
-      failures.push(`execution state ${block}.executorConfig must be ${V044_ROLE_CONFIG_PATH}`);
-    }
-    if (!('sessionId' in record)) {
-      failures.push(`execution state ${block}.sessionId must be present`);
+  if (state.executionMode !== 'independent-alpha-workspaces') {
+    failures.push('Alpha executionMode must be independent-alpha-workspaces');
+  }
+  if (state.threeRoleLoopActive !== false) {
+    failures.push('three-role loop must be disabled throughout Alpha');
+  }
+  for (const forbidden of ['implementer', 'releaseVerifier']) {
+    if (forbidden in state) {
+      failures.push(`Alpha execution state must not embed ${forbidden} session state`);
     }
   }
-
-  const verifier = state.releaseVerifier as Record<string, unknown> | undefined;
-  if (verifier && verifier.sessionPolicy !== config.profiles.releaseVerifier.sessionPolicy) {
-    failures.push(
-      'execution state releaseVerifier.sessionPolicy must match the executable configuration',
-    );
+  const workspaces = state.workspaces;
+  if (!workspaces || typeof workspaces !== 'object') {
+    failures.push('execution state workspaces must be an object');
+  } else {
+    for (const workspace of ALPHA_WORKSPACES) {
+      if (!(workspace in workspaces)) failures.push(`execution state omits ${workspace}`);
+    }
+  }
+  if (
+    typeof state.authoritativeCiOwner !== 'string' ||
+    !state.authoritativeCiOwner.includes('alpha.8')
+  ) {
+    failures.push('authoritative full CI owner must be the alpha.8 exact-SHA pull request');
+  }
+  if (state.betaThreeRoleExecutorConfig !== V044_ROLE_CONFIG_PATH) {
+    failures.push(`Beta executor configuration must reference ${V044_ROLE_CONFIG_PATH}`);
+  }
+  if (!config.profiles.implementer || !config.profiles.releaseVerifier) {
+    failures.push('Beta role profiles must remain configured for post-Alpha release work');
   }
   return failures;
 }
 
-/** The capability contract stays pinned even though identity moved to configuration. */
+/** Beta capability contract remains available but is not activated by Alpha state. */
 export function validateExecutorContract(config: V044RoleConfig): string[] {
   const failures: string[] = [];
   if (config.executor.contextTokens !== 262144) {
@@ -166,211 +148,154 @@ const REQUIRED_ISSUES = [
   1193,
 ];
 
-/** Accelerated Alpha topology: minimal alpha.0, parallel lanes, serial integration. */
-const MINIMAL_ALPHA_ZERO_ISSUES = [1160, 1182, 1193] as const;
-const BETA_THREE_ISSUES = [1192, 1156, 1187, 1188, 1189] as const;
-const ACCELERATED_LANES = [
-  { lane: 'Compiler', issues: [1161, 1162, 1163] },
-  { lane: 'Runtime', issues: [1164, 1165, 1166, 723, 1167] },
-  { lane: 'SSR', issues: [1168, 1169, 1170] },
-  { lane: 'App', issues: [1088, 1171, 1172, 1173] },
+const WORKSPACE_ISSUES = [
+  { workspace: 'alpha.1', issues: [1161, 1162, 1163] },
+  { workspace: 'alpha.2', issues: [1164, 1165, 1166, 723, 1167] },
+  { workspace: 'alpha.3', issues: [1168, 1169, 1170] },
+  { workspace: 'alpha.4', issues: [1088, 1171, 1172, 1173, 1163] },
+  { workspace: 'alpha.5', issues: [1174] },
+  { workspace: 'alpha.6', issues: [1175] },
+  { workspace: 'alpha.7', issues: [1176] },
+  { workspace: 'alpha.8', issues: [1181] },
 ] as const;
-const FINAL_ALPHA_ISSUES = [1174, 1175, 1176, 1181] as const;
 
-function sectionRange(plan: string, heading: RegExp): [number, number] | null {
-  const match = heading.exec(plan);
-  if (!match) return null;
-  const end = plan.indexOf('\n## ', match.index + 1);
-  return [match.index, end === -1 ? plan.length : end];
-}
-
-/**
- * Accelerated topology contract: alpha.0 is reduced to the accepted compiler
- * proof, exact-SHA baseline and branch safety; governance hardening moved to
- * Beta.3; lanes develop in parallel and integrate serially at Integration I
- * (gating broad App/Delivery work) and Integration II (gating Final Alpha
- * legacy removal).
- */
-export function validateAcceleratedTopology(plan: string): string[] {
+export function validateAlphaWorkspaceTopology(plan: string): string[] {
   const failures: string[] = [];
   const lines = plan.split('\n');
-
-  const alphaZeroRow = lines.find((line) => line.startsWith('| `alpha.0`'));
-  if (!alphaZeroRow) {
-    failures.push('execution plan has no minimal alpha.0 phase row');
+  const alphaZero = lines.find((line) => line.includes('`alpha.0`'));
+  if (!alphaZero) {
+    failures.push('execution plan omits alpha.0 foundation');
   } else {
-    for (const issue of MINIMAL_ALPHA_ZERO_ISSUES) {
-      if (!alphaZeroRow.includes(`#${issue}`)) {
-        failures.push(`minimal alpha.0 phase omits #${issue}`);
-      }
-    }
-    for (const issue of BETA_THREE_ISSUES) {
-      if (alphaZeroRow.includes(`#${issue}`)) {
-        failures.push(`minimal alpha.0 phase still carries deferred hardening issue #${issue}`);
-      }
+    for (const issue of [1160, 1182, 1193]) {
+      if (!alphaZero.includes(`#${issue}`)) failures.push(`alpha.0 foundation omits #${issue}`);
     }
   }
 
-  const betaThreeLine = lines.find((line) => /Beta\.3\s*:/u.test(line));
-  if (!betaThreeLine) {
-    failures.push('execution plan has no Beta.3 hardening assignment');
-  } else {
-    for (const issue of BETA_THREE_ISSUES) {
-      if (!betaThreeLine.includes(`#${issue}`)) {
-        failures.push(`Beta.3 hardening omits #${issue}`);
-      }
-    }
-  }
-
-  for (const { lane, issues } of ACCELERATED_LANES) {
-    const row = lines.find((line) => line.startsWith('|') && line.includes(lane));
+  for (const { workspace, issues } of WORKSPACE_ISSUES) {
+    const row = lines.find((line) => line.startsWith('|') && line.includes(workspace));
     if (!row) {
-      failures.push(`execution plan has no ${lane} lane row`);
+      failures.push(`execution plan omits ${workspace} workspace`);
       continue;
     }
     for (const issue of issues) {
-      if (!row.includes(`#${issue}`)) failures.push(`${lane} lane omits #${issue}`);
-    }
-    if (lane === 'App' && !row.includes('Integration I')) {
-      failures.push('App/Delivery lane starts broad work before Integration I');
+      if (!row.includes(`#${issue}`)) failures.push(`${workspace} workspace omits #${issue}`);
     }
   }
 
-  const integrationOne = sectionRange(plan, /^## Integration I\s*$/mu);
-  const integrationTwo = sectionRange(plan, /^## Integration II\s*$/mu);
-  const finalAlpha = sectionRange(plan, /^## Final Alpha\s*$/mu);
-  if (!integrationOne) failures.push('execution plan omits the Integration I checkpoint');
-  if (!integrationTwo) failures.push('execution plan omits the Integration II checkpoint');
-  if (!finalAlpha) failures.push('execution plan omits the Final Alpha phase');
-  if (integrationOne && finalAlpha && integrationOne[0] > finalAlpha[0]) {
-    failures.push('Integration I must precede broad App/Delivery and Final Alpha work');
+  const normalized = plan.replaceAll(/\s+/gu, ' ');
+  for (
+    const required of [
+      'parallel development in independent workspaces',
+      'one final integration workspace',
+      'does not use the three-role release loop',
+      'One agent owns each alpha.1-alpha.7 workspace end-to-end',
+      'alpha.8 integration agent is the only aggregator',
+      'alpha.8 pull request to `dev` runs the only full matrix',
+      'No internal Alpha ID causes a tag',
+      'Beta.1',
+      'Beta.3',
+    ]
+  ) {
+    if (!normalized.includes(required)) failures.push(`execution plan omits "${required}"`);
   }
-  if (integrationTwo && finalAlpha && integrationTwo[0] > finalAlpha[0]) {
-    failures.push('Integration II must precede Final Alpha legacy removal');
-  }
-  if (integrationTwo && !plan.slice(...integrationTwo).includes('#1174')) {
-    failures.push('Integration II must gate Final Alpha legacy removal (#1174)');
-  }
-  if (finalAlpha) {
-    const section = plan.slice(...finalAlpha);
-    for (const issue of FINAL_ALPHA_ISSUES) {
-      if (!section.includes(`#${issue}`)) failures.push(`Final Alpha omits #${issue}`);
-    }
+  if (
+    /invoke the configured implementer/iu.test(plan) ||
+    /fresh release verifier session/iu.test(plan)
+  ) {
+    failures.push('execution plan activates a three-role Alpha implementation or verifier flow');
   }
   return failures;
 }
 
-/**
- * R12–R14 release-doctrine and integration-topology contract (#1156).
- *
- * Deterministically rejects the contradictions the repair-4 review found:
- * an alpha.0-publishable issue map (R12), a per-candidate human promotion GO
- * in the version plan (R13), and undocumented exact-SHA fast-forward
- * topology (R14). Anchors are exact phrases owned by the control-plane docs.
- */
 export interface ReleaseDoctrineTexts {
   issueMap: string;
   versionPlan: string;
-  sop: string;
-  prompt: string;
+  alphaSop: string;
+  betaSop: string;
+  betaPrompt: string;
   plan: string;
 }
 
 export function validateReleaseDoctrine(texts: ReleaseDoctrineTexts): string[] {
   const failures: string[] = [];
-  // Markdown prose reflows under the formatter; match anchors on
-  // whitespace-normalized text so wrapping never breaks the contract.
-  const issueMap = texts.issueMap.replaceAll(/\s+/gu, ' ');
-  const versionPlan = texts.versionPlan.replaceAll(/\s+/gu, ' ');
-  const sop = texts.sop.replaceAll(/\s+/gu, ' ');
-  const prompt = texts.prompt.replaceAll(/\s+/gu, ' ');
-  const plan = texts.plan.replaceAll(/\s+/gu, ' ');
+  const normalize = (text: string) => text.replaceAll(/^>\s?/gmu, '').replaceAll(/\s+/gu, ' ');
+  const issueMap = normalize(texts.issueMap);
+  const versionPlan = normalize(texts.versionPlan);
+  const alphaSop = normalize(texts.alphaSop);
+  const betaSop = normalize(texts.betaSop);
+  const betaPrompt = normalize(texts.betaPrompt);
+  const plan = normalize(texts.plan);
 
-  // R12: alpha.0 is internal-only and can never be published.
-  if (/\balpha\.0`?\s+may\s+publish/iu.test(issueMap)) {
-    failures.push(
-      'issue map still describes `alpha.0` as publishable; it is an internal-only baseline',
-    );
+  if (/alpha\.\d+\s+may\s+publish/iu.test(issueMap)) {
+    failures.push('issue map describes an internal Alpha identifier as publishable');
   }
   for (
     const required of [
-      '`alpha.0` is internal-only',
+      'internal identifiers',
       'no tag',
       'no npm publication',
       'no GitHub Release',
       'no dist-tag',
       'no `main` promotion',
-      'no external release action',
+      'three-role loop is disabled',
     ]
   ) {
-    if (!issueMap.includes(required)) {
-      failures.push(`issue map omits "${required}"`);
-    }
+    if (!issueMap.includes(required)) failures.push(`issue map omits "${required}"`);
   }
 
-  // R13: alpha.1–beta.3 close on the unanimous three-role GO; the only human
-  // stop on the prerelease train is #1178 RC admission.
-  if (versionPlan.includes('exact human promotion GO')) {
-    failures.push(
-      'version plan still requires an exact human promotion GO for every alpha/beta candidate',
-    );
-  }
   for (
     const required of [
-      'implementer/release-verifier/thinker GO',
-      'only prerelease human promotion stop is #1178 RC admission',
+      'internal work identifiers',
+      'three-role release loop is disabled throughout Alpha',
+      'It begins at Beta.1',
+      'not npm versions',
     ]
   ) {
-    if (!versionPlan.includes(required)) {
-      failures.push(`version plan omits "${required}"`);
-    }
+    if (!versionPlan.includes(required)) failures.push(`version plan omits "${required}"`);
   }
 
-  // R14: the proved PR head SHA is preserved through `dev` and `main` by
-  // fast-forward only; a moved base refreezes the candidate with new PR CI.
+  for (
+    const required of [
+      'The three-role release SOP does not apply during this phase',
+      'One worktree, branch and writing agent per Alpha workspace',
+      'Alpha.8 is created as the integration workspace',
+      'No three-role GO or release-verifier session',
+      'Do not run `v044:executor:check` during Alpha',
+    ]
+  ) {
+    if (!alphaSop.includes(required)) failures.push(`Alpha workspace SOP omits "${required}"`);
+  }
+  if (/start a fresh release verifier/iu.test(alphaSop)) {
+    failures.push('Alpha workspace SOP starts a release verifier');
+  }
+
   for (
     const [name, text] of [
-      ['agent loop SOP', sop],
-      ['bootstrap prompt', prompt],
+      ['Beta agent loop SOP', betaSop],
+      ['Beta bootstrap prompt', betaPrompt],
     ] as const
   ) {
-    for (
-      const required of [
-        '--ff-only',
-        'fast-forward is impossible',
-        'new exact-SHA PR CI',
-        'merge commits, squash',
-        'evidence relabeling',
-      ]
-    ) {
-      if (!text.includes(required)) failures.push(`${name} omits "${required}"`);
+    for (const required of ['Beta.1', 'Beta.3', '--ff-only', '#1178']) {
+      if (!text.includes(required) && !text.includes(required.toLowerCase())) {
+        failures.push(`${name} omits "${required}"`);
+      }
     }
   }
-  for (const required of ['fast-forward', '--ff-only']) {
-    if (!plan.includes(required)) {
-      failures.push(`execution plan omits "${required}"`);
-    }
+  if (!betaSop.includes('does not govern the internal Alpha workspace train')) {
+    failures.push('Beta agent loop SOP does not exclude Alpha');
+  }
+  if (!betaPrompt.includes('Do not use this prompt during Alpha')) {
+    failures.push('Beta bootstrap prompt does not exclude Alpha');
   }
 
-  // Beta.3 publication boundary: the authorized public prerelease range runs
-  // through the Beta.3 governance/release-hardening wave, not beta.2.
   for (
-    const [name, text] of [
-      ['agent loop SOP', sop],
-      ['bootstrap prompt', prompt],
-    ] as const
+    const required of [
+      'does not use the three-role release loop',
+      'No internal Alpha ID causes a tag',
+      'alpha.8 pull request to `dev` runs the only full matrix',
+    ]
   ) {
-    if (!text.includes('`beta.1` through `beta.3`')) {
-      failures.push(`${name} omits the Beta.3 publication boundary`);
-    }
-  }
-
-  // Probe 4: alpha.0 stays excluded from version closure and publication.
-  if (!sop.includes('stays strictly unpublished')) {
-    failures.push('agent loop SOP omits the `alpha.0` unpublished exclusion');
-  }
-  if (!versionPlan.includes('internal integration baseline')) {
-    failures.push('version plan omits the `alpha.0` internal integration baseline');
+    if (!plan.includes(required)) failures.push(`execution plan omits "${required}"`);
   }
   return failures;
 }
@@ -388,8 +313,7 @@ async function main(): Promise<void> {
     }
   }
 
-  const files = requiredFiles(config);
-  for (const file of files) await read(file);
+  for (const file of requiredFiles(config)) await read(file);
 
   let state: Record<string, unknown> = {};
   try {
@@ -406,59 +330,16 @@ async function main(): Promise<void> {
     if (!plan.includes(`#${issue}`)) failures.push(`execution plan omits #${issue}`);
     if (!issueMap.includes(`#${issue}`)) failures.push(`issue map omits #${issue}`);
   }
-  failures.push(...validateAcceleratedTopology(plan));
-  for (
-    const required of [
-      'CI evidence tier',
-      'parallel development',
-      'serial integration',
-      'Integration I',
-      'Integration II',
-      'Beta.3',
-    ]
-  ) {
-    if (!plan.includes(required)) failures.push(`execution plan omits "${required}"`);
-  }
+  failures.push(...validateAlphaWorkspaceTopology(plan));
 
-  const versionPlan = await read('docs/current/VERSION_PLAN.md');
-  for (const required of ['internal integration baseline', 'release closure']) {
-    if (!versionPlan.toLowerCase().includes(required.toLowerCase())) {
-      failures.push(`version plan omits "${required}"`);
-    }
-  }
-
-  const prompt = await read('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md');
-  for (
-    const required of [
-      'thinker',
-      'implementer',
-      'release verifier',
-      'deno task v044:role',
-      'AWAITING_HUMAN_GO',
-      V044_ROLE_CONFIG_PATH,
-    ]
-  ) {
-    if (!prompt.includes(required)) failures.push(`bootstrap prompt omits ${required}`);
-  }
-
-  const sop = await read('docs/governance/V044_AGENT_LOOP_SOP.md');
-  for (
-    const required of [
-      'test-first',
-      'fresh',
-      'production code',
-      'deno task v044:executor:check',
-      'deno task v044:role',
-      'CI evidence tier',
-      V044_ROLE_CONFIG_PATH,
-    ]
-  ) {
-    if (!sop.toLowerCase().includes(required.toLowerCase())) {
-      failures.push(`agent loop SOP omits ${required}`);
-    }
-  }
-
-  failures.push(...validateReleaseDoctrine({ issueMap, versionPlan, sop, prompt, plan }));
+  failures.push(...validateReleaseDoctrine({
+    issueMap,
+    versionPlan: await read('docs/current/VERSION_PLAN.md'),
+    alphaSop: await read('docs/governance/V044_ALPHA_WORKSPACE_SOP.md'),
+    betaSop: await read('docs/governance/V044_AGENT_LOOP_SOP.md'),
+    betaPrompt: await read('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md'),
+    plan,
+  }));
 
   if (failures.length > 0) {
     console.error('v0.44 orchestration check failed:');
@@ -467,7 +348,9 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `v0.44 orchestration check passed (${files.length} control files, ${REQUIRED_ISSUES.length} scheduled issues, role-neutral executor configuration).`,
+    `v0.44 orchestration check passed (${requiredFiles(config).length} control files, ` +
+      `${REQUIRED_ISSUES.length} scheduled issues, 8 internal Alpha workspaces, ` +
+      'three-role release loop deferred to Beta.1).',
   );
 }
 

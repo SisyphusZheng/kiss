@@ -1,7 +1,7 @@
 # v0.44 Three-Role Autonomous Loop SOP
 
-> Status: Mandatory for ADR-0146 execution. This SOP governs implementation from
-> the unpublished `v0.44.0-alpha.0` baseline through `v0.44.0-beta.3`.
+> Status: Mandatory for Beta.1 and later release execution. It does not govern the
+> internal Alpha workspace train; see `V044_ALPHA_WORKSPACE_SOP.md`.
 
 ## 1. Roles
 
@@ -31,7 +31,7 @@ state.
 ### Release verifier
 
 Runs as a **fresh** configured executor session with provider-default `high` effort and
-the configured release-verifier profile. It closes one alpha/beta candidate by deriving
+the configured release-verifier profile. It closes one Beta or later public candidate by deriving
 tests from the exit contract. It may add tests, fixtures and verification evidence, but
 must never repair production code.
 
@@ -218,11 +218,11 @@ The thinker records the verdict and exact commands in the owned issue/PR. FAIL c
 an uncommitted repair packet. The thinker must not edit production code to rescue the
 executor.
 
-## 9. Version closure with a fresh release verifier
+## 9. Beta version closure with a fresh release verifier
 
-Closure occurs for every real public alpha and beta publication, including repeated
-`alpha.N+1` or `beta.N+1` repair candidates. The internal `alpha.0` integration
-baseline receives loop review only; the first release closure is `alpha.1`.
+Closure occurs for every Beta and later public publication, including repeated
+`beta.N+1` repair candidates. Internal Alpha workspaces never invoke this closure; the
+first three-role release closure is Beta.1.
 
 ### Closure input
 
@@ -292,13 +292,13 @@ The bootstrap prompt may explicitly authorize the thinker to create scoped branc
 local commits, pushes, PRs and issue comments/closure after gates pass. Executor roles
 never perform those actions.
 
-The active bootstrap authorizes the full prerelease release flow for meaningful public
-alpha candidates and `beta.1` through `beta.3` — `dev`→`main` integration, version tag,
+The active bootstrap authorizes the full prerelease release flow for `beta.1` through
+`beta.3` — `dev`→`main` integration, version tag,
 npm publication, dist-tag change,
 GitHub Release, evidence and issue updates, and execution-cursor advancement — after a
 unanimous implementer/release-verifier/thinker GO against the exact candidate SHA with
-every deterministic gate green. `alpha.0` is the internal integration baseline and
-stays strictly unpublished: no tag, no publish, no release entry.
+every deterministic gate green. The internal Alpha workspace train stays strictly
+unpublished and outside this SOP: no tag, no publish, no release entry.
 
 Exact-SHA integration topology: PR CI proves the exact PR head SHA, and that SHA is the
 candidate. `dev` advances only by fast-forward to the proved PR head (`git merge
