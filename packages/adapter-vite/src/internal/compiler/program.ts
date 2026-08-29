@@ -186,15 +186,7 @@ export interface SpikeEventPart {
   location: ProgramLocation;
 }
 
-export type ConditionOperator =
-  | 'truthy'
-  | 'falsy'
-  | 'equal'
-  | 'not-equal'
-  | 'greater-than'
-  | 'greater-than-or-equal'
-  | 'less-than'
-  | 'less-than-or-equal';
+export type ConditionOperator = 'greater-than';
 
 export interface SpikeCondition {
   signal: string;
@@ -329,8 +321,25 @@ function isIdentifier(value: unknown): value is string {
 }
 
 function isAttributeName(value: unknown): value is string {
-  return typeof value === 'string' && /^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(value);
+  return typeof value === 'string' && /^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(value) &&
+    !/^on/i.test(value);
 }
+
+const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr',
+]);
 
 function samePath(left: unknown, right: number[]): boolean {
   return isIntegerArray(left) && JSON.stringify(left) === JSON.stringify(right);
@@ -343,9 +352,9 @@ function isSerializable(value: unknown, seen = new Set<unknown>()): value is Ser
   if (seen.has(value)) return false;
   seen.add(value);
   if (Array.isArray(value)) return value.every((entry) => isSerializable(entry, seen));
-  return Object.entries(value).every(([key, entry]) =>
-    key.length > 0 && isSerializable(entry, seen)
-  );
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) return false;
+  return Object.values(value).every((entry) => isSerializable(entry, seen));
 }
 
 function validatePosition(value: unknown, where: string): void {
@@ -382,6 +391,9 @@ function validateTreeNodes(
   allowItemValues: boolean,
   elementIds: Set<string>,
   anchorIds: Map<number, string>,
+  elementLocations: Map<string, { tag: string; path: number[] }>,
+  pathPrefix: number[] = [],
+  rootPath: number[] | undefined = undefined,
 ): asserts nodes is SpikeTreeNode[] {
   if (!Array.isArray(nodes)) fail(`${where} must be an array`);
   for (const [position, rawNode] of nodes.entries()) {
@@ -398,7 +410,14 @@ function validateTreeNodes(
         if (typeof rawNode.tag !== 'string' || !/^[a-z][a-z0-9]*$/.test(rawNode.tag)) {
           fail(`${where}[${position}].tag must be a lowercase intrinsic tag`);
         }
+        elementLocations.set(rawNode.id, {
+          tag: rawNode.tag,
+          path: position === 0 && rootPath !== undefined
+            ? [...rootPath]
+            : [...pathPrefix, position],
+        });
         if (!Array.isArray(rawNode.attrs)) fail(`${where}[${position}].attrs must be an array`);
+        const attributeNames = new Set<string>();
         for (const [attrPosition, attr] of rawNode.attrs.entries()) {
           if (
             !Array.isArray(attr) || attr.length !== 2 || typeof attr[0] !== 'string' ||
@@ -406,6 +425,19 @@ function validateTreeNodes(
           ) {
             fail(`${where}[${position}].attrs[${attrPosition}] must be a [name, value] pair`);
           }
+          if (!isAttributeName(attr[0])) {
+            fail(`${where}[${position}].attrs[${attrPosition}] has an unsafe name`);
+          }
+          if (attributeNames.has(attr[0].toLowerCase())) {
+            fail(`${where}[${position}].attrs[${attrPosition}] duplicates attribute ${attr[0]}`);
+          }
+          attributeNames.add(attr[0].toLowerCase());
+        }
+        if (!Array.isArray(rawNode.children)) {
+          fail(`${where}[${position}].children must be an array`);
+        }
+        if (VOID_TAGS.has(rawNode.tag) && rawNode.children.length > 0) {
+          fail(`${where}[${position}] void elements may not have children`);
         }
         validateTreeNodes(
           rawNode.children,
@@ -414,11 +446,15 @@ function validateTreeNodes(
           allowItemValues,
           elementIds,
           anchorIds,
+          elementLocations,
+          position === 0 && rootPath !== undefined ? [...rootPath] : [...pathPrefix, position],
         );
         break;
       }
       case 'text':
-        if (typeof rawNode.value !== 'string') fail(`${where}[${position}].value must be a string`);
+        if (typeof rawNode.value !== 'string' || rawNode.value.length === 0) {
+          fail(`${where}[${position}].value must be a non-empty string`);
+        }
         break;
       case 'part': {
         if (!allowAnchors) fail(`${where}[${position}] may not contain a part anchor`);
@@ -454,21 +490,28 @@ function validateLocation(value: unknown, where: string): asserts value is Progr
 }
 
 function validateCondition(value: unknown, where: string): asserts value is SpikeCondition {
-  if (!isRecord(value) || !isIdentifier(value.signal)) fail(`${where} needs a signal`);
-  const operators = new Set<ConditionOperator>([
-    'truthy',
-    'falsy',
-    'equal',
-    'not-equal',
-    'greater-than',
-    'greater-than-or-equal',
-    'less-than',
-    'less-than-or-equal',
-  ]);
-  if (typeof value.op !== 'string' || !operators.has(value.op as ConditionOperator)) {
-    fail(`${where}.op is unsupported`);
+  if (
+    !isRecord(value) || !isIdentifier(value.signal) || value.op !== 'greater-than' ||
+    typeof value.value !== 'number' || !Number.isFinite(value.value)
+  ) {
+    fail(`${where} supports only greater-than with a finite numeric value`);
   }
-  if ('value' in value && !isSerializable(value.value)) fail(`${where}.value must be serializable`);
+}
+
+function validateItemValueFields(
+  nodes: SpikeTreeNode[],
+  field: string,
+  where: string,
+): void {
+  nodes.forEach((node, position) => {
+    if (node.k === 'ival') {
+      if (node.field !== field) fail(`${where}[${position}] must use item field ${field}`);
+      return;
+    }
+    if (node.k === 'el') {
+      validateItemValueFields(node.children, field, `${where}[${position}].children`);
+    }
+  });
 }
 
 function validatePartPath(
@@ -511,6 +554,23 @@ function validateAnchorPath(
   }
   if (!node || node.k !== 'part' || node.index !== partIndex || node.id !== `p${partIndex}`) {
     fail(`${where}.path must target anchor p${partIndex}`);
+  }
+}
+
+function validateFixedPartPath(
+  template: SpikeTreeNode[],
+  path: number[],
+  where: string,
+): void {
+  let nodes = template;
+  for (const target of path) {
+    for (let sibling = 0; sibling < target; sibling++) {
+      if (nodes[sibling]?.k === 'part') {
+        fail(`${where}.path is preceded by a dynamic anchor`);
+      }
+    }
+    const next = nodes[target];
+    nodes = next?.k === 'el' ? next.children : [];
   }
 }
 
@@ -585,7 +645,16 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
 
   const elementIds = new Set<string>();
   const anchorIds = new Map<number, string>();
-  validateTreeNodes(raw.template, 'template', true, false, elementIds, anchorIds);
+  const elementLocations = new Map<string, { tag: string; path: number[] }>();
+  validateTreeNodes(
+    raw.template,
+    'template',
+    true,
+    false,
+    elementIds,
+    anchorIds,
+    elementLocations,
+  );
   const topLevelElements = (raw.template as SpikeTreeNode[])
     .filter((node): node is SpikeElementNode => node.k === 'el')
     .map((node) => node.id);
@@ -618,6 +687,12 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
       case 'bool':
         if (!isIdentifier(part.signal) || typeof part.name !== 'string' || part.name.length === 0) {
           fail(`parts[${position}] ${part.k} needs signal and name`);
+        }
+        if (part.k === 'prop' && (!isIdentifier(part.name) || /^on/i.test(part.name))) {
+          fail(`parts[${position}] prop name must be an identifier`);
+        }
+        if ((part.k === 'attr' || part.k === 'bool') && !isAttributeName(part.name)) {
+          fail(`parts[${position}] ${part.k} name is unsafe`);
         }
         if (part.location.kind !== 'sink') fail(`parts[${position}] ${part.k} must own a sink`);
         if (
@@ -680,6 +755,9 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         ) {
           fail(`parts[${position}] event needs event and handler`);
         }
+        if (!/^[a-z][a-z0-9:-]*$/.test(part.event)) {
+          fail(`parts[${position}] event name is unsafe`);
+        }
         validateEventAction(part.action, `parts[${position}].action`);
         if (part.location.kind !== 'sink') fail(`parts[${position}] event must own a sink`);
         if (
@@ -698,14 +776,37 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         }
         break;
       case 'when':
-        if (!isIdentifier(part.signal) || (part.gt !== undefined && !Number.isFinite(part.gt))) {
+        if (
+          !isIdentifier(part.signal) || typeof part.gt !== 'number' || !Number.isFinite(part.gt)
+        ) {
           fail(`parts[${position}] when needs a signal and finite threshold`);
         }
         if (part.location.kind !== 'anchor') fail(`parts[${position}] when must own an anchor`);
         validateCondition(part.test, `parts[${position}].test`);
         if (part.test.signal !== part.signal) fail(`parts[${position}] test signal mismatch`);
-        validateTreeNodes(part.on, `parts[${position}].on`, false, false, elementIds, new Map());
-        validateTreeNodes(part.off, `parts[${position}].off`, false, false, elementIds, new Map());
+        if (part.test.value !== part.gt) fail(`parts[${position}] threshold mismatches its test`);
+        validateTreeNodes(
+          part.on,
+          `parts[${position}].on`,
+          false,
+          false,
+          elementIds,
+          new Map(),
+          elementLocations,
+          [],
+          [],
+        );
+        validateTreeNodes(
+          part.off,
+          `parts[${position}].off`,
+          false,
+          false,
+          elementIds,
+          new Map(),
+          elementLocations,
+          [],
+          [],
+        );
         validateAnchorPath(
           raw.template as SpikeTreeNode[],
           part.location.path,
@@ -719,7 +820,22 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
           fail(`parts[${position}] each needs signal, key and field identifiers`);
         }
         if (part.location.kind !== 'anchor') fail(`parts[${position}] each must own an anchor`);
-        validateTreeNodes(part.item, `parts[${position}].item`, false, true, elementIds, new Map());
+        validateTreeNodes(
+          part.item,
+          `parts[${position}].item`,
+          false,
+          true,
+          elementIds,
+          new Map(),
+          elementLocations,
+          [],
+          [],
+        );
+        validateItemValueFields(
+          part.item,
+          part.field,
+          `parts[${position}].item`,
+        );
         validateAnchorPath(
           raw.template as SpikeTreeNode[],
           part.location.path,
@@ -732,6 +848,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         fail(`parts[${position}] has unknown part kind ${String((part as { k?: unknown }).k)}`);
     }
   });
+
+  for (const part of parts) {
+    if (part.k === 'text' || part.k === 'when' || part.k === 'each') continue;
+    validateFixedPartPath(raw.template as SpikeTreeNode[], part.path, `parts[${part.index}]`);
+  }
 
   for (const [index, id] of anchorIds) {
     const part = parts[index];
@@ -761,7 +882,7 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
       !isRecord(region) || region.id !== `r${region.index}` ||
       region.index !== regionParts[position].index ||
       (region.kind !== 'when' && region.kind !== 'each') || region.anchor !== `p${region.index}` ||
-      region.end !== `p${region.index}:end` || typeof region.source !== 'string'
+      region.end !== `p${region.index}:end` || region.source !== `p${region.index}`
     ) {
       fail(`regions[${position}] has an invalid Region record`);
     }
@@ -818,9 +939,9 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     locationById.set(location.id, location);
     if (!isIntegerArray(location.path)) fail(`locations[${position}].path is invalid`);
     if (location.kind === 'element') {
+      const element = elementLocations.get(location.id);
       if (
-        !elementIds.has(location.id) || typeof location.tag !== 'string' ||
-        !/^[a-z][a-z0-9]*$/.test(location.tag)
+        !element || location.tag !== element.tag || !samePath(location.path, element.path)
       ) fail(`locations[${position}] element is invalid`);
     } else if (location.kind === 'anchor') {
       const part = Number.isInteger(location.part) ? parts[location.part] : undefined;

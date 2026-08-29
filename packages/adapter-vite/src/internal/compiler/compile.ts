@@ -17,7 +17,6 @@ import {
 } from './diagnostics/index.ts';
 import {
   type CompiledElementMetadata,
-  type ConditionOperator,
   type PartProgramSpike,
   type ProgramDependencyRecord,
   type ProgramLocation,
@@ -132,15 +131,20 @@ const DOM_PROPERTY_NAMES = new Set([
   'value',
 ]);
 
-const CONDITION_OPERATORS = new Map<ts.SyntaxKind, ConditionOperator>([
-  [ts.SyntaxKind.EqualsEqualsToken, 'equal'],
-  [ts.SyntaxKind.EqualsEqualsEqualsToken, 'equal'],
-  [ts.SyntaxKind.ExclamationEqualsToken, 'not-equal'],
-  [ts.SyntaxKind.ExclamationEqualsEqualsToken, 'not-equal'],
-  [ts.SyntaxKind.GreaterThanToken, 'greater-than'],
-  [ts.SyntaxKind.GreaterThanEqualsToken, 'greater-than-or-equal'],
-  [ts.SyntaxKind.LessThanToken, 'less-than'],
-  [ts.SyntaxKind.LessThanEqualsToken, 'less-than-or-equal'],
+const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr',
 ]);
 
 function camelToKebab(value: string): string {
@@ -148,7 +152,7 @@ function camelToKebab(value: string): string {
 }
 
 function isSafeAttributeName(value: string): boolean {
-  return /^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(value);
+  return /^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(value) && !/^on/i.test(value);
 }
 
 function isIdentifier(value: string): boolean {
@@ -200,7 +204,7 @@ function literalValue(expr: ts.Expression, sf: ts.SourceFile): SerializableValue
       const key = ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)
         ? name.text
         : undefined;
-      if (key === undefined) return undefined;
+      if (key === undefined || key === '__proto__') return undefined;
       const entry = literalValue(property.initializer, sf);
       if (entry === undefined) return undefined;
       object[key] = entry;
@@ -216,6 +220,16 @@ function primitiveText(value: SerializableValue): string | null {
     return String(value);
   }
   return null;
+}
+
+function hasMeaningfulJsxChild(sf: ts.SourceFile, child: ts.JsxChild): boolean {
+  if (ts.isJsxText(child)) return child.getText(sf).trim().length > 0;
+  if (ts.isJsxExpression(child)) {
+    if (!child.expression) return false;
+    const literal = literalValue(child.expression, sf);
+    if (literal !== undefined) return primitiveText(literal) !== '';
+  }
+  return true;
 }
 
 function propertyTypeFromConstructor(
@@ -456,15 +470,23 @@ class Lowering {
     }
     const attrs: Array<[string, string]> = [];
     const elementId = this.reserveElement(tag, path, sourceNode);
+    const attributeNames = new Set<string>();
     for (const prop of attributes.properties) {
       if (ts.isJsxSpreadAttribute(prop)) {
         this.fail(prop, 'OEC9011', 'spread attributes are not supported by the compiler grammar');
       }
       const name = this.normalizeAttributeName(prop.name.getText(this.sf));
-      if (!isSafeAttributeName(name)) {
+      const init = prop.initializer;
+      const isDynamicEvent = /^on[A-Z]/.test(name) && init !== undefined &&
+        ts.isJsxExpression(init) && init.expression !== undefined;
+      if (!isSafeAttributeName(name) && !isDynamicEvent) {
         this.fail(prop, 'OEC9011', `attribute name "${name}" is unsafe`);
       }
-      const init = prop.initializer;
+      const attributeKey = name.toLowerCase();
+      if (attributeNames.has(attributeKey)) {
+        this.fail(prop, 'OEC9011', `duplicate attribute "${name}" is unsupported`);
+      }
+      attributeNames.add(attributeKey);
       if (!init) {
         attrs.push([name, '']);
         continue;
@@ -542,6 +564,12 @@ class Lowering {
         continue;
       }
       this.fail(child, 'OEC9013', 'JSX fragments and spreads are outside the compiler grammar');
+    }
+    if (VOID_TAGS.has(tag)) {
+      const child = children.find((candidate) => hasMeaningfulJsxChild(this.sf, candidate));
+      if (child) {
+        this.fail(child, 'OEC9013', `void element <${tag}> may not have children`);
+      }
     }
     return this.addElement(elementId, tag, attrs, lowered);
   }
@@ -698,6 +726,7 @@ class Lowering {
       if (text === null) {
         this.fail(child, 'OEC9013', 'dynamic child literals must be primitive values');
       }
+      if (text === '') return null;
       return { k: 'text', value: text ?? '' };
     }
     if (ts.isConditionalExpression(expr)) {
@@ -707,9 +736,7 @@ class Lowering {
       const test = this.parseCondition(expr.condition, child);
       const on = this.lowerStaticBranch(expr.whenTrue, child);
       const off = this.lowerStaticBranch(expr.whenFalse, child);
-      const gt = test.op === 'greater-than' && typeof test.value === 'number'
-        ? test.value
-        : undefined;
+      const gt = test.value as number;
       const index = this.addPart(
         { k: 'when', signal: test.signal, gt, test, on: [on], off: [off] },
         path,
@@ -732,24 +759,20 @@ class Lowering {
 
   private parseCondition(expr: ts.Expression, near: ts.Node): SpikeCondition {
     const condition = unwrapExpression(expr);
-    const direct = this.fieldAccess(condition);
-    if (direct) return { signal: direct, op: 'truthy' };
-    if (
-      ts.isPrefixUnaryExpression(condition) && condition.operator === ts.SyntaxKind.ExclamationToken
-    ) {
-      const signal = this.fieldAccess(condition.operand);
-      if (signal) return { signal, op: 'falsy' };
-    }
     if (ts.isBinaryExpression(condition)) {
       const signal = this.fieldAccess(condition.left);
       const value = literalValue(condition.right, this.sf);
-      const op = CONDITION_OPERATORS.get(condition.operatorToken.kind);
-      if (signal && value !== undefined && op) return { signal, op, value };
+      if (
+        signal && typeof value === 'number' && Number.isFinite(value) &&
+        condition.operatorToken.kind === ts.SyntaxKind.GreaterThanToken
+      ) {
+        return { signal, op: 'greater-than', value };
+      }
     }
     this.fail(
       near,
       'OEC9013',
-      'conditional Regions support this.<property>, !this.<property> or a literal comparison',
+      'conditional Regions support only this.<property> > a finite numeric literal',
     );
   }
 
@@ -824,7 +847,7 @@ class Lowering {
     const itemFields: string[] = [];
     const item = this.lowerItemElement(body, param, itemFields, [], true);
     const uniqueFields = [...new Set(itemFields)];
-    if (uniqueFields.length !== 1) {
+    if (itemFields.length !== 1 || uniqueFields.length !== 1) {
       this.fail(
         body,
         'OEC9013',
@@ -862,6 +885,7 @@ class Lowering {
     }
     const elementId = this.reserveElement(tag, path, element);
     const attrs: Array<[string, string]> = [];
+    const attributeNames = new Set<string>();
     for (const prop of attributes.properties) {
       if (!ts.isJsxAttribute(prop)) {
         this.fail(prop, 'OEC9011', 'spread attributes are not supported in item templates');
@@ -876,6 +900,11 @@ class Lowering {
       if (!isSafeAttributeName(name)) {
         this.fail(prop, 'OEC9011', `attribute name "${name}" is unsafe`);
       }
+      const attributeKey = name.toLowerCase();
+      if (attributeNames.has(attributeKey)) {
+        this.fail(prop, 'OEC9011', `duplicate attribute "${name}" is unsupported`);
+      }
+      attributeNames.add(attributeKey);
       if (!prop.initializer) {
         attrs.push([name, '']);
         continue;
@@ -897,6 +926,10 @@ class Lowering {
     }
     const children: SpikeTreeNode[] = [];
     const rawChildren = ts.isJsxElement(element) ? [...element.children] : [];
+    if (VOID_TAGS.has(tag)) {
+      const child = rawChildren.find((candidate) => hasMeaningfulJsxChild(this.sf, candidate));
+      if (child) this.fail(child, 'OEC9013', `void element <${tag}> may not have children`);
+    }
     for (const child of rawChildren) {
       const childPath = [...path, children.length];
       if (ts.isJsxText(child)) {
@@ -939,6 +972,7 @@ function propertyFields(
   const methods: ts.MethodDeclaration[] = [];
   let render: ts.MethodDeclaration | null = null;
   const names = new Set<string>();
+  const propertyAttributeNames = new Set<string>();
   for (const member of classNode.members) {
     if (ts.isPropertyDeclaration(member)) {
       const modifiers = ts.getModifiers(member) ?? [];
@@ -999,11 +1033,16 @@ function propertyFields(
         | { label: PropertyValueType; constructorName: SpikeField['typeConstructor'] }
         | undefined;
       let explicitConverter: PropertyValueType | undefined;
+      const optionNames = new Set<string>();
       for (const entry of options.properties) {
         if (!ts.isPropertyAssignment(entry) || entry.name.getText(sf).length === 0) {
           fail(entry, 'OEC9022', '@property options must be named literal assignments');
         }
         const optionName = entry.name.getText(sf);
+        if (optionNames.has(optionName)) {
+          fail(entry, 'OEC9022', `@property option "${optionName}" may appear only once`);
+        }
+        optionNames.add(optionName);
         if (optionName === 'reflect') {
           if (
             entry.initializer.kind !== ts.SyntaxKind.TrueKeyword &&
@@ -1038,6 +1077,13 @@ function propertyFields(
       const inferred = explicitType ?? inferPropertyType(member, defaultValue, sf);
       const converter = explicitConverter ?? inferred.label;
       if (attribute === undefined) attribute = camelToKebab(member.name.text);
+      if (attribute !== null) {
+        const attributeKey = attribute.toLowerCase();
+        if (propertyAttributeNames.has(attributeKey)) {
+          fail(member, 'OEC9023', `duplicate property attribute "${attribute}"`);
+        }
+        propertyAttributeNames.add(attributeKey);
+      }
       if (attribute === null && reflect) {
         fail(member, 'OEC9023', 'a property with attribute: false cannot reflect');
       }
@@ -1077,6 +1123,13 @@ function propertyFields(
       }
       if ((ts.getDecorators(member) ?? []).length > 0) {
         fail(member, 'OEC9004', 'methods may not carry decorators in the compiler grammar');
+      }
+      if (member.parameters.some((parameter) => (ts.getDecorators(parameter) ?? []).length > 0)) {
+        fail(
+          member,
+          'OEC9004',
+          'method parameters may not carry decorators in the compiler grammar',
+        );
       }
       if (!ts.isIdentifier(member.name)) {
         fail(member, 'OEC9006', 'method names must be identifiers');
@@ -1129,6 +1182,41 @@ function hasRuntimeOpenElementImport(sf: ts.SourceFile): boolean {
       (element.propertyName?.text ?? element.name.text) === 'OpenElement'
     );
   });
+}
+
+/**
+ * Path-addressed fixed Parts can use DOM child indexes only before any dynamic
+ * anchor. An anchor expands to multiple DOM nodes, so accepting a fixed sink
+ * after one would make server output, fresh creation and claim address
+ * different nodes. The v1 location id remains the identity; this guard keeps
+ * the path retained for seed consumers safe until they consume that id.
+ */
+function assertPathSafety(program: PartProgramSpike): void {
+  for (const part of program.parts) {
+    if (part.k === 'text' || part.k === 'when' || part.k === 'each') continue;
+    let nodes = program.template;
+    for (const target of part.path) {
+      for (let sibling = 0; sibling < target; sibling++) {
+        if (nodes[sibling]?.k === 'part') {
+          const source = program.sourceMap.records.find((record) => record.id === `p${part.index}`)
+            ?.source;
+          throw new CompiledSpikeError([{
+            code: 'OEC9015',
+            message:
+              `${part.k} part path [${part.path.join(',')}] is preceded by a dynamic anchor; ` +
+              'path-addressed fixed sinks must appear before any dynamic anchor sibling',
+            file: source?.file ?? program.sourceMap.file,
+            line: source?.start.line ?? 1,
+            character: source?.start.column ?? 1,
+            start: source?.start.offset ?? 0,
+            end: source?.end.offset ?? 0,
+          }]);
+        }
+      }
+      const next = nodes[target];
+      nodes = next?.k === 'el' ? next.children : [];
+    }
+  }
 }
 
 function encodeBase64(value: string): string {
@@ -1324,6 +1412,7 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     sourceMap: { version: 1, file: fileName, records: sourceRecords },
     metadata,
   };
+  assertPathSafety(program);
   validatePartProgram(program);
 
   const programJson = JSON.stringify(program, null, 2);

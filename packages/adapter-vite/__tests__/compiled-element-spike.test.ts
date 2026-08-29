@@ -272,6 +272,129 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
     assert(thrown, 'transform must throw for non-OpenElement base classes');
     assertStringIncludes(ctx.messages[0], 'OpenElement');
   });
+
+  await t.step('path-addressed fixed sinks after dynamic anchors fail closed', () => {
+    const source = [
+      "import { OpenElement } from '@openelement/element';",
+      'declare function element(tag: string): ClassDecorator;',
+      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "@element('oe-spike-unsafe-path')",
+      'export class UnsafePath extends OpenElement {',
+      '  @property({ reflect: false }) count = 0;',
+      "  @property({ reflect: false }) label = 'ready';",
+      '  render() {',
+      '    return <div>{this.count > 0 ? <p>positive</p> : <p>zero</p>}<input value={this.label} /></div>;',
+      '  }',
+      '}',
+    ].join('\n');
+    const ctx = failingContext();
+    assertThrows(
+      () => transform.call(ctx, source, '/project/app/islands/unsafe-path.tsx'),
+      Error,
+      'OEC9015',
+    );
+    assertStringIncludes(ctx.messages[0], 'dynamic anchor');
+  });
+
+  await t.step('duplicate static and dynamic attribute sinks fail closed', () => {
+    const source = [
+      "import { OpenElement } from '@openelement/element';",
+      'declare function element(tag: string): ClassDecorator;',
+      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "@element('oe-spike-duplicate-attribute')",
+      'export class DuplicateAttribute extends OpenElement {',
+      "  @property({ reflect: false }) label = 'ready';",
+      '  render() { return <input value="static" value={this.label} />; }',
+      '}',
+    ].join('\n');
+    const ctx = failingContext();
+    assertThrows(
+      () => transform.call(ctx, source, '/project/app/islands/duplicate-attribute.tsx'),
+      Error,
+      'duplicate attribute',
+    );
+    assertStringIncludes(ctx.messages[0], 'OEC9011');
+  });
+
+  await t.step('void elements with children fail closed', () => {
+    const source = [
+      "import { OpenElement } from '@openelement/element';",
+      'declare function element(tag: string): ClassDecorator;',
+      "@element('oe-spike-void-children')",
+      'export class VoidChildren extends OpenElement {',
+      '  render() { return <input>not supported</input>; }',
+      '}',
+    ].join('\n');
+    const ctx = failingContext();
+    assertThrows(
+      () => transform.call(ctx, source, '/project/app/islands/void-children.tsx'),
+      Error,
+      'void element',
+    );
+    assertStringIncludes(ctx.messages[0], 'OEC9013');
+  });
+
+  await t.step('event-looking attribute sinks fail closed', () => {
+    const source = [
+      "import { OpenElement } from '@openelement/element';",
+      'declare function element(tag: string): ClassDecorator;',
+      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "@element('oe-spike-unsafe-attribute')",
+      'export class UnsafeAttribute extends OpenElement {',
+      "  @property({ reflect: false }) label = 'ready';",
+      '  render() { return <input onclick={this.label} />; }',
+      '}',
+    ].join('\n');
+    const ctx = failingContext();
+    assertThrows(
+      () => transform.call(ctx, source, '/project/app/islands/unsafe-attribute.tsx'),
+      Error,
+      'unsafe',
+    );
+    assertStringIncludes(ctx.messages[0], 'OEC9011');
+  });
+
+  await t.step('conditions outside the seed operator fail closed', () => {
+    const source = [
+      "import { OpenElement } from '@openelement/element';",
+      'declare function element(tag: string): ClassDecorator;',
+      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "@element('oe-spike-unsupported-condition')",
+      'export class UnsupportedCondition extends OpenElement {',
+      '  @property({ reflect: false }) count = 0;',
+      '  render() { return <div>{this.count === 1 ? <p>one</p> : <p>other</p>}</div>; }',
+      '}',
+    ].join('\n');
+    const ctx = failingContext();
+    assertThrows(
+      () => transform.call(ctx, source, '/project/app/islands/unsupported-condition.tsx'),
+      Error,
+      'finite numeric literal',
+    );
+    assertStringIncludes(ctx.messages[0], 'OEC9013');
+  });
+
+  await t.step('list Regions reject multiple item value slots', () => {
+    const source = [
+      "import { OpenElement } from '@openelement/element';",
+      'declare function element(tag: string): ClassDecorator;',
+      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "@element('oe-spike-duplicate-item-value')",
+      'export class DuplicateItemValue extends OpenElement {',
+      "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha' }];",
+      '  render() {',
+      '    return <ul>{this.items.map((item) => <li key={item.id}>{item.text}{item.text}</li>)}</ul>;',
+      '  }',
+      '}',
+    ].join('\n');
+    const ctx = failingContext();
+    assertThrows(
+      () => transform.call(ctx, source, '/project/app/islands/duplicate-item-value.tsx'),
+      Error,
+      'exactly one',
+    );
+    assertStringIncludes(ctx.messages[0], 'OEC9013');
+  });
 });
 
 Deno.test('compiled-element alpha.1 - canonical program records and decorator lowering', async () => {
@@ -359,6 +482,48 @@ Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe 
   };
   shiftedLocation.parts[1].location.path = [0];
   assertThrows(() => validatePartProgram(shiftedLocation), Error, 'location path');
+
+  const shiftedElementLocation = structuredClone(program) as {
+    locations: Array<{ id: string; path: number[]; tag?: string }>;
+  };
+  shiftedElementLocation.locations[0].path = [0, 99];
+  assertThrows(
+    () => validatePartProgram(shiftedElementLocation),
+    Error,
+    'locations[0] element',
+  );
+
+  const renamedElementLocation = structuredClone(program) as {
+    locations: Array<{ id: string; path: number[]; tag?: string }>;
+  };
+  renamedElementLocation.locations[0].tag = 'span';
+  assertThrows(
+    () => validatePartProgram(renamedElementLocation),
+    Error,
+    'locations[0] element',
+  );
+
+  const mismatchedItemField = structuredClone(program) as {
+    parts: Array<{
+      item?: Array<{ children?: Array<{ field?: string }> }>;
+    }>;
+  };
+  mismatchedItemField.parts[4].item![0].children![0].field = 'id';
+  assertThrows(
+    () => validatePartProgram(mismatchedItemField),
+    Error,
+    'must use item field',
+  );
+
+  const mismatchedRegionSource = structuredClone(program) as {
+    regions: Array<{ source: string }>;
+  };
+  mismatchedRegionSource.regions[0].source = 'p0';
+  assertThrows(
+    () => validatePartProgram(mismatchedRegionSource),
+    Error,
+    'regions[0]',
+  );
 
   const unknownPart = structuredClone(program) as { parts: Array<{ k: string }> };
   unknownPart.parts[0].k = 'future';
