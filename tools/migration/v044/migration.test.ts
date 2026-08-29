@@ -1,8 +1,5 @@
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
-import {
-  scanLegacyAbsence,
-  type LegacyAbsenceViolation,
-} from '../../check-v044-legacy-absence.ts';
+import { type LegacyAbsenceViolation, scanLegacyAbsence } from '../../check-v044-legacy-absence.ts';
 import { migrateV043Source, type MigrationDiagnostic } from './migrate.ts';
 
 Deno.test('v0.44 migration converts literal legacy registration and is idempotent', () => {
@@ -19,9 +16,10 @@ Deno.test('v0.44 migration converts literal legacy registration and is idempoten
   assertEquals(result.diagnostics, []);
   assertEquals(result.changed, true);
   assertStringIncludes(result.code, "@element('oe-legacy-counter')");
+  assertStringIncludes(result.code, 'declare function element(tag: string): ClassDecorator;');
   assertStringIncludes(
     result.code,
-    "import { element, OpenElement } from '@openelement/element';",
+    "import { OpenElement } from '@openelement/element';",
   );
   assert(!result.code.includes('defineCustomElement'));
   assert(!result.code.includes('customElements.define'));
@@ -36,7 +34,7 @@ Deno.test('v0.44 migration lowers a prop-free defineElement object deterministic
   const source = [
     "import { defineElement } from '@openelement/element';",
     'const styles = new StyleSheet();',
-    'export const LegacyCard = defineElement(\'oe-legacy-card\', {',
+    "export const LegacyCard = defineElement('oe-legacy-card', {",
     '  styles,',
     '  render() { return <article>Card</article>; },',
     '});',
@@ -46,14 +44,44 @@ Deno.test('v0.44 migration lowers a prop-free defineElement object deterministic
   assertEquals(result.diagnostics, []);
   assertEquals(result.changed, true);
   assertStringIncludes(result.code, "@element('oe-legacy-card')");
+  assertStringIncludes(result.code, 'declare function element(tag: string): ClassDecorator;');
   assertStringIncludes(result.code, 'export class LegacyCard extends OpenElement');
   assertStringIncludes(result.code, 'static styles = styles;');
   assertStringIncludes(result.code, 'render() { return <article>Card</article>; }');
   assertStringIncludes(
     result.code,
-    "import { element, OpenElement } from '@openelement/element';",
+    "import { OpenElement } from '@openelement/element';",
   );
   assert(!result.code.includes('defineElement'));
+});
+
+Deno.test('v0.44 migration fixtures are exact and manual fixtures remain unchanged', async () => {
+  const fixtureRoot = new URL('./fixtures/', import.meta.url);
+  const registration = migrateV043Source(
+    await Deno.readTextFile(new URL('legacy-registration.tsx', fixtureRoot)),
+    'legacy-registration.tsx',
+  );
+  assertEquals(
+    registration.code,
+    await Deno.readTextFile(new URL('expected-registration.tsx', fixtureRoot)),
+  );
+
+  const definition = migrateV043Source(
+    await Deno.readTextFile(new URL('legacy-define-element.tsx', fixtureRoot)),
+    'legacy-define-element.tsx',
+  );
+  assertEquals(
+    definition.code,
+    await Deno.readTextFile(new URL('expected-define-element.tsx', fixtureRoot)),
+  );
+
+  const manualSource = await Deno.readTextFile(
+    new URL('manual-dynamic-registration.tsx', fixtureRoot),
+  );
+  const manual = migrateV043Source(manualSource, 'manual-dynamic-registration.tsx');
+  assertEquals(manual.changed, false);
+  assertEquals(manual.code, manualSource);
+  assert(manual.diagnostics.some((diagnostic) => diagnostic.code === 'OE-MIGRATE-001'));
 });
 
 Deno.test('v0.44 migration reports non-literal registration for manual repair', () => {
@@ -68,16 +96,39 @@ Deno.test('v0.44 migration reports non-literal registration for manual repair', 
   assertEquals(result.changed, false);
   assertEquals(result.code, source);
   assert(
-    result.diagnostics.some((diagnostic: MigrationDiagnostic) => diagnostic.code === 'OE-MIGRATE-001'),
+    result.diagnostics.some((diagnostic: MigrationDiagnostic) =>
+      diagnostic.code === 'OE-MIGRATE-001'
+    ),
   );
   assertStringIncludes(result.diagnostics[0].message, 'literal custom-element tag');
   assertEquals(result.diagnostics[0].line, 4);
 });
 
+Deno.test('v0.44 migration fails closed for dynamic definition behavior', () => {
+  const source = [
+    "import { defineElement } from '@openelement/app';",
+    "export const UnsafeCard = defineElement('oe-unsafe-card', {",
+    '  render(props) { return <article>{props.label}</article>; },',
+    '  get props() { return {}; },',
+    '});',
+  ].join('\n');
+
+  const result = migrateV043Source(source, 'unsafe-definition.tsx');
+  assertEquals(result.changed, false);
+  assertEquals(result.code, source);
+  assert(result.diagnostics.some((item) => item.code === 'OE-MIGRATE-002'));
+  assertStringIncludes(result.diagnostics[0].message, 'manual migration');
+});
+
 Deno.test('v0.44 legacy absence scan rejects runtime symbols and private imports', () => {
   const clean = scanLegacyAbsence([{
     path: 'dist/generated-counter.js',
-    text: "import { mountCompiledElement } from './runtime.js';\nexport { mountCompiledElement };",
+    text: [
+      '// VNode and HydrationScope are historical terms in this note.',
+      'const note = "VNode is not a runtime dependency";',
+      "import { mountCompiledElement } from './runtime.js';",
+      'export { mountCompiledElement };',
+    ].join('\n'),
   }]);
   assertEquals(clean, []);
 
@@ -90,11 +141,27 @@ Deno.test('v0.44 legacy absence scan rejects runtime symbols and private imports
     ].join('\n'),
   }]);
   assert(violations.some((violation: LegacyAbsenceViolation) => violation.rule === 'legacy-vnode'));
-  assert(violations.some((violation: LegacyAbsenceViolation) => violation.rule === 'legacy-binding'));
+  assert(
+    violations.some((violation: LegacyAbsenceViolation) => violation.rule === 'legacy-binding'),
+  );
   assert(
     violations.some((violation: LegacyAbsenceViolation) => violation.rule === 'legacy-hydration'),
   );
   assert(
-    violations.some((violation: LegacyAbsenceViolation) => violation.rule === 'private-runtime-import'),
+    violations.some((violation: LegacyAbsenceViolation) =>
+      violation.rule === 'private-runtime-import'
+    ),
+  );
+
+  const dependencyViolations = scanLegacyAbsence([{
+    path: 'dist/manifest.json',
+    text: JSON.stringify({
+      dependencies: { '@openelement/legacy-renderer': '0.43.0' },
+    }),
+  }]);
+  assert(
+    dependencyViolations.some((violation: LegacyAbsenceViolation) =>
+      violation.rule === 'legacy-dependency'
+    ),
   );
 });
