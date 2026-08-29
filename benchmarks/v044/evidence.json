@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "source": "tools/benchmark-v044.ts",
+  "fixtureId": "compiled-element-spike",
+  "versions": {
+    "baseline": "0.43.3",
+    "candidate": "0.44.0-alpha.0"
+  },
+  "artifact": {
+    "source": "packages/adapter-vite/__fixtures__/compiled-element-spike/counter.tsx",
+    "program": "packages/adapter-vite/__fixtures__/compiled-element-spike/expected-program.json",
+    "compiler": "packages/adapter-vite/src/internal/compiler/compile.ts",
+    "runtime": "packages/element/src/internal/compiled/runtime.ts",
+    "programBytes": 2626,
+    "generatedModuleBytes": 3488,
+    "instructionCount": 5
+  },
+  "baseline": {
+    "interactiveJsBytes": 4096,
+    "description": "Frozen 0.43.3 equivalent binding/update payload budget for this fixture"
+  },
+  "candidate": {
+    "interactiveJsBytes": 2626,
+    "generatedModuleBytes": 3488,
+    "programBytes": 2626
+  },
+  "staticOutput": {
+    "runtimeBytes": 0,
+    "transferredBytes": 198,
+    "scriptTags": 0
+  },
+  "environment": {
+    "deno": "2.9.0",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "warmupRuns": 2,
+    "timingSamples": 5,
+    "churnCycles": 100
+  },
+  "scenarios": [
+    {
+      "id": "fixed-only",
+      "baseline": {
+        "initialAllocations": 10,
+        "claimAllocations": 10,
+        "updateAllocations": 10,
+        "initialWalkVisits": 10,
+        "updateWalkVisits": 10,
+        "transferBytes": 116,
+        "updates": 1,
+        "updateWrites": 0,
+        "updateListeners": 1,
+        "subscriptions": 0
+      },
+      "candidate": {
+        "initialAllocations": 9,
+        "claimAllocations": 0,
+        "updateAllocations": 0,
+        "initialWalkVisits": 0,
+        "updateWalkVisits": 0,
+        "transferBytes": 116,
+        "updates": 1,
+        "updateWrites": 1,
+        "updateListeners": 0,
+        "subscriptions": 2
+      },
+      "timing": {
+        "serializeMs": 0.185,
+        "freshMs": 0.289,
+        "claimMs": 0.201,
+        "updateMs": 0.03,
+        "churnMs": 0.888
+      },
+      "heapGrowthBytes": 2138472,
+      "retainedSubscriptions": 0,
+      "retainedListeners": 0,
+      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul></ul></div>"
+    },
+    {
+      "id": "conditional",
+      "baseline": {
+        "initialAllocations": 14,
+        "claimAllocations": 14,
+        "updateAllocations": 28,
+        "initialWalkVisits": 14,
+        "updateWalkVisits": 28,
+        "transferBytes": 167,
+        "updates": 2,
+        "updateWrites": 0,
+        "updateListeners": 2,
+        "subscriptions": 0
+      },
+      "candidate": {
+        "initialAllocations": 13,
+        "claimAllocations": 0,
+        "updateAllocations": 4,
+        "initialWalkVisits": 0,
+        "updateWalkVisits": 0,
+        "transferBytes": 167,
+        "updates": 2,
+        "updateWrites": 2,
+        "updateListeners": 0,
+        "subscriptions": 3
+      },
+      "timing": {
+        "serializeMs": 0.056,
+        "freshMs": 0.055,
+        "claimMs": 0.024,
+        "updateMs": 0.091,
+        "churnMs": 0.966
+      },
+      "heapGrowthBytes": 0,
+      "retainedSubscriptions": 0,
+      "retainedListeners": 0,
+      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul></ul></div>"
+    },
+    {
+      "id": "keyed-list",
+      "baseline": {
+        "initialAllocations": 20,
+        "claimAllocations": 20,
+        "updateAllocations": 36,
+        "initialWalkVisits": 20,
+        "updateWalkVisits": 36,
+        "transferBytes": 196,
+        "updates": 2,
+        "updateWrites": 0,
+        "updateListeners": 2,
+        "subscriptions": 0
+      },
+      "candidate": {
+        "initialAllocations": 19,
+        "claimAllocations": 0,
+        "updateAllocations": 2,
+        "initialWalkVisits": 0,
+        "updateWalkVisits": 0,
+        "transferBytes": 196,
+        "updates": 2,
+        "updateWrites": 1,
+        "updateListeners": 0,
+        "subscriptions": 3
+      },
+      "timing": {
+        "serializeMs": 0.07,
+        "freshMs": 0.102,
+        "claimMs": 0.129,
+        "updateMs": 0.089,
+        "churnMs": 0.755
+      },
+      "heapGrowthBytes": 3119336,
+      "retainedSubscriptions": 0,
+      "retainedListeners": 0,
+      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul><!--oe:p3--><li>alpha</li><li>beta</li><li>gamma</li><li>delta</li><!--oe:/p3--></ul></div>"
+    },
+    {
+      "id": "nested-real-app",
+      "baseline": {
+        "initialAllocations": 40,
+        "claimAllocations": 40,
+        "updateAllocations": 92,
+        "initialWalkVisits": 40,
+        "updateWalkVisits": 92,
+        "transferBytes": 384,
+        "updates": 3,
+        "updateWrites": 0,
+        "updateListeners": 3,
+        "subscriptions": 0
+      },
+      "candidate": {
+        "initialAllocations": 39,
+        "claimAllocations": 0,
+        "updateAllocations": 6,
+        "initialWalkVisits": 0,
+        "updateWalkVisits": 0,
+        "transferBytes": 384,
+        "updates": 3,
+        "updateWrites": 3,
+        "updateListeners": 0,
+        "subscriptions": 4
+      },
+      "timing": {
+        "serializeMs": 0.027,
+        "freshMs": 0.013,
+        "claimMs": 0.038,
+        "updateMs": 0.038,
+        "churnMs": 1.614
+      },
+      "heapGrowthBytes": 5460896,
+      "retainedSubscriptions": 0,
+      "retainedListeners": 0,
+      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul><!--oe:p4--><li>item-00</li><li>item-01</li><li>item-02</li><li>item-03</li><li>item-04</li><li>item-05</li><li>item-06</li><li>item-07</li><li>item-08</li><li>item-09</li><li>item-10</li><li>item-11</li><!--oe:/p4--></ul></div>"
+    }
+  ],
+  "resources": {
+    "maxHeapGrowthBytes": 5460896,
+    "maxRetainedSubscriptions": 0,
+    "maxRetainedListeners": 0
+  },
+  "browser": [
+    {
+      "browser": "chromium",
+      "passed": true,
+      "pageErrors": [],
+      "claimReady": true,
+      "identityPreserved": true,
+      "liveValuePreserved": true,
+      "serializedBytes": 384
+    },
+    {
+      "browser": "firefox",
+      "passed": true,
+      "pageErrors": [],
+      "claimReady": true,
+      "identityPreserved": true,
+      "liveValuePreserved": true,
+      "serializedBytes": 384
+    },
+    {
+      "browser": "webkit",
+      "passed": true,
+      "pageErrors": [],
+      "claimReady": true,
+      "identityPreserved": true,
+      "liveValuePreserved": true,
+      "serializedBytes": 384
+    }
+  ]
+}

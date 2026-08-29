@@ -15,7 +15,7 @@ Deno.test('alpha.7 qualification covers the frozen v0.44 performance matrix', as
     writeEvidence: false,
   });
 
-  assertEquals(evaluateV044Performance(report), []);
+  assertEquals(evaluateV044Performance(report, undefined, { requireBrowsers: false }), []);
   assertEquals(report.scenarios.map((scenario) => scenario.id), [
     'fixed-only',
     'conditional',
@@ -44,7 +44,8 @@ Deno.test('alpha.7 qualification rejects critical regressions and incomplete evi
 
   const missingBrowser = structuredClone(report) as V044PerformanceReport;
   missingBrowser.browser = [];
-  const browserFailures = evaluateV044Performance(missingBrowser, definition);
+  const browserFailures = evaluateV044Performance(missingBrowser, definition, {
+    requireBrowsers: true,
+  });
   assertStringIncludes(browserFailures.join('\n'), 'browser evidence');
 });
-
