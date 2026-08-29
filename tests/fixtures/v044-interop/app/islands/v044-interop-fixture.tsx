@@ -5,7 +5,26 @@ export const tagName = 'v044-interop-fixture';
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 
 if (typeof window !== 'undefined') {
-  import('../client/v044-interop-client.ts');
+  const findTag = (root: Document | ShadowRoot, tag: string): HTMLElement | null => {
+    const direct = root.querySelector(tag);
+    if (direct) return direct as HTMLElement;
+    for (const element of root.querySelectorAll('*')) {
+      const shadow = (element as HTMLElement).shadowRoot;
+      if (!shadow) continue;
+      const found = findTag(shadow, tag);
+      if (found) return found;
+    }
+    return null;
+  };
+  const loadInteropClient = (): void => {
+    const fixture = findTag(document, tagName);
+    if (fixture?.shadowRoot) {
+      void import('../client/v044-interop-client.ts');
+      return;
+    }
+    requestAnimationFrame(loadInteropClient);
+  };
+  loadInteropClient();
 }
 
 export default defineIsland(tagName, {
@@ -32,6 +51,7 @@ export default defineIsland(tagName, {
             Stencil dependency
           </v044-stencil-probe>
         </section>
+        <section id='fresh-probes' aria-hidden='true'></section>
       </main>
     );
   },

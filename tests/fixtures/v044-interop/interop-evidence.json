@@ -120,6 +120,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-native-property",
           "attributeValue": "child-native-property",
           "assignedSlotNodes": 1
@@ -135,6 +137,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-native-property",
           "attributeValue": "application-dependency-native-property",
           "assignedSlotNodes": 1
@@ -150,6 +154,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-lit-property",
           "attributeValue": "child-lit-property",
           "assignedSlotNodes": 1
@@ -165,6 +171,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-lit-property",
           "attributeValue": "application-dependency-lit-property",
           "assignedSlotNodes": 1
@@ -180,6 +188,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-fast-property",
           "attributeValue": "child-fast-property",
           "assignedSlotNodes": 1
@@ -195,6 +205,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-fast-property",
           "attributeValue": "application-dependency-fast-property",
           "assignedSlotNodes": 1
@@ -210,6 +222,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": true,
           "attributeValue": "",
           "assignedSlotNodes": 1
@@ -218,6 +232,66 @@
           "id": "stencil-dependency",
           "tag": "v044-stencil-probe",
           "placement": "application-dependency",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
+          "propertyValue": true,
+          "attributeValue": "",
+          "assignedSlotNodes": 1
+        }
+      ],
+      "fresh": [
+        {
+          "id": "fresh-v044-native-probe",
+          "tag": "v044-native-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-native-property",
+          "attributeValue": "fresh-native-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-lit-probe",
+          "tag": "v044-lit-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-lit-property",
+          "attributeValue": "fresh-lit-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-fast-probe",
+          "tag": "v044-fast-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-fast-property",
+          "attributeValue": "fresh-fast-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-stencil-probe",
+          "tag": "v044-stencil-probe",
           "upgraded": true,
           "propertyAttribute": true,
           "event": true,
@@ -248,7 +322,15 @@
         "constructor:v044-fast-probe#fast-child",
         "connected:v044-fast-probe#fast-child",
         "constructor:v044-fast-probe#fast-dependency",
-        "connected:v044-fast-probe#fast-dependency"
+        "connected:v044-fast-probe#fast-dependency",
+        "constructor:v044-native-probe#",
+        "connected:v044-native-probe#fresh-v044-native-probe",
+        "constructor:v044-lit-probe#",
+        "connected:v044-lit-probe#fresh-v044-lit-probe",
+        "constructor:v044-fast-probe#",
+        "connected:v044-fast-probe#fresh-v044-fast-probe",
+        "constructor:v044-stencil-probe#",
+        "connected:v044-stencil-probe#fresh-v044-stencil-probe"
       ],
       "pageErrors": []
     },
@@ -267,6 +349,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-native-property",
           "attributeValue": "child-native-property",
           "assignedSlotNodes": 1
@@ -282,6 +366,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-native-property",
           "attributeValue": "application-dependency-native-property",
           "assignedSlotNodes": 1
@@ -297,6 +383,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-lit-property",
           "attributeValue": "child-lit-property",
           "assignedSlotNodes": 1
@@ -312,6 +400,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-lit-property",
           "attributeValue": "application-dependency-lit-property",
           "assignedSlotNodes": 1
@@ -327,6 +417,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-fast-property",
           "attributeValue": "child-fast-property",
           "assignedSlotNodes": 1
@@ -342,6 +434,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-fast-property",
           "attributeValue": "application-dependency-fast-property",
           "assignedSlotNodes": 1
@@ -357,6 +451,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": true,
           "attributeValue": "",
           "assignedSlotNodes": 1
@@ -365,6 +461,66 @@
           "id": "stencil-dependency",
           "tag": "v044-stencil-probe",
           "placement": "application-dependency",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
+          "propertyValue": true,
+          "attributeValue": "",
+          "assignedSlotNodes": 1
+        }
+      ],
+      "fresh": [
+        {
+          "id": "fresh-v044-native-probe",
+          "tag": "v044-native-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-native-property",
+          "attributeValue": "fresh-native-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-lit-probe",
+          "tag": "v044-lit-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-lit-property",
+          "attributeValue": "fresh-lit-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-fast-probe",
+          "tag": "v044-fast-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-fast-property",
+          "attributeValue": "fresh-fast-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-stencil-probe",
+          "tag": "v044-stencil-probe",
           "upgraded": true,
           "propertyAttribute": true,
           "event": true,
@@ -395,7 +551,15 @@
         "constructor:v044-fast-probe#fast-child",
         "connected:v044-fast-probe#fast-child",
         "constructor:v044-fast-probe#fast-dependency",
-        "connected:v044-fast-probe#fast-dependency"
+        "connected:v044-fast-probe#fast-dependency",
+        "constructor:v044-native-probe#",
+        "connected:v044-native-probe#fresh-v044-native-probe",
+        "constructor:v044-lit-probe#",
+        "connected:v044-lit-probe#fresh-v044-lit-probe",
+        "constructor:v044-fast-probe#",
+        "connected:v044-fast-probe#fresh-v044-fast-probe",
+        "constructor:v044-stencil-probe#",
+        "connected:v044-stencil-probe#fresh-v044-stencil-probe"
       ],
       "pageErrors": []
     },
@@ -414,6 +578,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-native-property",
           "attributeValue": "child-native-property",
           "assignedSlotNodes": 1
@@ -429,6 +595,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-native-property",
           "attributeValue": "application-dependency-native-property",
           "assignedSlotNodes": 1
@@ -444,6 +612,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-lit-property",
           "attributeValue": "child-lit-property",
           "assignedSlotNodes": 1
@@ -459,6 +629,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-lit-property",
           "attributeValue": "application-dependency-lit-property",
           "assignedSlotNodes": 1
@@ -474,6 +646,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "child-fast-property",
           "attributeValue": "child-fast-property",
           "assignedSlotNodes": 1
@@ -489,6 +663,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": "application-dependency-fast-property",
           "attributeValue": "application-dependency-fast-property",
           "assignedSlotNodes": 1
@@ -504,6 +680,8 @@
           "cssPart": true,
           "root": true,
           "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
           "propertyValue": true,
           "attributeValue": "",
           "assignedSlotNodes": 1
@@ -512,6 +690,66 @@
           "id": "stencil-dependency",
           "tag": "v044-stencil-probe",
           "placement": "application-dependency",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "identityPreserved": true,
+          "liveStatePreserved": true,
+          "propertyValue": true,
+          "attributeValue": "",
+          "assignedSlotNodes": 1
+        }
+      ],
+      "fresh": [
+        {
+          "id": "fresh-v044-native-probe",
+          "tag": "v044-native-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-native-property",
+          "attributeValue": "fresh-native-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-lit-probe",
+          "tag": "v044-lit-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-lit-property",
+          "attributeValue": "fresh-lit-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-fast-probe",
+          "tag": "v044-fast-probe",
+          "upgraded": true,
+          "propertyAttribute": true,
+          "event": true,
+          "slot": true,
+          "cssPart": true,
+          "root": true,
+          "upgradeOrder": true,
+          "propertyValue": "fresh-fast-property",
+          "attributeValue": "fresh-fast-property",
+          "assignedSlotNodes": 1
+        },
+        {
+          "id": "fresh-v044-stencil-probe",
+          "tag": "v044-stencil-probe",
           "upgraded": true,
           "propertyAttribute": true,
           "event": true,
@@ -542,7 +780,15 @@
         "constructor:v044-fast-probe#fast-child",
         "connected:v044-fast-probe#fast-child",
         "constructor:v044-fast-probe#fast-dependency",
-        "connected:v044-fast-probe#fast-dependency"
+        "connected:v044-fast-probe#fast-dependency",
+        "constructor:v044-native-probe#",
+        "connected:v044-native-probe#fresh-v044-native-probe",
+        "constructor:v044-lit-probe#",
+        "connected:v044-lit-probe#fresh-v044-lit-probe",
+        "constructor:v044-fast-probe#",
+        "connected:v044-fast-probe#fresh-v044-fast-probe",
+        "constructor:v044-stencil-probe#",
+        "connected:v044-stencil-probe#fresh-v044-stencil-probe"
       ],
       "pageErrors": []
     }

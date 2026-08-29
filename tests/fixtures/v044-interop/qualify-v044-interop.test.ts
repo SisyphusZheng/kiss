@@ -41,6 +41,24 @@ Deno.test('alpha.6 validates compiler CEM output and rejects malformed manifests
   assertStringIncludes(diagnostics[0], 'modules');
 });
 
+Deno.test('CEM validation fails closed for empty module paths and declaration names', async () => {
+  const corpus = await loadInteropCorpus(fixtureRoot);
+
+  const emptyPath = structuredClone(corpus.cem) as {
+    modules: Array<{ path: string; declarations: Array<Record<string, unknown>> }>;
+  };
+  emptyPath.modules[0].path = '';
+  const pathDiagnostics = validateCemManifest(emptyPath);
+  assertEquals(pathDiagnostics.some((diagnostic) => diagnostic.includes('.path')), true);
+
+  const emptyName = structuredClone(corpus.cem) as {
+    modules: Array<{ declarations: Array<Record<string, unknown>> }>;
+  };
+  emptyName.modules[0].declarations[0].name = '';
+  const nameDiagnostics = validateCemManifest(emptyName);
+  assertEquals(nameDiagnostics.some((diagnostic) => diagnostic.includes('.name')), true);
+});
+
 Deno.test('unknown SSR capability fails closed to documented client-only behavior', () => {
   const result = classifySsrCapability('not-a-capability');
 

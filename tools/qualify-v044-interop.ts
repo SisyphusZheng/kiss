@@ -109,6 +109,23 @@ interface BrowserComponentEvidence {
   cssPart: boolean;
   root: boolean;
   upgradeOrder: boolean;
+  identityPreserved: boolean;
+  liveStatePreserved: boolean;
+  propertyValue?: string | boolean;
+  attributeValue?: string | null;
+  assignedSlotNodes?: number;
+}
+
+interface BrowserFreshComponentEvidence {
+  id: string;
+  tag: string;
+  upgraded: boolean;
+  propertyAttribute: boolean;
+  event: boolean;
+  slot: boolean;
+  cssPart: boolean;
+  root: boolean;
+  upgradeOrder: boolean;
   propertyValue?: string | boolean;
   attributeValue?: string | null;
   assignedSlotNodes?: number;
@@ -118,6 +135,7 @@ export interface BrowserEvidence {
   browser: BrowserName;
   childHost: boolean;
   components: BrowserComponentEvidence[];
+  fresh: BrowserFreshComponentEvidence[];
   upgradeOrder: string[];
   pageErrors: string[];
 }
@@ -823,7 +841,12 @@ export async function verifyBrowser(
       const childHostWorks = !!childHost && !!childHost.shadowRoot &&
         (childSlot?.assignedElements().length ?? 0) === componentInput.length;
       const state = (globalThis as typeof globalThis & {
-        __v044InteropState?: { upgradeOrder?: UpgradeEntry[]; events?: string[] };
+        __v044InteropState?: {
+          upgradeOrder?: UpgradeEntry[];
+          events?: string[];
+          existingIdentity?: Record<string, boolean>;
+          existingLiveState?: Record<string, boolean>;
+        };
       }).__v044InteropState;
       const upgradeOrder = state?.upgradeOrder ?? [];
       const results: Array<{
@@ -837,6 +860,8 @@ export async function verifyBrowser(
         cssPart: boolean;
         root: boolean;
         upgradeOrder: boolean;
+        identityPreserved: boolean;
+        liveStatePreserved: boolean;
         propertyValue?: string | boolean;
         attributeValue?: string | null;
         assignedSlotNodes?: number;
@@ -858,6 +883,8 @@ export async function verifyBrowser(
               cssPart: false,
               root: false,
               upgradeOrder: false,
+              identityPreserved: false,
+              liveStatePreserved: false,
             });
             continue;
           }
@@ -925,6 +952,106 @@ export async function verifyBrowser(
             cssPart: partWorks,
             root: !!shadow,
             upgradeOrder: constructorIndex >= 0 && connectedIndex > constructorIndex,
+            identityPreserved: state?.existingIdentity?.[id] === true,
+            liveStatePreserved: state?.existingLiveState?.[id] === true,
+            propertyValue,
+            attributeValue,
+            assignedSlotNodes,
+          });
+        }
+      }
+      type FreshResult = {
+        id: string;
+        tag: string;
+        upgraded: boolean;
+        propertyAttribute: boolean;
+        event: boolean;
+        slot: boolean;
+        cssPart: boolean;
+        root: boolean;
+        upgradeOrder: boolean;
+        propertyValue?: string | boolean;
+        attributeValue?: string | null;
+        assignedSlotNodes?: number;
+      };
+      const fresh: FreshResult[] = [];
+      const freshRoot = fixtureRoot.querySelector('#fresh-probes') as HTMLElement | null;
+      if (freshRoot) {
+        for (const component of componentInput) {
+          const id = `fresh-${component.tag}`;
+          const upgradeStart = upgradeOrder.length;
+          const element = document.createElement(component.tag) as HTMLElement;
+          element.id = id;
+          element.textContent = component.slotText;
+          freshRoot.appendChild(element);
+
+          let propertyAttribute = false;
+          let propertyValue: string | boolean;
+          let attributeValue: string | null;
+          if (component.property === 'disabled') {
+            element.setAttribute(component.attribute, '');
+            await Promise.resolve();
+            propertyValue =
+              (element as HTMLElement & Record<string, unknown>)[component.property] === true
+                ? true
+                : false;
+            attributeValue = element.getAttribute(component.attribute);
+            propertyAttribute = propertyValue === true &&
+              element.hasAttribute(component.attribute);
+            element.removeAttribute(component.attribute);
+          } else {
+            const value = `fresh-${component.framework}-property`;
+            (element as HTMLElement & Record<string, unknown>)[component.property] = value;
+            const updateComplete = (element as HTMLElement & { updateComplete?: Promise<unknown> })
+              .updateComplete;
+            if (updateComplete) await updateComplete;
+            propertyValue = String(
+              (element as HTMLElement & Record<string, unknown>)[component.property],
+            );
+            attributeValue = element.getAttribute(component.attribute);
+            propertyAttribute = element.getAttribute(component.attribute) === value &&
+              propertyValue === value;
+          }
+
+          const shadow = element.shadowRoot;
+          const slots = Array.from(shadow?.querySelectorAll('slot') ?? []) as HTMLSlotElement[];
+          const assignedSlotNodes = slots.reduce(
+            (count, slot) => count + slot.assignedNodes({ flatten: true }).length,
+            0,
+          );
+          const slotWorks = slots.some((slot) =>
+            slot.assignedNodes({ flatten: true }).some((node) =>
+              node.textContent?.includes(component.slotText) === true
+            )
+          );
+          const partWorks = !!shadow &&
+            Array.from(shadow.querySelectorAll('[part]')).some((part) =>
+              (part.getAttribute('part') ?? '').split(/\s+/).includes(component.cssPart)
+            );
+          let eventObserved = false;
+          element.addEventListener(component.event, () => eventObserved = true);
+          const control = shadow?.querySelector('[part]') as HTMLElement | null;
+          control?.click();
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          if (component.event === 'click' && !eventObserved) element.click();
+          const entries = upgradeOrder.slice(upgradeStart);
+          const constructorIndex = entries.findIndex((entry) =>
+            entry.phase === 'constructor' && entry.tag === component.tag
+          );
+          const connectedIndex = entries.findIndex((entry) =>
+            entry.phase === 'connected' && entry.id === id
+          );
+          fresh.push({
+            id,
+            tag: component.tag,
+            upgraded: customElements.get(component.tag) !== undefined &&
+              element.constructor !== HTMLElement,
+            propertyAttribute,
+            event: eventObserved,
+            slot: slotWorks,
+            cssPart: partWorks,
+            root: !!shadow,
+            upgradeOrder: constructorIndex >= 0 && connectedIndex > constructorIndex,
             propertyValue,
             attributeValue,
             assignedSlotNodes,
@@ -941,7 +1068,13 @@ export async function verifyBrowser(
       return {
         childHost: childHostWorks && dependencyWorks &&
           dependencyTags.length === componentInput.length,
+        freshRoot: !!freshRoot && fresh.length === componentInput.length &&
+          fresh.every((component) => {
+            const element = freshRoot.querySelector(`#${component.id}`);
+            return !!element && element.parentElement === freshRoot;
+          }),
         components: results,
+        fresh,
         upgradeOrder: upgradeOrder.map((entry) => `${entry.phase}:${entry.tag}#${entry.id}`),
       };
     }, components);
@@ -951,10 +1084,20 @@ export async function verifyBrowser(
     }
     const failedComponents = observed.components.filter((component) =>
       !component.upgraded || !component.propertyAttribute || !component.event || !component.slot ||
-      !component.cssPart || !component.root || !component.upgradeOrder
+      !component.cssPart || !component.root || !component.upgradeOrder ||
+      !component.identityPreserved || !component.liveStatePreserved
     );
     if (!observed.childHost) {
       throw new Error(`${browserName}: child/dependency placement probe failed`);
+    }
+    const failedFresh = observed.fresh.filter((component) =>
+      !component.upgraded || !component.propertyAttribute || !component.event || !component.slot ||
+      !component.cssPart || !component.root || !component.upgradeOrder
+    );
+    if (!observed.freshRoot || failedFresh.length > 0) {
+      throw new Error(
+        `${browserName}: fresh DOM probes failed: ${JSON.stringify(failedFresh)}`,
+      );
     }
     if (failedComponents.length > 0) {
       throw new Error(
@@ -965,6 +1108,7 @@ export async function verifyBrowser(
       browser: browserName,
       childHost: observed.childHost,
       components: observed.components,
+      fresh: observed.fresh,
       upgradeOrder: observed.upgradeOrder,
       pageErrors,
     };
