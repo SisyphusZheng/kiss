@@ -1,39 +1,53 @@
 /**
  * Supported development JSX transform entrypoint for Element authors.
  *
+ * 0.44: this module exists only so TSX sources typecheck while authoring
+ * components that the OpenElement compiler lowers to Part Programs. Compiled
+ * output never calls `jsxDEV`, so it fails closed with a diagnostic — JSX
+ * executing at runtime means the module never passed through the compiler.
+ *
  * The JSX namespace is declared inline here (and in jsx-runtime.ts) because
  * TypeScript's automatic JSX transform resolves it from the jsx-runtime
  * module's emitted declarations — a `/// <reference>` indirection does not
- * survive `deno pack` declaration emit (consumer:packaged gate). Keep in
- * sync with internal/core/jsx-types.d.ts (used by the internal runtime).
+ * survive `deno pack` declaration emit (consumer:packaged gate).
  */
-export { Fragment, jsxDEV } from './public-runtime.ts';
+import { OpenElementError } from './internal/core/errors.ts';
+
+function jsxOutsideCompiler(): never {
+  throw new OpenElementError(
+    '[openElement] JSX executed outside the 0.44 compiler pipeline. ' +
+      'The runtime JSX factory was removed; run the OpenElement Vite adapter ' +
+      'so the component is compiled to a Part Program.',
+    { code: 'OE_JSX_OUTSIDE_COMPILER', phase: 'build' },
+  );
+}
+
+/** Typechecking-only factory; fails closed when executed at runtime. */
+export function jsxDEV(
+  _type: unknown,
+  _props: unknown,
+  _key: unknown,
+  _isStaticChildren: unknown,
+  _source: unknown,
+  _self: unknown,
+): JSX.Element {
+  return jsxOutsideCompiler();
+}
+
+/** Typechecking-only fragment marker; fails closed when executed at runtime. */
+export function Fragment(_props?: unknown): JSX.Element {
+  return jsxOutsideCompiler();
+}
 
 /** JSX type interface consumed by TypeScript's automatic JSX transform. */
 export declare namespace JSX {
   /**
-   * JSX expression result — structurally compatible with VNode.
-   *
-   * children must match VNode.children: (VNode | string | RenderFn)[] to
-   * satisfy TypeScript's structural assignability check when a JSX
-   * expression is returned from OpenElement.render(): VNode | null, and so
-   * that control-flow components returning VNode (<For key={fn}>, #1055)
-   * are valid JSX components.
+   * JSX expression result — a nominal opaque type. The compiler lowers JSX
+   * expressions into Part Program tree nodes at build time; at runtime no
+   * JSX value exists, so this type is intentionally uninhabited.
    */
   interface Element {
-    tag:
-      | string
-      | import('./public-runtime.ts').ComponentFn
-      | import('./public-runtime.ts').ComponentCtor
-      | symbol;
-    props: Record<string, unknown>;
-    children: (
-      | string
-      | import('./public-runtime.ts').VNode
-      | import('./public-runtime.ts').RenderFn
-    )[];
-    key?: string | number;
-    ref?: (el: globalThis.Element) => void;
+    readonly __compiledJsxElement: unique symbol;
   }
 
   interface ElementClass {
@@ -42,6 +56,11 @@ export declare namespace JSX {
 
   interface IntrinsicElements {
     [elemName: string]: Record<string, unknown>;
+  }
+
+  interface IntrinsicAttributes {
+    key?: string | number;
+    ref?: (el: globalThis.Element) => void;
   }
 
   interface ElementAttributesProperty {

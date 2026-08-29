@@ -133,20 +133,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/internal/core/island.ts',
-    fragment: 'el as unknown as Record<string, unknown>',
-    reason: 'Custom element prop assignment by dynamic prop name.',
-
-    revisitBy: '0.44.0',
-  },
-  {
-    file: 'packages/element/src/internal/core/binding-activation.ts',
-    fragment: 'desc.el as unknown as Record<string, unknown>',
-    reason: 'Direct DOM property assignment by dynamic prop name.',
-
-    revisitBy: '0.44.0',
-  },
-  {
     file: 'packages/element/src/internal/core/prop.ts',
     fragment: 'instance as unknown as {',
     reason: 'Static prop runtime writes element attributes and properties.',
@@ -162,8 +148,37 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   },
   {
     file: 'packages/element/src/open-element-implementation.ts',
-    fragment: 'return this as unknown as OpenElementRuntimeHost;',
-    reason: 'Cycle-free structural bridge to the extracted lifecycle runtime collaborator.',
+    fragment: 'document as unknown as EventTarget',
+    reason:
+      'SSR-safe default for the pre-upgrade capture root: the global document narrows to EventTarget for the compiled claim capture seam.',
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'packages/element/src/open-element-implementation.ts',
+    fragment: 'this as unknown as HTMLElement',
+    reason:
+      'Facade-to-kernel bridge: OpenElementBase is HTMLElement on clients and an SSR stub on the server; the kernel only runs on the client shape.',
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'packages/element/src/open-element-implementation.ts',
+    fragment: 'root as unknown as Node',
+    reason:
+      'The kernel root union (HTMLElement | ShadowRoot) narrows to Node for compiled claim pre-upgrade event replay.',
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'packages/element/src/open-element-implementation.ts',
+    fragment: 'as { childNodes: ArrayLike<unknown> }',
+    reason:
+      'Claim-vs-fresh probe: the element/shadow root is read structurally for existing content before the kernel resolves its root.',
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'packages/element/src/internal/compiled/facade-host.ts',
+    fragment: 'element as unknown as Record<string, unknown>',
+    reason:
+      'Compiled property contract reads/writes element own properties by the compiler-emitted property name.',
     revisitBy: '0.44.0',
   },
   {
@@ -174,37 +189,39 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/define-element.ts',
-    fragment: 'this as unknown as Record<string, unknown>',
-    reason: 'Custom element prop collection by dynamic prop name.',
-
+    file: 'tools/benchmark-v044.ts',
+    fragment: 'this as unknown as FNode',
+    reason: 'Benchmark fake-DOM node base narrows itself into the node union for sibling lookups.',
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/open-element-render.ts',
-    fragment: 'instance as unknown as HTMLElement',
-    reason: 'Cycle-break: OpenElementLike does not extend HTMLElement.',
-
+    file: 'tools/benchmark-v044.ts',
+    fragment: 'this as unknown as FElement',
+    reason: 'Benchmark fake-DOM node base narrows itself to the element parent slot.',
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/open-element-render.ts',
-    fragment: 'instance.constructor as unknown as OpenElementLikeConstructor',
-    reason: 'Cycle-break: OpenElementLike constructor typed as ObjectConstructor.',
-
+    file: 'tools/benchmark-v044.ts',
+    fragment: '} as unknown as Parameters<typeof serializeToHtml>[1]',
+    reason: 'Benchmark host literal meets the compiled serializer host contract structurally.',
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/internal/core/render-dsd.ts',
-    fragment: 'instance as unknown as Record<string, unknown>',
-    reason: 'injectPropsSafe writes element props by dynamic name across the DSD boundary.',
+    file: 'tools/benchmark-v044.ts',
+    fragment: 'program as unknown as Parameters<typeof serializeToHtml>[0]',
+    reason: 'Benchmark-built program value crosses into the validator-checked serializer input.',
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/internal/core/render-dsd-internals.ts',
-    fragment: 'instance as unknown as Record<string, unknown>',
-    reason:
-      'Error-boundary fallback calls the private capture hook after the boundary marker check.',
+    file: 'tools/benchmark-v044.ts',
+    fragment: 'root as unknown as Parameters<typeof createFreshDom>[2]',
+    reason: 'Benchmark fake-DOM root meets the compiled runtime Node contract structurally.',
+    revisitBy: '0.44.0',
+  },
+  {
+    file: 'tools/benchmark-v044.ts',
+    fragment: '(playwright as unknown as Record<string, BrowserTypeLike>)[browserName]',
+    reason: 'Optional Playwright dependency: browser-name lookup across the browser type map.',
     revisitBy: '0.44.0',
   },
 ];

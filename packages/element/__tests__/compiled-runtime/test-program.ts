@@ -68,6 +68,19 @@ export interface TestProgramSpec {
   rootMode?: RootMode;
   className?: string;
   sourceFile?: string;
+  /**
+   * Compiled property records for facade-level tests (the public OpenElement
+   * class consumes them to build signals, accessors, and observedAttributes).
+   * Attributes must match the compiler's declaration-order contract.
+   */
+  properties?: Array<{
+    name: string;
+    attribute: string | null;
+    type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+    converter: 'string' | 'number' | 'boolean' | 'array' | 'object';
+    reflect: boolean;
+    default: unknown;
+  }>;
 }
 
 interface BuiltElement {
@@ -210,8 +223,10 @@ export function testProgram(spec: TestProgramSpec): PartProgram {
 
   const className = spec.className ?? 'TestProgramElement';
   const sourceFile = spec.sourceFile ?? '/test/program.tsx';
+  const properties = spec.properties ?? [];
   const recordIds = [
     'root',
+    ...properties.map((property) => `property:${property.name}`),
     ...locations.map((location) => location.id as string),
     ...regions.map((region) => region.id as string),
   ];
@@ -220,7 +235,7 @@ export function testProgram(spec: TestProgramSpec): PartProgram {
     file: sourceFile,
     records: recordIds.map((id, position) => ({
       id,
-      kind: sourceKind(id, regionPartIds),
+      kind: id.startsWith('property:') ? 'property' : sourceKind(id, regionPartIds),
       source: {
         file: sourceFile,
         start: { offset: position * 16, line: position + 1, column: 1 },
@@ -232,14 +247,29 @@ export function testProgram(spec: TestProgramSpec): PartProgram {
     tag: spec.tag,
     className,
     sourceFile,
-    properties: [],
-    observedAttributes: [],
+    properties,
+    observedAttributes: properties.flatMap((property) =>
+      property.attribute === null ? [] : [property.attribute]
+    ),
     cem: {
       tagName: spec.tag,
       className,
       declaration: { name: className, module: sourceFile },
-      attributes: [],
-      members: [],
+      attributes: properties.flatMap((property) =>
+        property.attribute === null ? [] : [{
+          name: property.attribute,
+          fieldName: property.name,
+          type: property.type,
+          reflect: property.reflect,
+        }]
+      ),
+      members: properties.map((property) => ({
+        name: property.name,
+        fieldName: property.name,
+        type: property.type,
+        attribute: property.attribute,
+        reflect: property.reflect,
+      })),
     },
   };
 

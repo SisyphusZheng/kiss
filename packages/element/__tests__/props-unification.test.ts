@@ -1,11 +1,16 @@
 import { assertEquals } from '@std/assert';
 import { collectPublicProps, normalizePublicProps } from '../src/internal/core/props-utils.ts';
-import { collectPropBindings } from '../src/internal/core/jsx-render-dom.ts';
 import { isDangerousKey } from '../src/internal/core/security.ts';
-import type { BindingDescriptor } from '../src/internal/core/binding-descriptor.ts';
 
 // #903: SSR and CSR prop-collection paths must filter the same key set, so a
 // security fix cannot land on one path and be missed on the other.
+//
+// 0.44: the CSR collector (collectPropBindings in the deleted jsx-render-dom)
+// was removed with the legacy renderer. The compiled architecture filters at
+// compile/serialization time instead: the program validator and the compiled
+// server reject unsafe attribute names (attributeNameIsSafe /
+// isSafeAttributeName), covered by compiled-server/compiled-server.test.ts
+// and the program validator tests. The shared key filter stays pinned here.
 
 const DANGEROUS = ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'];
 const INTERNAL = ['__openElementState', '__openElementHmr'];
@@ -36,10 +41,8 @@ Deno.test('SSR path (collectPublicProps) filters identically to the shared core'
 });
 
 Deno.test('collectPublicProps strips framework-internal host instance fields (#1037)', () => {
-  // OpenElement instances carry own-enumerable framework internals — the
-  // signal registry (a Map) and ElementInternals (an own key even when
-  // undefined, since the constructor assigns it unconditionally). Collected
-  // into props they leak into CSR `{...props}` spreads as garbage attributes
+  // Host instances may carry own-enumerable framework internals. Collected
+  // into props they leak into `{...props}` spreads as garbage attributes
   // (`signal-registry="[object Map]"`) and diverge SSR/CSR output.
   const host = {
     label: 'public',
@@ -47,15 +50,4 @@ Deno.test('collectPublicProps strips framework-internal host instance fields (#1
     _internals: undefined,
   } as unknown as object;
   assertEquals(collectPublicProps(host), { label: 'public' });
-});
-
-Deno.test('CSR path (collectPropBindings) skips dangerous + internal keys', () => {
-  const el = { localName: 'div', setAttribute: () => {} } as unknown as Element;
-  const descriptors = collectPropBindings(el, FIXTURE);
-  for (const desc of descriptors as BindingDescriptor[]) {
-    const key = (desc as { attrName?: string }).attrName ?? '';
-    assertEquals(DANGEROUS.includes(key), false, `dangerous key ${key} was bound`);
-  }
-  const bound = descriptors.map((d) => (d as { attrName?: string }).attrName);
-  assertEquals(bound, ['class', 'style', 'aria-label']);
 });

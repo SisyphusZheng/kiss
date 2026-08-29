@@ -1,238 +1,177 @@
 /**
- * SSR error-boundary automatic capture tests (ADR-0053 Layer 2, #919).
+ * ErrorBoundary automatic capture tests (ADR-0053 Layer 2, #919), restated
+ * over the compiled kernel (0.44).
  *
- * Covers the three SSR shapes:
- *   - a single boundary captures a failing subtree and renders its fallback
- *   - nested boundaries: the inner boundary captures; a failing inner
- *     fallback bubbles to the outer boundary
- *   - without a boundary the #892 bare-tag degradation is unchanged
+ * The legacy SSR shapes (renderDsdTree subtree capture, bare-tag degradation)
+ * were deleted with the legacy renderer. In the compiled model:
+ *   - the kernel captures connect/claim failures into the element-local
+ *     CompiledErrorBoundary service;
+ *   - the public ErrorBoundary class exposes that service (hasError, error,
+ *     catchError, retry, reset);
+ *   - retry() re-activates the captured source element; a still-failing
+ *     source recaptures through its own activation path;
+ *   - fallback presentation is program-defined (a Region over error state),
+ *     not a VNode swap.
  *
- * These tests run without a DOM: renderToNode only needs a `customElements`
- * registry stub (same pattern as event-marker-alignment.test.ts).
+ * The DOM harness (compiled-runtime/facade-dom.ts) installs browser globals
+ * before the package is imported.
  */
 
-import { assertEquals, assertRejects, assertStringIncludes } from '@std/assert';
-import type { VNode } from '../src/internal/protocol/vnode.ts';
-import { jsx } from '../src/jsx-runtime.ts';
-import { renderDsdTree } from '../src/internal/core/render-ir.ts';
-import { ErrorBoundary } from '../src/error-boundary.ts';
-import type { OpenElementError } from '../src/internal/core/errors.ts';
+import { assertEquals, assertInstanceOf, assertStringIncludes } from '@std/assert';
+import { installFacadeDom, parseHtml } from './compiled-runtime/facade-dom.ts';
+import { testProgram, type TestProgramSpec } from './compiled-runtime/test-program.ts';
 
-// ─── customElements stub ─────────────────────────────────────────
+const dom = installFacadeDom();
 
-type StubbedRegistry = Map<string, unknown>;
+const { ErrorBoundary } = await import('@openelement/element');
+const { renderDsd } = await import('@openelement/element');
 
-async function withCustomElementsRegistry<T>(
-  registry: StubbedRegistry,
-  run: () => Promise<T> | T,
-): Promise<T> {
-  const had = 'customElements' in globalThis;
-  const previous = globalThis.customElements;
-  Object.defineProperty(globalThis, 'customElements', {
-    configurable: true,
-    value: {
-      get: (name: string) => registry.get(name),
-      define: (name: string, ctor: unknown) => registry.set(name, ctor),
-    },
-  });
+// deno-lint-ignore no-explicit-any
+type AnyElement = any;
+type BoundaryInstance = InstanceType<typeof ErrorBoundary>;
+
+let tagCounter = 0;
+function uniqueTag(prefix: string): string {
+  return `oe-boundary-${prefix}-${++tagCounter}`;
+}
+
+const COUNTER_SPEC: Omit<TestProgramSpec, 'tag'> = {
+  template: [{
+    k: 'el',
+    tag: 'button',
+    attrs: [['type', 'button']],
+    children: [{ k: 'text', value: 'count: ' }, { k: 'part', index: 0 }],
+  }],
+  parts: [{ k: 'text', index: 0, signal: 'count' }],
+  properties: [{
+    name: 'count',
+    attribute: 'count',
+    type: 'number',
+    converter: 'number',
+    reflect: false,
+    default: 0,
+  }],
+};
+
+function defineBoundary(tag: string, spec: Omit<TestProgramSpec, 'tag'> = COUNTER_SPEC) {
+  const program = testProgram({ ...spec, tag });
+  const ctor = class extends ErrorBoundary {} as unknown as
+    & CustomElementConstructor
+    & Record<string, unknown>;
+  ctor.__partProgram = program;
+  ctor.__compiledProperties = program.metadata.properties;
+  ctor.__elementMetadata = program.metadata;
+  ctor.observedAttributes = program.metadata.observedAttributes;
+  dom.registry.define(tag, ctor);
+  return { ctor, program };
+}
+
+/** Connect a boundary whose light DOM drifts from the program. */
+function connectDrifted(tag: string): BoundaryInstance {
+  const el = dom.document.createElement(tag) as AnyElement;
+  el.setAttribute('count', '2');
+  const parsed = parseHtml(dom.document, '<button type="button">count: <!--bad-->2</button>');
+  for (const child of [...parsed.childNodes]) el.appendChild(child);
   try {
-    // Await inside the try: the registry stub must stay installed for the
-    // whole async render, not just until the promise is created.
-    return await run();
-  } finally {
-    if (had) {
-      Object.defineProperty(globalThis, 'customElements', { configurable: true, value: previous });
-    } else {
-      delete (globalThis as { customElements?: unknown }).customElements;
-    }
+    dom.document.body.appendChild(el);
+  } catch {
+    // The kernel captures the claim mismatch and rethrows through connect.
   }
+  return el as BoundaryInstance;
 }
 
-// ─── Fixtures ────────────────────────────────────────────────────
-
-class BrokenChild {
-  render(): unknown {
-    throw new Error('child boom');
-  }
-}
-
-class SlotBoundary extends ErrorBoundary {
-  override render(): VNode | null {
-    if (this.hasError) return this.onError(this.error!);
-    return jsx('slot', {});
-  }
-}
-
-class OuterBoundary extends ErrorBoundary {
-  override onError(error: OpenElementError): VNode {
-    return jsx('p', { children: `outer fallback: ${error.message}` });
-  }
-
-  override render(): VNode | null {
-    if (this.hasError) return this.onError(this.error!);
-    return jsx('slot', {});
-  }
-}
-
-class InnerBoundary extends ErrorBoundary {
-  override onError(error: OpenElementError): VNode {
-    return jsx('p', { children: `inner fallback: ${error.message}` });
-  }
-
-  override render(): VNode | null {
-    if (this.hasError) return this.onError(this.error!);
-    return jsx('slot', {});
-  }
-}
-
-/** Boundary whose fallback itself fails — bubbles to the outer boundary. */
-class FragileBoundary extends ErrorBoundary {
-  override onError(_error: OpenElementError): VNode {
-    throw new Error('fallback boom');
-  }
-
-  override render(): VNode | null {
-    if (this.hasError) return this.onError(this.error!);
-    return jsx('slot', {});
-  }
-}
-
-/** Boundary whose own shadow output (not light DOM) contains the failure. */
-class ShadowSubtreeBoundary extends ErrorBoundary {
-  override render(): VNode | null {
-    if (this.hasError) return this.onError(this.error!);
-    return jsx('div', { children: [jsx('x-broken-child', {})] });
-  }
-}
-
-// ─── Single boundary ─────────────────────────────────────────────
-
-Deno.test('SSR error boundary captures a failing light-DOM subtree (#919)', async () => {
-  const registry: StubbedRegistry = new Map([
-    ['x-slot-boundary', SlotBoundary],
-    ['x-broken-child', BrokenChild],
-  ]);
-
-  const html = await withCustomElementsRegistry(
-    registry,
-    () =>
-      renderDsdTree(jsx('x-slot-boundary', {
-        children: [jsx('x-broken-child', { label: 'hi' })],
-      })),
-  );
-
-  // The boundary renders its fallback in place of the failed subtree...
-  assertStringIncludes(html, '<x-slot-boundary');
-  assertStringIncludes(html, 'shadowrootmode');
-  assertStringIncludes(html, 'error-boundary-fallback');
-  assertStringIncludes(html, 'child boom');
-  // ...instead of the #892 bare-tag degradation of the child.
-  assertEquals(html.includes('<x-broken-child'), false);
+Deno.test('compiled boundary captures connect-time claim failures automatically', () => {
+  const tag = uniqueTag('auto');
+  defineBoundary(tag);
+  const el = connectDrifted(tag);
+  assertEquals(el.hasError, true);
+  assertInstanceOf(el.error, Error);
+  assertStringIncludes(el.error?.message ?? '', 'compiled-claim');
 });
 
-Deno.test('SSR error boundary captures a failure inside its own shadow output (#919)', async () => {
-  const registry: StubbedRegistry = new Map([
-    ['x-shadow-boundary', ShadowSubtreeBoundary],
-    ['x-broken-child', BrokenChild],
-  ]);
-
-  const html = await withCustomElementsRegistry(
-    registry,
-    () => renderDsdTree(jsx('x-shadow-boundary', {})),
-  );
-
-  assertStringIncludes(html, 'error-boundary-fallback');
-  assertStringIncludes(html, 'child boom');
-  assertEquals(html.includes('<x-broken-child'), false);
+Deno.test('boundary without failure stays clean and renders normally', () => {
+  const tag = uniqueTag('clean');
+  const { ctor } = defineBoundary(tag);
+  const html = renderDsd(tag, { componentClass: ctor, props: { count: 4 } }).html;
+  const parsed = parseHtml(dom.document, html);
+  const parsedHost = parsed.childNodes[0] as AnyElement;
+  const el = dom.document.createElement(tag) as AnyElement;
+  for (const [name, value] of parsedHost.attributes) el.setAttribute(name, value);
+  for (const child of [...parsedHost.childNodes]) el.appendChild(child);
+  dom.document.body.appendChild(el);
+  assertEquals(el.hasError, false);
+  assertEquals(el.count, 4);
 });
 
-// ─── Nested boundaries ───────────────────────────────────────────
+Deno.test('retry re-activates the captured source after the drift is fixed', () => {
+  const tag = uniqueTag('retry');
+  const { ctor } = defineBoundary(tag);
+  const el = connectDrifted(tag) as AnyElement;
+  assertEquals(el.hasError, true);
 
-Deno.test('SSR nested boundaries: the inner boundary captures first (#919)', async () => {
-  const registry: StubbedRegistry = new Map([
-    ['x-outer-boundary', OuterBoundary],
-    ['x-inner-boundary', InnerBoundary],
-    ['x-broken-child', BrokenChild],
-  ]);
+  // Repair the DOM to match the program's expectation for count=2.
+  const html = renderDsd(tag, { componentClass: ctor, props: { count: 2 } }).html;
+  const parsed = parseHtml(dom.document, html);
+  const parsedHost = parsed.childNodes[0] as AnyElement;
+  for (const child of [...el.childNodes]) el.removeChild(child);
+  for (const child of [...parsedHost.childNodes]) el.appendChild(child);
 
-  const html = await withCustomElementsRegistry(
-    registry,
-    () =>
-      renderDsdTree(jsx('x-outer-boundary', {
-        children: [jsx('x-inner-boundary', {
-          children: [jsx('x-broken-child', {})],
-        })],
-      })),
-  );
-
-  assertStringIncludes(html, 'inner fallback: child boom');
-  // The error does not bubble past the inner boundary.
-  assertEquals(html.includes('outer fallback'), false);
-  assertEquals(html.includes('<x-broken-child'), false);
+  el.retry();
+  assertEquals(el.hasError, false, 'retry cleared the error after a successful re-activation');
+  assertEquals(el.count, 2);
 });
 
-Deno.test('SSR nested boundaries: a failing inner fallback bubbles to the outer boundary (#919)', async () => {
-  const registry: StubbedRegistry = new Map([
-    ['x-outer-boundary', OuterBoundary],
-    ['x-fragile-boundary', FragileBoundary],
-    ['x-broken-child', BrokenChild],
-  ]);
-
-  const html = await withCustomElementsRegistry(
-    registry,
-    () =>
-      renderDsdTree(jsx('x-outer-boundary', {
-        children: [jsx('x-fragile-boundary', {
-          children: [jsx('x-broken-child', {})],
-        })],
-      })),
-  );
-
-  // The fragile boundary's fallback threw, so the outer boundary captures.
-  assertStringIncludes(html, 'outer fallback');
-  assertEquals(html.includes('<x-broken-child'), false);
+Deno.test('retry with a still-broken source recaptures the error', () => {
+  const tag = uniqueTag('retry-broken');
+  defineBoundary(tag);
+  const el = connectDrifted(tag);
+  assertEquals(el.hasError, true);
+  el.retry();
+  assertEquals(el.hasError, true, 'the still-failing source recaptures');
 });
 
-// ─── No boundary: #892 degradation unchanged ─────────────────────
-
-Deno.test('SSR without a boundary keeps the bare-tag-with-props degradation (#892, #919)', async () => {
-  const registry: StubbedRegistry = new Map([
-    ['x-broken-child', BrokenChild],
-  ]);
-
-  const html = await withCustomElementsRegistry(registry, () =>
-    renderDsdTree(jsx('div', {
-      children: [
-        jsx('x-broken-child', { label: 'hi' }),
-        jsx('span', { children: 'sibling ok' }),
-      ],
-    })));
-
-  assertStringIncludes(html, '<x-broken-child label="hi"></x-broken-child>');
-  assertStringIncludes(html, '<span>sibling ok</span>');
+Deno.test('retry budget exhausts at maxRetries', () => {
+  const tag = uniqueTag('exhausted');
+  const { ctor } = defineBoundary(tag);
+  void ctor;
+  const el = connectDrifted(tag);
+  (el as AnyElement).maxRetries = 1;
+  assertEquals(el.hasError, true);
+  el.retry(); // recaptures (still broken)
+  assertEquals(el.hasError, true);
+  el.retry(); // exhausted: no further recovery attempt
+  assertEquals(el.retryCount, 1);
+  assertEquals(el.hasError, true);
 });
 
-// ─── Control flow is never captured ──────────────────────────────
+Deno.test('nested boundaries keep error state service-local (inner captures only)', () => {
+  const innerTag = uniqueTag('inner');
+  const outerTag = uniqueTag('outer');
+  defineBoundary(innerTag);
+  defineBoundary(outerTag, {
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [],
+  });
+  const outer = dom.document.createElement(outerTag) as AnyElement;
+  dom.document.body.appendChild(outer);
+  const inner = connectDrifted(innerTag);
+  outer.appendChild(inner);
 
-Deno.test('SSR error boundary does not swallow notFound/redirect control flow (#922, #919)', async () => {
-  class NotFoundChild {
-    render(): unknown {
-      const err = new Error('nope') as unknown as { name: string; status: number };
-      err.name = 'OpenElementNotFound';
-      err.status = 404;
-      throw err;
-    }
-  }
-  const registry: StubbedRegistry = new Map([
-    ['x-slot-boundary', SlotBoundary],
-    ['x-notfound-child', NotFoundChild],
-  ]);
+  assertEquals(inner.hasError, true, 'the inner boundary captured its own failure');
+  assertEquals(outer.hasError, false, 'no state leaks to the outer boundary');
+});
 
-  const err = await assertRejects(() =>
-    withCustomElementsRegistry(registry, () =>
-      renderDsdTree(jsx('x-slot-boundary', {
-        children: [jsx('x-notfound-child', {})],
-      })))
-  );
-  assertEquals((err as { name?: unknown }).name, 'OpenElementNotFound');
+Deno.test('application-driven catchError and reset keep the public contract', () => {
+  const tag = uniqueTag('manual');
+  defineBoundary(tag);
+  const el = dom.document.createElement(tag) as unknown as BoundaryInstance;
+  dom.document.body.appendChild(el as never);
+
+  el.catchError(new Error('manual boom'), { origin: 'test' });
+  assertEquals(el.hasError, true);
+  assertEquals(el.error?.message, 'manual boom');
+
+  el.reset();
+  assertEquals(el.hasError, false);
+  assertEquals(el.retryCount, 0);
 });

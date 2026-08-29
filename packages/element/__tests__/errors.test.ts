@@ -5,7 +5,6 @@ import {
   resetErrorTelemetryHookForTests,
   setErrorTelemetryHook,
 } from '../src/internal/core/errors.ts';
-import { renderDsd } from '../src/internal/core/render-dsd.ts';
 
 Deno.test('setErrorTelemetryHook is reconfigurable (#1099)', () => {
   resetErrorTelemetryHookForTests();
@@ -41,47 +40,8 @@ Deno.test('reportError falls back to console.error when no hook is set (#644)', 
   }
 });
 
-Deno.test('renderDsd routes classified render errors through the telemetry hook (#780)', async () => {
-  resetErrorTelemetryHookForTests();
-  try {
-    const received: string[] = [];
-    setErrorTelemetryHook((e) => {
-      received.push(e.message);
-    });
-
-    class BrokenComponent {
-      static tagName = 'x-broken';
-      render(): unknown {
-        throw new Error('boom');
-      }
-    }
-
-    const output = await renderDsd(BrokenComponent as unknown as CustomElementConstructor);
-    assertEquals(output.metrics.hasError, true);
-    assertEquals(received.length, 1);
-    assertEquals(received[0].includes('boom'), true);
-  } finally {
-    resetErrorTelemetryHookForTests();
-  }
-});
-
-Deno.test('renderDsd rethrows control-flow throws (notFound/redirect) instead of falling back (#922)', async () => {
-  class NotFoundComponent {
-    static tagName = 'x-notfound';
-    render(): unknown {
-      // Duck-typed OpenElementNotFound (app package class; element must not
-      // depend on app) — same shape the request-time handler recognizes.
-      const err = new Error('nope') as unknown as { name: string; status: number };
-      err.name = 'OpenElementNotFound';
-      err.status = 404;
-      throw err;
-    }
-  }
-
-  try {
-    await renderDsd(NotFoundComponent as unknown as CustomElementConstructor);
-    assertEquals(true, false, 'expected control-flow throw to propagate');
-  } catch (err) {
-    assertEquals((err as { name?: unknown }).name, 'OpenElementNotFound');
-  }
-});
+// The legacy renderDsd telemetry-routing and control-flow-rethrow tests were
+// deleted with the legacy renderer: the 0.44 renderDsd (public-runtime.ts)
+// fails closed for uncompiled classes and never invokes component code, so
+// there is no render error to route. Fail-closed coverage:
+// __tests__/compiled-runtime/facade.test.ts ('renderDsd fails closed').

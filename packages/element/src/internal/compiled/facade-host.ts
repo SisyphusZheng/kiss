@@ -1,0 +1,319 @@
+/**
+ * facade-host.ts — compiled property contract for the public OpenElement
+ * facade (v0.44).
+ *
+ * Everything the public base class needs to turn the compiler-emitted statics
+ * (`__compiledProperties`, `__partProgram`) into live element behavior:
+ * engine-backed signals, prototype accessors with guarded attribute
+ * reflection, attribute conversion, own-property reconciliation (generated
+ * field initializers / pre-upgrade sets), and program handler binding.
+ *
+ * The class shell itself lives in src/open-element-implementation.ts; this
+ * module owns no lifecycle state of its own.
+ */
+
+import { OpenElementError } from '../core/errors.ts';
+import type {
+  CompiledElementMetadata,
+  CompiledPropertyMetadata,
+  PartProgram,
+  SpikePart,
+} from './program.ts';
+import type { CompiledElementKernel } from './runtime/kernel.ts';
+import { signal } from '../signal/index.ts';
+import type { WritableSignal } from '../signal/types.ts';
+
+/** Compiled statics emitted by the 0.44 compiler onto the generated class. */
+export interface CompiledStatics {
+  __partProgram?: PartProgram;
+  __compiledProperties?: CompiledPropertyMetadata[];
+  __elementMetadata?: CompiledElementMetadata;
+  styles?: unknown;
+  delegatesFocus?: boolean;
+  formAssociated?: boolean;
+  isErrorBoundary?: boolean;
+}
+
+/** Facade element surface the property contract touches. */
+export interface FacadeElementLike {
+  hasAttribute(name: string): boolean;
+  getAttribute(name: string): string | null;
+  setAttribute(name: string, value: string): void;
+  removeAttribute(name: string): void;
+}
+
+/** Per-instance property state (signals, reflection guard, pending values). */
+export interface FacadePropertyState {
+  readonly properties: CompiledPropertyMetadata[];
+  readonly signals: Record<string, WritableSignal<unknown>>;
+  /** Attribute currently being written by property reflection (loop guard). */
+  reflecting: string | null;
+  /** Property values set as JS properties before upgrade; applied at connect. */
+  pendingOwnValues: Map<string, unknown> | null;
+  /** True after the first connect reconciled generated field initializers. */
+  ownPropertiesReconciled: boolean;
+  /** Wired by the facade once the kernel exists; drives post-connect reflection. */
+  kernel?: CompiledElementKernel;
+}
+
+export function classNameOf(ctor: object): string {
+  return (ctor as { name?: string }).name ?? 'anonymous';
+}
+
+/** Convert a raw attribute string into the compiled property value. */
+export function convertFromAttribute(record: CompiledPropertyMetadata, raw: string): unknown {
+  switch (record.converter) {
+    case 'boolean':
+      return true;
+    case 'number': {
+      const parsed = Number(raw);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+    case 'array':
+    case 'object': {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return record.default;
+      }
+    }
+    default:
+      return raw;
+  }
+}
+
+/** Serialize a property value for attribute reflection. */
+export function convertToAttribute(
+  record: CompiledPropertyMetadata,
+  value: unknown,
+): string | null {
+  if (value === null || value === undefined) return null;
+  if (record.type === 'boolean') return value ? '' : null;
+  if (record.type === 'array' || record.type === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+/** Coerce a JS-side property assignment into the compiled property type. */
+export function coercePropertyValue(record: CompiledPropertyMetadata, value: unknown): unknown {
+  if (value === null || value === undefined) return record.default;
+  switch (record.type) {
+    case 'boolean':
+      return Boolean(value);
+    case 'number':
+      return typeof value === 'number' ? value : convertFromAttribute(record, String(value));
+    case 'array':
+      return Array.isArray(value) ? value : convertFromAttribute(record, String(value));
+    case 'object':
+      return typeof value === 'object' ? value : convertFromAttribute(record, String(value));
+    default:
+      return typeof value === 'string' ? value : String(value);
+  }
+}
+
+function ownDataValue(element: object, name: string): { found: boolean; value?: unknown } {
+  if (!Object.prototype.hasOwnProperty.call(element, name)) return { found: false };
+  const descriptor = Object.getOwnPropertyDescriptor(element, name);
+  if (!descriptor || !('value' in descriptor)) return { found: false };
+  return { found: true, value: descriptor.value };
+}
+
+/**
+ * Create the per-instance property state: one signal per compiled property at
+ * its compiled default, plus any property values set as own data properties
+ * before upgrade (captured and deleted so the prototype accessors take over;
+ * applied last at connect — pre-upgrade JS sets win over attributes).
+ */
+export function createFacadePropertyState(
+  element: FacadeElementLike,
+  properties: CompiledPropertyMetadata[],
+): FacadePropertyState {
+  const signals: Record<string, WritableSignal<unknown>> = {};
+  const pending = new Map<string, unknown>();
+  const record = element as unknown as Record<string, unknown>;
+  for (const property of properties) {
+    const own = ownDataValue(element, property.name);
+    if (own.found) {
+      pending.set(property.name, own.value);
+      delete record[property.name];
+    }
+    signals[property.name] = signal<unknown>(property.default);
+  }
+  return {
+    properties,
+    signals,
+    reflecting: null,
+    pendingOwnValues: pending,
+    ownPropertiesReconciled: false,
+  };
+}
+
+/** Constructors whose prototype already carries the compiled accessors. */
+const accessorInstalled = new WeakSet<object>();
+
+/**
+ * Install the signal-backed property accessors on the subclass prototype.
+ * Runs once per constructor; instance own data properties (generated class
+ * field initializers, pre-upgrade sets) shadow them until connect, where they
+ * are captured into the signals and deleted.
+ */
+export function installAccessors(
+  properties: CompiledPropertyMetadata[],
+  proto: object,
+  states: WeakMap<object, FacadePropertyState>,
+): void {
+  if (accessorInstalled.has(proto)) return;
+  accessorInstalled.add(proto);
+  for (const record of properties) {
+    if (Object.getOwnPropertyDescriptor(proto, record.name)) continue;
+    Object.defineProperty(proto, record.name, {
+      configurable: true,
+      enumerable: true,
+      get(this: FacadeElementLike): unknown {
+        return states.get(this)?.signals[record.name]?.value;
+      },
+      set(this: FacadeElementLike, value: unknown) {
+        const state = states.get(this);
+        if (!state) return;
+        const sig = state.signals[record.name];
+        if (!sig) return;
+        const next = coercePropertyValue(record, value);
+        if (Object.is(sig.value, next)) return;
+        sig.value = next;
+        // Post-connect reflection to the attribute, guarded against the
+        // attribute -> property -> attribute loop.
+        if (record.reflect && record.attribute !== null && state.kernel?.active) {
+          const serialized = convertToAttribute(record, next);
+          const current = this.getAttribute(record.attribute);
+          if (current !== serialized) {
+            state.reflecting = record.attribute;
+            try {
+              if (serialized === null) this.removeAttribute(record.attribute);
+              else this.setAttribute(record.attribute, serialized);
+            } finally {
+              state.reflecting = null;
+            }
+          }
+        }
+      },
+    });
+  }
+}
+
+/**
+ * Move generated field initializers (own data properties defined after
+ * super()) into their signals. Runs once; they restate the compiled default,
+ * so attributes (synced next) win over them.
+ */
+export function reconcileOwnProperties(
+  element: FacadeElementLike,
+  state: FacadePropertyState,
+): void {
+  if (state.ownPropertiesReconciled) return;
+  state.ownPropertiesReconciled = true;
+  const record = element as unknown as Record<string, unknown>;
+  for (const property of state.properties) {
+    const own = ownDataValue(element, property.name);
+    if (!own.found) continue;
+    delete record[property.name];
+    state.signals[property.name].value = coercePropertyValue(property, own.value);
+  }
+}
+
+/** Present attributes overwrite defaults via the compiled converters. */
+export function syncAttributesToSignals(
+  element: FacadeElementLike,
+  state: FacadePropertyState,
+): void {
+  for (const record of state.properties) {
+    if (record.attribute === null) continue;
+    if (element.hasAttribute(record.attribute)) {
+      const raw = element.getAttribute(record.attribute);
+      state.signals[record.name].value = convertFromAttribute(record, raw ?? '');
+    }
+  }
+}
+
+/** Pre-upgrade JS property sets win over attributes; consumed once. */
+export function applyPendingOwnValues(state: FacadePropertyState): void {
+  const pending = state.pendingOwnValues;
+  if (!pending) return;
+  state.pendingOwnValues = null;
+  for (const [name, value] of pending) {
+    const record = state.properties.find((candidate) => candidate.name === name);
+    const sig = record ? state.signals[record.name] : undefined;
+    if (record && sig) sig.value = coercePropertyValue(record, value);
+  }
+}
+
+/**
+ * Route one observed attribute change into the compiled property contract:
+ * convert per the compiled `converter` record and write through the accessor
+ * (so reflect mirrors stay consistent); removal restores the compiled default
+ * and re-mirrors it when the property reflects.
+ */
+export function handleCompiledAttributeChange(
+  element: FacadeElementLike,
+  state: FacadePropertyState,
+  name: string,
+  newValue: string | null,
+): void {
+  if (state.reflecting === name) return;
+  const record = state.properties.find((candidate) => candidate.attribute === name);
+  if (!record) return;
+  const sig = state.signals[record.name];
+  if (!sig) return;
+  (element as unknown as Record<string, unknown>)[record.name] = newValue === null
+    ? record.default
+    : convertFromAttribute(record, newValue);
+  // Real signals suppress equal-value notifications: when removal restores
+  // the value the signal already holds, the accessor's short-circuit skips
+  // the mirror — restore it explicitly (legacy reflect-removal contract).
+  if (newValue === null && record.reflect && record.attribute !== null && state.kernel?.active) {
+    const serialized = convertToAttribute(record, sig.value);
+    if (serialized !== null && element.getAttribute(record.attribute) !== serialized) {
+      state.reflecting = record.attribute;
+      try {
+        element.setAttribute(record.attribute, serialized);
+      } finally {
+        state.reflecting = null;
+      }
+    }
+  }
+}
+
+/** Collect the handler names the program references on the host. */
+function programHandlerNames(program: PartProgram): string[] {
+  const names = new Set<string>();
+  for (const part of program.parts as readonly SpikePart[]) {
+    if ((part.k === 'event' || part.k === 'ref') && part.handler !== undefined) {
+      names.add(part.handler);
+    }
+  }
+  return [...names];
+}
+
+/**
+ * Bind every program-referenced handler to its instance method. A missing
+ * method is a compile/linkage defect, so this fails closed (OE_HANDLER_MISSING).
+ */
+export function bindProgramHandlers(
+  element: object,
+  ctor: object,
+  program: PartProgram,
+): Record<string, (event: unknown) => void> {
+  const handlers: Record<string, (event: unknown) => void> = {};
+  const record = element as unknown as Record<string, unknown>;
+  for (const name of programHandlerNames(program)) {
+    const method = record[name];
+    if (typeof method !== 'function') {
+      throw new OpenElementError(
+        `[openElement] <${classNameOf(ctor)}> is compiled to call handler "${name}", ` +
+          'but the instance has no such method. Rebuild the component through the ' +
+          '0.44 compiler so the generated class and its Part Program agree.',
+        { code: 'OE_HANDLER_MISSING', phase: 'csr' },
+      );
+    }
+    handlers[name] = (method as (event: unknown) => void).bind(element);
+  }
+  return handlers;
+}

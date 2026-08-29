@@ -1,4 +1,3 @@
-import { declareObservedAttributes, resolveObservedAttributes } from './internal/core/prop.ts';
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import { OpenElementBase } from './open-element-base.ts';
 import { themeManager } from './open-element-styles.ts';
@@ -6,6 +5,11 @@ import { themeManager } from './open-element-styles.ts';
 /** Static component configuration shared by every OpenElement subclass. */
 export class OpenElementConfiguration extends OpenElementBase {
   static styles?: StyleSheetLike | StyleSheetLike[];
+  /**
+   * Compile-time hint for the intended root mode. The 0.44 runtime derives
+   * the actual root mode from the compiled program's `root.kind`; this static
+   * remains part of the authoring-time configuration contract.
+   */
   static renderMode?: 'shadow' | 'light';
   static isErrorBoundary?: boolean;
   static head?: { title?: string; description?: string; ogImage?: string };
@@ -32,15 +36,8 @@ export class OpenElementConfiguration extends OpenElementBase {
     themeManager.resetStyles();
   }
 
-  /**
-   * Union explicitly observed attributes with attributes declared by static
-   * props. A subclass class field may still intentionally shadow this accessor.
-   */
-  static get observedAttributes(): string[] {
-    return resolveObservedAttributes(this);
-  }
-
-  static set observedAttributes(value: string[] | undefined) {
-    declareObservedAttributes(this, value);
-  }
+  // v0.44: the compiled statics own `observedAttributes` — generated classes
+  // declare `static observedAttributes = [...]`, which shadows any inherited
+  // member in the normal way. The legacy static-props union getter/setter was
+  // removed with the legacy renderer.
 }

@@ -117,8 +117,8 @@ Deno.test('arch: failMatches ignores matches in inline and block comments', () =
 
 Deno.test('arch: allowed `as unknown as` escape is not flagged as unapproved', () => {
   const files: TextFile[] = [{
-    path: 'packages/element/src/internal/core/island.ts',
-    text: 'const x = el as unknown as Record<string, unknown>;',
+    path: 'packages/element/src/open-element-implementation.ts',
+    text: 'const root = document as unknown as EventTarget;',
   }];
   const issues: Issue[] = [];
   assertAllowedTypeEscapes(files, issues);

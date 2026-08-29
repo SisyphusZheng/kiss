@@ -16,13 +16,14 @@ Deno.test('@openelement/element preserves light DOM opt-in static contract', () 
   assertEquals(LightElement.renderMode, 'light');
 });
 
-Deno.test('@openelement/element exposes one functional authoring helper', () => {
-  assertEquals(typeof elementSurface.defineElement, 'function');
+Deno.test('@openelement/element exports the compiled pipeline entries', () => {
+  // 0.44: the functional authoring helper (defineElement) and the runtime JSX
+  // factories (For/jsx/...) were removed with the legacy renderer. The public
+  // pipeline entries are the compiled server render and the claim bootstrap.
+  assertEquals('defineElement' in elementSurface, false);
   assertEquals('defineLayout' in elementSurface, false);
-});
-
-Deno.test('@openelement/element exports keyed For from the root (#941)', () => {
-  assertEquals(typeof elementSurface.For, 'function');
-  const vnode = elementSurface.For({ each: [] });
-  assertEquals(typeof vnode, 'object');
+  assertEquals('For' in elementSurface, false);
+  assertEquals('jsx' in elementSurface, false);
+  assertEquals(typeof elementSurface.renderDsd, 'function');
+  assertEquals(typeof elementSurface.ensurePreHydrationClickCapture, 'function');
 });

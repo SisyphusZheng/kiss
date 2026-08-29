@@ -1,121 +1,175 @@
 /**
- * @openelement/element - OpenElement base class.
+ * @openelement/element - OpenElement base class (v0.44 compiled facade).
  *
- * Custom Element base class with zero framework dependency, providing:
- *   - Declarative Shadow DOM (DSD) detection at upgrade time
- *   - Client-Side Rendering (CSR) fallback when no DSD content exists
- *   - StyleSheet (SSR-safe CSSStyleSheet) via adoptedStyleSheets
- *   - Declarative event binding via JSX onClick / on-click props, matched to
- *     SSR-emitted data-eid markers at hydration time
- *   - Signal-driven fine-grained DOM patching via data-signal markers
- *   - AbortController cleanup on disconnect
- *   - formAssociated + delegatesFocus support
+ * The public OpenElement base class is a thin facade over the compiled Part
+ * Program kernel (internal/compiled/runtime/kernel.ts). A 0.44 component is
+ * authored in TSX and passed through the OpenElement compiler (the
+ * @openelement/adapter-vite `open:compiled-element` transform), which emits a
+ * decorator-free class carrying the compiled statics this facade consumes:
  *
- * OpenElement extends HTMLElement directly - ZERO Lit dependency.
- * Components return `render(): VNode | null`.
+ *   - `static __partProgram`        — the validated Part Program v1 artifact
+ *   - `static __compiledProperties` — JSON property records
+ *     ({ name, attribute, type, converter, reflect, default })
+ *   - `static __elementMetadata`    — element metadata (tag, cem, ...)
+ *   - `static observedAttributes`   — compiler-owned attribute list
+ *
+ * At construction the facade builds the kernel host: one engine-backed signal
+ * per compiled property, the program-referenced handlers bound to instance
+ * methods, and an empty refs record (internal/compiled/facade-host.ts owns
+ * the property contract). Claim-vs-fresh activation is decided by the kernel
+ * from the existing root content (`root.childNodes`).
+ *
+ * There is no fallback render path: an OpenElement subclass that reaches
+ * `connectedCallback()` without a `__partProgram` fails closed with an
+ * OpenElementError (code `OE_PROGRAM_MISSING`).
  *
  * Lifecycle:
- *   SSR: instantiate -> set props -> render() -> wrap in DSD template
- *   Client (DSD): browser attaches shadow root from DSD -> upgrade -> bind template events
- *   Client (CSR): connectedCallback -> createRenderRoot -> render into shadowRoot
- *
- * Usage (static DSD component):
- * ```ts
- * class MyCard extends OpenElement {
- *   static styles = myStyleSheet;
- *   render(): VNode {
- *     return <div class="card"><slot /></div>;
- *   }
- * }
- * customElements.define('my-card', MyCard);
- * ```
- *
- * Usage (reactive DSD component):
- * ```ts
- * class MyToggle extends OpenElement {
- *   #active = signal(false);
- *   render() {
- *     return (
- *       <button onClick={() => this.#active.value = !this.#active.value}>
- *         {this.#active.value ? 'ON' : 'OFF'}
- *       </button>
- *     );
- *   }
- * }
- * ```
+ *   Server: renderDsd() -> serializeCompiledProgram() -> deterministic HTML
+ *   Client (SSR DOM present): connectedCallback -> kernel.connect() claims
+ *     the existing tree -> onDsdHydrated()
+ *   Client (no SSR DOM): connectedCallback -> kernel.connect() creates fresh
+ *     DOM -> onCsrRendered()
  *
  * @module @openelement/element/open-element
  */
 
-import { formatError } from './internal/core/errors.ts';
-import { handleStaticPropAttributeChange, initializeStaticProps } from './internal/core/prop.ts';
-import type { VNode } from './internal/protocol/vnode.ts';
-import type { Signal } from './internal/protocol/signal.ts';
-import { createLogger } from './internal/core/logger.ts';
-import { HydrationScope } from './internal/core/index.ts';
-import { hydrateExistingDom } from './open-element-hydration.ts';
-import { themeManager } from './open-element-styles.ts';
-import { ElementParams } from './open-element-params.ts';
-import { ElementLifecycle } from './open-element-lifecycle.ts';
-import { OpenElementConfiguration } from './open-element-configuration.ts';
+import { OpenElementError } from './internal/core/errors.ts';
 import {
-  connectOpenElement,
-  disconnectOpenElement,
-  type OpenElementRuntimeHost,
-  registerOpenElementScope,
-  updateOpenElement,
-} from './open-element-runtime.ts';
+  applyPendingOwnValues,
+  bindProgramHandlers,
+  classNameOf,
+  type CompiledStatics,
+  createFacadePropertyState,
+  type FacadePropertyState,
+  handleCompiledAttributeChange,
+  installAccessors,
+  reconcileOwnProperties,
+  syncAttributesToSignals,
+} from './internal/compiled/facade-host.ts';
+import {
+  capturePreUpgradeEvents,
+  replayPreUpgradeEvents,
+} from './internal/compiled/claim/index.ts';
+import type { PreUpgradeEventCapture } from './internal/compiled/claim/index.ts';
+import { CompiledErrorBoundary } from './internal/compiled/runtime/error-boundary.ts';
+import {
+  CompiledElementKernel,
+  type CompiledRootMode,
+} from './internal/compiled/runtime/kernel.ts';
+import { ElementLifecycle } from './open-element-lifecycle.ts';
+import { ElementParams } from './open-element-params.ts';
+import { OpenElementConfiguration } from './open-element-configuration.ts';
+
+/** Per-instance facade state, keyed off the element (constructor closures). */
+const facadeStates = new WeakMap<OpenElement, FacadePropertyState>();
+
+// ─── Pre-upgrade event capture (claim replay seam) ──────────────────
+
+const preUpgradeCaptures = new Map<EventTarget, PreUpgradeEventCapture>();
 
 /**
- * Custom Element base class for DSD rendering with zero framework dependency.
+ * Install the bounded pre-upgrade interaction capture on an owning root
+ * (default: the document). Generated client entries call this before any
+ * compiled element upgrades; after a successful claim the element replays the
+ * captured events whose targets live inside its root (compiled claim
+ * capture/replay, internal/compiled/claim). Idempotent per root and a no-op
+ * where no DOM exists (SSR).
+ */
+export function ensurePreHydrationClickCapture(root?: EventTarget): void {
+  const target = root ??
+    (typeof document !== 'undefined' ? (document as unknown as EventTarget) : undefined);
+  if (!target || typeof target.addEventListener !== 'function') return;
+  if (preUpgradeCaptures.has(target)) return;
+  preUpgradeCaptures.set(target, capturePreUpgradeEvents(target));
+}
+
+/** Replay captured pre-upgrade events owned by a successfully claimed root. */
+function replayPreUpgradeCaptures(root: Node): void {
+  for (const capture of preUpgradeCaptures.values()) {
+    replayPreUpgradeEvents(root, capture.events);
+  }
+}
+
+function failMissingProgram(ctor: object): never {
+  throw new OpenElementError(
+    `[openElement] <${classNameOf(ctor)}> has no compiled Part Program. ` +
+      'In 0.44 every OpenElement component must pass through the OpenElement ' +
+      'compiler (the @openelement/adapter-vite open:compiled-element transform); ' +
+      'the runtime JSX render path was removed.',
+    { code: 'OE_PROGRAM_MISSING', phase: 'csr' },
+  );
+}
+
+/**
+ * Custom Element base class for the compiled Part Program architecture.
  *
- * Provides DSD detection, CSR fallback, event hydration, and style management
- * without any framework dependency (no Lit, no reactive-element).
- *
- * Subclasses MUST override `render(): VNode | null`.
+ * Subclasses are produced by the 0.44 compiler; hand-written subclasses that
+ * never pass through the compiler fail closed at connect time.
  */
 export class OpenElement extends OpenElementConfiguration {
-  /**
-   * Signal registry for attribute-based hydration (ADR-0065).
-   * Maps signal names → signal objects. Built by registerSignal()
-   * in component constructors, consumed during hydration.
-   *
-   * Exposed internally for render helper modules.
-   */
-  signalRegistry: Map<string, Signal<unknown>> = new Map();
-
-  /**
-   * v0.41.0-alpha.2: Hydration lifecycle scope.
-   *
-   * Replaces the separate #effectDisposers, #eventCleanups, and #vnodeCache
-   * fields. The scope is owned by the element and disposed on disconnect.
-   * It is exposed to the hydration adapter so the same lifecycle model
-   * can be reused by third-party framework runtimes later.
-   *
-   * Initialized after signalRegistry in the constructor to avoid field-order
-   * dependency on class field initializer sequencing.
-   */
-  #hydrationScope!: HydrationScope;
-
-  /**
-   * v0.42.0-alpha.15 (#904): Abort lifecycle moved into ElementLifecycle
-   * (open-element-lifecycle.ts); the class keeps the protected surface.
-   */
-  #lifecycle = new ElementLifecycle();
-
   /** v0.42.0-alpha.15 (#904): route params box (open-element-params.ts). */
   #params = new ElementParams();
 
+  /**
+   * Lifecycle fallback used only when no compiled kernel exists (an instance
+   * without a program never connects; the kernel owns the connected lifecycle
+   * otherwise).
+   */
+  #detachedLifecycle = new ElementLifecycle();
+
+  /** Error state owner used before a kernel exists (never connected). */
+  #detachedErrors = new CompiledErrorBoundary();
+
+  /** Present only when the class carries a compiled Part Program. */
+  #kernel?: CompiledElementKernel;
+
   constructor() {
     super();
-    this.#hydrationScope = new HydrationScope({
-      signalRegistry: this.signalRegistry,
+    const ctor = this.constructor as CompiledStatics & { name?: string };
+    const program = ctor.__partProgram;
+    const properties = Array.isArray(ctor.__compiledProperties) ? ctor.__compiledProperties : [];
+
+    // Signal-backed accessors live on the subclass prototype so generated
+    // class field initializers can be reconciled at connect time.
+    installAccessors(properties, Object.getPrototypeOf(this), facadeStates);
+
+    const state = createFacadePropertyState(this, properties);
+    facadeStates.set(this, state);
+
+    if (!program) return;
+
+    const rootMode: CompiledRootMode = program.root.kind === 'light'
+      ? 'light'
+      : program.root.kind === 'shadow-open'
+      ? 'open'
+      : 'closed';
+
+    state.kernel = new CompiledElementKernel(this as unknown as HTMLElement, program, {
+      signals: state.signals,
+      handlers: bindProgramHandlers(this, ctor, program),
+      refs: {},
+      rootMode,
+      delegatesFocus: ctor.delegatesFocus ?? false,
+      styles: ctor.styles as never,
+      formAssociated: ctor.formAssociated ?? false,
+      errorBoundary: ctor.isErrorBoundary === true
+        // The public ErrorBoundary owns the user-facing retry policy
+        // (maxRetries field); the kernel service only tracks state, so its
+        // own retry budget stays out of the way.
+        ? { maxRetries: Number.MAX_SAFE_INTEGER }
+        : undefined,
     });
-    registerOpenElementScope(this._runtimeHost(), this.#hydrationScope);
-    // Initialize static prop accessors during construction so SSR sees the
-    // same engine-backed, registered signals as CSR/hydration. The initializer
-    // is idempotent and reconnect only re-arms disposed reflection listeners.
-    initializeStaticProps(this);
+    this.#kernel = state.kernel;
+  }
+
+  /**
+   * The element-local error boundary service. Compiled instances delegate to
+   * the kernel's service so connect-time capture and public ErrorBoundary
+   * state agree; uncompiled instances (which never connect) get a detached
+   * service so the protected surface stays usable pre-connect.
+   */
+  protected get _errors(): CompiledErrorBoundary {
+    return this.#kernel?.errors ?? this.#detachedErrors;
   }
 
   /**
@@ -123,34 +177,21 @@ export class OpenElement extends OpenElementConfiguration {
    * Useful for tying async work (fetch, event listeners) to element lifecycle.
    */
   protected _lifecycleSignal(): AbortSignal {
-    return this.#lifecycle.signal;
+    return this.#kernel?.lifecycle.signal ?? this.#detachedLifecycle.signal;
   }
 
   /**
    * setTimeout wrapper that auto-clears when the element disconnects.
    */
   protected _setTimeout(handler: TimerHandler, timeout?: number): number {
-    return this.#lifecycle.setTimeout(handler, timeout);
+    return (this.#kernel?.lifecycle ?? this.#detachedLifecycle).setTimeout(handler, timeout);
   }
 
   /**
    * requestAnimationFrame wrapper that auto-cancels when the element disconnects.
    */
   protected _requestAnimationFrame(callback: FrameRequestCallback): number {
-    return this.#lifecycle.requestAnimationFrame(callback);
-  }
-
-  /**
-   * Register a signal for hydration by name.
-   * Call in constructor: this.registerSignal('count', this.#count);
-   */
-  protected registerSignal(name: string, sig: Signal<unknown>): void {
-    this.signalRegistry.set(name, sig);
-  }
-
-  /** Cycle-free structural view used by the lifecycle runtime collaborator. */
-  private _runtimeHost(): OpenElementRuntimeHost {
-    return this as unknown as OpenElementRuntimeHost;
+    return (this.#kernel?.lifecycle ?? this.#detachedLifecycle).requestAnimationFrame(callback);
   }
 
   /** Reactive route parameters. Updates automatically on SPA navigation. */
@@ -162,87 +203,69 @@ export class OpenElement extends OpenElementConfiguration {
     this.#params.value = value;
   }
 
-  /** ElementInternals for form-associated custom elements */
-  protected _internals?: ElementInternals;
-
-  /**
-   * Create or reuse the shadow root.
-   *
-   * DSD detection: if `this.shadowRoot` already exists and has nodes,
-   * the browser pre-populated it from a <template shadowrootmode> tag.
-   * In that case we reuse the existing root; the DSD-vs-CSR decision itself
-   * happens later in _renderOrHydrate() via hasPopulatedShadowRoot().
-   *
-   * CSR fallback: if no shadow root exists, we call `attachShadow()`. If an
-   * empty shadow root already exists, we reuse it and let connectedCallback()
-   * populate it from render().
-   *
-   * @returns The existing or newly created ShadowRoot.
-   */
-  createRenderRoot(): ShadowRoot | this {
-    const ctor = this.constructor as typeof OpenElement;
-    if (ctor.renderMode === 'light') {
-      return this;
-    }
-
-    // DSD pre-populated shadow root detection
-    if (this.shadowRoot) {
-      themeManager.applyStyles(this.shadowRoot, ctor.styles);
-      return this.shadowRoot;
-    }
-
-    // CSR: create a new shadow root
-    const delegatesFocus = ctor.delegatesFocus ?? false;
-    const root = this.attachShadow({ mode: 'open', delegatesFocus });
-
-    // Apply static styles via adoptedStyleSheets
-    themeManager.applyStyles(root, ctor.styles);
-
-    return root;
+  /** ElementInternals for form-associated custom elements. */
+  protected get _internals(): ElementInternals | undefined {
+    return this.#kernel?.form.internals;
   }
 
   /**
    * Lifecycle: called when the element is connected to the DOM.
    *
-   * Ensures the render root exists, then delegates to _renderOrHydrate(),
-   * which picks between DSD hydration (hasPopulatedShadowRoot() — bind events
-   * and signals onto the existing DOM) and CSR rendering (render() into the
-   * shadow root).
-   *
-   * If formAssociated is true, ElementInternals are attached.
+   * Fails closed (OE_PROGRAM_MISSING) when the class carries no compiled
+   * Part Program. Otherwise syncs route params, reconciles property state
+   * into the compiled signals (field initializers, then present attributes,
+   * then pre-upgrade JS sets), and connects the kernel; the kernel claims
+   * existing SSR DOM or creates fresh DOM from the program.
    */
   connectedCallback(): void {
-    connectOpenElement(this._runtimeHost(), this.#params);
+    const kernel = this.#kernel;
+    const state = facadeStates.get(this);
+    if (!kernel || !state) failMissingProgram(this.constructor);
+    this.#params.syncFromAttribute(this as unknown as HTMLElement);
+    reconcileOwnProperties(this, state);
+    syncAttributesToSignals(this, state);
+    applyPendingOwnValues(state);
+
+    const willClaim = this.#rootContent().childNodes.length > 0;
+    kernel.connect();
+    if (willClaim) {
+      const root = kernel.root;
+      if (root) replayPreUpgradeCaptures(root as unknown as Node);
+      this.onDsdHydrated();
+    } else {
+      this.onCsrRendered();
+    }
+    this.clientActivate();
+  }
+
+  /** Root whose existing content decides claim-vs-fresh at connect time. */
+  #rootContent(): { childNodes: ArrayLike<unknown> } {
+    const kernel = this.#kernel;
+    if (!kernel) return { childNodes: [] };
+    const mode = kernel.program.root.kind;
+    if (mode === 'light') return this as unknown as { childNodes: ArrayLike<unknown> };
+    if (mode === 'shadow-open') {
+      return (this.shadowRoot ?? { childNodes: [] }) as { childNodes: ArrayLike<unknown> };
+    }
+    return (kernel.root ?? { childNodes: [] }) as { childNodes: ArrayLike<unknown> };
   }
 
   /**
-   * Hydrate DSD DOM with signal and event bindings.
-   *
-   * Implementation lives in open-element-hydration.ts.
-   */
-  private _hydrateExistingDom(): void {
-    hydrateExistingDom(this, this.#hydrationScope);
-  }
-
-  /**
-   * v0.23.0: Hook called after DSD hydration completes.
+   * v0.23.0: Hook called after a successful claim of server-rendered DOM.
    *
    * Subclasses override this instead of relying on fragile
-   * `super.connectedCallback()` call order. At this point the
-   * shadow DOM is populated from DSD and declarative event props
-   * (onClick / on-click) are bound to their data-eid markers.
+   * `super.connectedCallback()` call order. At this point the program's DOM
+   * is claimed and Parts/Regions are live.
    *
    * No-op by default.
    */
   protected onDsdHydrated(): void {}
 
   /**
-   * v0.23.0: Hook called after CSR first render completes.
+   * v0.23.0: Hook called after fresh client-side DOM creation completes.
    *
-   * Subclasses override this for post-render initialization
-   * that depends on the shadow DOM being populated. At this
-   * point render() has been called and declarative events
-   * are bound.
+   * Subclasses override this for post-render initialization that depends on
+   * the program's DOM being populated.
    *
    * No-op by default.
    */
@@ -251,105 +274,64 @@ export class OpenElement extends OpenElementConfiguration {
   /**
    * v0.40.0: Client-side activation hook.
    *
-   * Called once after the element is connected, the shadow root
-   * is ready, and any DSD hydration or CSR rendering has completed.
-   * This is the right place for framework hydration (Preact, React,
-   * Vue, Lit) to take over the shadow root.
+   * Called once after the element is connected and the compiled program has
+   * been claimed or created. This is the right place for framework hydration
+   * (Preact, React, Vue, Lit) to take over from the compiled DOM.
    *
-   * Default implementation is a no-op. Subclasses override this to
-   * hydrate or render framework components into the shadow root.
+   * Default implementation is a no-op.
    */
   protected clientActivate(): void {
     // default no-op
   }
 
   /**
-   * Hook called when the unified client render/hydrate path throws.
-   * Subclasses may return a VNode fallback.
-   */
-  protected onRenderError(error: unknown): VNode | null {
-    createLogger('dsd').error(
-      `<${this.tagName.toLowerCase()}> render/hydrate failed: ${formatError(error)}`,
-    );
-    return null;
-  }
-
-  /**
    * Lifecycle: called when the element is disconnected from the DOM.
-   * Aborts all hydration event listeners for cleanup.
+   * Disposes the kernel activation (subscriptions, listeners, styles).
    */
   disconnectedCallback(): void {
-    disconnectOpenElement(
-      this._runtimeHost(),
-      this.#hydrationScope,
-      this.#lifecycle,
-    );
+    this.#kernel?.disconnect();
   }
 
-  // Effect + event lifecycle managed by HydrationScope (ADR-0067).
+  /** Lifecycle: called when the element is adopted into a new document. */
+  adoptedCallback(): void {
+    this.#kernel?.adopted();
+  }
 
   /**
    * Lifecycle: called when an observed attribute changes.
    *
-   * The base implementation forwards the change to
-   * handleStaticPropAttributeChange(), which parses the new attribute value
-   * into the matching static-prop signal (restoring the declared default on
-   * attribute removal). Subclasses that override this should call
-   * `super.attributeChangedCallback(...)` to keep static props in sync.
-   *
-   * @param name - Attribute name (lowercase).
-   * @param oldValue - Previous value, or null if the attribute was not set.
-   * @param newValue - New value, or null if the attribute was removed.
+   * Routes the change into the compiled property contract (convert + write
+   * through the accessor; removal restores the compiled default). Writes that
+   * came from property reflection are ignored (loop guard).
    */
   attributeChangedCallback(
-    _name: string,
+    name: string,
     _oldValue: string | null,
-    _newValue: string | null,
+    newValue: string | null,
   ): void {
-    // v0.24.1 (ADR-0057): Route to static props handler
-    handleStaticPropAttributeChange(
-      this,
-      _name,
-      _oldValue,
-      _newValue,
-    );
-    // Subclass override point — call super to keep static props in sync.
+    const state = facadeStates.get(this);
+    if (!state || !this.#kernel) return;
+    handleCompiledAttributeChange(this, state, name, newValue);
+  }
+
+  /** Platform form callback: the kernel owns ElementInternals. */
+  formAssociatedCallback(_form: HTMLFormElement | null): void {
+    // Subclass override point; kernel.form attached the internals at connect.
+  }
+
+  /** Platform form callback routed into the kernel form controller. */
+  formResetCallback(): void {
+    this.#kernel?.form.formResetCallback();
+  }
+
+  /** Platform form callback routed into the kernel form controller. */
+  formStateRestoreCallback(state: File | string | FormData | null, mode: string): void {
+    this.#kernel?.form.formStateRestoreCallback(state, mode);
   }
 
   /**
-   * Re-render the shadow DOM from `render()` and re-bind declarative events.
-   *
-   * OpenElement intentionally does not include a reactive scheduler. Components
-   * with local state can call this method after state changes instead of
-   * duplicating renderToDom() and event hydration.
-   *
-   * Render errors take the same `onRenderError()` fallback contract as the
-   * initial render (_renderOrHydrate) — rethrowing here would leave callers
-   * (e.g. ErrorBoundary.retry()) with an uncaught throw and the element stuck
-   * on stale/partial DOM with no recovery path (#662).
-   */
-  update(): void {
-    updateOpenElement(this._runtimeHost());
-  }
-
-  /**
-   * ReactiveController-compatible update hook.
-   *
-   * Async state controllers call this method when state changes. Keeping this
-   * tiny alias lets OpenElement host controllers without inheriting Lit or a
-   * scheduler.
-   */
-  requestUpdate(): void {
-    this.update();
-  }
-
-  /**
-   * Read locale from JS property (set by SSR injectProps) first,
+   * Read locale from JS property (set by SSR injection) first,
    * then HTML attribute, then fallback to provided default.
-   *
-   * SSR injectProps() sets camelCase JS properties (e.g. this.locale = 'en')
-   * but getAttribute() only reads HTML attributes, which remain null.
-   * This method resolves the mismatch by checking JS property first.
    *
    * @param fallback - Default value when neither source has a value. Defaults to 'en'.
    */
@@ -357,18 +339,5 @@ export class OpenElement extends OpenElementConfiguration {
     const prop = this.locale;
     if (typeof prop === 'string' && prop) return prop;
     return this.getAttribute('locale') || fallback;
-  }
-
-  /**
-   * Return Shadow DOM content as a VNode.
-   *
-   * Subclasses MUST override this method. During SSR, rendered content is
-   * wrapped in a <template shadowrootmode="open"> tag. During CSR, VNode values
-   * are rendered via renderToDom() with event binding and signal tracking.
-   *
-   * @returns VNode for the shadow DOM content, or null for empty content.
-   */
-  render(): VNode | null {
-    return null;
   }
 }
