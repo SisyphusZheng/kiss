@@ -11,6 +11,7 @@ The published stable line remains `v0.43.3`. The active target is an unpublished
 - Current npm registry line: `v0.43.3`
 - Latest landed train: `v0.43.3`
 - Active release target: `v0.44.0-alpha.0`
+- Next planned train: `v0.44.0-alpha.1`
 - Next public prerelease: the first coherent compiled-framework alpha
 
 The coherent five-package distribution contract follows

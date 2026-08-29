@@ -6,6 +6,7 @@ Updated: 2026-08-29
 - npm registry line: `v0.43.3` (dist-tag `latest`)
 - Latest landed train: `v0.43.3`
 - Active release target: `v0.44.0-alpha.0`
+- Next planned train: `v0.44.0-alpha.1`
 - Published stable package line: `v0.43.3` on npm `latest`
 - Repository development target: minimal Alpha.0 safety followed by parallel Alpha architecture
 - Accepted Alpha.0 foundations: #1160, #1182 / PR #1186, and PR #1190
