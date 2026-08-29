@@ -11,8 +11,6 @@
  * Zero DOM interaction - cannot interfere with DSD rendering.
  */
 
-import type { HydrationStrategy } from '../protocol/framework.ts';
-import type { ClientIslandEntry } from '../protocol/ssg.ts';
 import { HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
 import {
   type ClientIslandDeliveryEntry,
@@ -138,7 +136,7 @@ export function validateClientIslandEntry(
   if (
     deliveryEntry.exportName !== undefined &&
     (typeof deliveryEntry.exportName !== 'string' ||
-      deliveryEntry.exportName.length === 0 ||
+      deliveryEntry.exportName.trim() === '' ||
       hasControlCharacter(deliveryEntry.exportName))
   ) {
     throw new Error(`Invalid island export name for ${entry.tagName}`);

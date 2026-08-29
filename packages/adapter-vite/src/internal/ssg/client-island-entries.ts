@@ -52,7 +52,7 @@ export function buildClientIslandEntries(options: {
       const strategy = resolveIslandHydrate(
         meta?.hydrate as IslandDeliveryStrategy | undefined,
         upgradeStrategy,
-      );
+      ) as IslandDeliveryStrategy;
       return {
         tagName,
         // #460: resolve() emits drive-letter backslash paths on Windows; convert
@@ -85,7 +85,7 @@ export function buildClientIslandEntries(options: {
         const strategy = resolveIslandHydrate(
           (island as IslandDecl & { hydrate?: IslandDeliveryStrategy }).hydrate,
           upgradeStrategy,
-        );
+        ) as IslandDeliveryStrategy;
         return ({
           tagName: island.tagName,
           modulePath: island.modulePath,

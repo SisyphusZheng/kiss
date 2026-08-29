@@ -392,6 +392,16 @@ Deno.test('defineIslandConfig() returns canonical island metadata shape', () => 
   assertEquals(config.ssr, false);
 });
 
+Deno.test('defineIslandConfig() bounds media delivery queries', () => {
+  assertThrows(
+    () => {
+      defineIslandConfig({ hydrate: 'media', media: 'x'.repeat(513) });
+    },
+    Error,
+    'unsafe or oversized query',
+  );
+});
+
 Deno.test('defineIslandConfig() rejects non-canonical island metadata', () => {
   assertThrows(
     () => {
@@ -406,5 +416,12 @@ Deno.test('defineIslandConfig() rejects non-canonical island metadata', () => {
     },
     Error,
     'Invalid island hydrate strategy "lazy"',
+  );
+  assertThrows(
+    () => {
+      defineIslandConfig({ ssr: 'yes' } as never);
+    },
+    Error,
+    'ssr must be a boolean',
   );
 });

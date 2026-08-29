@@ -15,7 +15,7 @@
 import { build as viteBuild, type InlineConfig } from 'vite';
 import { existsSync, readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import { extractCustomElementTags, generateClientEntry } from '../internal/ssg/index.ts';
@@ -73,12 +73,76 @@ function sourceMentionsTag(source: string, tagName: string): boolean {
     source.includes('`' + tagName + '`');
 }
 
+function sourceImportSpecifiers(source: string): string[] {
+  const specifiers = new Set<string>();
+  const patterns = [
+    /\bfrom\s*["']([^"']+)["']/g,
+    /\bimport\s*["']([^"']+)["']/g,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+  for (const pattern of patterns) {
+    for (const match of source.matchAll(pattern)) specifiers.add(match[1]);
+  }
+  return [...specifiers];
+}
+
+const SOURCE_EXTENSIONS = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+
+function sourceCandidates(base: string): string[] {
+  const withoutExtension = /\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(base)
+    ? base.replace(/\.(?:ts|tsx|js|jsx|mjs|cjs)$/, '')
+    : base;
+  const stems = withoutExtension === base ? [base] : [base, withoutExtension];
+  return [
+    ...new Set(stems.flatMap((stem) => [
+      stem,
+      ...SOURCE_EXTENSIONS.slice(1).map((extension) => `${stem}${extension}`),
+      ...SOURCE_EXTENSIONS.slice(1).map((extension) => join(stem, `index${extension}`)),
+    ])),
+  ];
+}
+
+function isWithinRoot(candidate: string, root: string): boolean {
+  const fromRoot = relative(resolve(root), resolve(candidate));
+  return fromRoot === '' || (!fromRoot.startsWith('..') && !isAbsolute(fromRoot));
+}
+
+function existingSourceFile(candidates: readonly string[]): string | null {
+  for (const candidate of candidates) {
+    if (!existsSync(candidate)) continue;
+    try {
+      readFileSync(candidate, 'utf8');
+      return candidate;
+    } catch {
+      // A directory or unreadable path is not a source graph node.
+    }
+  }
+  return null;
+}
+
+function resolveSourceImport(fromFile: string, specifier: string, root: string): string | null {
+  if (!specifier.startsWith('.')) return null;
+  const cleanSpecifier = specifier.split(/[?#]/, 1)[0];
+  const base = resolve(dirname(fromFile), cleanSpecifier);
+  if (!isWithinRoot(base, root)) return null;
+  if (base.replaceAll('\\', '/').includes('/node_modules/')) return null;
+  return existingSourceFile(sourceCandidates(base));
+}
+
+function resolveConfiguredSource(root: string, importPath: string): string | null {
+  const candidate = importPath.startsWith('/')
+    ? resolve(root, importPath.slice(1))
+    : resolve(root, importPath);
+  if (!isWithinRoot(candidate, root)) return null;
+  return existingSourceFile(sourceCandidates(candidate));
+}
+
 /**
  * Select only admitted island tags that are observable in the rendered site
  * or in a request-time page source. This keeps a declaration from becoming a
  * client-bundle tax merely because it exists in app/islands/.
  */
-function findReachableIslandTags(
+export function findReachableIslandTags(
   ctx: OpenElementBuildContext,
   root: string,
   outDir: string,
@@ -103,6 +167,24 @@ function findReachableIslandTags(
     }
   };
 
+  const visitedSourceFiles = new Set<string>();
+  const recordSourceFile = (filePath: string): void => {
+    const normalizedPath = resolve(filePath);
+    if (visitedSourceFiles.has(normalizedPath)) return;
+    visitedSourceFiles.add(normalizedPath);
+    let source: string;
+    try {
+      source = readFileSync(normalizedPath, 'utf8');
+    } catch {
+      return;
+    }
+    recordSource(source);
+    for (const specifier of sourceImportSpecifiers(source)) {
+      const imported = resolveSourceImport(normalizedPath, specifier, root);
+      if (imported) recordSourceFile(imported);
+    }
+  };
+
   for (const entry of walkHtmlFileEntries(resolve(root, outDir))) {
     recordSource(readFileSync(entry.absolutePath, 'utf8'));
   }
@@ -110,8 +192,17 @@ function findReachableIslandTags(
   const routesDir = ctx.phase3.routesDir || 'app/routes';
   for (const route of ctx.phase1.cachedRoutes ?? []) {
     if (route.type !== 'page' || route.special) continue;
-    const path = join(root, routesDir, route.filePath);
-    if (existsSync(path)) recordSource(readFileSync(path, 'utf8'));
+    recordSourceFile(resolve(root, routesDir, route.filePath));
+  }
+
+  const shellConfigs = [
+    ctx.phase3.appShell,
+    ...Object.values(ctx.phase3.layouts ?? {}),
+  ];
+  for (const shell of shellConfigs) {
+    if (!shell || typeof shell !== 'object') continue;
+    const shellFile = resolveConfiguredSource(root, shell.import);
+    if (shellFile) recordSourceFile(shellFile);
   }
 
   // A project without route metadata can still call buildClient() directly

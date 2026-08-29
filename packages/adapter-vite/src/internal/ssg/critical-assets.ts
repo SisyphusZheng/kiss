@@ -10,6 +10,19 @@
 import { escapeAttr, OpenElementError } from '@openelement/element';
 import { validateSafeUrl } from '../../head-injection.ts';
 
+function hasControlCharacters(value: string): boolean {
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    if (
+      code <= 0x08 || code === 0x0b || code === 0x0c || (code >= 0x0e && code <= 0x1f) ||
+      code === 0x7f
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export interface CriticalFontAsset {
   href: string;
   type?: string;
@@ -82,7 +95,7 @@ function stringValue(value: unknown, context: string): string {
     });
   }
   const normalized = value.trim();
-  if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(normalized)) {
+  if (hasControlCharacters(normalized)) {
     throw new OpenElementError(`${context} contains control characters`, {
       code: 'INVALID_CRITICAL_ASSETS',
       statusCode: 400,
@@ -100,7 +113,7 @@ function assertNoControls(value: string, context: string): void {
   // Newlines, carriage returns, and tabs are ordinary CSS/JavaScript
   // whitespace. Reject the remaining C0 controls, which cannot carry useful
   // critical asset content and can confuse HTML parsers/logs.
-  if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)) {
+  if (hasControlCharacters(value)) {
     throw new OpenElementError(`${context} contains control characters`, {
       code: 'INVALID_CRITICAL_ASSETS',
       statusCode: 400,
@@ -137,13 +150,77 @@ function crossoriginValue(
 }
 
 /** Small deterministic CSS minifier that preserves quoted strings and values. */
+function stripCssComments(css: string): string {
+  let out = '';
+  let quote = '';
+  let escaped = false;
+  for (let index = 0; index < css.length; index++) {
+    const char = css[index];
+    const next = css[index + 1];
+    if (quote) {
+      out += char;
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      out += char;
+      continue;
+    }
+    if (char === '/' && next === '*') {
+      index += 2;
+      while (index + 1 < css.length && !(css[index] === '*' && css[index + 1] === '/')) {
+        index += 1;
+      }
+      if (index + 1 >= css.length) {
+        throw new OpenElementError('Invalid CSS: unterminated CSS comment', {
+          code: 'INVALID_CRITICAL_ASSETS',
+          statusCode: 400,
+          recoverable: false,
+        });
+      }
+      index += 1;
+      out += ' ';
+      continue;
+    }
+    out += char;
+  }
+  return out;
+}
+
+function foldCssForCheck(css: string): string {
+  return stripCssComments(css)
+    .replace(/\\([0-9a-fA-F]{1,6})\s?/g, (_m, hex: string) => {
+      const code = Number.parseInt(hex, 16);
+      return code === 0 || code > 0x10FFFF ? '\uFFFD' : String.fromCodePoint(code);
+    })
+    .replace(/\\(.)/g, '$1');
+}
+
+function assertSafeInlineCss(css: string, context: string): void {
+  if (
+    /<\/style/i.test(css) ||
+    /(?:@import|expression\s*\(|url\s*\(\s*["']?\s*(?:javascript|data|vbscript|file)\s*:)/i.test(
+      foldCssForCheck(css),
+    )
+  ) {
+    throw new OpenElementError(`Unsafe CSS in ${context}`, {
+      code: 'UNSAFE_HEAD_INJECTION',
+      statusCode: 400,
+      recoverable: false,
+    });
+  }
+}
+
 export function minifyCriticalCss(css: string): string {
   assertNoControls(css, 'critical inline CSS');
   let out = '';
   let quote = '';
   let escaped = false;
   let pendingSpace = false;
-  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const withoutComments = stripCssComments(css);
 
   const flushSpace = (next: string): void => {
     if (!pendingSpace) return;
@@ -195,7 +272,9 @@ function safeUrl(value: unknown, context: string): string {
 }
 
 function isCrossOrigin(href: string, origin: string | undefined): boolean {
-  if (!/^[a-z][a-z0-9+.-]*:/i.test(href)) return false;
+  const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(href);
+  const isProtocolRelative = href.startsWith('//');
+  if (!hasScheme && !isProtocolRelative) return false;
   let url: URL;
   try {
     url = new URL(href, origin || 'https://open-element.invalid');
@@ -248,6 +327,7 @@ function renderStyle(
     );
   }
   if (css !== undefined) {
+    assertSafeInlineCss(css, `criticalAssets.styles[${index}].css`);
     const body = config.minifyInlineStyles === false ? css : minifyCriticalCss(css);
     const safeBody = body.replace(/<\/style/gi, '<\\/style');
     const attrs = value.media === undefined

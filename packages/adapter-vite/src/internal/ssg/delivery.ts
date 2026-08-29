@@ -48,7 +48,13 @@ export interface IslandDeliveryMeta {
 
 export type ClientIslandDeliveryInput = ClientIslandEntry | ClientIslandDeliveryEntry;
 
-const CONTROL_CHARACTER_RE = /[\u0000-\u001f\u007f]/;
+function hasControlCharacters(value: string): boolean {
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
+}
 
 /**
  * Media queries are data in the generated artifact, never executable source.
@@ -60,7 +66,7 @@ export function validateIslandMediaQuery(media: unknown, context = 'island'): st
     throw new Error(`Invalid island media query for ${context}: a non-empty string is required`);
   }
   const normalized = media.trim();
-  if (normalized.length > 512 || CONTROL_CHARACTER_RE.test(normalized)) {
+  if (normalized.length > 512 || hasControlCharacters(normalized)) {
     throw new Error(`Invalid island media query for ${context}: unsafe or oversized value`);
   }
   return normalized;
@@ -76,13 +82,15 @@ export function validateIslandDeliveryTags(
   tags: readonly string[] | undefined,
   context: string,
 ): string[] {
-  if (!tags) return [];
-  if (tags.length === 0) {
+  if (tags === undefined) return [];
+  if (!Array.isArray(tags) || tags.length === 0) {
     throw new Error(`Invalid island tags for ${context}: at least one tag is required`);
   }
   const seen = new Set<string>();
   return tags.map((tag) => {
-    if (!isValidTagName(tag)) throw new Error(`Invalid island tagName for ${context}: ${tag}`);
+    if (typeof tag !== 'string' || !isValidTagName(tag)) {
+      throw new Error(`Invalid island tagName for ${context}: ${tag}`);
+    }
     if (seen.has(tag)) throw new Error(`Duplicate island tagName for ${context}: ${tag}`);
     seen.add(tag);
     return tag;
@@ -100,6 +108,9 @@ export function resolveIslandDeliveryTags(
   tagNames: readonly string[] | undefined,
   context = primaryTag,
 ): string[] {
+  if (!isValidTagName(primaryTag)) {
+    throw new Error(`Invalid island tagName for ${context}: ${primaryTag}`);
+  }
   const validatedTags = tags === undefined ? undefined : validateIslandDeliveryTags(tags, context);
   const validatedTagNames = tagNames === undefined
     ? undefined
@@ -121,6 +132,9 @@ export function validateIslandDeliveryExportNames(
   context: string,
 ): Record<string, string> | undefined {
   if (exportNames === undefined) return undefined;
+  if (typeof exportNames !== 'object' || exportNames === null || Array.isArray(exportNames)) {
+    throw new Error(`Invalid island export names for ${context}: an object is required`);
+  }
   const allowedTags = new Set(tags);
   const result: Record<string, string> = {};
   for (const [tag, exportName] of Object.entries(exportNames)) {
@@ -129,7 +143,7 @@ export function validateIslandDeliveryExportNames(
       !isValidTagName(tag) ||
       typeof exportName !== 'string' ||
       exportName.trim() === '' ||
-      CONTROL_CHARACTER_RE.test(exportName)
+      hasControlCharacters(exportName)
     ) {
       throw new Error(`Invalid island export name for ${context}: ${tag}`);
     }

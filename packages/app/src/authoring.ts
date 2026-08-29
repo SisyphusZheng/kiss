@@ -428,10 +428,18 @@ function validateIslandMedia(media: unknown): string {
     );
   }
   const value = media.trim();
-  if (value.length > 512 || /[\u0000-\u001f\u007f]/.test(value)) {
+  if (value.length > 512) {
     throw new Error(
       `${ERROR_PREFIX} defineIslandConfig() media contains an unsafe or oversized query.`,
     );
+  }
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) {
+      throw new Error(
+        `${ERROR_PREFIX} defineIslandConfig() media contains an unsafe or oversized query.`,
+      );
+    }
   }
   return value;
 }
@@ -463,6 +471,12 @@ export function defineIslandConfig(config: IslandConfig): IslandConfig {
           'Use only ssr, dsd, hydrate, media, tags, tagNames, and exportNames.',
       );
     }
+  }
+  if (config.ssr !== undefined && typeof config.ssr !== 'boolean') {
+    throw new Error(`${ERROR_PREFIX} defineIslandConfig() ssr must be a boolean.`);
+  }
+  if (config.dsd !== undefined && typeof config.dsd !== 'boolean') {
+    throw new Error(`${ERROR_PREFIX} defineIslandConfig() dsd must be a boolean.`);
   }
   if (config.hydrate !== undefined && !HYDRATION_STRATEGY_SET.has(config.hydrate)) {
     throw new Error(
@@ -504,7 +518,13 @@ export function defineIslandConfig(config: IslandConfig): IslandConfig {
         (deliveryTags !== undefined && !allowedTags.has(tag)) ||
         typeof exportName !== 'string' ||
         exportName.trim() === '' ||
-        /[\u0000-\u001f\u007f]/.test(exportName)
+        (() => {
+          for (let index = 0; index < exportName.length; index++) {
+            const code = exportName.charCodeAt(index);
+            if (code <= 0x1f || code === 0x7f) return true;
+          }
+          return false;
+        })()
       ) {
         throw new Error(
           `${ERROR_PREFIX} defineIslandConfig() exportNames contains an invalid entry.`,

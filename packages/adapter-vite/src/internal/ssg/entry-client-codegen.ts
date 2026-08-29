@@ -15,11 +15,13 @@ function islandImportFactory(
   exportName?: string,
 ): string {
   const nameLiteral = exportName ? quoteGeneratedJavaScriptValue(exportName) : 'undefined';
+  const tagLiteral = quoteGeneratedJavaScriptValue(tagName);
+  const errorLiteral = quoteGeneratedJavaScriptValue(
+    `[openElement] Capability module ${modulePath} did not export a constructor for ${tagName}`,
+  );
   return `() => import(${
     quoteGeneratedJavaScriptValue(modulePath)
-  }).then(function(mod) { var _name = ${nameLiteral}; var Ctor = _name ? mod[_name] : mod.default; if (Ctor && !customElements.get(${
-    quoteGeneratedJavaScriptValue(tagName)
-  })) customElements.define(${quoteGeneratedJavaScriptValue(tagName)}, Ctor); return mod; })`;
+  }).then(function(mod) { var _name = ${nameLiteral}; var Ctor = _name ? mod[_name] : mod.default; if (typeof Ctor !== 'function') throw new Error(${errorLiteral}); if (!customElements.get(${tagLiteral})) customElements.define(${tagLiteral}, Ctor); return mod; })`;
 }
 
 interface NormalizedClientIsland extends AdmittedClientIslandEntry {
@@ -102,9 +104,12 @@ function sharedActivationFactory(group: ActivationGroup, index: number): string 
     const value = entry.exportName
       ? `mod[${quoteGeneratedJavaScriptValue(entry.exportName)}]`
       : 'mod.default';
+    const errorLiteral = quoteGeneratedJavaScriptValue(
+      `[openElement] Capability module ${group.modulePath} did not export a constructor for ${entry.tagName}`,
+    );
     lines.push(`    var ${ctor} = ${value};`);
     lines.push(
-      `    if (typeof ${ctor} !== 'function') throw new Error('[openElement] Capability module ${group.modulePath} did not export a constructor for ${entry.tagName}');`,
+      `    if (typeof ${ctor} !== 'function') throw new Error(${errorLiteral});`,
     );
     lines.push(
       `    if (!customElements.get(${

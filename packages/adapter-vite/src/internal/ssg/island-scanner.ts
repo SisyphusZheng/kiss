@@ -298,18 +298,50 @@ function unquoteStaticString(raw: string, context: string): string {
     index++;
     const escaped = value[index];
     if (escaped === undefined) throw staticOpenElementError(context + ' has an invalid escape');
-    const escapes: Record<string, string> = {
-      b: '\\b',
-      f: '\\f',
-      n: '\\n',
-      r: '\\r',
-      t: '\\t',
-      v: '\\v',
-      '\\': '\\',
-      "'": "'",
-      '"': '"',
-    };
-    result += escapes[escaped] ?? escaped;
+    if (escaped === 'b') result += '\b';
+    else if (escaped === 'f') result += '\f';
+    else if (escaped === 'n') result += '\n';
+    else if (escaped === 'r') result += '\r';
+    else if (escaped === 't') result += '\t';
+    else if (escaped === 'v') result += '\v';
+    else if (escaped === '\\' || escaped === "'" || escaped === '"') result += escaped;
+    else if (escaped === '0') {
+      if (/\d/.test(value[index + 1] ?? '')) {
+        throw staticOpenElementError(context + ' has an unsupported octal escape');
+      }
+      result += '\0';
+    } else if (escaped === 'x') {
+      const hex = value.slice(index + 1, index + 3);
+      if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
+        throw staticOpenElementError(context + ' has an invalid hex escape');
+      }
+      result += String.fromCharCode(Number.parseInt(hex, 16));
+      index += 2;
+    } else if (escaped === 'u') {
+      if (value[index + 1] === '{') {
+        const end = value.indexOf('}', index + 2);
+        const hex = end === -1 ? '' : value.slice(index + 2, end);
+        const code = Number.parseInt(hex, 16);
+        if (!/^[0-9a-fA-F]+$/.test(hex) || code > 0x10FFFF) {
+          throw staticOpenElementError(context + ' has an invalid Unicode escape');
+        }
+        result += String.fromCodePoint(code);
+        index = end;
+      } else {
+        const hex = value.slice(index + 1, index + 5);
+        if (!/^[0-9a-fA-F]{4}$/.test(hex)) {
+          throw staticOpenElementError(context + ' has an invalid Unicode escape');
+        }
+        result += String.fromCharCode(Number.parseInt(hex, 16));
+        index += 4;
+      }
+    } else if (escaped === '\n') {
+      // JavaScript line-continuation escape: it contributes no character.
+    } else if (escaped === '\r') {
+      if (value[index + 1] === '\n') index++;
+    } else {
+      throw staticOpenElementError(context + ` has an unsupported escape "\\${escaped}"`);
+    }
   }
   return result;
 }
@@ -434,7 +466,13 @@ function parseStaticIslandConfigBody(body: string): {
         !isValidTagName(tag) ||
         (deliveryTags !== undefined && !deliveryTags.includes(tag)) ||
         exportName.trim() === '' ||
-        /[\u0000-\u001f\u007f]/.test(exportName)
+        (() => {
+          for (let index = 0; index < exportName.length; index++) {
+            const code = exportName.charCodeAt(index);
+            if (code <= 0x1f || code === 0x7f) return true;
+          }
+          return false;
+        })()
       ) {
         throw staticOpenElementError(`openElement.exportNames has an invalid entry for "${tag}"`);
       }
@@ -477,16 +515,28 @@ export function readIslandConfig(source: string): {
     throw staticOpenElementError('openElement export must call defineIslandConfig(...)');
   }
 
-  const body = findStaticConfigBody(afterEquals, callMatch[0].length);
+  const argument = afterEquals.slice(callMatch[0].length).trimStart();
+  if (!argument.startsWith('{')) {
+    throw staticOpenElementError(
+      'defineIslandConfig() argument must be a static object literal',
+    );
+  }
+  const body = findStaticConfigBody(argument, 0);
   if (body === undefined) {
     throw staticOpenElementError(
       'defineIslandConfig() argument must be a static object literal',
     );
   }
-  const objectStart = afterEquals.indexOf('{', callMatch[0].length);
-  const objectEnd = objectStart + body.length + 2;
-  const callTail = afterEquals.slice(objectEnd).trimStart();
-  if (!callTail.startsWith(')')) {
+  const callTail = argument.slice(body.length + 2).trimStart();
+  const afterParen = callTail.startsWith(')') ? callTail.slice(1) : '';
+  const continuation = afterParen.trimStart();
+  const hasStatementTerminator = afterParen.startsWith(';');
+  const hasAutomaticSemicolonBoundary = /^\s*\r?\n/.test(afterParen) &&
+    !/^(?:[.[(`]|[+\-*%/&|^!=<>:]|as\b|satisfies\b)/.test(continuation);
+  if (
+    !callTail.startsWith(')') ||
+    (continuation !== '' && !hasStatementTerminator && !hasAutomaticSemicolonBoundary)
+  ) {
     throw staticOpenElementError(
       'defineIslandConfig() argument must be one static object literal',
     );
