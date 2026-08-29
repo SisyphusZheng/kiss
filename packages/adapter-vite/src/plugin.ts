@@ -274,10 +274,7 @@ export function createOpenPlugin(
     const islandFiles = await scanIslands(islandsRoot);
     ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
     ctx.phase1.islandFiles = islandFiles;
-    ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles) as unknown as Record<
-      string,
-      Partial<IslandDecl>
-    >;
+    ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
     if (resolvedOptions.mode === 'spa') return;
     generateEntry(
       ctx.phase1.cachedRoutes || [],
@@ -405,10 +402,7 @@ export function createOpenPlugin(
         const islandFiles = await scanIslands(islandsRoot);
         ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
         ctx.phase1.islandFiles = islandFiles;
-        ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles) as unknown as Record<
-          string,
-          Partial<IslandDecl>
-        >;
+        ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
 
         if (
           resolvedOptions.packageIslands &&

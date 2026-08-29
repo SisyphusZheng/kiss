@@ -240,10 +240,7 @@ async function buildSSG(
     : ssgIslandFiles.map((f) => fileToTagName(f));
   const ssgIslandMeta: Record<string, Partial<IslandDecl>> = Object.keys(islandMeta).length > 0
     ? islandMeta
-    : await scanIslandMeta(islandsRoot, ssgIslandFiles) as unknown as Record<
-      string,
-      Partial<IslandDecl>
-    >;
+    : await scanIslandMeta(islandsRoot, ssgIslandFiles);
   // Single descriptor instantiation (alpha.17 B1): the SSR admission plan and
   // the emitted SSG entry code come from the same descriptor. Previously the
   // plan was built without middleware/html/upgradeStrategy and diverged from

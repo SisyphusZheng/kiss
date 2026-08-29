@@ -309,7 +309,7 @@ function renderFont(font: unknown, index: number): string {
 function renderStyle(
   style: unknown,
   index: number,
-  config: CriticalAssetsOptions,
+  config: CriticalAssetsView,
 ): string {
   const value = typeof style === 'string'
     ? { href: style }
@@ -383,14 +383,44 @@ function renderInlineScript(script: unknown, index: number): string {
   return `<script${type ? ` type="${escapeAttr(type)}"` : ''}>${safeCode}</script>`;
 }
 
-function normalizeConfig(input: unknown): CriticalAssetsOptions | undefined {
+/**
+ * Normalized view over the criticalAssets config record. Item-level
+ * validation lives in the render helpers (which accept unknown by design),
+ * so array fields stay unknown here; the scalar policy flags are consumed
+ * with strict === / !== comparisons. `origin` is narrowed to a string
+ * because isCrossOrigin() uses it as a URL base (a non-string origin would
+ * fail URL parsing there and be treated as cross-origin, so narrowing it to
+ * undefined preserves that outcome).
+ */
+interface CriticalAssetsView {
+  fonts?: unknown;
+  styles?: unknown;
+  stylesheets?: unknown;
+  inlineScripts?: unknown;
+  allowExternalRenderBlocking?: unknown;
+  allowRenderBlockingExternal?: unknown;
+  minifyInlineStyles?: unknown;
+  origin?: string;
+}
+
+function normalizeConfig(input: unknown): CriticalAssetsView | undefined {
   const options = asRecord(input, 'createOpenPlugin options');
   const candidate = options.criticalAssets ?? options.critical ??
     (typeof options.performance === 'object' && options.performance !== null
       ? (options.performance as RecordLike).criticalAssets
       : undefined);
   if (candidate === undefined) return undefined;
-  return asRecord(candidate, 'criticalAssets') as unknown as CriticalAssetsOptions;
+  const record = asRecord(candidate, 'criticalAssets');
+  return {
+    fonts: record.fonts,
+    styles: record.styles,
+    stylesheets: record.stylesheets,
+    inlineScripts: record.inlineScripts,
+    allowExternalRenderBlocking: record.allowExternalRenderBlocking,
+    allowRenderBlockingExternal: record.allowRenderBlockingExternal,
+    minifyInlineStyles: record.minifyInlineStyles,
+    origin: typeof record.origin === 'string' ? record.origin : undefined,
+  };
 }
 
 /**
