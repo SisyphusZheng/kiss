@@ -1,9 +1,17 @@
 {
   "version": 1,
   "tag": "oe-spike-counter",
+  "root": {
+    "id": "root",
+    "kind": "light",
+    "nodes": [
+      "e0"
+    ]
+  },
   "template": [
     {
       "k": "el",
+      "id": "e0",
       "tag": "div",
       "attrs": [
         [
@@ -14,6 +22,7 @@
       "children": [
         {
           "k": "el",
+          "id": "e1",
           "tag": "h1",
           "attrs": [],
           "children": [
@@ -23,18 +32,21 @@
             },
             {
               "k": "part",
+              "id": "p0",
               "index": 0
             }
           ]
         },
         {
           "k": "el",
+          "id": "e2",
           "tag": "input",
           "attrs": [],
           "children": []
         },
         {
           "k": "el",
+          "id": "e3",
           "tag": "button",
           "attrs": [
             [
@@ -51,15 +63,18 @@
         },
         {
           "k": "part",
+          "id": "p3",
           "index": 3
         },
         {
           "k": "el",
+          "id": "e6",
           "tag": "ul",
           "attrs": [],
           "children": [
             {
               "k": "part",
+              "id": "p4",
               "index": 4
             }
           ]
@@ -70,37 +85,73 @@
   "parts": [
     {
       "k": "text",
+      "signal": "count",
       "index": 0,
-      "signal": "count"
+      "location": {
+        "id": "p0",
+        "kind": "anchor",
+        "path": [
+          0,
+          0,
+          1
+        ]
+      }
     },
     {
       "k": "prop",
-      "index": 1,
       "signal": "label",
       "name": "value",
       "path": [
         0,
         1
-      ]
+      ],
+      "index": 1,
+      "location": {
+        "id": "p1",
+        "kind": "sink",
+        "path": [
+          0,
+          1
+        ],
+        "node": "e2"
+      }
     },
     {
       "k": "event",
-      "index": 2,
       "event": "click",
       "handler": "increment",
+      "action": {
+        "kind": "method",
+        "name": "increment"
+      },
       "path": [
         0,
         2
-      ]
+      ],
+      "index": 2,
+      "location": {
+        "id": "p2",
+        "kind": "sink",
+        "path": [
+          0,
+          2
+        ],
+        "node": "e3"
+      }
     },
     {
       "k": "when",
-      "index": 3,
       "signal": "count",
       "gt": 0,
+      "test": {
+        "signal": "count",
+        "op": "greater-than",
+        "value": 0
+      },
       "on": [
         {
           "k": "el",
+          "id": "e4",
           "tag": "p",
           "attrs": [
             [
@@ -119,6 +170,7 @@
       "off": [
         {
           "k": "el",
+          "id": "e5",
           "tag": "p",
           "attrs": [
             [
@@ -133,26 +185,636 @@
             }
           ]
         }
-      ]
+      ],
+      "index": 3,
+      "location": {
+        "id": "p3",
+        "kind": "anchor",
+        "path": [
+          0,
+          3
+        ]
+      }
     },
     {
       "k": "each",
-      "index": 4,
       "signal": "items",
       "key": "id",
       "field": "text",
       "item": [
         {
           "k": "el",
+          "id": "e7",
           "tag": "li",
           "attrs": [],
           "children": [
             {
-              "k": "ival"
+              "k": "ival",
+              "field": "text"
             }
           ]
         }
+      ],
+      "index": 4,
+      "location": {
+        "id": "p4",
+        "kind": "anchor",
+        "path": [
+          0,
+          4,
+          0
+        ]
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "r3",
+      "index": 3,
+      "kind": "when",
+      "anchor": "p3",
+      "end": "p3:end",
+      "source": "p3"
+    },
+    {
+      "id": "r4",
+      "index": 4,
+      "kind": "each",
+      "anchor": "p4",
+      "end": "p4:end",
+      "source": "p4"
+    }
+  ],
+  "dependencies": [
+    {
+      "signal": "count",
+      "owner": {
+        "kind": "part",
+        "index": 0
+      },
+      "location": "p0"
+    },
+    {
+      "signal": "label",
+      "owner": {
+        "kind": "part",
+        "index": 1
+      },
+      "location": "p1"
+    },
+    {
+      "signal": "count",
+      "owner": {
+        "kind": "region",
+        "index": 3
+      },
+      "location": "p3"
+    },
+    {
+      "signal": "items",
+      "owner": {
+        "kind": "region",
+        "index": 4
+      },
+      "location": "p4"
+    }
+  ],
+  "locations": [
+    {
+      "id": "e0",
+      "kind": "element",
+      "tag": "div",
+      "path": [
+        0
+      ]
+    },
+    {
+      "id": "e1",
+      "kind": "element",
+      "tag": "h1",
+      "path": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "p0",
+      "kind": "anchor",
+      "part": 0,
+      "path": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "e2",
+      "kind": "element",
+      "tag": "input",
+      "path": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "p1",
+      "kind": "sink",
+      "part": 1,
+      "node": "e2",
+      "path": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "e3",
+      "kind": "element",
+      "tag": "button",
+      "path": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "p2",
+      "kind": "sink",
+      "part": 2,
+      "node": "e3",
+      "path": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "e4",
+      "kind": "element",
+      "tag": "p",
+      "path": []
+    },
+    {
+      "id": "e5",
+      "kind": "element",
+      "tag": "p",
+      "path": []
+    },
+    {
+      "id": "p3",
+      "kind": "anchor",
+      "part": 3,
+      "path": [
+        0,
+        3
+      ]
+    },
+    {
+      "id": "e6",
+      "kind": "element",
+      "tag": "ul",
+      "path": [
+        0,
+        4
+      ]
+    },
+    {
+      "id": "e7",
+      "kind": "element",
+      "tag": "li",
+      "path": []
+    },
+    {
+      "id": "p4",
+      "kind": "anchor",
+      "part": 4,
+      "path": [
+        0,
+        4,
+        0
       ]
     }
-  ]
+  ],
+  "sourceMap": {
+    "version": 1,
+    "file": "/project/app/islands/counter.tsx",
+    "records": [
+      {
+        "id": "root",
+        "kind": "root",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 932,
+            "line": 32,
+            "column": 3
+          },
+          "end": {
+            "offset": 1312,
+            "line": 42,
+            "column": 4
+          }
+        }
+      },
+      {
+        "id": "property:count",
+        "kind": "property",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 642,
+            "line": 16,
+            "column": 3
+          },
+          "end": {
+            "offset": 683,
+            "line": 17,
+            "column": 13
+          }
+        }
+      },
+      {
+        "id": "property:label",
+        "kind": "property",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 687,
+            "line": 19,
+            "column": 3
+          },
+          "end": {
+            "offset": 735,
+            "line": 20,
+            "column": 19
+          }
+        }
+      },
+      {
+        "id": "property:items",
+        "kind": "property",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 739,
+            "line": 22,
+            "column": 3
+          },
+          "end": {
+            "offset": 883,
+            "line": 26,
+            "column": 6
+          }
+        }
+      },
+      {
+        "id": "e0",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 962,
+            "line": 34,
+            "column": 7
+          },
+          "end": {
+            "offset": 1301,
+            "line": 40,
+            "column": 13
+          }
+        }
+      },
+      {
+        "id": "e1",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 990,
+            "line": 35,
+            "column": 9
+          },
+          "end": {
+            "offset": 1018,
+            "line": 35,
+            "column": 37
+          }
+        }
+      },
+      {
+        "id": "p0",
+        "kind": "part",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1001,
+            "line": 35,
+            "column": 20
+          },
+          "end": {
+            "offset": 1013,
+            "line": 35,
+            "column": 32
+          }
+        }
+      },
+      {
+        "id": "e2",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1027,
+            "line": 36,
+            "column": 9
+          },
+          "end": {
+            "offset": 1055,
+            "line": 36,
+            "column": 37
+          }
+        }
+      },
+      {
+        "id": "p1",
+        "kind": "part",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1034,
+            "line": 36,
+            "column": 16
+          },
+          "end": {
+            "offset": 1052,
+            "line": 36,
+            "column": 34
+          }
+        }
+      },
+      {
+        "id": "e3",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1064,
+            "line": 37,
+            "column": 9
+          },
+          "end": {
+            "offset": 1121,
+            "line": 37,
+            "column": 66
+          }
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "part",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1086,
+            "line": 37,
+            "column": 31
+          },
+          "end": {
+            "offset": 1110,
+            "line": 37,
+            "column": 55
+          }
+        }
+      },
+      {
+        "id": "e4",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1148,
+            "line": 38,
+            "column": 27
+          },
+          "end": {
+            "offset": 1178,
+            "line": 38,
+            "column": 57
+          }
+        }
+      },
+      {
+        "id": "e5",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1181,
+            "line": 38,
+            "column": 60
+          },
+          "end": {
+            "offset": 1207,
+            "line": 38,
+            "column": 86
+          }
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "region",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1130,
+            "line": 38,
+            "column": 9
+          },
+          "end": {
+            "offset": 1208,
+            "line": 38,
+            "column": 87
+          }
+        }
+      },
+      {
+        "id": "r3",
+        "kind": "region",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1130,
+            "line": 38,
+            "column": 9
+          },
+          "end": {
+            "offset": 1208,
+            "line": 38,
+            "column": 87
+          }
+        }
+      },
+      {
+        "id": "e6",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1217,
+            "line": 39,
+            "column": 9
+          },
+          "end": {
+            "offset": 1288,
+            "line": 39,
+            "column": 80
+          }
+        }
+      },
+      {
+        "id": "e7",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1247,
+            "line": 39,
+            "column": 39
+          },
+          "end": {
+            "offset": 1281,
+            "line": 39,
+            "column": 73
+          }
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "region",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1221,
+            "line": 39,
+            "column": 13
+          },
+          "end": {
+            "offset": 1283,
+            "line": 39,
+            "column": 75
+          }
+        }
+      },
+      {
+        "id": "r4",
+        "kind": "region",
+        "source": {
+          "file": "/project/app/islands/counter.tsx",
+          "start": {
+            "offset": 1221,
+            "line": 39,
+            "column": 13
+          },
+          "end": {
+            "offset": 1283,
+            "line": 39,
+            "column": 75
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "tag": "oe-spike-counter",
+    "className": "SpikeCounter",
+    "sourceFile": "/project/app/islands/counter.tsx",
+    "properties": [
+      {
+        "name": "count",
+        "attribute": "count",
+        "type": "number",
+        "converter": "number",
+        "reflect": true,
+        "default": 0
+      },
+      {
+        "name": "label",
+        "attribute": "label",
+        "type": "string",
+        "converter": "string",
+        "reflect": false,
+        "default": "ready"
+      },
+      {
+        "name": "items",
+        "attribute": "items",
+        "type": "array",
+        "converter": "array",
+        "reflect": false,
+        "default": [
+          {
+            "id": "a",
+            "text": "alpha"
+          },
+          {
+            "id": "b",
+            "text": "beta"
+          }
+        ]
+      }
+    ],
+    "observedAttributes": [
+      "count",
+      "label",
+      "items"
+    ],
+    "cem": {
+      "tagName": "oe-spike-counter",
+      "className": "SpikeCounter",
+      "declaration": {
+        "name": "SpikeCounter",
+        "module": "/project/app/islands/counter.tsx"
+      },
+      "attributes": [
+        {
+          "name": "count",
+          "fieldName": "count",
+          "type": "number",
+          "reflect": true
+        },
+        {
+          "name": "label",
+          "fieldName": "label",
+          "type": "string",
+          "reflect": false
+        },
+        {
+          "name": "items",
+          "fieldName": "items",
+          "type": "array",
+          "reflect": false
+        }
+      ],
+      "members": [
+        {
+          "name": "count",
+          "fieldName": "count",
+          "type": "number",
+          "attribute": "count",
+          "reflect": true
+        },
+        {
+          "name": "label",
+          "fieldName": "label",
+          "type": "string",
+          "attribute": "label",
+          "reflect": false
+        },
+        {
+          "name": "items",
+          "fieldName": "items",
+          "type": "array",
+          "attribute": "items",
+          "reflect": false
+        }
+      ]
+    }
+  }
 }

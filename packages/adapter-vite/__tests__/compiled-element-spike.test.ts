@@ -16,7 +16,7 @@
  * harness and fixtures work while the new vertical behavior is absent.
  */
 
-import { assert, assertEquals, assertStringIncludes } from '@std/assert';
+import { assert, assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { createOpenPlugin } from '../src/plugin.ts';
 import type { Plugin } from 'vite';
 
@@ -117,14 +117,40 @@ Deno.test('compiled-element spike - fixture transforms through the Vite hook', a
     const end = emitted!.indexOf(';', start);
     const metadata = JSON.parse(emitted!.slice(start + marker.length, end));
     // Exact fixture decisions: count reflected; label and items not reflected.
-    assertEquals(metadata, {
-      count: { reflect: true },
-      label: { reflect: false },
-      items: { reflect: false },
-    });
+    assertEquals(metadata, [
+      {
+        name: 'count',
+        attribute: 'count',
+        type: 'number',
+        converter: 'number',
+        reflect: true,
+        default: 0,
+      },
+      {
+        name: 'label',
+        attribute: 'label',
+        type: 'string',
+        converter: 'string',
+        reflect: false,
+        default: 'ready',
+      },
+      {
+        name: 'items',
+        attribute: 'items',
+        type: 'array',
+        converter: 'array',
+        reflect: false,
+        default: [
+          { id: 'a', text: 'alpha' },
+          { id: 'b', text: 'beta' },
+        ],
+      },
+    ]);
     // Compile-time data only: no runtime reflection behavior is emitted.
     assertEquals(emitted!.includes('attributeChangedCallback'), false);
     assertStringIncludes(emitted!, 'static __compiledProperties = __compiledProperties;');
+    assertStringIncludes(emitted!, 'static props = __compiledProps;');
+    assertStringIncludes(emitted!, 'static observedAttributes = __observedAttributes;');
   });
 
   await t.step('program carries static structure plus typed Part/Region instructions', () => {
@@ -246,4 +272,95 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
     assert(thrown, 'transform must throw for non-OpenElement base classes');
     assertStringIncludes(ctx.messages[0], 'OpenElement');
   });
+});
+
+Deno.test('compiled-element alpha.1 - canonical program records and decorator lowering', async () => {
+  const { compiledElementPlugin } = await loadPluginModule();
+  const transform = transformOf(compiledElementPlugin());
+  const source = [
+    "import { OpenElement } from '@openelement/element';",
+    'declare function element(tag: string): ClassDecorator;',
+    'declare function property(options: { type?: unknown; attribute?: string | false; reflect?: boolean }): PropertyDecorator;',
+    "@element('oe-alpha-one')",
+    'export class AlphaOne extends OpenElement {',
+    '  @property({ type: Number, reflect: true })',
+    '  count = 0;',
+    "  @property({ type: Boolean, attribute: 'enabled' })",
+    '  enabled = false;',
+    '  render() {',
+    '    return <button disabled={this.enabled} onClick={() => this.count++}>Count: {this.count}</button>;',
+    '  }',
+    '}',
+  ].join('\n');
+  const id = '/project/app/islands/alpha-one.tsx';
+  const emitted = transform.call(failingContext(), source, id);
+  assert(typeof emitted === 'string');
+
+  const marker = 'const __partProgram = ';
+  const start = emitted.indexOf(marker);
+  assert(start >= 0, 'generated code must embed the Part Program literal');
+  const end = emitted.indexOf(';', start);
+  const program = JSON.parse(emitted.slice(start + marker.length, end));
+
+  assertEquals(program.version, 1);
+  assertEquals(program.root, { id: 'root', kind: 'light', nodes: ['e0'] });
+  assertEquals(program.parts.map((part: { k: string }) => part.k), ['bool', 'event', 'text']);
+  assertEquals(program.parts[0].location, {
+    id: 'p0',
+    kind: 'sink',
+    node: 'e0',
+    path: [0],
+  });
+  assertEquals(program.dependencies, [
+    { signal: 'enabled', owner: { kind: 'part', index: 0 }, location: 'p0' },
+    { signal: 'count', owner: { kind: 'part', index: 2 }, location: 'p2' },
+  ]);
+  assertEquals(program.metadata.properties, [
+    {
+      name: 'count',
+      attribute: 'count',
+      type: 'number',
+      converter: 'number',
+      reflect: true,
+      default: 0,
+    },
+    {
+      name: 'enabled',
+      attribute: 'enabled',
+      type: 'boolean',
+      converter: 'boolean',
+      reflect: false,
+      default: false,
+    },
+  ]);
+  assertEquals(program.metadata.observedAttributes, ['count', 'enabled']);
+  assert(
+    program.sourceMap.records.some((record: { id: string; source: { file: string } }) =>
+      record.id === 'p0' && record.source.file === id
+    ),
+  );
+  assertStringIncludes(emitted, 'static observedAttributes = __observedAttributes;');
+  assertStringIncludes(emitted, 'static props = __compiledProps;');
+  assertEquals(emitted.includes('@element'), false);
+  assertEquals(emitted.includes('@property'), false);
+  assertEquals(emitted.includes('accessor '), false);
+});
+
+Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe identity', async () => {
+  const [{ compileElementSpike }, { validatePartProgram }] = await Promise.all([
+    import('../src/internal/compiler/compile.ts'),
+    import('../src/internal/compiler/program.ts'),
+  ]);
+  const source = await readFixture('counter.tsx');
+  const program = compileElementSpike(source, '/project/app/islands/counter.tsx').program;
+
+  const shiftedLocation = structuredClone(program) as {
+    parts: Array<{ location: { path: number[] } }>;
+  };
+  shiftedLocation.parts[1].location.path = [0];
+  assertThrows(() => validatePartProgram(shiftedLocation), Error, 'location path');
+
+  const unknownPart = structuredClone(program) as { parts: Array<{ k: string }> };
+  unknownPart.parts[0].k = 'future';
+  assertThrows(() => validatePartProgram(unknownPart), Error, 'unknown part kind');
 });
