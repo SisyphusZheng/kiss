@@ -1,4 +1,4 @@
-import { assertEquals } from '@std/assert';
+import { assertEquals, assertThrows } from '@std/assert';
 import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 
 Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
@@ -38,4 +38,23 @@ Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
     'event',
     'ref',
   ]);
+});
+
+Deno.test('program validation rejects void elements with children', () => {
+  assertThrows(
+    () =>
+      validateSpikeProgram({
+        version: 1,
+        tag: 'oe-invalid-void',
+        template: [{
+          k: 'el',
+          tag: 'input',
+          attrs: [],
+          children: [{ k: 'text', value: 'unsupported' }],
+        }],
+        parts: [],
+      }),
+    Error,
+    'void elements may not have children',
+  );
 });

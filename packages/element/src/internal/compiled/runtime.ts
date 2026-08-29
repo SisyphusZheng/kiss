@@ -65,6 +65,7 @@ class ResourceScope {
   #parent?: ResourceScope;
   #children = new Set<ResourceScope>();
   #cleanups: Array<() => void> = [];
+  #rangeCleanups: Array<() => void> = [];
   #disposed = false;
 
   constructor(parent?: ResourceScope) {
@@ -88,7 +89,15 @@ class ResourceScope {
     this.#cleanups.push(cleanup);
   }
 
-  dispose(): void {
+  addRangeCleanup(cleanup: () => void): void {
+    if (this.#disposed) {
+      cleanup();
+      return;
+    }
+    this.#rangeCleanups.push(cleanup);
+  }
+
+  dispose(detachOwnedNodes = false): void {
     if (this.#disposed) return;
     this.#disposed = true;
     let firstError: unknown;
@@ -96,7 +105,7 @@ class ResourceScope {
 
     for (const child of [...this.#children]) {
       try {
-        child.dispose();
+        child.dispose(detachOwnedNodes);
       } catch (error) {
         hasError = true;
         firstError ??= error;
@@ -110,6 +119,17 @@ class ResourceScope {
       } catch (error) {
         hasError = true;
         firstError ??= error;
+      }
+    }
+    const rangeCleanups = this.#rangeCleanups.splice(0).reverse();
+    if (detachOwnedNodes) {
+      for (const cleanup of rangeCleanups) {
+        try {
+          cleanup();
+        } catch (error) {
+          hasError = true;
+          firstError ??= error;
+        }
       }
     }
     if (this.#parent) this.#parent.#children.delete(this);
@@ -180,6 +200,17 @@ function isFixedPart(part: PartProgramSpike['parts'][number]): part is SpikeFixe
   );
 }
 
+function fixedPartsAtPath(ctx: MountContext, path: number[]): SpikeFixedPart[] {
+  const parts = [...(ctx.fixedPartsByPath.get(path.join('.')) ?? [])];
+  // The validator gives [] the same meaning as the sole template root. During
+  // tree traversal that element is visited at template path [0], so include
+  // both spellings and restore Part-table order for deterministic sinks.
+  if (path.length === 1 && path[0] === 0) {
+    parts.push(...(ctx.fixedPartsByPath.get('') ?? []));
+  }
+  return parts.sort((left, right) => left.index - right.index);
+}
+
 function isComment(node: Node): node is Comment {
   return node.nodeType === 8;
 }
@@ -220,11 +251,12 @@ function classValue(value: unknown): string {
 
 function cssName(name: string): string {
   if (name.startsWith('--')) return name;
-  return name
-    .replace(/^Webkit/, '-webkit-')
-    .replace(/^Moz/, '-moz-')
-    .replace(/^ms-/, '-ms-')
-    .replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  const vendor = /^(Webkit|Moz|ms|O)([A-Z].*)$/.exec(name);
+  const kebab = (value: string): string =>
+    value[0].toLowerCase() +
+    value.slice(1).replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  if (vendor) return `-${vendor[1].toLowerCase()}-${kebab(vendor[2])}`;
+  return kebab(name);
 }
 
 function styleValue(value: unknown): string {
@@ -293,6 +325,13 @@ interface TextPartSlot {
   current: string;
 }
 
+interface ItemValueSlot {
+  text?: Text;
+  parent?: Node;
+  before?: Node | null;
+  position?: number;
+}
+
 interface ChildRegion {
   ctx: MountContext;
   part: SpikeChildPart;
@@ -307,7 +346,7 @@ interface EachEntry {
   key: string;
   scope: ResourceScope;
   nodes: Node[];
-  valueTexts: Text[];
+  valueSlots: ItemValueSlot[];
 }
 
 interface EachRegion {
@@ -385,9 +424,11 @@ function mountNodes(
   nodes: SpikeTreeNode[],
   item: unknown = NO_ITEM,
   itemPart?: SpikeEachPart,
-  itemValueTexts?: Text[],
+  itemValueSlots?: ItemValueSlot[],
+  parent?: Node,
 ): Node[] {
   const out: Node[] = [];
+  const slotStart = itemValueSlots?.length ?? 0;
   for (const node of nodes) {
     if (node.k === 'text') {
       out.push(doc.createTextNode(node.value));
@@ -399,25 +440,44 @@ function mountNodes(
       }
       if (!itemPart) throw new Error('[compiled-runtime] item value slot has no item Region');
       const value = displayValue(itemValue(itemPart, item));
+      const slot: ItemValueSlot = { parent, position: out.length };
       if (value.length > 0) {
         const text = doc.createTextNode(value);
-        itemValueTexts?.push(text);
+        slot.text = text;
         out.push(text);
       }
+      itemValueSlots?.push(slot);
       continue;
     }
     if (node.k === 'el') {
       const el = doc.createElement(node.tag);
       for (const [name, value] of node.attrs) el.setAttribute(name, value);
       for (
-        const child of mountNodes(ctx, scope, doc, node.children, item, itemPart, itemValueTexts)
+        const child of mountNodes(
+          ctx,
+          scope,
+          doc,
+          node.children,
+          item,
+          itemPart,
+          itemValueSlots,
+          el,
+        )
       ) {
         el.appendChild(child);
       }
       out.push(el);
       continue;
     }
-    out.push(...mountPart(ctx, scope, doc, node.index, item, itemPart));
+    out.push(...mountPart(ctx, scope, doc, node.index, item, itemPart, parent));
+  }
+  if (itemValueSlots && parent) {
+    for (let index = slotStart; index < itemValueSlots.length; index++) {
+      const slot = itemValueSlots[index];
+      if (slot.parent !== parent || slot.before !== undefined) continue;
+      const position = slot.position ?? out.length;
+      slot.before = out[position + (slot.text ? 1 : 0)] ?? null;
+    }
   }
   return out;
 }
@@ -431,14 +491,24 @@ function buildItem(
   doc: Document,
   part: SpikeEachPart,
   item: unknown,
-): { nodes: Node[]; valueTexts: Text[]; scope: ResourceScope } {
+  parent?: Node,
+): { nodes: Node[]; valueSlots: ItemValueSlot[]; scope: ResourceScope } {
   const scope = regionScope.child();
-  const valueTexts: Text[] = [];
-  return {
-    nodes: mountNodes(ctx, scope, doc, part.item, item, part, valueTexts),
-    valueTexts,
-    scope,
-  };
+  const valueSlots: ItemValueSlot[] = [];
+  try {
+    return {
+      nodes: mountNodes(ctx, scope, doc, part.item, item, part, valueSlots, parent),
+      valueSlots,
+      scope,
+    };
+  } catch (error) {
+    try {
+      scope.dispose();
+    } catch {
+      // Preserve the item construction error after attempting every cleanup.
+    }
+    throw error;
+  }
 }
 
 function buildWhen(
@@ -448,6 +518,7 @@ function buildWhen(
   part: SpikeWhenPart,
   item: unknown,
   itemPart?: SpikeEachPart,
+  parent?: Node,
 ): Node[] {
   const scope = parentScope.child();
   const anchor = doc.createComment(partAnchorMarker(part.index));
@@ -465,6 +536,7 @@ function buildWhen(
     item,
     itemPart,
   };
+  scope.addRangeCleanup(() => removeNodes(region.nodes));
   region.nodes = mountNodes(
     ctx,
     region.branchScope,
@@ -472,6 +544,8 @@ function buildWhen(
     current ? part.on : part.off,
     item,
     itemPart,
+    undefined,
+    parent,
   );
   subscribeWrites(ctx, scope, part.signal, (value) => updateWhen(region, value));
   return [anchor, ...region.nodes, end];
@@ -484,7 +558,7 @@ function updateWhen(region: WhenRegion, value: unknown): void {
   const parent = region.end.parentNode;
   if (!parent) return;
   try {
-    region.branchScope.dispose();
+    region.branchScope.dispose(true);
   } finally {
     removeNodes(region.nodes);
   }
@@ -498,6 +572,8 @@ function updateWhen(region: WhenRegion, value: unknown): void {
       next ? region.part.on : region.part.off,
       region.item,
       region.itemPart,
+      undefined,
+      parent,
     );
     insertNodesBefore(parent, nodes, region.end);
   } catch (error) {
@@ -535,6 +611,7 @@ function buildChild(
     currentValue,
     nodes: buildDynamicValue(doc, currentValue),
   };
+  scope.addRangeCleanup(() => removeNodes(region.nodes));
   subscribeWrites(ctx, scope, part.signal, (value) => updateChild(region, value));
   return [anchor, ...region.nodes, end];
 }
@@ -585,6 +662,10 @@ function buildTextPart(
     text: current.length > 0 ? doc.createTextNode(current) : undefined,
     current,
   };
+  scope.addRangeCleanup(() => {
+    slot.text?.parentNode?.removeChild(slot.text);
+    slot.text = undefined;
+  });
   subscribeWrites(ctx, scope, part.signal, (value) => updateTextPart(slot, value));
   return [anchor, ...(slot.text ? [slot.text] : [])];
 }
@@ -594,6 +675,7 @@ function buildEach(
   parentScope: ResourceScope,
   doc: Document,
   part: SpikeEachPart,
+  parent?: Node,
 ): Node[] {
   const scope = parentScope.child();
   const anchor = doc.createComment(partAnchorMarker(part.index));
@@ -608,6 +690,9 @@ function buildEach(
     byKey: new Map(),
     item: NO_ITEM,
   };
+  scope.addRangeCleanup(() => {
+    for (const entry of region.entries) removeNodes(entry.nodes);
+  });
   const value = signalOf(ctx, part.signal).value;
   if (!Array.isArray(value)) {
     throw new Error(`[compiled-runtime] each part ${part.index} expects an array signal`);
@@ -620,8 +705,8 @@ function buildEach(
       throw new Error(`[compiled-runtime] each part ${part.index} has duplicate key`);
     }
     seen.add(key);
-    const entry = buildItem(ctx, scope, doc, part, value[index]);
-    const stored = { key, scope: entry.scope, nodes: entry.nodes, valueTexts: entry.valueTexts };
+    const entry = buildItem(ctx, scope, doc, part, value[index], parent);
+    const stored = { key, scope: entry.scope, nodes: entry.nodes, valueSlots: entry.valueSlots };
     region.entries.push(stored);
     region.byKey.set(key, stored);
     nodes.push(...entry.nodes);
@@ -630,16 +715,88 @@ function buildEach(
   return [anchor, ...nodes, end];
 }
 
-function updateItemValues(part: SpikeEachPart, entry: EachEntry, item: unknown): void {
+function recordDirectItemValueNode(entry: EachEntry, slot: ItemValueSlot, text: Text): void {
+  const parent = slot.parent;
+  if (!parent) return;
+  const hasDirectEntryNode = entry.nodes.some((node) => node.parentNode === parent);
+  if (!hasDirectEntryNode && entry.nodes.length > 0) return;
+  if (entry.nodes.includes(text)) return;
+
+  const reference = slot.before;
+  const position = reference ? entry.nodes.indexOf(reference) : -1;
+  if (position >= 0) entry.nodes.splice(position, 0, text);
+  else entry.nodes.push(text);
+}
+
+function insertItemValue(
+  entry: EachEntry,
+  slotIndex: number,
+  text: Text,
+  regionParent: Node,
+  regionReference: Node,
+): void {
+  const slot = entry.valueSlots[slotIndex];
+  const parent = slot.parent;
+  if (!parent) return;
+
+  let reference: Node | null = null;
+  for (let index = slotIndex + 1; index < entry.valueSlots.length; index++) {
+    const later = entry.valueSlots[index].text;
+    if (later?.parentNode === parent) {
+      reference = later;
+      break;
+    }
+  }
+  if (!reference && slot.before?.parentNode === parent) reference = slot.before;
+  if (!reference && parent === regionParent && regionReference.parentNode === parent) {
+    reference = regionReference;
+  }
+  if (reference) parent.insertBefore(text, reference);
+  else parent.appendChild(text);
+  recordDirectItemValueNode(entry, slot, text);
+}
+
+function removeItemValue(entry: EachEntry, slot: ItemValueSlot, text: Text): void {
+  const replacement = slot.before ?? null;
+  text.parentNode?.removeChild(text);
+  for (const other of entry.valueSlots) {
+    if (other.before === text) other.before = replacement;
+  }
+  const position = entry.nodes.indexOf(text);
+  if (position >= 0) entry.nodes.splice(position, 1);
+  slot.text = undefined;
+}
+
+function updateItemValues(
+  part: SpikeEachPart,
+  entry: EachEntry,
+  item: unknown,
+  regionParent: Node,
+  regionReference: Node,
+): void {
   const next = displayValue(itemValue(part, item));
-  for (const text of entry.valueTexts) {
-    if (text.data !== next) text.data = next;
+  for (const [index, slot] of entry.valueSlots.entries()) {
+    if (next.length === 0) {
+      if (slot.text) removeItemValue(entry, slot, slot.text);
+      continue;
+    }
+    if (slot.text) {
+      if (slot.text.data !== next) slot.text.data = next;
+      continue;
+    }
+    const parent = slot.parent ?? regionParent;
+    slot.parent = parent;
+    const document = parent.ownerDocument;
+    if (!document) throw new Error('[compiled-runtime] item value slot has no owner document');
+    const text = document.createTextNode(next);
+    slot.text = text;
+    insertItemValue(entry, index, text, regionParent, regionReference);
   }
 }
 
 function disposeEntry(entry: EachEntry): void {
   try {
-    entry.scope.dispose();
+    entry.scope.dispose(true);
   } finally {
     removeNodes(entry.nodes);
   }
@@ -689,6 +846,7 @@ function updateEach(region: EachRegion, value: unknown): void {
         region.end.ownerDocument,
         region.part,
         descriptor.item,
+        parent,
       );
       const entry = { key: descriptor.key, ...built };
       descriptor.existing = entry;
@@ -703,12 +861,21 @@ function updateEach(region: EachRegion, value: unknown): void {
     if (seen.has(entry.key)) continue;
     disposeEntry(entry);
   }
-  for (const descriptor of descriptors) {
+  const nextEntries = descriptors.map((descriptor) => descriptor.existing!);
+  for (let descriptorIndex = 0; descriptorIndex < descriptors.length; descriptorIndex++) {
+    const descriptor = descriptors[descriptorIndex];
     if (descriptor.existing && !created.includes(descriptor.existing)) {
-      updateItemValues(region.part, descriptor.existing, descriptor.item);
+      let regionReference: Node = region.end;
+      for (let nextIndex = descriptorIndex + 1; nextIndex < nextEntries.length; nextIndex++) {
+        const nextNode = nextEntries[nextIndex].nodes.find((node) => node.parentNode === parent);
+        if (nextNode) {
+          regionReference = nextNode;
+          break;
+        }
+      }
+      updateItemValues(region.part, descriptor.existing, descriptor.item, parent, regionReference);
     }
   }
-  const nextEntries = descriptors.map((descriptor) => descriptor.existing!);
   region.entries = nextEntries;
   region.byKey = new Map(nextEntries.map((entry) => [entry.key, entry]));
   moveEntries(region, parent, nextEntries);
@@ -721,19 +888,32 @@ function mountPart(
   index: number,
   item: unknown,
   itemPart?: SpikeEachPart,
+  parent?: Node,
 ): Node[] {
   const part = ctx.program.parts[index];
   if (!part) throw new Error(`[compiled-runtime] missing Part ${index}`);
   if (part.k === 'text') return buildTextPart(ctx, parentScope, doc, part);
-  if (part.k === 'when') return buildWhen(ctx, parentScope, doc, part, item, itemPart);
+  if (part.k === 'when') return buildWhen(ctx, parentScope, doc, part, item, itemPart, parent);
   if (part.k === 'child') return buildChild(ctx, parentScope, doc, part);
-  if (part.k === 'each') return buildEach(ctx, parentScope, doc, part);
+  if (part.k === 'each') return buildEach(ctx, parentScope, doc, part, parent);
   throw new Error(`[compiled-runtime] fixed Part ${part.index} cannot be used as an anchor`);
 }
 
 /** Resolve a compiler-owned static path without any selector/discovery walk. */
 function resolvePath(root: Node, path: number[], where: string): Element {
-  let node: Node = root;
+  // Program paths are relative to the template node list. An empty path is
+  // therefore the sole template-root element, not the host/root container
+  // that receives the template nodes.
+  let node: Node;
+  if (path.length === 0) {
+    const templateRoot = root.childNodes[0];
+    if (!templateRoot) {
+      throw new Error(`[compiled-runtime] ${where}: path [] unresolved`);
+    }
+    node = templateRoot;
+  } else {
+    node = root;
+  }
   for (const index of path) {
     const child = node.childNodes[index];
     if (!child) throw new Error(`[compiled-runtime] ${where}: path [${path.join(',')}] unresolved`);
@@ -974,7 +1154,16 @@ export function createFreshDom(
   }
   let created: Node[] = [];
   try {
-    created = mountNodes(ctx, ctx.rootScope, doc, ctx.program.template);
+    created = mountNodes(
+      ctx,
+      ctx.rootScope,
+      doc,
+      ctx.program.template,
+      NO_ITEM,
+      undefined,
+      undefined,
+      root,
+    );
     for (const node of created) {
       root.appendChild(node);
     }
@@ -1024,7 +1213,7 @@ function serializedFixedAttributes(
 ): Array<[string, string]> {
   const attrs = new Map<string, string>();
   for (const [name, value] of node.attrs) attrs.set(name, value);
-  for (const part of ctx.fixedPartsByPath.get(path.join('.')) ?? []) {
+  for (const part of fixedPartsAtPath(ctx, path)) {
     if (part.k === 'attr' || part.k === 'prop') {
       const value = signalOf(ctx, part.signal).value;
       const next = attributeValue(value);
@@ -1134,7 +1323,7 @@ function expectComment(node: Node, marker: string, path: string): Comment {
 
 function dynamicAttributeNames(ctx: MountContext, path: number[]): Set<string> {
   const names = new Set<string>();
-  for (const part of ctx.fixedPartsByPath.get(path.join('.')) ?? []) {
+  for (const part of fixedPartsAtPath(ctx, path)) {
     if (part.k === 'attr' || part.k === 'prop' || part.k === 'boolean') names.add(part.name);
     if (part.k === 'class') names.add('class');
     if (part.k === 'style') names.add('style');
@@ -1224,7 +1413,7 @@ function claimNodes(
   scope: ResourceScope,
   item: unknown = NO_ITEM,
   itemPart?: SpikeEachPart,
-  itemValueTexts?: Text[],
+  itemValueSlots?: ItemValueSlot[],
 ): number {
   const at = (index: number): Node => {
     const node = parent.childNodes[index];
@@ -1257,7 +1446,16 @@ function claimNodes(
         if (dom.data !== expected) {
           claimFailure(nodePath, `item text drift: expected ${JSON.stringify(expected)}`);
         }
-        itemValueTexts?.push(dom);
+        itemValueSlots?.push({
+          text: dom,
+          parent,
+          before: parent.childNodes[cursor] ?? null,
+        });
+      } else {
+        itemValueSlots?.push({
+          parent,
+          before: parent.childNodes[cursor] ?? null,
+        });
       }
       continue;
     }
@@ -1278,7 +1476,7 @@ function claimNodes(
         scope,
         item,
         itemPart,
-        itemValueTexts,
+        itemValueSlots,
       );
       if (consumed !== dom.childNodes.length) {
         claimFailure(`${nodePath}.children`, 'unexpected trailing nodes');
@@ -1302,6 +1500,10 @@ function claimNodes(
       }
       const partScope = scope.child();
       const slot: TextPartSlot = { scope: partScope, anchor, text, current: expected };
+      partScope.addRangeCleanup(() => {
+        slot.text?.parentNode?.removeChild(slot.text);
+        slot.text = undefined;
+      });
       subscribeWrites(ctx, partScope, part.signal, (value) => {
         updateTextPart(slot, value);
       });
@@ -1327,6 +1529,7 @@ function claimNodes(
         currentValue: signalOf(ctx, part.signal).value,
         nodes: Array.from(parent.childNodes).slice(start, cursor - 1),
       };
+      partScope.addRangeCleanup(() => removeNodes(region.nodes));
       subscribeWrites(ctx, partScope, part.signal, (value) => updateChild(region, value));
       continue;
     }
@@ -1346,7 +1549,7 @@ function claimNodes(
         branchScope,
         item,
         itemPart,
-        itemValueTexts,
+        itemValueSlots,
       );
       const end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
       const region: WhenRegion = {
@@ -1360,6 +1563,7 @@ function claimNodes(
         nodes: Array.from(parent.childNodes).slice(before, cursor - 1),
         item,
       };
+      partScope.addRangeCleanup(() => removeNodes(region.nodes));
       subscribeWrites(ctx, partScope, part.signal, (value) => updateWhen(region, value));
       continue;
     }
@@ -1378,6 +1582,9 @@ function claimNodes(
         byKey: new Map(),
         item: NO_ITEM,
       };
+      partScope.addRangeCleanup(() => {
+        for (const entry of region.entries) removeNodes(entry.nodes);
+      });
       const seen = new Set<string>();
       for (let itemIndex = 0; itemIndex < value.length; itemIndex++) {
         const currentItem = value[itemIndex];
@@ -1385,7 +1592,7 @@ function claimNodes(
         if (seen.has(key)) claimFailure(`${nodePath}.item[${itemIndex}]`, 'duplicate item key');
         seen.add(key);
         const itemScope = partScope.child();
-        const itemTexts: Text[] = [];
+        const itemSlots: ItemValueSlot[] = [];
         const before = cursor;
         cursor = claimNodes(
           ctx,
@@ -1397,13 +1604,13 @@ function claimNodes(
           itemScope,
           currentItem,
           part,
-          itemTexts,
+          itemSlots,
         );
         const entry: EachEntry = {
           key,
           scope: itemScope,
           nodes: Array.from(parent.childNodes).slice(before, cursor),
-          valueTexts: itemTexts,
+          valueSlots: itemSlots,
         };
         region.entries.push(entry);
         region.byKey.set(key, entry);

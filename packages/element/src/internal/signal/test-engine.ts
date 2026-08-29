@@ -82,6 +82,8 @@ class TestSignal<T> implements WritableSignal<T>, ReactiveSource {
   readonly [SIGNAL_BRAND] = true as const;
   #value: T;
   #listeners = new Set<(value: T) => void>();
+  #pendingValues = new Map<(value: T) => void, { value: T }>();
+  #listenerJobs = new Map<(value: T) => void, () => void>();
   #invalidations = new Set<() => void>();
 
   constructor(initialValue: T) {
@@ -98,13 +100,29 @@ class TestSignal<T> implements WritableSignal<T>, ReactiveSource {
     this.#value = next;
     const listeners = [...this.#listeners];
     const invalidations = [...this.#invalidations];
-    for (const listener of listeners) schedule(() => listener(next));
+    for (const listener of listeners) {
+      const job = this.#listenerJobs.get(listener);
+      if (!job) continue;
+      this.#pendingValues.set(listener, { value: next });
+      schedule(job);
+    }
     for (const invalidate of invalidations) schedule(invalidate);
   }
 
   subscribe(listener: (value: T) => void): Unsubscribe {
     this.#listeners.add(listener);
-    return () => this.#listeners.delete(listener);
+    const job = (): void => {
+      const pending = this.#pendingValues.get(listener);
+      if (!pending) return;
+      this.#pendingValues.delete(listener);
+      if (this.#listeners.has(listener)) listener(pending.value);
+    };
+    this.#listenerJobs.set(listener, job);
+    return () => {
+      this.#listeners.delete(listener);
+      this.#pendingValues.delete(listener);
+      this.#listenerJobs.delete(listener);
+    };
   }
 
   addInvalidation(listener: () => void): Unsubscribe {

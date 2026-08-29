@@ -52,3 +52,18 @@ Deno.test('default and alternate engines expose the same non-batched effect cont
     'cleanup',
   ]);
 });
+
+Deno.test('the alternate engine coalesces direct subscriptions inside a batch', () => {
+  const engine = createTestEngine();
+  const source = engine.signal(0);
+  const values: number[] = [];
+  const dispose = source.subscribe((value) => values.push(value));
+
+  engine.batch(() => {
+    source.value = 1;
+    source.value = 2;
+  });
+
+  assertEquals(values, [2]);
+  dispose();
+});

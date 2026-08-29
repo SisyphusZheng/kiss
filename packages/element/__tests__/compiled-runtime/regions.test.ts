@@ -1,4 +1,4 @@
-import { assertEquals, assertNotStrictEquals, assertStrictEquals } from '@std/assert';
+import { assertEquals, assertNotStrictEquals, assertStrictEquals, assertThrows } from '@std/assert';
 import {
   claimExistingDom,
   createFreshDom,
@@ -6,6 +6,7 @@ import {
 } from '../../src/internal/compiled/runtime.ts';
 import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
+import { SIGNAL_BRAND } from '../../src/internal/protocol/signal.ts';
 import type { CompiledSpikeHost } from '../../src/internal/compiled/runtime.ts';
 import { parseHtml, TestDocument, type TestElement, type TestText, toHtml } from './test-dom.ts';
 
@@ -211,4 +212,188 @@ Deno.test('empty dynamic text and child values keep fresh and claim structure al
     '<host><div><!--oe:p0-->claimed<!--oe:p1-->claimed child<!--oe:/p1--></div></host>',
   );
   claimed.dispose();
+});
+
+Deno.test('item value slots create their text node when an item becomes non-empty', () => {
+  const items = signal([{ id: 'a', text: '' }]);
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-item-values',
+    template: [{ k: 'el', tag: 'ul', attrs: [], children: [{ k: 'part', index: 0 }] }],
+    parts: [{
+      k: 'each',
+      index: 0,
+      signal: 'items',
+      key: 'id',
+      field: 'text',
+      item: [{ k: 'el', tag: 'li', attrs: [], children: [{ k: 'ival' }] }],
+    }],
+  });
+  const host = { signals: { items }, handlers: {} } as unknown as CompiledSpikeHost;
+  const doc = new TestDocument();
+  const root = doc.createElement('host');
+  const fresh = createFreshDom(program, host, node(root));
+  assertEquals(
+    ((root.childNodes[0] as TestElement).childNodes[1] as TestElement).childNodes.length,
+    0,
+  );
+
+  items.value = [{ id: 'a', text: 'now visible' }];
+  assertEquals(
+    toHtml(root),
+    '<host><ul><!--oe:p0--><li>now visible</li><!--oe:/p0--></ul></host>',
+  );
+  items.value = [{ id: 'a', text: '' }];
+  assertEquals(
+    ((root.childNodes[0] as TestElement).childNodes[1] as TestElement).childNodes.length,
+    0,
+  );
+
+  fresh.dispose();
+  items.value = [{ id: 'a', text: '' }];
+  const html = serializeToHtml(program, host);
+  const claimDoc = new TestDocument();
+  const claimRoot = parseHtml(claimDoc, html);
+  const claimed = claimExistingDom(program, host, node(claimRoot));
+  assertEquals(
+    ((claimRoot.childNodes[0] as TestElement).childNodes[1] as TestElement).childNodes.length,
+    0,
+  );
+  items.value = [{ id: 'a', text: 'claimed visible' }];
+  assertEquals(
+    toHtml(claimRoot),
+    '<host><ul><!--oe:p0--><li>claimed visible</li><!--oe:/p0--></ul></host>',
+  );
+  items.value = [{ id: 'a', text: '' }];
+  assertEquals(
+    ((claimRoot.childNodes[0] as TestElement).childNodes[1] as TestElement).childNodes.length,
+    0,
+  );
+  claimed.dispose();
+});
+
+Deno.test('direct item value slots keep empty and multi-node item ranges ordered', () => {
+  const items = signal([{ id: 'a', text: '' }, { id: 'b', text: 'B' }]);
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-direct-item-values',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
+    parts: [{
+      k: 'each',
+      index: 0,
+      signal: 'items',
+      key: 'id',
+      field: 'text',
+      item: [{ k: 'text', value: '[' }, { k: 'ival' }, { k: 'text', value: ']' }],
+    }],
+  });
+  const host = { signals: { items }, handlers: {} } as unknown as CompiledSpikeHost;
+  const doc = new TestDocument();
+  const root = doc.createElement('host');
+  const instance = createFreshDom(program, host, node(root));
+
+  assertEquals(toHtml(root), '<host><div><!--oe:p0-->[][B]<!--oe:/p0--></div></host>');
+  items.value = [
+    { id: 'b', text: '' },
+    { id: 'a', text: 'A' },
+  ];
+  assertEquals(toHtml(root), '<host><div><!--oe:p0-->[][A]<!--oe:/p0--></div></host>');
+  items.value = [
+    { id: 'a', text: '' },
+    { id: 'b', text: 'B' },
+  ];
+  assertEquals(toHtml(root), '<host><div><!--oe:p0-->[][B]<!--oe:/p0--></div></host>');
+  instance.dispose();
+});
+
+Deno.test('nested list Regions retain item-slot insertion context after branch swaps', () => {
+  const visible = signal(0);
+  const items = signal([{ id: 'a', text: '' }]);
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-nested-item-values',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
+    parts: [
+      {
+        k: 'when',
+        index: 0,
+        signal: 'visible',
+        gt: 0,
+        on: [{ k: 'part', index: 1 }],
+        off: [],
+      },
+      {
+        k: 'each',
+        index: 1,
+        signal: 'items',
+        key: 'id',
+        field: 'text',
+        item: [{ k: 'ival' }],
+      },
+    ],
+  });
+  const host = { signals: { visible, items }, handlers: {} } as unknown as CompiledSpikeHost;
+  const doc = new TestDocument();
+  const root = doc.createElement('host');
+  const instance = createFreshDom(program, host, node(root));
+
+  visible.value = 1;
+  items.value = [{ id: 'a', text: 'branch value' }];
+  assertEquals(
+    toHtml(root),
+    '<host><div><!--oe:p0--><!--oe:p1-->branch value<!--oe:/p1--><!--oe:/p0--></div></host>',
+  );
+  visible.value = 0;
+  visible.value = 1;
+  assertEquals(
+    toHtml(root),
+    '<host><div><!--oe:p0--><!--oe:p1-->branch value<!--oe:/p1--><!--oe:/p0--></div></host>',
+  );
+  instance.dispose();
+});
+
+Deno.test('a failed item build disposes subscriptions created before the failure', () => {
+  const items = signal<unknown[]>([]);
+  const goodSource = signal('good');
+  let activeGoodSubscriptions = 0;
+  const good = {
+    [SIGNAL_BRAND]: true as const,
+    get value(): string {
+      return goodSource.value;
+    },
+    subscribe(listener: (value: string) => void): () => void {
+      activeGoodSubscriptions++;
+      const unsubscribe = goodSource.subscribe(listener);
+      return () => {
+        activeGoodSubscriptions--;
+        unsubscribe();
+      };
+    },
+  };
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-failed-item',
+    template: [{ k: 'el', tag: 'ul', attrs: [], children: [{ k: 'part', index: 0 }] }],
+    parts: [
+      {
+        k: 'each',
+        index: 0,
+        signal: 'items',
+        keyed: false,
+        item: [{ k: 'part', index: 1 }, { k: 'part', index: 2 }],
+      },
+      { k: 'text', index: 1, signal: 'good' },
+      { k: 'text', index: 2, signal: 'missing' },
+    ],
+  });
+  const host = {
+    signals: { items, good },
+    handlers: {},
+  } as unknown as CompiledSpikeHost;
+  const doc = new TestDocument();
+  const root = doc.createElement('host');
+  createFreshDom(program, host, node(root));
+
+  assertThrows(() => items.value = [{}], Error, 'missing host signal');
+  assertEquals(activeGoodSubscriptions, 0);
 });

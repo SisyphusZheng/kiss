@@ -16,6 +16,22 @@ export const PART_PROGRAM_SPIKE_VERSION = 1;
 /** Canonical internal name used by alpha.2 callers. */
 export const PART_PROGRAM_VERSION = PART_PROGRAM_SPIKE_VERSION;
 
+const SPIKE_VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr',
+]);
+
 /** Static element node. `attrs` preserves source order for determinism. */
 export interface SpikeElementNode {
   k: 'el';
@@ -223,11 +239,14 @@ function requireSignal(part: Record<string, unknown>, where: string): void {
 }
 
 function validatePath(path: unknown, where: string): asserts path is number[] {
-  if (
-    !Array.isArray(path) ||
-    path.some((index) => !Number.isInteger(index) || (index as number) < 0)
-  ) {
+  if (!Array.isArray(path)) {
     fail(`${where}.path must be non-negative integer child indices`);
+  }
+  for (let position = 0; position < path.length; position++) {
+    const index = path[position];
+    if (!Number.isInteger(index) || (index as number) < 0) {
+      fail(`${where}.path must be non-negative integer child indices`);
+    }
   }
 }
 
@@ -300,6 +319,12 @@ function validateTreeNodes(
             fail(`${where}.el(${node.tag}) repeats attribute "${attr[0]}"`);
           }
           attributeNames.add(attr[0]);
+        }
+        if (!Array.isArray(node.children)) {
+          fail(`${where}.el(${node.tag}) children must be an array`);
+        }
+        if (SPIKE_VOID_TAGS.has(node.tag) && node.children.length > 0) {
+          fail(`${where}.el(${node.tag}) void elements may not have children`);
         }
         validateTreeNodes(node.children, `${where}.${node.tag}`, allowAnchors, allowItemValue);
         break;
@@ -398,7 +423,8 @@ export function validateSpikeProgram(raw: unknown): PartProgramSpike {
   if (!Array.isArray(raw.parts)) fail('parts must be an array');
   const parts = raw.parts as SpikePart[];
 
-  parts.forEach((part, position) => {
+  for (let position = 0; position < parts.length; position++) {
+    const part = parts[position];
     if (!isRecord(part)) fail(`parts[${position}] must be an object`);
     if (part.index !== position) fail(`parts[${position}].index must equal its position`);
     switch (part.k) {
@@ -492,7 +518,7 @@ export function validateSpikeProgram(raw: unknown): PartProgramSpike {
       default:
         fail(`parts[${position}] has unknown part kind`);
     }
-  });
+  }
 
   const template = raw.template as SpikeTreeNode[];
   const anchorCounts = new Map<number, number>();

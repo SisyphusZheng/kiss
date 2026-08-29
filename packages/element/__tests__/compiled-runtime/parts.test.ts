@@ -156,3 +156,60 @@ Deno.test('fixed Part errors are explicit and unsupported claim shapes fail clos
   const error = assertThrows(() => claimExistingDom(FIXED_PROGRAM, host.host, asNode(root)), Error);
   assertStringIncludes(error.message, 'unexpected attribute');
 });
+
+Deno.test('an empty fixed-Part path targets the sole template root element', () => {
+  const title = signal('initial');
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-root-path',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [{ k: 'attr', index: 0, signal: 'title', name: 'title', path: [] }],
+  });
+  const host = { signals: { title }, handlers: {} } as unknown as CompiledSpikeHost;
+  const html = serializeToHtml(program, host);
+  assertEquals(html, '<div title="initial"></div>');
+  const doc = new TestDocument();
+  const root = doc.createElement('host');
+
+  createFreshDom(program, host, asNode(root));
+  const div = root.childNodes[0] as TestElement;
+  assertEquals(div.getAttribute('title'), 'initial');
+  assertEquals(root.getAttribute('title'), null);
+
+  title.value = 'updated';
+  assertEquals(div.getAttribute('title'), 'updated');
+  assertEquals(root.getAttribute('title'), null);
+
+  const claimDoc = new TestDocument();
+  const claimRoot = parseHtml(claimDoc, html);
+  const claimed = claimExistingDom(program, host, asNode(claimRoot));
+  const claimedDiv = claimRoot.childNodes[0] as TestElement;
+  assertEquals(claimedDiv.getAttribute('title'), 'initial');
+  assertEquals(claimRoot.getAttribute('title'), null);
+  title.value = 'claimed update';
+  assertEquals(claimedDiv.getAttribute('title'), 'claimed update');
+  claimed.dispose();
+});
+
+Deno.test('style Parts normalize vendor-prefixed and custom declarations', () => {
+  const styles = signal<unknown>({
+    WebkitTransform: 'scale(1)',
+    msTransition: 'opacity',
+    '--accent': 'red',
+  });
+  const program = validateSpikeProgram({
+    version: 1,
+    tag: 'oe-style-normalization',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [{ k: 'style', index: 0, signal: 'styles', path: [0] }],
+  });
+  const host = { signals: { styles }, handlers: {} } as unknown as CompiledSpikeHost;
+  const doc = new TestDocument();
+  const root = doc.createElement('host');
+  createFreshDom(program, host, asNode(root));
+
+  assertEquals(
+    (root.childNodes[0] as TestElement).getAttribute('style'),
+    '--accent:red;-webkit-transform:scale(1);-ms-transition:opacity',
+  );
+});
