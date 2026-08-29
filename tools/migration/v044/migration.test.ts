@@ -7,7 +7,7 @@ Deno.test('v0.44 migration converts literal legacy registration and is idempoten
     "import { defineCustomElement, OpenElement } from '@openelement/element';",
     "const tagName = 'oe-legacy-counter';",
     'export class Counter extends OpenElement {',
-    '  render() { return <button>Count</button>; }',
+    "  render() { return <button type='button'>Count</button>; }",
     '}',
     'defineCustomElement(tagName, Counter);',
   ].join('\n');

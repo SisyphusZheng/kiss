@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read
+#!/usr/bin/env -S deno run --allow-read --allow-env
 
 /**
  * v0.44 distribution gate for the retired VNode/binding/hydration runtime.

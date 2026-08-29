@@ -132,6 +132,46 @@ function collectLiteralBindings(sf: ts.SourceFile): Map<string, string> {
   return bindings;
 }
 
+function findLiteralBindingStatement(
+  sf: ts.SourceFile,
+  name: string,
+): ts.VariableStatement | undefined {
+  for (const statement of sf.statements) {
+    if (!ts.isVariableStatement(statement) || statement.declarationList.declarations.length !== 1) {
+      continue;
+    }
+    if ((statement.declarationList.flags & ts.NodeFlags.Const) === 0) continue;
+    const declaration = statement.declarationList.declarations[0];
+    if (
+      ts.isIdentifier(declaration.name) && declaration.name.text === name &&
+      declaration.initializer && stringLiteralValue(declaration.initializer) !== undefined
+    ) {
+      return statement;
+    }
+  }
+  return undefined;
+}
+
+function isOnlyRegistrationUse(
+  sf: ts.SourceFile,
+  name: string,
+  call: ts.CallExpression,
+): boolean {
+  const firstArgument = unwrap(call.arguments[0]);
+  if (!ts.isIdentifier(firstArgument) || firstArgument.text !== name) return false;
+  let references = 0;
+  let onlyRegistrationReference = false;
+  const visit = (node: ts.Node): void => {
+    if (ts.isIdentifier(node) && node.text === name) {
+      if (node === firstArgument) onlyRegistrationReference = true;
+      else references++;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return onlyRegistrationReference && references === 1;
+}
+
 function collectClasses(sf: ts.SourceFile): Map<string, ts.ClassDeclaration> {
   const classes = new Map<string, ts.ClassDeclaration>();
   for (const statement of sf.statements) {
@@ -605,14 +645,24 @@ function applyEdits(source: string, edits: TextEdit[]): string {
   return result;
 }
 
-function standaloneStatementEnd(source: string, statement: ts.Statement): number {
+function standaloneStatementEnd(
+  source: string,
+  statement: ts.Statement,
+  trimFollowingBlankLines = false,
+): number {
   const end = statement.getEnd();
   const lineEnd = source.indexOf('\n', end);
   const remainder = source.slice(end, lineEnd === -1 ? source.length : lineEnd);
   if (!/^\s*$/u.test(remainder)) return end;
-  if (source.startsWith('\r\n', end)) return end + 2;
-  if (source[end] === '\n') return end + 1;
-  return end;
+  let next = source.startsWith('\r\n', end) ? end + 2 : source[end] === '\n' ? end + 1 : end;
+  if (!trimFollowingBlankLines) return next;
+  while (next < source.length) {
+    const nextLineEnd = source.indexOf('\n', next);
+    const nextLine = source.slice(next, nextLineEnd === -1 ? source.length : nextLineEnd);
+    if (nextLine.trim().length > 0) break;
+    next = nextLineEnd === -1 ? source.length : nextLineEnd + 1;
+  }
+  return next;
 }
 
 function importText(
@@ -865,6 +915,17 @@ export function migrateV043Source(source: string, fileName = 'source.tsx'): Migr
       });
       plan.needsElementDecorator = true;
       plannedClasses.add(registration.classNode);
+    }
+    const registrationTag = unwrap(call.arguments[0]);
+    if (ts.isIdentifier(registrationTag) && isOnlyRegistrationUse(sf, registrationTag.text, call)) {
+      const bindingStatement = findLiteralBindingStatement(sf, registrationTag.text);
+      if (bindingStatement) {
+        plan.edits.push({
+          start: bindingStatement.getStart(sf),
+          end: standaloneStatementEnd(source, bindingStatement, true),
+          text: '',
+        });
+      }
     }
     plan.edits.push({
       start: expressionStatement.getStart(sf),
