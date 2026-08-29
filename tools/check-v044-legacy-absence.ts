@@ -117,7 +117,13 @@ const LEGACY_MODULE_RULES: Array<{ pattern: RegExp; rule: string; message: strin
 
 const LEGACY_DEPENDENCY =
   /(?:^|[\/@._-])(?:binding-runtime|generic-hydration|legacy-renderer|legacy-runtime|vnode-renderer)(?:$|[\/@._-])/iu;
+const LEGACY_PACKAGE_DEPENDENCY =
+  /^@openelement\/(?:binding|core|hydration|signal|vnode)(?:\/|$)/iu;
 const LEGACY_DEPENDENCY_MESSAGE = 'legacy renderer dependency is present in a v0.44 artifact';
+
+function isLegacyDependency(value: string): boolean {
+  return LEGACY_DEPENDENCY.test(value) || LEGACY_PACKAGE_DEPENDENCY.test(value);
+}
 
 const LEGACY_MARKER = /^(?:data-(?:eid|signal)(?:-|$)|oe-(?:branch|for-item):)/u;
 const LEGACY_METADATA =
@@ -185,7 +191,7 @@ function scanModuleSpecifier(
       'app/island artifact imports a private Part/Region/Signal/claim runtime path',
     );
   }
-  if (LEGACY_DEPENDENCY.test(value)) {
+  if (isLegacyDependency(value)) {
     addViolation(
       violations,
       file,
@@ -246,7 +252,7 @@ function scanJson(file: ArtifactSource, violations: LegacyAbsenceViolation[]): v
           `private runtime path appears in artifact metadata at ${path}`,
         );
       }
-      if (LEGACY_DEPENDENCY.test(normalized)) {
+      if (isLegacyDependency(normalized)) {
         addViolation(
           violations,
           file,
@@ -281,7 +287,7 @@ function scanJson(file: ArtifactSource, violations: LegacyAbsenceViolation[]): v
     }
     if (current && typeof current === 'object') {
       for (const [key, item] of Object.entries(current)) {
-        if (LEGACY_DEPENDENCY.test(key.replaceAll('\\', '/'))) {
+        if (isLegacyDependency(key.replaceAll('\\', '/'))) {
           addViolation(
             violations,
             file,
@@ -299,7 +305,7 @@ function scanJson(file: ArtifactSource, violations: LegacyAbsenceViolation[]): v
 
 function scanFileName(file: ArtifactSource, violations: LegacyAbsenceViolation[]): void {
   const path = file.path.replaceAll('\\', '/');
-  if (LEGACY_DEPENDENCY.test(path)) {
+  if (isLegacyDependency(path)) {
     addViolation(violations, file, 0, 'legacy-dependency', LEGACY_DEPENDENCY_MESSAGE);
   }
   for (const rule of LEGACY_MODULE_RULES) {

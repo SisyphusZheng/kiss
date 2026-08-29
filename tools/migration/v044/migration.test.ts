@@ -158,6 +158,9 @@ Deno.test('v0.44 legacy absence scan rejects runtime symbols and private imports
     text: JSON.stringify({
       dependencies: { '@openelement/legacy-renderer': '0.43.0' },
     }),
+  }, {
+    path: 'dist/legacy-import.js',
+    text: "import '@openelement/vnode';",
   }]);
   assert(
     dependencyViolations.some((violation: LegacyAbsenceViolation) =>
