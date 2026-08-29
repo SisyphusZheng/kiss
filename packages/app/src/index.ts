@@ -12,6 +12,7 @@ export {
   OpenElementRedirect,
   redirect,
 } from './authoring.ts';
+export type { IslandConfig, IslandDeliveryStrategy } from './authoring.ts';
 
 // Re-export route data types from protocol for convenience
 export type {

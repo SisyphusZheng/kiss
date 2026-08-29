@@ -7,11 +7,15 @@
 
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { ComponentLayer, HydrationStrategy } from '../protocol/framework.ts';
+import type { ComponentLayer } from '../protocol/framework.ts';
 import { formatJson, normalizeSeparators } from '@openelement/element/build-utils';
 import { isValidTagName } from '@openelement/element';
 import { stableHash } from './ssg-helpers.ts';
 import { walkHtmlFileEntries } from '../html-files.ts';
+import type { IslandDeliveryStrategy } from './delivery.ts';
+
+/** Stable artifact timestamp; manifests must be byte-identical across builds. */
+export const DETERMINISTIC_MANIFEST_TIMESTAMP = '1970-01-01T00:00:00.000Z';
 
 /** Island manifest entry for a single custom element */
 export interface IslandManifestEntry {
@@ -20,7 +24,7 @@ export interface IslandManifestEntry {
   /** Client chunk URL relative to site root */
   chunkUrl: string;
   /** Upgrade strategy */
-  strategy: HydrationStrategy;
+  strategy: IslandDeliveryStrategy;
   /** Component layer */
   layer: ComponentLayer;
 }
@@ -36,7 +40,7 @@ export interface PageIslandManifest {
 }
 
 /** Strategy map type: tagName -> strategy */
-export type IslandStrategyMap = Record<string, HydrationStrategy>;
+export type IslandStrategyMap = Record<string, IslandDeliveryStrategy>;
 
 /** Layer map type: tagName -> layer */
 export type IslandLayerMap = Record<string, ComponentLayer>;
@@ -126,7 +130,7 @@ export function generateIslandManifests(
   // #710: single shared walker — deterministic order, dotfiles skipped.
   for (const entry of walkHtmlFileEntries(htmlDir)) {
     const html = readFileSync(entry.absolutePath, 'utf-8');
-    const tags = extractCustomElementTags(html);
+    const tags = extractCustomElementTags(html).sort();
 
     const islands: IslandManifestEntry[] = tags
       .filter((tag) => tag in islandChunkMap)
@@ -145,7 +149,7 @@ export function generateIslandManifests(
     manifests.push({
       route,
       islands,
-      builtAt: new Date().toISOString(),
+      builtAt: DETERMINISTIC_MANIFEST_TIMESTAMP,
     });
   }
 

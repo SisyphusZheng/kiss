@@ -3,8 +3,9 @@
  *
  * This module is the ONE owner of island load/visibility scheduling in the
  * browser (#606): `load`/`only` islands import immediately, `idle` islands
- * defer to browser idle time, and `visible` islands import when any instance
- * enters the viewport — located by a deep, shadow-root-aware query because
+ * defer to browser idle time, `visible` islands import when any instance
+ * enters the viewport, and `media` islands wait for a matching media query —
+ * located by a deep, shadow-root-aware query because
  * islands live inside page-element DSD shadow roots where a light-DOM
  * querySelectorAll never looks (#562). defineIsland() in @openelement/element
  * carries no scheduling of its own: an island module only evaluates after
@@ -24,7 +25,13 @@ interface SchedulerLogger {
   warn: (...args: unknown[]) => void;
 }
 
-interface IslandSchedulerDeps {
+interface MediaQueryListLike {
+  matches: boolean;
+  addEventListener?: (type: 'change', listener: (event: MediaQueryListLike) => void) => void;
+  addListener?: (listener: (event: MediaQueryListLike) => void) => void;
+}
+
+export interface IslandSchedulerDeps {
   log: SchedulerLogger;
   win: Window & typeof globalThis;
   doc: Document;
@@ -35,8 +42,12 @@ interface IslandSchedulerDeps {
     load: readonly string[];
     idle: readonly string[];
     visible: readonly string[];
+    /** Tags whose capability is gated by `mediaQueries`. */
+    media?: readonly string[];
     only: readonly string[];
   };
+  /** One matchMedia result per media-gated tag. Missing entries fail closed. */
+  mediaQueries?: Record<string, MediaQueryListLike | null | undefined>;
   /**
    * Runs (macrotask-deferred) after any island module resolves. The enhance
    * layer uses it to rescan submit roots for late-hydrating islands (#584);
@@ -45,7 +56,7 @@ interface IslandSchedulerDeps {
   onIslandLoaded: (() => void) | null;
 }
 
-interface IslandScheduler {
+export interface IslandScheduler {
   /**
    * Re-scan for client:visible island elements and observe any new ones.
    * The enhance layer calls this after every morph: a replaced island is a
@@ -168,6 +179,34 @@ export function createIslandScheduler(deps: IslandSchedulerDeps): IslandSchedule
   }
 
   if (visibleTags.length > 0) onReady(observeVisible);
+
+  // client:media islands - import when their declarative media query matches.
+  // The generated entry creates these MediaQueryList values before
+  // constructing the scheduler. Delivery is one-shot per tag; subsequent
+  // route morphs see the native custom-element constructor already registered.
+  const mediaTags = strategies.media ?? [];
+  const mediaReady = new Set<string>();
+
+  const dispatchMedia = (tag: string): void => {
+    if (mediaReady.has(tag) || !map[tag]) return;
+    mediaReady.add(tag);
+    load(tag);
+    dispatchReady('media', [tag]);
+  };
+
+  for (const tag of mediaTags) {
+    const query = deps.mediaQueries?.[tag];
+    if (!query) {
+      log.warn(`Media island "${tag}" has no supported matchMedia result; delivery skipped`);
+      continue;
+    }
+    if (query.matches) dispatchMedia(tag);
+    const listener = (event: MediaQueryListLike): void => {
+      if (event.matches) dispatchMedia(tag);
+    };
+    if (query.addEventListener) query.addEventListener('change', listener);
+    else if (query.addListener) query.addListener(listener);
+  }
 
   // client:idle islands - defer to browser idle
   const idleTags = strategies.idle;

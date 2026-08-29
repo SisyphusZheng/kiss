@@ -227,7 +227,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
     const componentVar = `__island_component_${island.tagName.replace(/-/g, '_')}`;
-    lines.push(`const ${componentVar} = ${varName}?.default`);
+    const componentExport = island.exportName
+      ? `?.[${quoteGeneratedJavaScriptValue(island.exportName)}]`
+      : '?.default';
+    lines.push(`const ${componentVar} = ${varName}${componentExport}`);
     lines.push(
       `if (${componentVar}) {`,
     );

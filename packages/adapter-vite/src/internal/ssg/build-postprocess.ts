@@ -14,7 +14,12 @@ import type { IslandDecl } from '../protocol/ssg.ts';
 import { createLogger } from '@openelement/element';
 import { buildIslandChunkMap, injectClientScript } from './postprocess.ts';
 import { generateIslandManifests, writeIslandManifests } from './island-manifest.ts';
-import { resolveIslandHydrate } from './island-scanner.ts';
+import { expandIslandDeliveryDecl, resolveIslandHydrate } from './island-scanner.ts';
+import {
+  type IslandDeliveryMeta,
+  type IslandDeliveryStrategy,
+  resolveIslandDeliveryTags,
+} from './delivery.ts';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
 const log = createLogger('build-postprocess');
@@ -29,9 +34,32 @@ export interface BuildContextView {
   };
   phase1: {
     islandTagNames: string[];
+    islandFiles?: string[];
     packageIslandDecls: IslandDecl[];
     islandMeta: Record<string, Partial<IslandDecl>>;
   };
+}
+
+type DeliveryIslandMeta = Partial<IslandDecl> & IslandDeliveryMeta & {
+  hydrate?: IslandDeliveryStrategy;
+  filePath?: string;
+};
+
+function expandLocalIslandMeta(
+  tagName: string,
+  rawMeta: Partial<IslandDecl>,
+): Array<[string, DeliveryIslandMeta]> {
+  const meta = rawMeta as DeliveryIslandMeta;
+  const tags = resolveIslandDeliveryTags(
+    tagName,
+    meta.tags,
+    meta.tagNames,
+    tagName,
+  );
+  return tags.map((deliveredTag) => [
+    deliveredTag,
+    { ...meta, tagName: deliveredTag },
+  ]);
 }
 
 /**
@@ -49,28 +77,73 @@ export async function postProcessClientIslandBuild(
 
   injectClientScript(outputDir, scriptSrc);
 
-  const islandTagNames = [
-    ...(ctx.phase1.islandTagNames || []),
-    ...(ctx.phase1.packageIslandDecls || []).map((island) => island.tagName),
-  ];
-
-  const chunkMap = await buildIslandChunkMap(root, outDir, islandTagNames, base);
-
   // Local and package islands share the same strategy/layer derivation; the
   // only difference is where the tag->meta pairs come from.
-  const islandMetas: Array<[string, Partial<IslandDecl>]> = [
-    ...Object.entries(ctx.phase1.islandMeta || {}),
-    ...(ctx.phase1.packageIslandDecls || []).map((island) =>
-      [island.tagName, island] as [string, Partial<IslandDecl>]
-    ),
-  ];
+  const localMetas = Object.entries(ctx.phase1.islandMeta || {}).flatMap(([tag, meta]) =>
+    expandLocalIslandMeta(tag, meta)
+  );
+  const localMetaTags = new Set(Object.keys(ctx.phase1.islandMeta || {}));
+  for (const tagName of ctx.phase1.islandTagNames || []) {
+    if (!localMetaTags.has(tagName)) localMetas.push([tagName, { tagName }]);
+  }
+  const packageMetas = (ctx.phase1.packageIslandDecls || []).flatMap((island) =>
+    expandIslandDeliveryDecl(island).map((expanded) =>
+      [expanded.tagName, expanded as DeliveryIslandMeta] as [string, DeliveryIslandMeta]
+    )
+  );
+  const islandMetas: Array<[string, DeliveryIslandMeta]> = [...localMetas, ...packageMetas];
+  const islandTagNames = [...new Set(islandMetas.map(([tag]) => tag))].sort();
+
+  const chunkAliases: Record<string, readonly string[]> = {};
+  const addAliases = (tagName: string, aliases: string[]): void => {
+    chunkAliases[tagName] = [...new Set([...(chunkAliases[tagName] || []), ...aliases])];
+  };
+  for (const [primaryTag, meta] of Object.entries(ctx.phase1.islandMeta || {})) {
+    const filePath = meta && typeof (meta as { filePath?: unknown }).filePath === 'string'
+      ? (meta as { filePath: string }).filePath
+      : undefined;
+    const basename = filePath?.replaceAll('\\', '/').split('/').pop()?.replace(/\.[^.]+$/, '');
+    const deliveredTags = resolveIslandDeliveryTags(
+      primaryTag,
+      (meta as DeliveryIslandMeta | undefined)?.tags,
+      (meta as DeliveryIslandMeta | undefined)?.tagNames,
+      primaryTag,
+    );
+    for (const tagName of deliveredTags) {
+      addAliases(tagName, [primaryTag, ...(basename ? [basename] : [])]);
+    }
+  }
+  for (const island of ctx.phase1.packageIslandDecls || []) {
+    const delivery = island as IslandDecl & {
+      tags?: readonly string[];
+      tagNames?: readonly string[];
+    };
+    const deliveredTags = resolveIslandDeliveryTags(
+      island.tagName,
+      delivery.tags,
+      delivery.tagNames,
+      island.tagName,
+    );
+    for (const tagName of deliveredTags) addAliases(tagName, [island.tagName]);
+  }
+
+  const chunkMap = await buildIslandChunkMap(
+    root,
+    outDir,
+    islandTagNames,
+    base,
+    chunkAliases,
+  );
 
   const strategyMap = Object.fromEntries(
     islandMetas.map(([tag, meta]) => [
       tag,
-      resolveIslandHydrate(meta.hydrate, ctx.phase3.upgradeStrategy),
+      resolveIslandHydrate(
+        meta.hydrate as IslandDeliveryStrategy | undefined,
+        ctx.phase3.upgradeStrategy,
+      ),
     ]),
-  ) as Record<string, HydrationStrategy>;
+  ) as Record<string, IslandDeliveryStrategy>;
 
   const layerMap = Object.fromEntries(
     islandMetas.map(([tag, meta]) => [

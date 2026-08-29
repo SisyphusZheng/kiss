@@ -104,5 +104,29 @@ export type {
 
 export { generateClientEntry } from './entry-client-codegen.ts';
 export { validateClientIslandEntry } from './entry-generators.ts';
+export {
+  isIslandDeliveryStrategy,
+  ISLAND_DELIVERY_STRATEGIES,
+  validateIslandDeliveryTags,
+  validateIslandMediaQuery,
+} from './delivery.ts';
+export type {
+  ClientIslandDeliveryEntry,
+  ClientIslandDeliveryInput,
+  IslandDeliveryStrategy,
+} from './delivery.ts';
+
+export {
+  buildCriticalHeadExtras,
+  minifyCriticalCss,
+  minifyCriticalStyleBlocks,
+} from './critical-assets.ts';
+export type {
+  CriticalAssetsOptions,
+  CriticalAssetsResult,
+  CriticalFontAsset,
+  CriticalInlineScriptAsset,
+  CriticalStyleAsset,
+} from './critical-assets.ts';
 
 export { fsPathToModuleSpecifier } from './module-specifier.ts';

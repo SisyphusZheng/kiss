@@ -83,6 +83,7 @@ export async function buildIslandChunkMap(
   outDir: string,
   islands: string[],
   basePath: string = '/',
+  islandChunkAliases: Record<string, readonly string[]> = {},
 ): Promise<Record<string, string>> {
   const distDir = resolve(root, outDir);
   const clientDir = resolve(distDir, 'client');
@@ -96,6 +97,14 @@ export async function buildIslandChunkMap(
   try {
     const manifestRaw = await readFile(manifestPath, 'utf-8');
     const manifest = JSON.parse(manifestRaw);
+
+    const aliasesFor = (tagName: string): readonly string[] =>
+      islandChunkAliases[tagName] || [tagName];
+    const tagsForCandidate = (candidate: string): string[] =>
+      islands.filter((tagName) => aliasesFor(tagName).includes(candidate));
+    const mapChunk = (tagNames: string[], file: string): void => {
+      for (const tagName of tagNames) islandChunkMap[tagName] = `${basePath}client/${file}`;
+    };
 
     for (
       const [_srcPath, entry] of Object.entries(manifest) as [
@@ -120,20 +129,25 @@ export async function buildIslandChunkMap(
       // Primary: manifest chunk name (exact, hash-agnostic). manualChunks
       // names island chunks `island-<tag>`; Rolldown default names them
       // `<tag>` after the source file basename.
-      let tagName: string | undefined;
+      let matchedTags: string[] = [];
       if (entry.name) {
         const candidates = entry.name.startsWith('island-')
           ? [entry.name.slice('island-'.length), entry.name]
           : [entry.name];
-        tagName = candidates.find((candidate) => islands.includes(candidate));
+        for (const candidate of candidates) {
+          matchedTags = tagsForCandidate(candidate);
+          if (matchedTags.length > 0) break;
+        }
       }
       // Fallback: filename prefix match (the hash may contain `-`/`_`).
-      if (!tagName) {
-        tagName = islands.find((island) => matchIslandChunkFile(file, island));
+      if (matchedTags.length === 0) {
+        matchedTags = islands.filter((island) =>
+          aliasesFor(island).some((candidate) => matchIslandChunkFile(file, candidate))
+        );
       }
 
-      if (tagName) {
-        islandChunkMap[tagName] = `${basePath}client/${file}`;
+      if (matchedTags.length > 0) {
+        mapChunk(matchedTags, file);
       } else if (entry.name?.startsWith('island-') || file.startsWith('islands/island-')) {
         // Emitted as an island chunk (manualChunks `island-<tag>` naming) but
         // no scanned island tag matched — previously dropped silently.

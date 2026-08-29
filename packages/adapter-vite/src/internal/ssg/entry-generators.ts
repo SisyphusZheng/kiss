@@ -14,6 +14,16 @@
 import type { HydrationStrategy } from '../protocol/framework.ts';
 import type { ClientIslandEntry } from '../protocol/ssg.ts';
 import { HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
+import {
+  type ClientIslandDeliveryEntry,
+  type ClientIslandDeliveryInput,
+  isIslandDeliveryStrategy,
+  ISLAND_DELIVERY_STRATEGIES,
+  type IslandDeliveryStrategy,
+  resolveIslandDeliveryTags,
+  validateIslandDeliveryExportNames,
+  validateIslandMediaQuery,
+} from './delivery.ts';
 
 // #868: the browser runtimes are real modules (island-scheduler.ts,
 // enhance-client.ts) bundled via the virtual:open-client-runtime specifiers
@@ -32,15 +42,20 @@ const SAFE_ROOT_SPECIFIER_RE = /^\/[A-Za-z0-9_./@-]+$/;
 const SAFE_FS_SPECIFIER_RE = /^\/@fs\/(?:[A-Za-z]:\/)?[A-Za-z0-9_./@-]+$/;
 const SAFE_BARE_SPECIFIER_RE =
   /^(?:@[a-z0-9_.-]+\/[a-z0-9_.-]+|[a-z0-9_.-]+)(?:\/[A-Za-z0-9_./@-]+)?$/;
-const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
+const VALID_STRATEGIES = new Set<string>([
+  ...HYDRATION_STRATEGIES,
+  ...ISLAND_DELIVERY_STRATEGIES,
+]);
 
 declare const admittedIslandModuleSpecifier: unique symbol;
 export type AdmittedIslandModuleSpecifier = string & {
   readonly [admittedIslandModuleSpecifier]: true;
 };
 
-interface AdmittedClientIslandEntry extends Omit<ClientIslandEntry, 'modulePath'> {
+export interface AdmittedClientIslandEntry
+  extends Omit<ClientIslandDeliveryEntry, 'modulePath' | 'strategy'> {
   modulePath: AdmittedIslandModuleSpecifier;
+  strategy: IslandDeliveryStrategy;
 }
 
 function hasControlCharacter(value: string): boolean {
@@ -80,7 +95,10 @@ function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpe
   return modulePath as AdmittedIslandModuleSpecifier;
 }
 
-export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
+export function validateClientIslandEntry(
+  entry: ClientIslandDeliveryInput,
+): AdmittedClientIslandEntry {
+  const deliveryEntry = entry as ClientIslandDeliveryEntry;
   if (!isValidTagName(entry.tagName)) {
     throw new Error(`Invalid island tagName: ${entry.tagName}`);
   }
@@ -92,11 +110,49 @@ export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedCli
       cause: e,
     });
   }
-  if (!VALID_STRATEGIES.has(entry.strategy)) {
+  if (!isIslandDeliveryStrategy(entry.strategy) || !VALID_STRATEGIES.has(entry.strategy)) {
     throw new Error(
       `Invalid island strategy for ${entry.tagName}: ${String(entry.strategy)}. ` +
-        'Use one of: load, idle, visible, only.',
+        'Use one of: load, idle, visible, media, only.',
     );
   }
-  return { ...entry, modulePath };
+  const tags = resolveIslandDeliveryTags(
+    entry.tagName,
+    deliveryEntry.tags,
+    deliveryEntry.tagNames,
+    entry.tagName,
+  );
+  const media = deliveryEntry.media === undefined
+    ? undefined
+    : validateIslandMediaQuery(deliveryEntry.media, entry.tagName);
+  if (entry.strategy === 'media' && media === undefined) {
+    throw new Error(
+      `Invalid island media query for ${entry.tagName}: strategy "media" requires media`,
+    );
+  }
+  if (entry.strategy !== 'media' && media !== undefined) {
+    throw new Error(
+      `Invalid island media query for ${entry.tagName}: media is only valid with strategy "media"`,
+    );
+  }
+  if (
+    deliveryEntry.exportName !== undefined &&
+    (typeof deliveryEntry.exportName !== 'string' ||
+      deliveryEntry.exportName.length === 0 ||
+      hasControlCharacter(deliveryEntry.exportName))
+  ) {
+    throw new Error(`Invalid island export name for ${entry.tagName}`);
+  }
+  const exportNames = validateIslandDeliveryExportNames(
+    deliveryEntry.exportNames,
+    tags,
+    entry.tagName,
+  );
+  return {
+    ...entry,
+    modulePath,
+    ...(tags.length > 0 ? { tags } : {}),
+    ...(media !== undefined ? { media } : {}),
+    ...(exportNames === undefined ? {} : { exportNames }),
+  };
 }

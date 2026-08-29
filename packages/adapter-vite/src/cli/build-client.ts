@@ -14,15 +14,23 @@
 
 import { build as viteBuild, type InlineConfig } from 'vite';
 import { existsSync, readFileSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
-import { generateClientEntry } from '../internal/ssg/index.ts';
+import { extractCustomElementTags, generateClientEntry } from '../internal/ssg/index.ts';
 import { buildClientIslandEntries } from '../internal/ssg/client-island-entries.ts';
+import {
+  type ClientIslandDeliveryEntry,
+  type IslandDeliveryMeta,
+  resolveIslandDeliveryTags,
+} from '../internal/ssg/delivery.ts';
+import { walkHtmlFileEntries } from '../internal/html-files.ts';
 import { VIRTUAL_RUNTIME_SPECIFIERS } from '../internal/ssg/entry-generators.ts';
-import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
+import type { IslandDecl } from '../internal/protocol/ssg.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
+import { compiledElementPlugin } from '../internal/compiler/plugin.ts';
 import { parseJsonc } from '../internal/jsonc.ts';
 import { sortAliasEntries } from '../alias-utils.ts';
 import { formatError } from '@openelement/element';
@@ -38,6 +46,87 @@ const log = createLogger('build-client');
 
 const VIRTUAL_CLIENT_ENTRY_ID = 'virtual:open-client-entry';
 const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
+
+type DeliveryIslandRecord = IslandDeliveryMeta & { tagName?: string };
+
+function deliveryTagsForLocal(
+  tagName: string,
+  meta: Partial<DeliveryIslandRecord> | undefined,
+): string[] {
+  return resolveIslandDeliveryTags(tagName, meta?.tags, meta?.tagNames, tagName);
+}
+
+function deliveryTagsForPackage(island: IslandDecl): string[] {
+  const delivery = island as IslandDecl & DeliveryIslandRecord;
+  return resolveIslandDeliveryTags(
+    island.tagName,
+    delivery.tags,
+    delivery.tagNames,
+    island.tagName,
+  );
+}
+
+function sourceMentionsTag(source: string, tagName: string): boolean {
+  return source.includes(`<${tagName}`) ||
+    source.includes(`'${tagName}'`) ||
+    source.includes(`"${tagName}"`) ||
+    source.includes('`' + tagName + '`');
+}
+
+/**
+ * Select only admitted island tags that are observable in the rendered site
+ * or in a request-time page source. This keeps a declaration from becoming a
+ * client-bundle tax merely because it exists in app/islands/.
+ */
+function findReachableIslandTags(
+  ctx: OpenElementBuildContext,
+  root: string,
+  outDir: string,
+  candidates: string[],
+): Set<string> {
+  const plan = ctx.phase1.ssrAdmissionPlan;
+  const admitted = plan
+    ? new Set([...plan.renderableTags, ...plan.clientOnlyTags])
+    : new Set(candidates);
+  const allowed = candidates.filter((tag) => admitted.has(tag));
+  const reachable = new Set<string>();
+  const candidateSet = new Set(allowed);
+  const recordSource = (source: string): void => {
+    for (const tag of extractCustomElementTags(source)) {
+      if (candidateSet.has(tag)) reachable.add(tag);
+    }
+    // Route sources may use string-tag JSX (`jsx('x-element', ...)`) rather
+    // than angle-bracket syntax. Restrict the fallback to known candidates so
+    // arbitrary strings cannot create a delivery entry.
+    for (const tag of allowed) {
+      if (sourceMentionsTag(source, tag)) reachable.add(tag);
+    }
+  };
+
+  for (const entry of walkHtmlFileEntries(resolve(root, outDir))) {
+    recordSource(readFileSync(entry.absolutePath, 'utf8'));
+  }
+
+  const routesDir = ctx.phase3.routesDir || 'app/routes';
+  for (const route of ctx.phase1.cachedRoutes ?? []) {
+    if (route.type !== 'page' || route.special) continue;
+    const path = join(root, routesDir, route.filePath);
+    if (existsSync(path)) recordSource(readFileSync(path, 'utf8'));
+  }
+
+  // A project without route metadata can still call buildClient() directly
+  // (used by adapter integrations). In that case preserve admitted entries;
+  // normal app builds always have HTML or route sources to establish reachability.
+  if ((ctx.phase1.cachedRoutes ?? []).length === 0 && reachable.size === 0) {
+    return new Set(allowed);
+  }
+  return reachable;
+}
+
+async function removeClientDeliveryArtifacts(root: string, outDir: string): Promise<void> {
+  await rm(resolve(root, outDir, 'client'), { recursive: true, force: true });
+  await rm(resolve(root, outDir, 'island-manifests'), { recursive: true, force: true });
+}
 
 // #868: the browser runtimes (island-scheduler.ts, enhance-client.ts) are real
 // modules bundled through these virtual specifiers — the generated entry
@@ -181,11 +270,50 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
   );
 
   if (localIslands.length === 0 && packageIslandDecls.length === 0 && !enhancedForms) {
+    await removeClientDeliveryArtifacts(root, outDir);
     log.info('No islands found - zero client JS output');
     return;
   }
 
-  const totalIslands = localIslands.length + packageIslandDecls.length;
+  const localDeliveryTags = localIslands.flatMap((tagName) =>
+    deliveryTagsForLocal(
+      tagName,
+      ctx.phase1.islandMeta[tagName] as Partial<DeliveryIslandRecord> | undefined,
+    )
+  );
+  const packageDeliveryTags = packageIslandDecls.flatMap(deliveryTagsForPackage);
+  const candidateTags = [...new Set([...localDeliveryTags, ...packageDeliveryTags])];
+  const reachableTags = findReachableIslandTags(ctx, root, outDir, candidateTags);
+  const selectedLocal = localIslands
+    .map((tagName, index) => ({ tagName, index }))
+    .filter(({ tagName }) =>
+      deliveryTagsForLocal(
+        tagName,
+        ctx.phase1.islandMeta[tagName] as Partial<DeliveryIslandRecord> | undefined,
+      ).some((deliveredTag) => reachableTags.has(deliveredTag))
+    );
+  const selectedLocalTags = selectedLocal.map(({ tagName }) => tagName);
+  const selectedLocalFiles = selectedLocal.map(({ tagName, index }) =>
+    localIslandFiles[index] || `${tagName}.ts`
+  );
+  const selectedPackageDecls = packageIslandDecls.filter((island) =>
+    deliveryTagsForPackage(island).some((deliveredTag) => reachableTags.has(deliveredTag))
+  );
+
+  // Keep the post-processor and manifest inputs in lockstep with the exact
+  // client entry. This also makes an unused declaration disappear from the
+  // generated per-page manifests instead of leaving a false chunk reference.
+  ctx.phase1.islandTagNames = selectedLocalTags;
+  ctx.phase1.islandFiles = selectedLocalFiles;
+  ctx.phase1.packageIslandDecls = selectedPackageDecls;
+
+  if (selectedLocalTags.length === 0 && selectedPackageDecls.length === 0 && !enhancedForms) {
+    await removeClientDeliveryArtifacts(root, outDir);
+    log.info('No admitted reachable islands - zero client JS output');
+    return;
+  }
+
+  const totalIslands = selectedLocalTags.length + selectedPackageDecls.length;
   log.info(
     `Building client bundle for ${totalIslands} island(s)` +
       (enhancedForms ? ' + data-open-enhance form enhancement' : '') + '...',
@@ -193,13 +321,13 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
 
   // Generate client entry code (#951: entry list built by the shared helper,
   // identical to what the dev island client plugin serves).
-  const islandEntries: ClientIslandEntry[] = buildClientIslandEntries({
+  const islandEntries: ClientIslandDeliveryEntry[] = buildClientIslandEntries({
     root,
     islandsDir,
-    islandTagNames: localIslands,
-    islandFiles: localIslandFiles,
+    islandTagNames: selectedLocalTags,
+    islandFiles: selectedLocalFiles,
     islandMeta: ctx.phase1.islandMeta,
-    packageIslandDecls,
+    packageIslandDecls: selectedPackageDecls,
     upgradeStrategy: ctx.phase3.upgradeStrategy,
   });
 
@@ -258,7 +386,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
               const match = id.match(/\/([^/]+)\.(ts|tsx|js|jsx)$/);
               if (match) return `island-${match[1]}`;
             }
-            for (const island of packageIslandDecls) {
+            for (const island of selectedPackageDecls) {
               if (id.includes(island.modulePath)) return `island-${island.tagName}`;
             }
           },
@@ -276,6 +404,10 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
         | undefined,
     },
     plugins: [
+      // The compiler is part of the official client build path. The outer
+      // open:core hook covers normal Vite transforms; this inline build owns
+      // its own plugin list and must use the same transform exactly once.
+      compiledElementPlugin(),
       createNpmSpecifierPlugin(),
       {
         name: 'open:exclude-preact-rts',

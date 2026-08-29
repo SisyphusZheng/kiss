@@ -1,10 +1,12 @@
 /** Adapter-owned framework, build, content, and routing contracts. */
+import type { FrameworkOptions as ElementFrameworkOptions } from '@openelement/element';
+import type { CriticalAssetsOptions } from './internal/ssg/critical-assets.ts';
+
 export type {
   AppShellConfig,
   CompatibilityClassification,
   CompatibilityTier,
   ComponentLayer,
-  FrameworkOptions,
   HydrationStrategy,
   IsrManifestEntry,
   RenderError,
@@ -12,6 +14,15 @@ export type {
   SpecialFileType,
   SsrAdmissionDecision,
 } from '@openelement/element';
+
+/**
+ * Adapter options extend the frozen element options with build-only delivery
+ * declarations. The element package remains unaware of Vite/SSG policy.
+ */
+export type FrameworkOptions = ElementFrameworkOptions & {
+  criticalAssets?: CriticalAssetsOptions;
+  critical?: CriticalAssetsOptions;
+};
 
 /** Blog options stored in the adapter build context. */
 export interface OpenElementBlogOptions {
@@ -50,3 +61,15 @@ export interface OpenElementBuildContextLike {
 }
 
 export type { OpenElementPackageManifest } from '@openelement/element';
+
+// Alpha.4 build-side extensions. They are intentionally adapter-owned: the
+// stable element package keeps its 0.43 public contracts unchanged while the
+// Vite adapter serializes delivery and critical-path decisions into artifacts.
+export type { IslandDeliveryStrategy } from './internal/ssg/delivery.ts';
+export type {
+  CriticalAssetsOptions,
+  CriticalAssetsResult,
+  CriticalFontAsset,
+  CriticalInlineScriptAsset,
+  CriticalStyleAsset,
+} from './internal/ssg/critical-assets.ts';

@@ -1,11 +1,19 @@
 /** Island and package-manifest discovery without executing local island modules. */
 import type { HydrationStrategy, OpenElementPackageManifest } from '../protocol/framework.ts';
 import type { IslandDecl } from '../protocol/ssg.ts';
-import { formatError, HYDRATION_STRATEGIES, OpenElementError } from '@openelement/element';
+import { formatError, isValidTagName, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
 import { join } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
+import {
+  ISLAND_DELIVERY_STRATEGIES,
+  type IslandDeliveryStrategy,
+  resolveIslandDeliveryTags,
+  validateIslandDeliveryExportNames,
+  validateIslandDeliveryTags,
+  validateIslandMediaQuery,
+} from './delivery.ts';
 
 const log = createLogger('island-scan');
 
@@ -15,7 +23,15 @@ export interface LocalIslandMeta {
   filePath: string;
   ssr?: boolean;
   dsd?: boolean;
-  hydrate?: 'load' | 'idle' | 'visible' | 'only';
+  hydrate?: IslandDeliveryStrategy;
+  /** Required when hydrate is media; kept as build metadata, not runtime. */
+  media?: string;
+  /** Optional one-to-many custom-element capability names. */
+  tags?: string[];
+  /** Alias accepted by generated artifact producers. */
+  tagNames?: string[];
+  /** Named constructor exports keyed by delivered tag. */
+  exportNames?: Record<string, string>;
   reason?: string;
 }
 
@@ -33,7 +49,8 @@ export interface LocalIslandMeta {
 export function resolveIslandSsrDsd(meta: {
   ssr?: boolean;
   dsd?: boolean;
-  hydrate?: HydrationStrategy;
+  hydrate?: HydrationStrategy | IslandDeliveryStrategy;
+  media?: string;
 }): { ssr?: boolean; dsd?: boolean } {
   const clientOnly = meta.hydrate === 'only';
   return {
@@ -46,8 +63,55 @@ export function resolveIslandSsrDsd(meta: {
 export function resolveIslandHydrate(
   hydrate: HydrationStrategy | undefined,
   upgradeStrategy?: HydrationStrategy,
-): HydrationStrategy {
+): HydrationStrategy;
+export function resolveIslandHydrate(
+  hydrate: IslandDeliveryStrategy | undefined,
+  upgradeStrategy?: HydrationStrategy,
+): IslandDeliveryStrategy;
+export function resolveIslandHydrate(
+  hydrate: HydrationStrategy | IslandDeliveryStrategy | undefined,
+  upgradeStrategy?: HydrationStrategy,
+): IslandDeliveryStrategy {
   return hydrate || upgradeStrategy || 'idle';
+}
+
+/**
+ * Expand a one-to-many capability declaration for the server-side admission
+ * graph. The compiler/runtime artifact remains the single module authority;
+ * this expansion only gives each delivered native tag its own admission and
+ * registration identity.
+ */
+export function expandIslandDeliveryDecl(island: IslandDecl): IslandDecl[] {
+  const delivery = island as IslandDecl & {
+    tags?: readonly string[];
+    tagNames?: readonly string[];
+    exportNames?: Readonly<Record<string, string>>;
+  };
+  const hasDeliveryTags = delivery.tags !== undefined || delivery.tagNames !== undefined;
+  const tags = hasDeliveryTags
+    ? resolveIslandDeliveryTags(
+      island.tagName,
+      delivery.tags,
+      delivery.tagNames,
+      island.tagName,
+    )
+    : [island.tagName];
+  const exportNames = validateIslandDeliveryExportNames(
+    delivery.exportNames,
+    tags,
+    island.tagName,
+  );
+  const {
+    tags: _tags,
+    tagNames: _tagNames,
+    exportNames: _exportNames,
+    ...base
+  } = delivery;
+  return tags.map((tagName) => ({
+    ...base,
+    tagName,
+    ...(exportNames?.[tagName] === undefined ? {} : { exportName: exportNames[tagName] }),
+  })) as IslandDecl[];
 }
 
 /**
@@ -72,6 +136,43 @@ export function buildPackageIslandDecls(
             `Package manifest declaration "${d.tagName}" is missing openElement.module`,
           );
         }
+        const declarationDelivery = d as typeof d & {
+          tags?: readonly string[];
+          tagNames?: readonly string[];
+          exportNames?: Readonly<Record<string, string>>;
+        };
+        const delivery = openElement as typeof openElement & {
+          hydrate?: IslandDeliveryStrategy;
+          media?: unknown;
+          tags?: readonly string[];
+          tagNames?: readonly string[];
+          exportNames?: Readonly<Record<string, string>>;
+        };
+        const tags = resolveIslandDeliveryTags(
+          d.tagName,
+          declarationDelivery.tags ?? delivery.tags,
+          declarationDelivery.tagNames ?? delivery.tagNames,
+          d.tagName,
+        );
+        validateIslandDeliveryTags(tags, d.tagName);
+        const exportNames = validateIslandDeliveryExportNames(
+          declarationDelivery.exportNames ?? delivery.exportNames,
+          tags,
+          d.tagName,
+        );
+        const hydrate = resolveIslandHydrate(
+          delivery.hydrate as IslandDeliveryStrategy | undefined,
+          upgradeStrategy,
+        );
+        const media = delivery.media === undefined
+          ? undefined
+          : validateIslandMediaQuery(delivery.media, d.tagName);
+        if (hydrate === 'media' && media === undefined) {
+          throw new Error(`Package island "${d.tagName}" uses media delivery without media`);
+        }
+        if (hydrate !== 'media' && media !== undefined) {
+          throw new Error(`Package island "${d.tagName}" declares media without media delivery`);
+        }
         return {
           tagName: d.tagName,
           modulePath,
@@ -79,17 +180,20 @@ export function buildPackageIslandDecls(
           source: 'package' as const,
           // #638: package island chunks dropped `export default`; the client
           // island factory must read the named export (CEM class name) instead.
-          exportName: d.className,
-          hydrate: resolveIslandHydrate(openElement?.hydrate, upgradeStrategy),
+          exportName: exportNames?.[d.tagName] ?? d.className,
+          hydrate,
+          ...(media === undefined ? {} : { media }),
+          ...(tags.length > 0 ? { tags } : {}),
+          ...(exportNames === undefined ? {} : { exportNames }),
           ...resolveIslandSsrDsd(openElement ?? {}),
         };
       })
-  );
+  ) as unknown as IslandDecl[];
 }
 
 function staticOpenElementError(message: string): OpenElementError {
   return new OpenElementError(
-    `Invalid static island metadata export "openElement": ${message}. Accepted shape: export const openElement = defineIslandConfig({ ssr?: boolean, dsd?: boolean, hydrate?: "load" | "idle" | "visible" | "only" }).`,
+    `Invalid static island metadata export "openElement": ${message}. Accepted shape: export const openElement = defineIslandConfig({ ssr?: boolean, dsd?: boolean, hydrate?: "load" | "idle" | "visible" | "media" | "only", media?: string }).`,
     {
       code: 'ISLAND_METADATA_ERROR',
       statusCode: 500,
@@ -98,18 +202,269 @@ function staticOpenElementError(message: string): OpenElementError {
   );
 }
 
+function findStaticConfigBody(source: string, from: number): string | undefined {
+  const objectStart = source.indexOf('{', from);
+  if (objectStart === -1) return undefined;
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (let index = objectStart; index < source.length; index++) {
+    const char = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === '{') depth++;
+    else if (char === '}' && --depth === 0) return source.slice(objectStart + 1, index);
+  }
+  return undefined;
+}
+
+function splitStaticValues(value: string): string[] {
+  const values: string[] = [];
+  let start = 0;
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === '{' || char === '[' || char === '(') depth++;
+    else if (char === '}' || char === ']' || char === ')') depth--;
+    else if (char === ',' && depth === 0) {
+      values.push(value.slice(start, index).trim());
+      start = index + 1;
+    }
+  }
+  const last = value.slice(start).trim();
+  if (last) values.push(last);
+  return values;
+}
+
+function findStaticColon(value: string): number {
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === '{' || char === '[' || char === '(') depth++;
+    else if (char === '}' || char === ']' || char === ')') depth--;
+    else if (char === ':' && depth === 0) return index;
+  }
+  return -1;
+}
+
+function unquoteStaticString(raw: string, context: string): string {
+  const value = raw.trim();
+  if (
+    value.length < 2 ||
+    (value[0] !== '"' && value[0] !== "'") ||
+    value[value.length - 1] !== value[0]
+  ) {
+    throw staticOpenElementError(context + ' must be a string literal');
+  }
+  let result = '';
+  for (let index = 1; index < value.length - 1; index++) {
+    const char = value[index];
+    if (char !== '\\') {
+      result += char;
+      continue;
+    }
+    index++;
+    const escaped = value[index];
+    if (escaped === undefined) throw staticOpenElementError(context + ' has an invalid escape');
+    const escapes: Record<string, string> = {
+      b: '\\b',
+      f: '\\f',
+      n: '\\n',
+      r: '\\r',
+      t: '\\t',
+      v: '\\v',
+      '\\': '\\',
+      "'": "'",
+      '"': '"',
+    };
+    result += escapes[escaped] ?? escaped;
+  }
+  return result;
+}
+
+function isQuotedStaticString(raw: string): boolean {
+  const value = raw.trim();
+  return value.length >= 2 &&
+    (value[0] === '"' || value[0] === "'") &&
+    value[value.length - 1] === value[0];
+}
+
+function readStaticProperties(body: string): Array<[string, string]> {
+  return splitStaticValues(body).filter(Boolean).map((property) => {
+    const colon = findStaticColon(property);
+    if (colon === -1) throw staticOpenElementError('metadata must contain key/value pairs');
+    const rawKey = property.slice(0, colon).trim();
+    const quoted = rawKey.startsWith('"') || rawKey.startsWith("'");
+    const key = quoted ? unquoteStaticString(rawKey, 'metadata key') : rawKey;
+    if ((quoted && key.length === 0) || (!quoted && !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key))) {
+      throw staticOpenElementError('metadata keys must be identifiers or string literals');
+    }
+    return [key, property.slice(colon + 1).trim()] as [string, string];
+  });
+}
+
+function parseStaticStringArray(raw: string, context: string): string[] {
+  const value = raw.trim();
+  if (!value.startsWith('[') || !value.endsWith(']')) {
+    throw staticOpenElementError(context + ' must be an array of string literals');
+  }
+  const parts = splitStaticValues(value.slice(1, -1));
+  if (parts.length === 0) throw staticOpenElementError(context + ' must not be empty');
+  return parts.map((part) => unquoteStaticString(part, context));
+}
+
+function parseStaticStringRecord(raw: string, context: string): Record<string, string> {
+  const value = raw.trim();
+  if (!value.startsWith('{') || !value.endsWith('}')) {
+    throw staticOpenElementError(context + ' must be an object of string literals');
+  }
+  const entries = readStaticProperties(value.slice(1, -1));
+  const result: Record<string, string> = {};
+  for (const [key, entry] of entries) {
+    result[key] = unquoteStaticString(entry, context + '.' + key);
+  }
+  return result;
+}
+
+function parseStaticIslandConfigBody(body: string): {
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: IslandDeliveryStrategy;
+  media?: string;
+  tags?: string[];
+  tagNames?: string[];
+  exportNames?: Record<string, string>;
+} {
+  const meta: {
+    ssr?: boolean;
+    dsd?: boolean;
+    hydrate?: IslandDeliveryStrategy;
+    media?: string;
+    tags?: string[];
+    tagNames?: string[];
+    exportNames?: Record<string, string>;
+  } = {};
+  const seen = new Set<string>();
+  for (const [key, raw] of readStaticProperties(body)) {
+    if (seen.has(key)) throw staticOpenElementError(`duplicate metadata key "${key}"`);
+    seen.add(key);
+    if (!['ssr', 'dsd', 'hydrate', 'media', 'tags', 'tagNames', 'exportNames'].includes(key)) {
+      throw staticOpenElementError(`unsupported openElement metadata key "${key}"`);
+    }
+    if (key === 'ssr' || key === 'dsd') {
+      if (raw !== 'true' && raw !== 'false') {
+        throw staticOpenElementError(
+          `openElement.${key} must be a static literal, got dynamic value "${raw}"`,
+        );
+      }
+      meta[key] = raw === 'true';
+    } else if (key === 'hydrate') {
+      if (!isQuotedStaticString(raw)) {
+        throw staticOpenElementError(
+          `openElement.hydrate must be a static literal, got dynamic value "${raw}"`,
+        );
+      }
+      const value = unquoteStaticString(raw, 'openElement.hydrate');
+      if (!(ISLAND_DELIVERY_STRATEGIES as readonly string[]).includes(value)) {
+        throw staticOpenElementError(`openElement.hydrate has unsupported value "${value}"`);
+      }
+      meta.hydrate = value as IslandDeliveryStrategy;
+    } else if (key === 'media') {
+      if (!isQuotedStaticString(raw)) {
+        throw staticOpenElementError(
+          `openElement.media must be a static literal, got dynamic value "${raw}"`,
+        );
+      }
+      meta.media = validateIslandMediaQuery(
+        unquoteStaticString(raw, 'openElement.media'),
+        'openElement.media',
+      );
+    } else if (key === 'tags' || key === 'tagNames') {
+      meta[key] = parseStaticStringArray(raw, `openElement.${key}`);
+    } else {
+      meta.exportNames = parseStaticStringRecord(raw, 'openElement.exportNames');
+    }
+  }
+
+  if (meta.tags !== undefined || meta.tagNames !== undefined) {
+    const tags = resolveIslandDeliveryTags(
+      'island-capability',
+      meta.tags,
+      meta.tagNames,
+      'openElement',
+    );
+    validateIslandDeliveryTags(tags, 'openElement');
+  }
+  const deliveryTags = meta.tags ?? meta.tagNames;
+  if (meta.exportNames !== undefined) {
+    for (const [tag, exportName] of Object.entries(meta.exportNames)) {
+      if (
+        !isValidTagName(tag) ||
+        (deliveryTags !== undefined && !deliveryTags.includes(tag)) ||
+        exportName.trim() === '' ||
+        /[\u0000-\u001f\u007f]/.test(exportName)
+      ) {
+        throw staticOpenElementError(`openElement.exportNames has an invalid entry for "${tag}"`);
+      }
+    }
+  }
+  if (meta.media !== undefined && meta.hydrate !== 'media') {
+    throw staticOpenElementError('openElement.media is only valid when hydrate is "media"');
+  }
+  if (meta.hydrate === 'media' && meta.media === undefined) {
+    throw staticOpenElementError('openElement.media is required when hydrate is "media"');
+  }
+  return meta;
+}
+
 /**
- * v0.41.0-alpha.1: Regex-based extraction of
- * `export const openElement = defineIslandConfig({ ... })`.
+ * Statically extract `export const openElement = defineIslandConfig({ ... })`.
  *
  * The scanner intentionally does not execute island modules. It accepts only a
- * defineIslandConfig() call with boolean `ssr`/`dsd` and string `hydrate`
- * literal values. Dynamic metadata is rejected instead of guessed.
+ * defineIslandConfig() call with literal metadata. Dynamic metadata is rejected
+ * instead of guessed so the server admission plan and client manifest cannot
+ * disagree.
  */
 export function readIslandConfig(source: string): {
   ssr?: boolean;
   dsd?: boolean;
   hydrate?: LocalIslandMeta['hydrate'];
+  media?: string;
+  tags?: string[];
+  tagNames?: string[];
+  exportNames?: Record<string, string>;
 } | null {
   const declMatch = source.match(/export\s+const\s+openElement\s*=/);
   if (!declMatch) return null;
@@ -117,62 +472,27 @@ export function readIslandConfig(source: string): {
   const afterEquals = source.slice(declMatch.index! + declMatch[0].length).trimStart();
 
   // Must call defineIslandConfig(...) - reject legacy object literals.
-  const callMatch = afterEquals.match(/^defineIslandConfig\s*\(\s*(\{[\s\S]*?\})\s*\)/);
+  const callMatch = afterEquals.match(/^defineIslandConfig\s*\(/);
   if (!callMatch) {
-    const hasCall = /^defineIslandConfig\s*\(/.test(afterEquals);
-    if (hasCall) {
-      throw staticOpenElementError(
-        'defineIslandConfig() argument must be a static object literal',
-      );
-    }
     throw staticOpenElementError('openElement export must call defineIslandConfig(...)');
   }
 
-  const body = callMatch[1].slice(1, -1);
-  const meta: { ssr?: boolean; dsd?: boolean; hydrate?: LocalIslandMeta['hydrate'] } = {};
-
-  // Fail closed (#771): a known key with a non-literal value (e.g.
-  // `ssr: isProd`) must be rejected, not silently skipped and guessed.
-  const looseRe = /\b(ssr|dsd|hydrate)\s*:\s*("[^"]*"|'[^']*'|[^,}]+)/g;
-  let loose: RegExpExecArray | null;
-  while ((loose = looseRe.exec(body)) !== null) {
-    if (!/^(?:true|false|"[^"]*"|'[^']*')\s*$/.test(loose[2])) {
-      throw staticOpenElementError(
-        `openElement.${loose[1]} must be a static literal, got dynamic value "${loose[2].trim()}"`,
-      );
-    }
+  const body = findStaticConfigBody(afterEquals, callMatch[0].length);
+  if (body === undefined) {
+    throw staticOpenElementError(
+      'defineIslandConfig() argument must be a static object literal',
+    );
+  }
+  const objectStart = afterEquals.indexOf('{', callMatch[0].length);
+  const objectEnd = objectStart + body.length + 2;
+  const callTail = afterEquals.slice(objectEnd).trimStart();
+  if (!callTail.startsWith(')')) {
+    throw staticOpenElementError(
+      'defineIslandConfig() argument must be one static object literal',
+    );
   }
 
-  // Match key: value pairs, skipping nested braces/strings.
-  const propRe = /\b(ssr|dsd|hydrate|[^\s:,{}]+)\s*:\s*(true|false|["']([^"']*)["'])/g;
-  let m: RegExpExecArray | null;
-
-  while ((m = propRe.exec(body)) !== null) {
-    const key = m[1];
-    const raw = m[2];
-
-    if (!['ssr', 'dsd', 'hydrate'].includes(key)) {
-      throw staticOpenElementError(`unsupported openElement metadata key "${key}"`);
-    }
-
-    const typedKey = key as 'ssr' | 'dsd' | 'hydrate';
-
-    if (typedKey === 'ssr' || typedKey === 'dsd') {
-      if (raw !== 'true' && raw !== 'false') {
-        throw staticOpenElementError(`openElement.${typedKey} must be a boolean literal`);
-      }
-      meta[typedKey] = raw === 'true';
-      continue;
-    }
-
-    const value = raw.slice(1, -1);
-    if (!(HYDRATION_STRATEGIES as readonly string[]).includes(value)) {
-      throw staticOpenElementError(`openElement.hydrate has unsupported value "${value}"`);
-    }
-    meta.hydrate = value as LocalIslandMeta['hydrate'];
-  }
-
-  return meta;
+  return parseStaticIslandConfigBody(body);
 }
 
 /**
@@ -258,6 +578,7 @@ export async function scanIslandMeta(
       ssr: islandConfig.ssr,
       dsd: islandConfig.dsd,
       hydrate,
+      media: islandConfig.media,
     });
 
     meta[tagName] = {
@@ -266,6 +587,10 @@ export async function scanIslandMeta(
       ssr,
       dsd,
       hydrate,
+      ...(islandConfig.media === undefined ? {} : { media: islandConfig.media }),
+      ...(islandConfig.tags === undefined ? {} : { tags: islandConfig.tags }),
+      ...(islandConfig.tagNames === undefined ? {} : { tagNames: islandConfig.tagNames }),
+      ...(islandConfig.exportNames === undefined ? {} : { exportNames: islandConfig.exportNames }),
       reason: hydrate === 'only'
         ? 'local island exports openElement.hydrate=only'
         : islandConfig.ssr === false

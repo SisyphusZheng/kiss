@@ -54,6 +54,7 @@ import {
   generateSsrPolyfillBanner,
 } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
+import { compiledElementPlugin } from '../internal/compiler/plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
 import {
   CHUNK_SIZE_WARNING_LIMIT_KB,
@@ -237,9 +238,12 @@ async function buildSSG(
   const ssgIslandTagNames = islandTagNames.length > 0
     ? islandTagNames
     : ssgIslandFiles.map((f) => fileToTagName(f));
-  const ssgIslandMeta = Object.keys(islandMeta).length > 0
+  const ssgIslandMeta: Record<string, Partial<IslandDecl>> = Object.keys(islandMeta).length > 0
     ? islandMeta
-    : await scanIslandMeta(islandsRoot, ssgIslandFiles);
+    : await scanIslandMeta(islandsRoot, ssgIslandFiles) as unknown as Record<
+      string,
+      Partial<IslandDecl>
+    >;
   // Single descriptor instantiation (alpha.17 B1): the SSR admission plan and
   // the emitted SSG entry code come from the same descriptor. Previously the
   // plan was built without middleware/html/upgradeStrategy and diverged from
@@ -364,6 +368,9 @@ async function buildSSG(
         },
       },
       plugins: [
+        // Keep SSR lowering identical to the outer Vite and client builds;
+        // this inline build has its own plugin list.
+        compiledElementPlugin(),
         // MDX route support must mirror the outer plugin list (plugin.ts:396),
         // otherwise .mdx routes fail Phase 3 parse (esbuild treats them as JS).
         mdxPlugin(),

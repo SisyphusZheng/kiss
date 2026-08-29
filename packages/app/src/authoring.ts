@@ -11,6 +11,7 @@ import {
   collectPublicProps,
   defineElement,
   type ElementDefinition,
+  isValidTagName,
   OpenElement,
   OpenElementError,
   type VNode,
@@ -290,8 +291,17 @@ const PAGE_DESCRIPTOR_FIELDS = new Set([
   'error',
 ]);
 
-const ISLAND_CONFIG_FIELDS = new Set(['ssr', 'dsd', 'hydrate']);
-const HYDRATION_STRATEGY_SET: ReadonlySet<string> = new Set(HYDRATION_STRATEGIES);
+const ISLAND_CONFIG_FIELDS = new Set([
+  'ssr',
+  'dsd',
+  'hydrate',
+  'media',
+  'tags',
+  'tagNames',
+  'exportNames',
+]);
+const ISLAND_DELIVERY_STRATEGIES = [...HYDRATION_STRATEGIES, 'media'] as const;
+const HYDRATION_STRATEGY_SET: ReadonlySet<string> = new Set(ISLAND_DELIVERY_STRATEGIES);
 
 function assertCanonicalPageDefinition(input: unknown): asserts input is PageDefinition {
   if (typeof input === 'function') {
@@ -390,15 +400,56 @@ export function definePage<
   return OpenElementPage;
 }
 
-interface IslandConfig {
+export type IslandDeliveryStrategy = HydrationStrategy | 'media';
+
+export interface IslandConfig {
   ssr?: boolean;
   dsd?: boolean;
   /**
    * Hydration strategy — same values as `IslandOptions.hydrate` on the
    * element package (`packages/element/src/internal/protocol/island.ts`):
-   * 'load' | 'idle' | 'visible' | 'only'.
+   * 'load' | 'idle' | 'visible' | 'media' | 'only'.
    */
-  hydrate?: HydrationStrategy;
+  hydrate?: IslandDeliveryStrategy;
+  /** Media query required by the `media` delivery strategy. */
+  media?: string;
+  /** Custom-element tags delivered by this one capability module. */
+  tags?: readonly string[];
+  /** Alias accepted by generated artifact producers. */
+  tagNames?: readonly string[];
+  /** Named constructor exports keyed by delivered custom-element tag. */
+  exportNames?: Readonly<Record<string, string>>;
+}
+
+function validateIslandMedia(media: unknown): string {
+  if (typeof media !== 'string' || media.trim() === '') {
+    throw new Error(
+      `${ERROR_PREFIX} defineIslandConfig() media must be a non-empty string.`,
+    );
+  }
+  const value = media.trim();
+  if (value.length > 512 || /[\u0000-\u001f\u007f]/.test(value)) {
+    throw new Error(
+      `${ERROR_PREFIX} defineIslandConfig() media contains an unsafe or oversized query.`,
+    );
+  }
+  return value;
+}
+
+function validateIslandTags(value: unknown, field: 'tags' | 'tagNames'): string[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(`${ERROR_PREFIX} defineIslandConfig() ${field} must be a non-empty array.`);
+  }
+  const seen = new Set<string>();
+  return value.map((tag) => {
+    if (typeof tag !== 'string' || !isValidTagName(tag) || seen.has(tag)) {
+      throw new Error(
+        `${ERROR_PREFIX} defineIslandConfig() ${field} contains an invalid or duplicate tag.`,
+      );
+    }
+    seen.add(tag);
+    return tag;
+  });
 }
 
 export function defineIslandConfig(config: IslandConfig): IslandConfig {
@@ -409,17 +460,64 @@ export function defineIslandConfig(config: IslandConfig): IslandConfig {
     if (!ISLAND_CONFIG_FIELDS.has(key)) {
       throw new Error(
         `${ERROR_PREFIX} defineIslandConfig() does not accept "${key}". ` +
-          'Use only ssr, dsd, and hydrate.',
+          'Use only ssr, dsd, hydrate, media, tags, tagNames, and exportNames.',
       );
     }
   }
   if (config.hydrate !== undefined && !HYDRATION_STRATEGY_SET.has(config.hydrate)) {
     throw new Error(
       `${ERROR_PREFIX} Invalid island hydrate strategy "${String(config.hydrate)}". ` +
-        'Use one of: load, idle, visible, only.',
+        'Use one of: load, idle, visible, media, only.',
     );
   }
-  return { ...config };
+  const media = config.media === undefined ? undefined : validateIslandMedia(config.media);
+  if (config.hydrate === 'media' && media === undefined) {
+    throw new Error(
+      `${ERROR_PREFIX} defineIslandConfig() media is required when hydrate is "media".`,
+    );
+  }
+  if (config.hydrate !== 'media' && media !== undefined) {
+    throw new Error(
+      `${ERROR_PREFIX} defineIslandConfig() media is only valid with hydrate "media".`,
+    );
+  }
+  const tags = config.tags === undefined ? undefined : validateIslandTags(config.tags, 'tags');
+  const tagNames = config.tagNames === undefined
+    ? undefined
+    : validateIslandTags(config.tagNames, 'tagNames');
+  if (
+    tags && tagNames &&
+    (tags.length !== tagNames.length || tags.some((tag, index) => tag !== tagNames[index]))
+  ) {
+    throw new Error(`${ERROR_PREFIX} defineIslandConfig() tags and tagNames must agree.`);
+  }
+  const deliveryTags = tags ?? tagNames;
+  const exportNames = config.exportNames;
+  if (exportNames !== undefined) {
+    if (typeof exportNames !== 'object' || exportNames === null || Array.isArray(exportNames)) {
+      throw new Error(`${ERROR_PREFIX} defineIslandConfig() exportNames must be an object.`);
+    }
+    const allowedTags = new Set(deliveryTags ?? []);
+    for (const [tag, exportName] of Object.entries(exportNames)) {
+      if (
+        !isValidTagName(tag) ||
+        (deliveryTags !== undefined && !allowedTags.has(tag)) ||
+        typeof exportName !== 'string' ||
+        exportName.trim() === '' ||
+        /[\u0000-\u001f\u007f]/.test(exportName)
+      ) {
+        throw new Error(
+          `${ERROR_PREFIX} defineIslandConfig() exportNames contains an invalid entry.`,
+        );
+      }
+    }
+  }
+  return {
+    ...config,
+    ...(media === undefined ? {} : { media }),
+    ...(tags === undefined ? {} : { tags }),
+    ...(tagNames === undefined ? {} : { tagNames }),
+  };
 }
 
 export function defineIsland<Props extends Record<string, unknown> = Record<string, unknown>>(
@@ -431,7 +529,10 @@ export function defineIsland<Props extends Record<string, unknown> = Record<stri
     ? input as CustomElementConstructor
     : defineElement(tagName, input as ((props: Props) => VNode | null) | ElementDefinition<Props>);
   return defineRuntimeIsland(tagName, componentClass, {
-    hydrate: options.hydrate,
+    // The 0.43 element runtime owns only its legacy scheduling type. Media
+    // delivery is consumed by the adapter's generated activation artifact;
+    // the metadata export remains the authoritative build-side policy.
+    hydrate: options.hydrate === 'media' ? undefined : options.hydrate,
     dsd: options.dsd,
     ssr: options.ssr,
   });

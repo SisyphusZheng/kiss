@@ -27,9 +27,16 @@ import { DEFAULT_ISLANDS_DIR, DEFAULT_ROUTES_DIR } from '../paths.ts';
 import { fileToTagName } from './route-scanner.ts';
 import {
   buildPackageIslandDecls,
+  expandIslandDeliveryDecl,
   resolveIslandHydrate,
   resolveIslandSsrDsd,
 } from './island-scanner.ts';
+import {
+  type IslandDeliveryMeta,
+  type IslandDeliveryStrategy,
+  resolveIslandDeliveryTags,
+  validateIslandDeliveryExportNames,
+} from './delivery.ts';
 
 function normalizeAppShellImport(importPath: string): string {
   if (importPath.startsWith('./')) return `/${importPath.slice(2)}`;
@@ -258,16 +265,45 @@ export function buildEntryDescriptor(
   const islandsSpecifierDir = normalizeSeparators(islandsDir);
   const localIslands: IslandDecl[] = islandTagNames.map((tagName, i) => {
     const meta = islandMeta[tagName];
+    const deliveryMeta = (meta ?? {}) as Partial<IslandDecl> & IslandDeliveryMeta & {
+      hydrate?: IslandDeliveryStrategy;
+    };
+    const hydrate = resolveIslandHydrate(
+      deliveryMeta.hydrate as IslandDeliveryStrategy | undefined,
+      options.upgradeStrategy,
+    );
+    const hasDeliveryTags = deliveryMeta.tags !== undefined || deliveryMeta.tagNames !== undefined;
+    const deliveryTags = hasDeliveryTags
+      ? resolveIslandDeliveryTags(
+        tagName,
+        deliveryMeta.tags,
+        deliveryMeta.tagNames,
+        tagName,
+      )
+      : undefined;
+    const exportNames = validateIslandDeliveryExportNames(
+      deliveryMeta.exportNames,
+      deliveryTags ?? [tagName],
+      tagName,
+    );
     return {
       tagName,
       modulePath: islandFiles[i]
         ? `/${islandsSpecifierDir}/${normalizeSeparators(islandFiles[i])}`
         : `/${islandsSpecifierDir}/${tagName}.ts`,
       source: 'local',
-      ...resolveIslandSsrDsd(meta ?? {}),
-      hydrate: resolveIslandHydrate(meta?.hydrate, options.upgradeStrategy),
+      ...resolveIslandSsrDsd(deliveryMeta),
+      // The legacy protocol type is intentionally kept untouched on the
+      // frozen base. The adapter carries the alpha delivery value in the
+      // serialized declaration and narrows it only at this old seam.
+      hydrate: hydrate as HydrationStrategy,
+      ...(hydrate === 'media' && deliveryMeta.media !== undefined
+        ? { media: deliveryMeta.media }
+        : {}),
+      ...(deliveryTags === undefined ? {} : { tags: deliveryTags }),
+      ...(exportNames === undefined ? {} : { exportNames }),
       reason: meta?.reason,
-    };
+    } as IslandDecl;
   });
 
   const packageIslandDecls: IslandDecl[] = buildPackageIslandDecls(
@@ -275,10 +311,11 @@ export function buildEntryDescriptor(
     options.upgradeStrategy,
   );
 
-  const islands: IslandDecl[] = [...localIslands, ...packageIslandDecls];
+  const islandDeclarations: IslandDecl[] = [...localIslands, ...packageIslandDecls];
+  const islands: IslandDecl[] = islandDeclarations.flatMap(expandIslandDeliveryDecl);
   const cemClassifications = options.cemClassifications || [];
   const ssrAdmissionPlan = buildSsrAdmissionPlan(
-    islands,
+    islandDeclarations,
     cemClassifications,
     options.foreignTags || [],
   );
@@ -323,6 +360,7 @@ export function buildSsrAdmissionPlan(
   cemClassifications: CompatibilityClassification[] = [],
   foreignTags: string[] = [],
 ): SsrAdmissionPlan {
+  const expandedIslands = islands.flatMap(expandIslandDeliveryDecl);
   const renderableTags: string[] = [];
   const mergedClientOnlyTags: string[] = [];
   const rejectedTags: string[] = [];
@@ -336,7 +374,7 @@ export function buildSsrAdmissionPlan(
     cemMap.set(classification.tagName, classification);
   }
 
-  for (const island of islands) {
+  for (const island of expandedIslands) {
     const source = island.source || (island.isPackage ? 'package' : 'local');
 
     if (seen.has(island.tagName)) {

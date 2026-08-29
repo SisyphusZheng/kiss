@@ -14,8 +14,10 @@ import type {
   RouteEntry,
 } from './internal/protocol/framework.ts';
 import type { SsgBehaviorOptions } from './internal/protocol/ssg.ts';
+import type { IslandDecl } from './internal/protocol/ssg.ts';
 
 import { join, relative, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 import { formatError, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
@@ -34,8 +36,16 @@ import {
   renderEntry,
 } from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
+import {
+  buildCriticalHeadExtras,
+  minifyCriticalStyleBlocks,
+} from './internal/ssg/critical-assets.ts';
 import { islandTransformPlugin } from './island-transform.ts';
-import { compiledElementPlugin } from './internal/compiler/plugin.ts';
+import {
+  compiledElementPlugin,
+  compileElementModule,
+  createCompiledElementSourceMap,
+} from './internal/compiler/plugin.ts';
 import { devIslandClientPlugin, RESOLVED_CLIENT_ENTRY_ID } from './dev-island-client.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
@@ -48,6 +58,7 @@ import {
   scanRoutes,
 } from './internal/ssg/index.ts';
 import { buildPackageIslandDecls } from './internal/ssg/island-scanner.ts';
+import { resolveIslandDeliveryTags } from './internal/ssg/delivery.ts';
 import { mdxPlugin } from './plugin-mdx.ts';
 import {
   CHUNK_SIZE_WARNING_LIMIT_KB,
@@ -121,8 +132,18 @@ export function createOpenPlugin(
   options: FrameworkOptions & { ssg?: SsgBehaviorOptions; compiledSpike?: boolean } = {},
   externalCtx?: OpenElementBuildContext,
 ): Plugin[] {
-  // Build head extras (validated HTML fragments, stylesheets, scripts)
-  const { headExtras, allowHeadExtrasScripts } = buildHeadExtras(options);
+  // Build the validated legacy head channel, then prepend the opt-in alpha.4
+  // critical-assets channel. Both become one immutable document artifact; no
+  // runtime renderer or client fallback is introduced by the convention.
+  const legacyHead = buildHeadExtras(options);
+  const criticalHead = buildCriticalHeadExtras(options);
+  const headExtrasParts = [
+    criticalHead.headExtras,
+    legacyHead.headExtras ? minifyCriticalStyleBlocks(legacyHead.headExtras) : undefined,
+  ].filter((part): part is string => Boolean(part));
+  const headExtras = headExtrasParts.length > 0 ? headExtrasParts.join('\n  ') : undefined;
+  const allowHeadExtrasScripts = legacyHead.allowHeadExtrasScripts ||
+    criticalHead.allowHeadExtrasScripts;
 
   const resolvedOptions: FrameworkOptions & {
     allowHeadExtrasScripts?: boolean;
@@ -138,6 +159,10 @@ export function createOpenPlugin(
   };
 
   const ctx = externalCtx || new OpenElementBuildContext(resolvedOptions);
+  // Per-plugin-instance compiler state only. It is used to distinguish a
+  // compatible behavior edit from a Part Program shape edit during HMR; no
+  // module-global cache can leak a program between Vite builds.
+  const compiledProgramShapes = new Map<string, string>();
 
   // Pre-generate workspace aliases (sync, once, cached in ctx).
   // Phase 1 config, Phase 2 client build, and Phase 3 SSG build
@@ -249,7 +274,10 @@ export function createOpenPlugin(
     const islandFiles = await scanIslands(islandsRoot);
     ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
     ctx.phase1.islandFiles = islandFiles;
-    ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
+    ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles) as unknown as Record<
+      string,
+      Partial<IslandDecl>
+    >;
     if (resolvedOptions.mode === 'spa') return;
     generateEntry(
       ctx.phase1.cachedRoutes || [],
@@ -312,6 +340,58 @@ export function createOpenPlugin(
       );
     },
 
+    transform(code, id) {
+      try {
+        const result = compileElementModule(code, id);
+        if (!result) return null;
+        const key = id.split('?', 1)[0];
+        compiledProgramShapes.set(key, JSON.stringify(result.program));
+        return {
+          code: result.code,
+          map: createCompiledElementSourceMap(code, result.code, id, result.program),
+        };
+      } catch (error) {
+        if (error instanceof Error) this.error(error.message);
+        throw error;
+      }
+    },
+
+    async handleHotUpdate(hmr) {
+      if (!/\.tsx$/.test(hmr.file)) return;
+      let source: string;
+      try {
+        source = await readFile(hmr.file, 'utf8');
+      } catch {
+        compiledProgramShapes.delete(hmr.file);
+        return;
+      }
+      try {
+        const result = compileElementModule(source, hmr.file);
+        if (!result) {
+          compiledProgramShapes.delete(hmr.file);
+          return;
+        }
+        const nextShape = JSON.stringify(result.program);
+        const previousShape = compiledProgramShapes.get(hmr.file);
+        compiledProgramShapes.set(hmr.file, nextShape);
+        if (previousShape !== undefined && previousShape !== nextShape) {
+          // A changed static tree or Part/Region instruction cannot be safely
+          // patched in place. Full reload is the bounded fail-closed path;
+          // same-program method/initializer edits retain the element module's
+          // live state through ordinary Vite HMR.
+          hmr.server.ws.send({ type: 'full-reload' });
+          return [];
+        }
+        return hmr.modules;
+      } catch {
+        // The next normal transform reports the source-located compiler error.
+        // Do not keep a stale compiled module alive after an invalid edit.
+        compiledProgramShapes.delete(hmr.file);
+        hmr.server.ws.send({ type: 'full-reload' });
+        return [];
+      }
+    },
+
     async buildStart() {
       ctx.reset();
 
@@ -325,7 +405,10 @@ export function createOpenPlugin(
         const islandFiles = await scanIslands(islandsRoot);
         ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
         ctx.phase1.islandFiles = islandFiles;
-        ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
+        ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles) as unknown as Record<
+          string,
+          Partial<IslandDecl>
+        >;
 
         if (
           resolvedOptions.packageIslands &&
@@ -392,8 +475,39 @@ export function createOpenPlugin(
         // (client-only, visibility only) instead of never seeing them.
         try {
           const knownTags = new Set<string>(ctx.phase1.islandTagNames);
+          for (const [tagName, meta] of Object.entries(ctx.phase1.islandMeta)) {
+            const delivery = meta as IslandDecl & {
+              tags?: readonly string[];
+              tagNames?: readonly string[];
+            };
+            for (
+              const deliveredTag of resolveIslandDeliveryTags(
+                tagName,
+                delivery.tags,
+                delivery.tagNames,
+                tagName,
+              )
+            ) knownTags.add(deliveredTag);
+          }
           for (const pkg of ctx.phase1.packageManifests) {
-            for (const decl of pkg.declarations) knownTags.add(decl.tagName);
+            for (const decl of pkg.declarations) {
+              const delivery = decl as typeof decl & {
+                tags?: readonly string[];
+                tagNames?: readonly string[];
+              };
+              const openElement = decl.openElement as typeof decl.openElement & {
+                tags?: readonly string[];
+                tagNames?: readonly string[];
+              };
+              for (
+                const deliveredTag of resolveIslandDeliveryTags(
+                  decl.tagName,
+                  delivery.tags ?? openElement?.tags,
+                  delivery.tagNames ?? openElement?.tagNames,
+                  decl.tagName,
+                )
+              ) knownTags.add(deliveredTag);
+            }
           }
           const pageRoutes = routes.filter((r) => r.type === 'page' && !r.special);
           for (const route of pageRoutes) {

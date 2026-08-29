@@ -11,10 +11,19 @@
 import { resolve } from 'node:path';
 
 import type { HydrationStrategy } from '../protocol/framework.ts';
-import type { ClientIslandEntry, IslandDecl } from '../protocol/ssg.ts';
+import type { IslandDecl } from '../protocol/ssg.ts';
 
 import { fsPathToModuleSpecifier } from './module-specifier.ts';
 import { resolveIslandHydrate, resolveIslandSsrDsd } from './island-scanner.ts';
+import type { ClientIslandDeliveryEntry, IslandDeliveryStrategy } from './delivery.ts';
+
+type ScannedIslandMeta = Partial<IslandDecl> & {
+  hydrate?: IslandDeliveryStrategy;
+  media?: string;
+  tags?: readonly string[];
+  tagNames?: readonly string[];
+  exportNames?: Readonly<Record<string, string>>;
+};
 
 export function buildClientIslandEntries(options: {
   root: string;
@@ -26,7 +35,7 @@ export function buildClientIslandEntries(options: {
   islandMeta: Record<string, Partial<IslandDecl>>;
   packageIslandDecls: IslandDecl[];
   upgradeStrategy?: HydrationStrategy;
-}): ClientIslandEntry[] {
+}): ClientIslandDeliveryEntry[] {
   const {
     root,
     islandsDir,
@@ -39,7 +48,11 @@ export function buildClientIslandEntries(options: {
 
   return [
     ...islandTagNames.map((tagName: string, i: number) => {
-      const meta = islandMeta[tagName];
+      const meta = islandMeta[tagName] as ScannedIslandMeta | undefined;
+      const strategy = resolveIslandHydrate(
+        meta?.hydrate as IslandDeliveryStrategy | undefined,
+        upgradeStrategy,
+      );
       return {
         tagName,
         // #460: resolve() emits drive-letter backslash paths on Windows; convert
@@ -52,23 +65,45 @@ export function buildClientIslandEntries(options: {
           root,
         ),
         isPackage: false,
-        strategy: resolveIslandHydrate(meta?.hydrate, upgradeStrategy),
+        strategy,
+        ...(strategy === 'media' && meta?.media !== undefined ? { media: meta.media } : {}),
+        ...(meta?.tags !== undefined ? { tags: meta.tags } : {}),
+        ...(meta?.tagNames !== undefined ? { tagNames: meta.tagNames } : {}),
+        ...(meta?.exportNames !== undefined ? { exportNames: meta.exportNames } : {}),
         ...resolveIslandSsrDsd(meta ?? {}),
         reason: meta?.reason,
       };
     }),
     ...packageIslandDecls.map(
-      (island) => ({
-        tagName: island.tagName,
-        modulePath: island.modulePath,
-        isPackage: true,
-        // #638: forward the named export so the client factory reads
-        // mod[exportName] (UI package chunks dropped `export default`).
-        exportName: island.exportName,
-        strategy: resolveIslandHydrate(island.hydrate, upgradeStrategy),
-        ...resolveIslandSsrDsd(island),
-        reason: island.reason,
-      }),
+      (island) => {
+        const delivery = island as IslandDecl & {
+          media?: string;
+          tags?: readonly string[];
+          tagNames?: readonly string[];
+          exportNames?: Readonly<Record<string, string>>;
+        };
+        const strategy = resolveIslandHydrate(
+          (island as IslandDecl & { hydrate?: IslandDeliveryStrategy }).hydrate,
+          upgradeStrategy,
+        );
+        return ({
+          tagName: island.tagName,
+          modulePath: island.modulePath,
+          isPackage: true,
+          // #638: forward the named export so the client factory reads
+          // mod[exportName] (UI package chunks dropped `export default`).
+          exportName: island.exportName,
+          strategy,
+          ...(strategy === 'media' && delivery.media !== undefined
+            ? { media: delivery.media }
+            : {}),
+          ...(delivery.tags !== undefined ? { tags: delivery.tags } : {}),
+          ...(delivery.tagNames !== undefined ? { tagNames: delivery.tagNames } : {}),
+          ...(delivery.exportNames !== undefined ? { exportNames: delivery.exportNames } : {}),
+          ...resolveIslandSsrDsd(island),
+          reason: island.reason,
+        });
+      },
     ),
   ];
 }
