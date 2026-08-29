@@ -3,17 +3,18 @@
  * - empty submission -> fail(422, data) -> 422 re-render with the echo;
  * - valid submission -> redirect (PRG) with the value in the URL;
  * - named action 'shout' via formaction='?/shout'.
+ * v0.44: markup is the compiled Part Program in components/page-form.tsx;
+ * the props projector maps action data + the ?echoed= param onto the page's
+ * compiled properties (replacing the render-scope useActionData() hook).
  */
 import {
   definePage,
   fail,
   type OpenElementActionFailure,
+  type PagePropsContext,
   redirect,
-  useActionData,
 } from '@openelement/app';
-import '../islands/live-counter.tsx';
-
-export const tagName = 'page-form';
+import FormPage from '../components/page-form.tsx';
 
 interface FormActionData {
   error?: string;
@@ -35,32 +36,20 @@ export const actions = {
   },
 };
 
-const FormPage = definePage({
+function projectFormProps(context: PagePropsContext): Record<string, unknown> {
+  const actionData = context.actionData as FormActionData | undefined;
+  const echoed = context.request
+    ? new URL(context.request.url).searchParams.get('echoed')
+    : undefined;
+  return {
+    message: actionData?.message ?? '',
+    echoText: `echo=${echoed ?? ''}`,
+    hasError: actionData?.error ? 1 : 0,
+  };
+}
+
+export default definePage(FormPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — form' },
-  render({ request }) {
-    const actionData = useActionData() as FormActionData | undefined;
-    const echoed = request ? new URL(request.url).searchParams.get('echoed') : undefined;
-    return (
-      <main>
-        <h1>request-time form</h1>
-        <form method='post' data-open-enhance>
-          <input
-            id='message'
-            name='message'
-            type='text'
-            value={actionData?.message ?? ''}
-          />
-          <button id='submit' type='submit'>Send</button>
-          <button id='shout' type='submit' formaction='?/shout'>Shout</button>
-        </form>
-        {actionData?.error ? <p id='error'>{actionData.error}</p> : null}
-        <p id='echo'>echo={echoed ?? ''}</p>
-        <live-counter></live-counter>
-      </main>
-    );
-  },
+  props: projectFormProps,
 });
-
-customElements.define(tagName, FormPage);
-export default FormPage;

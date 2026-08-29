@@ -123,6 +123,11 @@ export function createCompiledElementSourceMap(
 export function compiledElementPlugin(): Plugin {
   return {
     name: 'open:compiled-element',
+    // The compiler owns the whole TSX module and must see the authored source:
+    // enforce 'pre' so this hook runs before Vite's builtin TS/JSX lowering
+    // (which would rewrite render() into runtime _jsx() calls the compiler
+    // rightly rejects).
+    enforce: 'pre',
 
     transform(code, id) {
       try {

@@ -1,17 +1,17 @@
 /**
  * /register — zod validation recipe (0.42.0-alpha.4): the action validates
  * with zod inside the route action; framework stays validation-agnostic.
+ * v0.44: markup compiled in components/page-register.tsx.
  */
 import {
   definePage,
   fail,
   type OpenElementActionFailure,
+  type PagePropsContext,
   redirect,
-  useActionData,
 } from '@openelement/app';
 import { z } from 'zod';
-
-export const tagName = 'page-register';
+import RegisterPage from '../components/page-register.tsx';
 
 const registerSchema = z.object({
   email: z.string().email('a valid email is required'),
@@ -33,25 +33,18 @@ export function action(ctx: { formData: FormData }): OpenElementActionFailure<Re
   throw redirect(`/register?welcome=${encodeURIComponent(parsed.data.email)}`);
 }
 
-const RegisterPage = definePage({
+export default definePage(RegisterPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — register (zod)' },
-  render({ request }) {
-    const actionData = useActionData() as RegisterActionData | undefined;
-    const welcome = request ? new URL(request.url).searchParams.get('welcome') : undefined;
-    return (
-      <main>
-        <h1>register with zod</h1>
-        <form method='post' data-open-enhance>
-          <input id='email' name='email' type='text' value={actionData?.email ?? ''} />
-          <button id='register' type='submit'>Register</button>
-        </form>
-        {actionData?.error ? <p id='error'>{actionData.error}</p> : null}
-        <p id='welcome'>welcome={welcome ?? ''}</p>
-      </main>
-    );
+  props(context: PagePropsContext) {
+    const actionData = context.actionData as RegisterActionData | undefined;
+    const welcome = context.request
+      ? new URL(context.request.url).searchParams.get('welcome')
+      : undefined;
+    return {
+      email: actionData?.email ?? '',
+      welcomeText: `welcome=${welcome ?? ''}`,
+      hasError: actionData?.error ? 1 : 0,
+    };
   },
 });
-
-customElements.define(tagName, RegisterPage);
-export default RegisterPage;

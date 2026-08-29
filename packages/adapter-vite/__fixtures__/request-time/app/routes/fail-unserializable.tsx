@@ -9,8 +9,11 @@
  *   drops the symbol key silently, the plain key must survive;
  * - big: a deeply nested but serializable payload (64 levels, 64 KiB leaf)
  *   proving neither channel truncates or 500s on large fail() data.
+ *
+ * v0.44: markup compiled in components/page-fail-unserializable.tsx.
  */
 import { definePage, fail, type OpenElementActionFailure } from '@openelement/app';
+import FailUnserializablePage from '../components/page-fail-unserializable.tsx';
 
 /** 64-deep serializable payload with a 64 KiB leaf (#1146 area 4b threshold). */
 function bigPayload(): Record<string, unknown> {
@@ -34,16 +37,6 @@ export function action(
   return fail(422, circular);
 }
 
-export default definePage({
+export default definePage(FailUnserializablePage, {
   renderIntent: { mode: 'dynamic' },
-  render() {
-    return (
-      <main>
-        <h1>fail-unserializable</h1>
-        <form method='post'>
-          <button type='submit'>go</button>
-        </form>
-      </main>
-    );
-  },
 });

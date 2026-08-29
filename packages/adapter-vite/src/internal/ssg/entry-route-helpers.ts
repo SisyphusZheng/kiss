@@ -60,19 +60,6 @@ export function renderMatchingRenderersFn(lines: string[], renderers: RendererDe
   lines.push('}');
 }
 
-/** Props object passed to the page jsx() call (page GET, action POST and SSG renderRoute). */
-export function pagePropsExpr(options: {
-  paramsExpr: string;
-  dataExpr: string;
-  actionDataExpr: string;
-  requestExpr: string;
-  routeExpr: string;
-  metaExpr: string;
-}): string {
-  const { paramsExpr, dataExpr, actionDataExpr, requestExpr, routeExpr, metaExpr } = options;
-  return `{ ...${paramsExpr}, __openElementData: ${dataExpr}, __openElementActionData: ${actionDataExpr}, __openElementParams: ${paramsExpr}, __openElementRequest: ${requestExpr}, __openElementRoute: ${routeExpr}, __openElementMeta: ${metaExpr} }`;
-}
-
 /** wrapInDocument() options object shared by page handlers and the SSG renderRoute. */
 export function documentWrapOptionsLines(options: {
   /** Expression yielding the page definition (head source), e.g. `__page`. */

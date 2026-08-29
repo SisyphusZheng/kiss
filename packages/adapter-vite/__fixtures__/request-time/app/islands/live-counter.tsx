@@ -1,31 +1,37 @@
 /**
- * live-counter — minimal signal counter island.
+ * live-counter — minimal counter island (v0.44 compiled, ADR-0143).
  *
- * Hydrates on load; clicking the button increments the count. Used on the
- * request-time /live page to prove hydration is identical to static pages.
+ * Hydrates on load; clicking the button increments the count through the
+ * compiled event Part. Used on the request-time /live page to prove
+ * hydration is identical to static pages. The shadow root keeps the island
+ * a DSD citizen (nested-DSD morph tests assert shadowRoot presence).
  */
-import { defineCustomElement, OpenElement, signal } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 
-export const tagName = 'live-counter';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
+declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 
+@element('live-counter', { root: 'shadow-open' })
 export default class LiveCounter extends OpenElement {
-  #count = signal(0);
+  @property({ reflect: false, attribute: false })
+  count = 0;
 
-  constructor() {
-    super();
-    this.registerSignal('count', this.#count);
+  increment(): void {
+    this.count++;
   }
 
-  override render() {
+  render() {
     return (
       <div class='counter-row'>
-        <button id='increment' type='button' onClick={() => this.#count.value++}>+</button>
-        <span id='count' data-signal='count'></span>
+        <button id='increment' type='button' onClick={this.increment}>+</button>
+        <span id='count'>{this.count}</span>
       </div>
     );
   }
 }
-
-defineCustomElement(tagName, LiveCounter);

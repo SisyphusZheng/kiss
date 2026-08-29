@@ -404,8 +404,11 @@ function validateTreeNodes(
           fail(`${where}[${position}] duplicates element ${rawNode.id}`);
         }
         elementIds.add(rawNode.id);
-        if (typeof rawNode.tag !== 'string' || !/^[a-z][a-z0-9]*$/.test(rawNode.tag)) {
-          fail(`${where}[${position}].tag must be a lowercase intrinsic tag`);
+        if (
+          typeof rawNode.tag !== 'string' ||
+          !/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(rawNode.tag)
+        ) {
+          fail(`${where}[${position}].tag must be a lowercase element tag`);
         }
         elementLocations.set(rawNode.id, {
           tag: rawNode.tag,

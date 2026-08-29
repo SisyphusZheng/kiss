@@ -3,16 +3,22 @@
  * shadow/DSD (`zag-combobox`) and light-mode (`zag-combobox-light`) spike
  * islands built for issue #1149.
  *
- * Composition contract under test:
- * - OpenElement owns the TSX structure (renderComboboxStructure), SSR/DSD or
- *   light rendering, and the custom-element lifecycle. The machine starts
- *   only after OpenElement activation (onDsdHydrated / onCsrRendered) and
- *   stops deterministically on disconnect.
- * - Zag owns state, keyboard, focus, ARIA, and collection behavior. Updates
- *   reach the DOM through in-place spreadProps() diffing against the
- *   surviving nodes — never through OpenElement.update() root replacement.
+ * v0.44 composition contract under test (ADR-0143):
+ * - The COMPILED class owns the structure: render() lowers the static
+ *   combobox markup (data-part nodes, items list) to a Part Program that the
+ *   server serializer and the client claim/creation runtimes execute; the
+ *   kernel owns the root.
+ * - Zag owns state, keyboard, focus, ARIA, and collection behavior. The
+ *   machine starts only after activation (the island classes call
+ *   startZagCombobox from onDsdHydrated/onCsrRendered) and stops in
+ *   disconnectedCallback. Updates reach the DOM through in-place
+ *   spreadProps() diffing against the surviving nodes — never through a
+ *   root replacement.
+ * - Machine state lives here (a WeakMap keyed by host), because compiled
+ *   classes may only carry @property fields + methods.
  * - Visuals consume Open Props scale values through --oe-* semantic tokens
- *   (mirroring packages/ui/src/open-props-tokens.css conventions).
+ *   (mirroring packages/ui/src/open-props-tokens.css conventions), injected
+ *   by the islands as a compiled static <style> node.
  *
  * Zag dependencies resolve through the ROOT deno.json import map — every
  * fixture gate (build, dev SSR, e2e) runs with the root config, and Vite
@@ -22,6 +28,8 @@
 
 import * as combobox from '@zag-js/combobox';
 import { normalizeProps, spreadProps, VanillaMachine } from '@zag-js/vanilla';
+import { StyleSheet } from '@openelement/element';
+import type { StyleSheetLike } from '@openelement/element';
 
 export interface ComboboxItem {
   value: string;
@@ -47,7 +55,7 @@ export interface ZagComboboxSnapshot {
   collectionValues: string[];
 }
 
-export interface ZagComboboxBinding {
+interface ZagComboboxBinding {
   /**
    * Controlled-prop update path: updateProps() -> subscribe -> spreadProps().
    * Sets value + inputValue together (Zag's documented controlled pattern).
@@ -63,12 +71,12 @@ export interface ZagComboboxBinding {
   stop(): void;
 }
 
-interface BindZagComboboxOptions {
+export interface StartZagComboboxOptions {
   /** Unique machine id; scopes every generated element id inside the scope root. */
   id: string;
   /** Form field name spread onto the input (light-mode form participation). */
   name?: string;
-  items: ComboboxItem[];
+  items?: ComboboxItem[];
   /**
    * Where data-part nodes are queried: the island's ShadowRoot (shadow mode)
    * or the host element itself (light mode).
@@ -80,10 +88,15 @@ interface BindZagComboboxOptions {
    * (a ShadowRoot when nested in a page, the Document at top level).
    */
   getRootNode(): Document | ShadowRoot | Node;
-  onValueChange?(value: string[]): void;
 }
 
-export function bindZagCombobox(options: BindZagComboboxOptions): ZagComboboxBinding {
+/** One machine binding per host element; the compiled classes own the lifecycle calls. */
+const bindings = new WeakMap<HTMLElement, ZagComboboxBinding>();
+
+/** Start the machine against the host's (claimed or freshly created) DOM. Idempotent. */
+export function startZagCombobox(host: HTMLElement, options: StartZagComboboxOptions): void {
+  if (bindings.has(host)) return;
+  const items = options.items ?? COMBOBOX_ITEMS;
   const { partsRoot } = options;
 
   // ADR-0142 composition: in-place activation preserves pre-upgrade input
@@ -96,10 +109,10 @@ export function bindZagCombobox(options: BindZagComboboxOptions): ZagComboboxBin
   let selectionCount = 0;
   // Typeahead filtering is consumer-owned in Zag: onInputValueChange swaps in
   // a filtered collection; renderParts then hides non-matching <li> nodes.
-  let visibleItems = options.items;
-  const makeCollection = (items: ComboboxItem[]) =>
+  let visibleItems = items;
+  const makeCollection = (nextItems: ComboboxItem[]) =>
     combobox.collection<ComboboxItem>({
-      items,
+      items: nextItems,
       itemToValue: (item) => item.value,
       itemToString: (item) => item.label,
       isItemDisabled: (item) => item.disabled === true,
@@ -107,18 +120,21 @@ export function bindZagCombobox(options: BindZagComboboxOptions): ZagComboboxBin
   const machine = new VanillaMachine(combobox.machine, {
     id: options.id,
     name: options.name,
-    collection: makeCollection(options.items),
+    collection: makeCollection(items),
     defaultInputValue: preUpgradeInputValue,
     getRootNode: () => options.getRootNode(),
-    onValueChange(details: { value: string[] }) {
+    onValueChange(_details: { value: string[] }) {
       selectionCount += 1;
-      options.onValueChange?.(details.value);
+      // Cross-instance duplicate-listener probe for the e2e spec.
+      const globalScope = globalThis as { __zagSelectCounts?: Record<string, number> };
+      const counts = (globalScope.__zagSelectCounts ??= {});
+      counts[options.id] = (counts[options.id] ?? 0) + 1;
     },
     onInputValueChange(details: { inputValue: string }) {
       const query = details.inputValue.trim().toLowerCase();
       visibleItems = query
-        ? options.items.filter((item) => item.label.toLowerCase().includes(query))
-        : options.items;
+        ? items.filter((item) => item.label.toLowerCase().includes(query))
+        : items;
       machine.updateProps({ collection: makeCollection(visibleItems) });
     },
   });
@@ -141,7 +157,7 @@ export function bindZagCombobox(options: BindZagComboboxOptions): ZagComboboxBin
     spread(partsRoot.querySelector('[data-part="trigger"]'), api.getTriggerProps());
     spread(partsRoot.querySelector('[data-part="positioner"]'), api.getPositionerProps());
     spread(partsRoot.querySelector('[data-part="content"]'), api.getContentProps());
-    for (const item of options.items) {
+    for (const item of items) {
       const el = partsRoot.querySelector<HTMLElement>(
         `[data-part="item"][data-value="${item.value}"]`,
       );
@@ -174,9 +190,9 @@ export function bindZagCombobox(options: BindZagComboboxOptions): ZagComboboxBin
     machine.send({ type: 'INPUT.FOCUS' });
   }
 
-  return {
+  bindings.set(host, {
     setControlledValue(value: string): void {
-      const item = options.items.find((candidate) => candidate.value === value);
+      const item = items.find((candidate) => candidate.value === value);
       machine.updateProps({ value: [value], inputValue: item?.label ?? value });
     },
     snapshot() {
@@ -199,52 +215,40 @@ export function bindZagCombobox(options: BindZagComboboxOptions): ZagComboboxBin
       cleanups.clear();
       machine.stop();
     },
-  };
+  });
 }
 
-/** Stable structure shared by both island variants; Zag queries by data-part. */
-export function renderComboboxStructure(options: { label: string; name?: string }) {
-  return (
-    <div class='zag-combobox' data-part='root'>
-      <label class='zag-combobox-label' data-part='label'>{options.label}</label>
-      <div class='zag-combobox-control' data-part='control'>
-        <input
-          class='zag-combobox-input'
-          data-part='input'
-          type='text'
-          name={options.name}
-          placeholder='Type or pick a fruit'
-          autocomplete='off'
-        />
-        <button class='zag-combobox-trigger' data-part='trigger' type='button'>▾</button>
-      </div>
-      <div class='zag-combobox-positioner' data-part='positioner'>
-        <ul class='zag-combobox-content' data-part='content'>
-          {COMBOBOX_ITEMS.map((item) => (
-            <li
-              class='zag-combobox-item'
-              data-part='item'
-              data-value={item.value}
-              data-disabled={item.disabled ? '' : undefined}
-            >
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+/** Stop the machine bound to the host (called from disconnectedCallback). */
+export function stopZagCombobox(host: HTMLElement): void {
+  const binding = bindings.get(host);
+  if (!binding) return;
+  bindings.delete(host);
+  binding.stop();
 }
+
+/** e2e hook for the controlled-prop evidence path (machine.updateProps). */
+export function zagComboboxSetControlledValue(host: HTMLElement, value: string): void {
+  bindings.get(host)?.setControlledValue(value);
+}
+
+/** e2e hook: machine-state snapshot after controlled updates. */
+export function zagComboboxSnapshot(host: HTMLElement): ZagComboboxSnapshot | null {
+  return bindings.get(host)?.snapshot() ?? null;
+}
+
+// ─── Island styles (consumed via the compiled `static styles` contract) ────
 
 /**
  * Open Props scale subset + --oe-* semantic tokens (values mirror
- * packages/ui/src/open-props-tokens.css). Consumed by the shadow island via
- * `static styles` (:host) and by the light island via an SSR'd <style> node
- * scoped to the component class, since light mode applies no static styles.
+ * packages/ui/src/open-props-tokens.css). Built here (a non-compiled module)
+ * because compiled classes ban runtime top-level statements; the islands
+ * reference the sheets through `static styles` — adoptedStyleSheets on the
+ * shadow island, the document-head compiled-style sink on the light island
+ * (light mode shares the page's tree).
  */
-export function comboboxTokenCss(hostSelector: string): string {
-  return `
-${hostSelector} {
+export function buildComboboxSheet(hostSelector: string): StyleSheetLike {
+  const sheet: StyleSheetLike = new StyleSheet();
+  sheet.replaceSync(`${hostSelector} {
   /* Open Props scale subset */
   --size-1: 4px;
   --size-2: 8px;
@@ -332,6 +336,64 @@ ${hostSelector} {
 .zag-combobox-item[data-disabled] {
   color: var(--oe-text-muted);
   cursor: not-allowed;
+}`);
+  return sheet;
 }
-`;
+
+/** Shared sheets: one per root scope contract (shadow :host / light class). */
+export const zagComboboxShadowStyles: StyleSheetLike[] = [buildComboboxSheet(':host')];
+export const zagComboboxLightStyles: StyleSheetLike[] = [
+  buildComboboxSheet('.zag-combobox-light'),
+];
+
+// ─── Compiled-kernel ownership: hand the structure back pristine ───────────
+
+/**
+ * The compiled claim is strict (fail-closed): on reconnect it validates the
+ * program's static structure, including exact attribute sets. Zag's
+ * spreadProps() mutations (role, ARIA attributes, id, data-state, and the
+ * reflected `hidden` on filtered items) are therefore removed on disconnect so a moved
+ * or reconnected island re-claims cleanly and the machine restarts on the
+ * pristine compiled DOM. Attribute contract mirrors the islands' static
+ * markup — keep them in sync.
+ */
+const STATIC_ATTRS_BY_PART: Record<string, Record<string, string>> = {
+  root: { class: 'zag-combobox', 'data-part': 'root' },
+  label: { class: 'zag-combobox-label', 'data-part': 'label' },
+  control: { class: 'zag-combobox-control', 'data-part': 'control' },
+  input: {
+    class: 'zag-combobox-input',
+    'data-part': 'input',
+    type: 'text',
+    placeholder: 'Type or pick a fruit',
+    autocomplete: 'off',
+  },
+  trigger: { class: 'zag-combobox-trigger', 'data-part': 'trigger', type: 'button' },
+  positioner: { class: 'zag-combobox-positioner', 'data-part': 'positioner' },
+  content: { class: 'zag-combobox-content', 'data-part': 'content' },
+};
+
+const ITEM_STATIC_ATTRS = ['class', 'data-part', 'data-value', 'data-disabled'];
+
+function restoreAttributes(el: Element, expected: Record<string, string>): void {
+  for (const name of el.getAttributeNames()) {
+    if (!(name in expected)) el.removeAttribute(name);
+  }
+  for (const [name, value] of Object.entries(expected)) {
+    if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+  }
+}
+
+/** Restore the compiled static structure under a Zag-bound parts root. */
+export function resetZagComboboxDom(partsRoot: ParentNode): void {
+  for (const [part, attrs] of Object.entries(STATIC_ATTRS_BY_PART)) {
+    const el = partsRoot.querySelector(`[data-part="${part}"]`);
+    if (el) restoreAttributes(el, attrs);
+  }
+  for (const el of partsRoot.querySelectorAll('[data-part="item"]')) {
+    for (const name of el.getAttributeNames()) {
+      if (!ITEM_STATIC_ATTRS.includes(name)) el.removeAttribute(name);
+    }
+    if ((el as HTMLElement).hidden) (el as HTMLElement).hidden = false;
+  }
 }

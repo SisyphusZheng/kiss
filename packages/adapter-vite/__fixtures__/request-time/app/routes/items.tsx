@@ -1,12 +1,10 @@
 /**
- * /items — identity-matched islands in a dynamic list (ADR-0121 §9): each
- * row carries a stable id, so prepending a row morphs the list without
- * resetting the existing islands' state.
+ * /items — islands in a dynamic list (ADR-0121 §9). v0.44 compiled shape:
+ * rows render through the compiled each-Region with per-row identity keys;
+ * see page-items.tsx for the item-attribute grammar gap note.
  */
-import { definePage, redirect } from '@openelement/app';
-import '../islands/live-counter.tsx';
-
-export const tagName = 'page-items';
+import { definePage, type PagePropsContext, redirect } from '@openelement/app';
+import ItemsPage from '../components/page-items.tsx';
 
 export function loader(ctx: { request: Request }): { items: string[] } {
   const url = new URL(ctx.request.url);
@@ -25,28 +23,14 @@ export const actions = {
   },
 };
 
-const ItemsPage = definePage({
+export default definePage(ItemsPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — items' },
-  render({ data }) {
-    return (
-      <main>
-        <form method='post' data-open-enhance>
-          <input type='hidden' name='items' value={data.items.join(',')} />
-          <button id='prepend' type='submit'>Prepend</button>
-          <button id='reverse' type='submit' formaction='?/reverse'>Reverse</button>
-        </form>
-        <ul>
-          {data.items.map((id) => (
-            <li id={`row-${id}`}>
-              <live-counter></live-counter>
-            </li>
-          ))}
-        </ul>
-      </main>
-    );
+  props({ data }: PagePropsContext<{ items: string[] }>) {
+    const items = data?.items ?? ['a', 'b'];
+    return {
+      rows: items.map((id) => ({ id, label: id })),
+      itemsValue: items.join(','),
+    };
   },
 });
-
-customElements.define(tagName, ItemsPage);
-export default ItemsPage;

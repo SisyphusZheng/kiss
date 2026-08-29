@@ -365,12 +365,16 @@ async function buildSSG(
         },
       },
       plugins: [
+        // MDX route support must mirror the outer plugin list (plugin.ts),
+        // otherwise .mdx routes fail Phase 3 parse (esbuild treats them as JS).
+        // The routesDir keeps the compiled page tag aligned with the
+        // path-derived registration tag the entry uses. The MDX transform
+        // emits the compiled page module source, so it must run BEFORE the
+        // compiler (both are enforce:'pre'; array order decides).
+        mdxPlugin({ routesDir }),
         // Keep SSR lowering identical to the outer Vite and client builds;
         // this inline build has its own plugin list.
         compiledElementPlugin(),
-        // MDX route support must mirror the outer plugin list (plugin.ts:396),
-        // otherwise .mdx routes fail Phase 3 parse (esbuild treats them as JS).
-        mdxPlugin(),
         // ADR 0010: Virtual SSG entry module
         // Replaces .openElement/.openElement-ssg-entry.ts file write
         {

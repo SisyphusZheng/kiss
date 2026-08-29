@@ -461,11 +461,18 @@ class Lowering {
     staticOnly = false,
   ): SpikeTreeNode {
     const tag = tagNameNode.getText(this.sf);
-    if (!/^[a-z][a-z0-9]*$/.test(tag)) {
+    // alpha.8: custom-element hosts (<x-y>) are admitted as opaque nested
+    // hosts — the page/layout composition renders them as host tags that the
+    // server entry expands per the SSR admission plan. They carry static
+    // literal attributes or this.<property> bindings (lowered as prop Parts so
+    // the server serializer emits them as host attributes); children, event
+    // handlers and refs on hosts fail closed (slots are outside grammar v1).
+    const isCustomHost = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(tag);
+    if (!/^[a-z][a-z0-9]*$/.test(tag) && !isCustomHost) {
       this.fail(
         tagNameNode,
         'OEC9010',
-        `component tag <${tag}> is outside the compiler grammar (intrinsic lowercase elements only)`,
+        `component tag <${tag}> is outside the compiler grammar (intrinsic lowercase elements and custom-element hosts only)`,
       );
     }
     const attrs: Array<[string, string]> = [];
@@ -479,6 +486,9 @@ class Lowering {
       const init = prop.initializer;
       const isDynamicEvent = /^on[A-Z]/.test(name) && init !== undefined &&
         ts.isJsxExpression(init) && init.expression !== undefined;
+      if (isCustomHost && (isDynamicEvent || /^on[A-Z]/.test(name))) {
+        this.fail(prop, 'OEC9017', `custom-element host <${tag}> may not carry event handlers`);
+      }
       if (!isSafeAttributeName(name) && !isDynamicEvent) {
         this.fail(prop, 'OEC9011', `attribute name "${name}" is unsafe`);
       }
@@ -509,6 +519,9 @@ class Lowering {
         continue;
       }
       if (name === 'ref') {
+        if (isCustomHost) {
+          this.fail(prop, 'OEC9017', `custom-element host <${tag}> may not carry a ref`);
+        }
         if (staticOnly) this.fail(prop, 'OEC9012', 'Region branches must be fully static');
         const ref = this.fieldAccess(expr);
         if (!ref) this.fail(prop, 'OEC9011', 'ref must reference this.<field>');
@@ -518,6 +531,13 @@ class Lowering {
       const field = this.fieldAccess(expr);
       if (field) {
         if (staticOnly) this.fail(prop, 'OEC9012', 'Region branches must be fully static');
+        if (isCustomHost) {
+          // Host attributes cross the SSR boundary as host attributes: lower
+          // every dynamic host attribute as a prop Part so the serializer
+          // emits it and the client claim assigns it as a JS property.
+          this.addPart({ k: 'prop', signal: field, name, path }, path, prop, elementId);
+          continue;
+        }
         this.lowerDynamicAttribute(name, field, tag, path, prop, elementId);
         continue;
       }
@@ -528,6 +548,14 @@ class Lowering {
       }
       if (literal === false || literal === null) continue;
       attrs.push([name, literal === true ? '' : text ?? '']);
+    }
+
+    if (isCustomHost && children.some((child) => hasMeaningfulJsxChild(this.sf, child))) {
+      this.fail(
+        sourceNode,
+        'OEC9017',
+        `custom-element host <${tag}> may not have children in the compiler grammar (slots are unsupported); compose through page layout instead`,
+      );
     }
 
     const lowered: SpikeTreeNode[] = [];
@@ -880,7 +908,12 @@ class Lowering {
       ? element.openingElement.attributes
       : element.attributes;
     const tag = tagName.getText(this.sf);
-    if (!/^[a-z][a-z0-9]*$/.test(tag)) {
+    // alpha.8: item templates may nest custom-element hosts (e.g. an island
+    // per row) as empty static shells — static literal attributes only, no
+    // children (slots are outside grammar v1). The server serializer emits
+    // them verbatim and the client instantiates them per item.
+    const isCustomHost = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(tag);
+    if (!/^[a-z][a-z0-9]*$/.test(tag) && !isCustomHost) {
       this.fail(tagName, 'OEC9010', 'list Region item must be an intrinsic lowercase element');
     }
     const elementId = this.reserveElement(tag, path, element);
@@ -930,6 +963,13 @@ class Lowering {
       const child = rawChildren.find((candidate) => hasMeaningfulJsxChild(this.sf, candidate));
       if (child) this.fail(child, 'OEC9013', `void element <${tag}> may not have children`);
     }
+    if (isCustomHost && rawChildren.some((child) => hasMeaningfulJsxChild(this.sf, child))) {
+      this.fail(
+        element,
+        'OEC9017',
+        `custom-element host <${tag}> may not have children in the compiler grammar (slots are unsupported)`,
+      );
+    }
     for (const child of rawChildren) {
       const childPath = [...path, children.length];
       if (ts.isJsxText(child)) {
@@ -967,15 +1007,42 @@ function propertyFields(
   sf: ts.SourceFile,
   classNode: ts.ClassDeclaration,
   fail: (node: ts.Node, code: string, message: string) => never,
-): { fields: SpikeField[]; methods: ts.MethodDeclaration[]; render: ts.MethodDeclaration } {
+): {
+  fields: SpikeField[];
+  methods: ts.MethodDeclaration[];
+  render: ts.MethodDeclaration;
+  stylesText?: string;
+} {
   const fields: SpikeField[] = [];
   const methods: ts.MethodDeclaration[] = [];
   let render: ts.MethodDeclaration | null = null;
+  let stylesText: string | undefined;
   const names = new Set<string>();
   const propertyAttributeNames = new Set<string>();
   for (const member of classNode.members) {
     if (ts.isPropertyDeclaration(member)) {
       const modifiers = ts.getModifiers(member) ?? [];
+      // alpha.8: `static styles = <expr>` is the one static member a compiled
+      // class may carry — the facade's compiled style scope consumes it
+      // (adoptedStyleSheets for shadow roots, a document-head sink for light
+      // roots). The initializer is copied verbatim; it typically references a
+      // StyleSheet built in a non-compiled module (compiled modules ban
+      // runtime top-level statements). Raw-text <style>/<script> elements are
+      // rejected from templates by the serializer, so styles never inline.
+      if (
+        modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword) &&
+        ts.isIdentifier(member.name) && member.name.text === 'styles' &&
+        (ts.getDecorators(member) ?? []).length === 0
+      ) {
+        if (!member.initializer) {
+          fail(member, 'OEC9005', 'static styles requires an initializer');
+        }
+        if (stylesText !== undefined) {
+          fail(member, 'OEC9005', 'compiled classes may declare static styles only once');
+        }
+        stylesText = member.initializer.getText(sf);
+        continue;
+      }
       const accessibilityModifiers = modifiers.filter((modifier) =>
         modifier.kind === ts.SyntaxKind.PublicKeyword ||
         modifier.kind === ts.SyntaxKind.ProtectedKeyword ||
@@ -1157,7 +1224,7 @@ function propertyFields(
     );
   }
   if (!render) fail(classNode, 'OEC9007', 'compiled classes must declare render()');
-  return { fields, methods, render };
+  return { fields, methods, render, stylesText };
 }
 
 function isDeclareStatement(statement: ts.Statement): boolean {
@@ -1165,6 +1232,39 @@ function isDeclareStatement(statement: ts.Statement): boolean {
     (ts.getModifiers(statement) ?? []).some((modifier) =>
       modifier.kind === ts.SyntaxKind.DeclareKeyword
     );
+}
+
+/**
+ * The one extra runtime statement a compiled module may carry: the island
+ * delivery policy colocated with the class
+ * (`export const openElement = defineIslandConfig({ ... })`). The statement is
+ * validated here and copied verbatim into the generated module; the runtime
+ * defineIslandConfig() validates the descriptor itself at module evaluation.
+ * Anything else stays outside the compiled module grammar (OEC9008).
+ */
+function isIslandConfigStatement(sf: ts.SourceFile, statement: ts.Statement): boolean {
+  if (!ts.isVariableStatement(statement)) return false;
+  const modifiers = ts.getModifiers(statement) ?? [];
+  if (
+    modifiers.length !== 1 || modifiers[0].kind !== ts.SyntaxKind.ExportKeyword
+  ) {
+    return false;
+  }
+  const declarations = statement.declarationList.declarations;
+  if (declarations.length !== 1) return false;
+  const declaration = declarations[0];
+  if (!ts.isIdentifier(declaration.name) || declaration.name.text !== 'openElement') {
+    return false;
+  }
+  const initializer = declaration.initializer;
+  if (!initializer || !ts.isCallExpression(initializer)) return false;
+  if (initializer.expression.getText(sf) !== 'defineIslandConfig') return false;
+  if (
+    initializer.arguments.length !== 1 || !ts.isObjectLiteralExpression(initializer.arguments[0])
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function hasRuntimeOpenElementImport(sf: ts.SourceFile): boolean {
@@ -1272,12 +1372,19 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     throw new CompiledSpikeError([diagnosticAt(sf, node, code, message)]);
   }
 
+  const passthroughStatements: string[] = [];
   for (const statement of sf.statements) {
     if (
       ts.isImportDeclaration(statement) || ts.isClassDeclaration(statement) ||
       ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) ||
       ts.isModuleDeclaration(statement) || isDeclareStatement(statement)
     ) continue;
+    // alpha.8: the island delivery policy is the one runtime statement a
+    // compiled module may carry; it is validated and copied verbatim below.
+    if (isIslandConfigStatement(sf, statement)) {
+      passthroughStatements.push(statement.getText(sf));
+      continue;
+    }
     fail(
       statement,
       'OEC9008',
@@ -1305,13 +1412,20 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     );
   }
   const classModifiers = ts.getModifiers(classNode) ?? [];
-  if (
-    classModifiers.length !== 1 || classModifiers[0].kind !== ts.SyntaxKind.ExportKeyword
-  ) {
+  // alpha.8: the canonical route/island module default-exports its compiled
+  // class, so `export default class` is admitted alongside `export class`.
+  const isDefaultExport = classModifiers.some((modifier) =>
+    modifier.kind === ts.SyntaxKind.DefaultKeyword
+  );
+  const modifiersValid = isDefaultExport
+    ? classModifiers.length === 2 &&
+      classModifiers.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+    : classModifiers.length === 1 && classModifiers[0].kind === ts.SyntaxKind.ExportKeyword;
+  if (!modifiersValid) {
     fail(
       classNode,
       'OEC9006',
-      'compiled @element classes must be named exports without class modifiers',
+      'compiled @element classes must be exported (optionally as the default export) without other class modifiers',
     );
   }
   let tag = '';
@@ -1320,12 +1434,46 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
   if (!ts.isCallExpression(expr) || expr.expression.getText(sf) !== 'element') {
     fail(decorator, 'OEC9004', 'unknown decorator on an OpenElement class; use only @element');
   }
-  if (expr.arguments.length !== 1 || !ts.isStringLiteral(expr.arguments[0])) {
-    fail(decorator, 'OEC9002', '@element requires exactly one string tag name');
+  if (
+    expr.arguments.length < 1 || expr.arguments.length > 2 ||
+    !ts.isStringLiteral(expr.arguments[0])
+  ) {
+    fail(
+      decorator,
+      'OEC9002',
+      '@element requires a string tag name plus an optional options object',
+    );
   }
   tag = expr.arguments[0].text;
   if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(tag)) {
     fail(decorator, 'OEC9002', `@element tag "${tag}" is not a custom-element name`);
+  }
+  // alpha.8: `@element(tag, { root: 'light' | 'shadow-open' | 'shadow-closed' })`
+  // selects the program root ownership mode (light content vs DSD). Pages and
+  // DSD islands compile with a shadow root; the default stays light.
+  let rootKind: 'light' | 'shadow-open' | 'shadow-closed' = 'light';
+  if (expr.arguments.length === 2) {
+    const options = expr.arguments[1];
+    if (!ts.isObjectLiteralExpression(options)) {
+      fail(decorator, 'OEC9002', '@element options must be an object literal');
+    }
+    for (const entry of options.properties) {
+      if (
+        !ts.isPropertyAssignment(entry) || entry.name.getText(sf) !== 'root' ||
+        !ts.isStringLiteral(entry.initializer)
+      ) {
+        fail(entry, 'OEC9002', '@element options support only root: "<mode>" string literals');
+      }
+      const mode = entry.initializer.text;
+      if (mode !== 'light' && mode !== 'shadow-open' && mode !== 'shadow-closed') {
+        fail(
+          entry,
+          'OEC9002',
+          `@element root "${mode}" is unsupported; use "light", "shadow-open" or "shadow-closed"`,
+        );
+      }
+      rootKind = mode;
+    }
   }
   const heritage = classNode.heritageClauses?.find((clause) =>
     clause.token === ts.SyntaxKind.ExtendsKeyword
@@ -1341,7 +1489,7 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
   }
   if (!classNode.name) fail(classNode, 'OEC9003', 'compiled classes must be named');
   const className = classNode.name.text;
-  const { fields, methods, render } = propertyFields(sf, classNode, fail);
+  const { fields, methods, render, stylesText } = propertyFields(sf, classNode, fail);
   const methodNames = methods.map((method) => (method.name as ts.Identifier).text);
   const lowering = new Lowering(sf, fields, methodNames);
   const renderStatements = render.body?.statements ?? [];
@@ -1403,7 +1551,7 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
   const program: PartProgramSpike = {
     version: 1,
     tag,
-    root: { id: 'root', kind: 'light', nodes: [root.id] },
+    root: { id: 'root', kind: rootKind, nodes: [root.id] },
     template: [root],
     parts: lowering.parts,
     regions: lowering.regions,
@@ -1426,6 +1574,12 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     '  static props = __compiledProps;',
     '  static observedAttributes = __observedAttributes;',
   ];
+  if (stylesText !== undefined) {
+    // Copied verbatim: the facade reads static styles into the compiled style
+    // scope (adoptedStyleSheets on shadow roots, a document-head sink on light
+    // roots). The serializer never inlines raw-text elements.
+    memberLines.push(`  static styles = ${stylesText};`);
+  }
   for (const field of fields) {
     const accessibility = field.accessibility ? `${field.accessibility} ` : '';
     memberLines.push(
@@ -1455,6 +1609,8 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     '// <auto-generated by open:compiled-element; v0.44.0-alpha.1 - do not edit>',
     ...imports,
     '',
+    ...passthroughStatements,
+    ...(passthroughStatements.length > 0 ? [''] : []),
     `const __partProgram = ${programJson};`,
     '',
     `const __compiledProperties = ${propertiesJson};`,
@@ -1465,7 +1621,7 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     '',
     ...runtimePropsText(fields),
     '',
-    `export class ${className} extends OpenElement {`,
+    `export ${isDefaultExport ? 'default ' : ''}class ${className} extends OpenElement {`,
     ...memberLines,
     '}',
     '',

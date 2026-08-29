@@ -1,17 +1,17 @@
 /**
  * /subscribe — valibot validation recipe (0.42.0-alpha.4): same contract as
  * the zod recipe, different library, to prove the loop is library-agnostic.
+ * v0.44: markup compiled in components/page-subscribe.tsx.
  */
 import {
   definePage,
   fail,
   type OpenElementActionFailure,
+  type PagePropsContext,
   redirect,
-  useActionData,
 } from '@openelement/app';
 import * as v from 'valibot';
-
-export const tagName = 'page-subscribe';
+import SubscribePage from '../components/page-subscribe.tsx';
 
 const subscribeSchema = v.object({
   email: v.pipe(v.string(), v.email('a valid email is required')),
@@ -34,25 +34,18 @@ export function action(ctx: { formData: FormData }): OpenElementActionFailure<Su
   throw redirect(`/subscribe?welcome=${encodeURIComponent(parsed.output.email)}`);
 }
 
-const SubscribePage = definePage({
+export default definePage(SubscribePage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — subscribe (valibot)' },
-  render({ request }) {
-    const actionData = useActionData() as SubscribeActionData | undefined;
-    const welcome = request ? new URL(request.url).searchParams.get('welcome') : undefined;
-    return (
-      <main>
-        <h1>subscribe with valibot</h1>
-        <form method='post' data-open-enhance>
-          <input id='email' name='email' type='text' value={actionData?.email ?? ''} />
-          <button id='subscribe' type='submit'>Subscribe</button>
-        </form>
-        {actionData?.error ? <p id='error'>{actionData.error}</p> : null}
-        <p id='welcome'>welcome={welcome ?? ''}</p>
-      </main>
-    );
+  props(context: PagePropsContext) {
+    const actionData = context.actionData as SubscribeActionData | undefined;
+    const welcome = context.request
+      ? new URL(context.request.url).searchParams.get('welcome')
+      : undefined;
+    return {
+      email: actionData?.email ?? '',
+      welcomeText: `welcome=${welcome ?? ''}`,
+      hasError: actionData?.error ? 1 : 0,
+    };
   },
 });
-
-customElements.define(tagName, SubscribePage);
-export default SubscribePage;

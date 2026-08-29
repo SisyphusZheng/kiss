@@ -2,18 +2,18 @@
  * /regions — data-open-region / data-open-preserve morph semantics
  * (ADR-0121 §8): the form is scoped to its nearest ancestor region; the
  * preserved subtree survives untouched; a form targeting a missing region
- * falls back to a full navigation.
+ * falls back to a full navigation. v0.44: markup compiled in
+ * components/page-regions.tsx; the descriptor projector replaces the
+ * render-scope useActionData() hook.
  */
 import {
   definePage,
   fail,
   type OpenElementActionFailure,
+  type PagePropsContext,
   redirect,
-  useActionData,
 } from '@openelement/app';
-import '../islands/live-counter.tsx';
-
-export const tagName = 'page-regions';
+import RegionsPage from '../components/page-regions.tsx';
 
 interface RegionActionData {
   error?: string;
@@ -30,43 +30,18 @@ export function action(
   throw redirect(`/regions?echoed=${encodeURIComponent(message)}`);
 }
 
-const RegionsPage = definePage({
+export default definePage(RegionsPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — regions' },
-  render({ request }) {
-    const actionData = useActionData() as RegionActionData | undefined;
-    const echoed = request ? new URL(request.url).searchParams.get('echoed') : undefined;
-    return (
-      <main>
-        <div data-open-region='banner'>
-          <p id='banner'>echo={echoed ?? ''}</p>
-        </div>
-        <section data-open-region='form-area'>
-          <form method='post' data-open-enhance>
-            <input
-              id='message'
-              name='message'
-              type='text'
-              value={actionData?.message ?? ''}
-            />
-            <button id='submit' type='submit'>Send</button>
-            <button id='missing' type='submit' data-open-region-target='no-such-region'>
-              Send to missing region
-            </button>
-          </form>
-          {actionData?.error ? <p id='error'>{actionData.error}</p> : null}
-          <div id='preserved' data-open-preserve>
-            <details id='preserved-details'>
-              <summary>keep me</summary>
-              secret
-            </details>
-          </div>
-        </section>
-        <live-counter></live-counter>
-      </main>
-    );
+  props(context: PagePropsContext) {
+    const actionData = context.actionData as RegionActionData | undefined;
+    const echoed = context.request
+      ? new URL(context.request.url).searchParams.get('echoed')
+      : undefined;
+    return {
+      bannerText: `echo=${echoed ?? ''}`,
+      message: actionData?.message ?? '',
+      hasError: actionData?.error ? 1 : 0,
+    };
   },
 });
-
-customElements.define(tagName, RegionsPage);
-export default RegionsPage;

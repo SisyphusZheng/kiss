@@ -59,12 +59,19 @@ export function renderEntry(desc: EntryDescriptor): string {
   for (const island of desc.islands) {
     islandLookup[island.tagName] = island.modulePath;
   }
-  const appShellImports = new Set<string>();
-  const collectShellImport = (shell: typeof desc.appShell.default) => {
-    if (shell) appShellImports.add(shell.importPath);
+  // --- App-shell imports + explicit registration ---
+  // Compiled shell modules do not self-register (0.44): the entry imports the
+  // module namespace and registers the default-exported compiled class under
+  // the configured shell tag. renderDsd fails closed on a tag mismatch.
+  // Deduped by importPath — one module maps to one compiled class and tag.
+  const appShellModules = new Map<string, string>();
+  const collectShellModule = (shell: typeof desc.appShell.default) => {
+    if (shell && !appShellModules.has(shell.importPath)) {
+      appShellModules.set(shell.importPath, shell.tagName);
+    }
   };
-  collectShellImport(desc.appShell.default);
-  for (const shell of Object.values(desc.appShell.layouts)) collectShellImport(shell);
+  collectShellModule(desc.appShell.default);
+  for (const shell of Object.values(desc.appShell.layouts)) collectShellModule(shell);
 
   lines.push(
     `// Known islands (determined at build time by scanning islandsDir)`,
@@ -98,8 +105,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
 
   // --- Document wrapper ---
-  lines.push(`import { wrapInDocument } from '@openelement/element';`);
-  lines.push(`import { jsx } from '@openelement/element';`);
+  // wrapInDocument is a codegen-owned runtime helper (entry-render-runtime.ts)
+  // since 0.44 — the element package no longer exports a runtime document
+  // wrapper. jsx/renderDsdTree are gone: pages render through the sync
+  // compiled renderDsd via __ssr.
   lines.push(`import { createLogger } from '@openelement/element';`);
   lines.push(
     `import { createRuntimeAdapter, insertBeforeBodyClose as __insertBeforeBodyClose } from '@openelement/element/build-utils';`,
@@ -116,8 +125,17 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(
     `import { getDefaultLocale as __getDefaultLocale, locales as __locales } from '@openelement/generated/i18n';`,
   );
-  for (const importPath of appShellImports) {
-    lines.push(`import ${quoteGeneratedJavaScriptValue(importPath)};`);
+  const appShellModuleList = [...appShellModules].map(([importPath, tagName], index) => ({
+    importPath,
+    tagName,
+    varName: `__shell_${index}`,
+  }));
+  for (const shellModule of appShellModuleList) {
+    lines.push(
+      `import * as ${shellModule.varName} from ${
+        quoteGeneratedJavaScriptValue(shellModule.importPath)
+      };`,
+    );
   }
   lines.push(`const log = createLogger('server-entry');`);
   lines.push('');
@@ -137,9 +155,6 @@ export function renderEntry(desc: EntryDescriptor): string {
   // --- Register page components in SSR customElements registry ---
   {
     lines.push('// ADR 0014: Idempotent customElements.define for SSR (dev + SSG)');
-    lines.push(
-      '// Island modules call customElements.define() as a side-effect.',
-    );
     lines.push(
       '// The SSR dom-shim does not make define() idempotent, so we patch it.',
     );
@@ -163,18 +178,14 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('  }');
     lines.push('};');
     lines.push('');
-    // #952: entry-side registration ownership tracking. A route module can
-    // self-register a DIFFERENT class for its tag via defineElement at module
-    // top level. Since #960 (registration decoupling) a definePage route's
-    // page class is registered under the path-derived fallback tag, so the
-    // shape-1 pattern (defineElement('home-page', …) content element plus a
-    // definePage render returning <home-page/>) no longer collides with the
-    // entry's registration at all. The ownership guard still covers what is
-    // left: plain element routes self-registering their own default export
-    // under the exported tagName, and dev re-evaluation of those modules —
-    // overwriting a fresh self-registered class with the entry's page class
-    // would recurse when its render emits the same tag. The entry therefore
-    // only overwrites registrations it made itself.
+    // #952: entry-side registration ownership tracking. Since #960
+    // (registration decoupling) a definePage route's page class registers
+    // under the path-derived fallback tag; v0.44 compiled modules never
+    // self-register, so the entry owns every registration. The ownership
+    // guard still covers dev re-evaluation — overwriting a fresh
+    // self-registered class with the entry's page class would recurse when
+    // its compiled program emits the same tag. The entry therefore only
+    // overwrites registrations it made itself.
     // #965: the marker/property names below are chartered constants —
     // SSR_REGISTRY_STUB_MARKER / ENTRY_REGISTRATION_OWNERS in
     // @openelement/element internal/protocol/ssr-registry-markers.ts; keep
@@ -191,28 +202,20 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('  if (!current) customElements.define(tag, ctor);');
     lines.push('}');
     lines.push('');
-    // #954: MDX routes default-export a plain function component, not an
-    // element class with a render() method. Wrap it in a minimal class whose
-    // render() mounts the function's VNode, so .mdx pages render through the
-    // same custom-element path as definePage routes. The check keys on
-    // prototype.render because the SSR bundle has no global HTMLElement to
-    // instanceof against (the element base class falls back to a local stub).
-    lines.push('const __asRouteElementClass = (component) => {');
-    lines.push(
-      '  if (typeof component === "function" && typeof component.prototype?.render !== "function") {',
-    );
-    lines.push('    return class {');
-    lines.push('      render() { return component({}); }');
-    lines.push('    };');
-    lines.push('  }');
-    lines.push('  return component;');
-    lines.push('};');
-    lines.push('');
   }
   for (const route of desc.pageRoutes) {
     const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
     lines.push(
-      `try { __registerSsrComponent(${tagNameExpr}, __asRouteElementClass(${route.varName}.default)); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
+      `try { __registerSsrComponent(${tagNameExpr}, ${route.varName}.default); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
+    );
+  }
+  for (const shellModule of appShellModuleList) {
+    lines.push(
+      `try { __registerSsrComponent(${
+        quoteGeneratedJavaScriptValue(shellModule.tagName)
+      }, ${shellModule.varName}.default); } catch (err) { console.error('[ssg] Failed to register app shell custom element ${
+        quoteGeneratedJavaScriptValue(shellModule.tagName)
+      }:', err); throw err; }`,
     );
   }
   lines.push('');
@@ -264,7 +267,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
 
   // --- Runtime helpers ---
-  lines.push(renderRuntimeHelpers(desc.appShell));
+  lines.push(renderRuntimeHelpers(desc.appShell, desc.ssrAdmissionPlan.renderableTags));
   lines.push('');
   if (desc.pageRoutes.length > 0) {
     lines.push(renderActionRuntime());

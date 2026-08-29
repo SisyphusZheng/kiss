@@ -2,9 +2,17 @@
  * /set-header — ADR-0129 response-header channel: the loader and the action
  * append to context.responseHeaders and the generated entry merges the
  * channel into every response of the request (render, redirect, re-render),
- * with protocol headers winning on conflict.
+ * with protocol headers winning on conflict. v0.44: markup compiled in
+ * components/page-set-header.tsx.
  */
-import { definePage, fail, type OpenElementActionFailure, redirect } from '@openelement/app';
+import {
+  definePage,
+  fail,
+  type OpenElementActionFailure,
+  type PagePropsContext,
+  redirect,
+} from '@openelement/app';
+import SetHeaderPage from '../components/page-set-header.tsx';
 
 interface ChannelActionData {
   error?: string;
@@ -31,18 +39,12 @@ export function loader(ctx: { responseHeaders: Headers }): void {
   ctx.responseHeaders.append('cache-control', 'public, max-age=3600');
 }
 
-export default definePage({
+export default definePage(SetHeaderPage, {
   renderIntent: { mode: 'dynamic' },
-  render({ request }: { request?: Request }) {
-    const done = request ? new URL(request.url).searchParams.get('done') : undefined;
-    return (
-      <main>
-        <h1>set-header</h1>
-        {done ? <p id='done'>done={done}</p> : null}
-        <form method='post'>
-          <button type='submit'>go</button>
-        </form>
-      </main>
-    );
+  props(context: PagePropsContext) {
+    const done = context.request
+      ? new URL(context.request.url).searchParams.get('done')
+      : undefined;
+    return { doneText: `done=${done ?? ''}` };
   },
 });

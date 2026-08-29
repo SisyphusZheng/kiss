@@ -1,37 +1,25 @@
 /**
- * /decoupled — regression fixture for #960 (registration decoupling).
+ * /decoupled — regression fixture for #960 (registration decoupling), v0.44
+ * compiled shape.
  *
- * The exact failure shape from the issue: a route module exporting
- * `tagName = 'decoupled-view'`, self-registering a CONTENT element under
- * that same tag, and default-exporting a definePage whose render depends on
- * request context. Before the fix the entry registered the page class under
- * 'decoupled-view', the self-registered content element won, and the
- * definePage render was silently bypassed (the marker below never
- * rendered). After the fix the page class registers under the path-derived
- * fallback tag ('decoupled-page') and always renders, wrapping the content
- * element.
+ * The page class (components/page-decoupled.tsx, @element('decoupled-page'))
+ * registers under the path-derived fallback tag and nests the compiled
+ * content island <decoupled-view> (app/islands/decoupled-view.tsx). The
+ * request-scoped marker flows: request -> loader-free props projector -> the
+ * page's compiled `marker` property -> host attribute -> the island's
+ * compiled `marker` property. Before #960 the self-registered content
+ * element shadowed the page class and the request context never arrived.
  */
-import { defineElement, definePage } from '@openelement/app';
+import { definePage, type PagePropsContext } from '@openelement/app';
+import DecoupledPage from '../components/page-decoupled.tsx';
 
-export const tagName = 'decoupled-view';
-
-defineElement(tagName, {
-  render(props: { marker?: string }) {
-    return <p id='decoupled-content'>content element: {props.marker ?? 'no marker'}</p>;
-  },
-});
-
-const DecoupledPage = definePage({
+export default definePage(DecoupledPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — decoupled' },
-  render({ request }) {
-    const marker = request ? new URL(request.url).searchParams.get('marker') : null;
-    return (
-      <main id='decoupled-page-render'>
-        <decoupled-view marker={marker ?? undefined} />
-      </main>
-    );
+  props(context: PagePropsContext) {
+    const marker = context.request ? new URL(context.request.url).searchParams.get('marker') : null;
+    return {
+      marker: marker === null ? 'content element: no marker' : `content element: ${marker}`,
+    };
   },
 });
-
-export default DecoupledPage;

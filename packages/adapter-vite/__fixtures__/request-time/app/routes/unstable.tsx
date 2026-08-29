@@ -1,31 +1,23 @@
 /**
- * /unstable — render-time failure channel (#943 amendment regression).
+ * /unstable — failure channel regression page (#943 amendment).
  *
- * Every failure mode is thrown from render() (i.e. from inside
- * __renderAppShell), NOT from the loader, because the #943 Cache-Control
- * override used to be emitted before the shell render: a notFound()/
- * redirect()/throw out of render leaked `private, no-cache` onto the
- * 404/3xx/500 response. ADR-0121 section 6 amendment: every error/redirect
- * response keeps the no-store baseline; only a successful 200 GET relaxes.
- *
- * `?kind=` selects the failure channel: `404` (default) throws notFound(),
- * `redirect` throws redirect('/live'). A plain render() throw is NOT a route
- * error — the element SSR layer recovers it inline (#922 control-flow
- * contract) — so the 500 channel is covered by /boom's loader throw.
+ * v0.44: compiled pages have no render-time code path (render() is the
+ * compiled Part Program), so the throw moved from render() into the loader —
+ * the response contract is unchanged: every failure mode throws BEFORE the
+ * render succeeds, so the #943 Cache-Control relaxation never leaks onto the
+ * 404/3xx/500 response. `?kind=` selects the failure channel: `404`
+ * (default) throws notFound(), `redirect` throws redirect('/live').
  */
 import { definePage, notFound, redirect } from '@openelement/app';
+import UnstablePage from '../components/page-unstable.tsx';
 
-export const tagName = 'page-unstable';
+export function loader(ctx: { request: Request }): never {
+  const kind = new URL(ctx.request.url).searchParams.get('kind') ?? '404';
+  if (kind === 'redirect') redirect('/live');
+  notFound('unstable gone');
+}
 
-const UnstablePage = definePage({
+export default definePage(UnstablePage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — unstable' },
-  render({ request }) {
-    const kind = request ? new URL(request.url).searchParams.get('kind') ?? '404' : '404';
-    if (kind === 'redirect') redirect('/live');
-    notFound('unstable gone');
-  },
 });
-
-customElements.define(tagName, UnstablePage);
-export default UnstablePage;

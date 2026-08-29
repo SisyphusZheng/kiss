@@ -6,16 +6,17 @@
  *   the body or the action 422s (#544);
  * - 'mv307' redirects with an explicit 307, coerced to 303 on POST;
  * - 'raw' returns a Response — a contract violation, never a response.
+ * v0.44: markup compiled in components/page-ping.tsx; the descriptor
+ * projector replaces the render-scope useActionData() hook.
  */
 import {
   definePage,
   fail,
   type OpenElementActionFailure,
+  type PagePropsContext,
   redirect,
-  useActionData,
 } from '@openelement/app';
-
-export const tagName = 'page-ping';
+import PingPage from '../components/page-ping.tsx';
 
 interface PingActionData {
   error?: string;
@@ -40,34 +41,17 @@ export const actions = {
   },
 };
 
-const PingPage = definePage({
+export default definePage(PingPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — ping' },
-  render({ request }) {
-    const actionData = useActionData() as PingActionData | undefined;
-    const moved = request ? new URL(request.url).searchParams.get('moved') : undefined;
-    return (
-      <main>
-        <h1>ping page</h1>
-        <p id='moved'>moved={moved ?? ''}</p>
-        {actionData?.error ? <p id='intent-error'>{actionData.error}</p> : null}
-        <form method='post' data-open-enhance>
-          <button id='ping' type='submit' name='intent' value='ping' formaction='?/ping'>
-            Ping
-          </button>
-          <button id='mv307' type='submit' formaction='?/mv307'>Move</button>
-        </form>
-        {
-          /* #576: an explicit action attribute with an attribute-less
-            submitter — the enhanced POST must hit /form, not this page. */
-        }
-        <form method='post' action='/form' data-open-enhance>
-          <button id='to-form' type='submit'>Send to /form</button>
-        </form>
-      </main>
-    );
+  props(context: PagePropsContext) {
+    const actionData = context.actionData as PingActionData | undefined;
+    const moved = context.request
+      ? new URL(context.request.url).searchParams.get('moved')
+      : undefined;
+    return {
+      movedText: `moved=${moved ?? ''}`,
+      hasError: actionData?.error ? 1 : 0,
+    };
   },
 });
-
-customElements.define(tagName, PingPage);
-export default PingPage;

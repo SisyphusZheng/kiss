@@ -4,7 +4,6 @@ import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
   pageDefinitionExpr,
-  pagePropsExpr,
   rendererScopeMatches,
   routeMetaExpr,
   routeTagNameExpr,
@@ -55,22 +54,17 @@ export function renderNotFoundRoute(
   lines.push(
     `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
   );
-  lines.push(`    let node = jsx(__tag, ${
-    pagePropsExpr({
-      paramsExpr: '__params',
-      dataExpr: '__data',
-      actionDataExpr: 'undefined',
-      requestExpr: 'c.req.raw',
-      routeExpr: '__routeContext',
-      metaExpr: '__routeMetaValue',
-    })
-  })`);
+  lines.push(
+    `    let __content = __ssr(__tag, __pageProps(${route.varName}, { data: __data, actionData: undefined, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue }), { route: ${
+      quoteGeneratedJavaScriptValue(route.path)
+    } })`,
+  );
   lines.push('');
   for (const renderer of renderers.filter((r) => rendererScopeMatches(route.path, r.scope))) {
-    lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
+    lines.push(`    __content = await ${renderer.varName}.default.wrap(__content, c)`);
   }
   lines.push(
-    `    const content = await __renderAppShell(node, ${
+    `    const content = __renderAppShell(__content, ${
       quoteGeneratedJavaScriptValue(route.path)
     }, { routeMeta: __routeMetaValue })`,
   );

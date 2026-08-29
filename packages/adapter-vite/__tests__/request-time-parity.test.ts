@@ -756,7 +756,10 @@ Deno.test({
       await t.step(
         'dev SSR reloads an edited imported component on the next request (#1091)',
         async () => {
-          const componentPath = join(fixtureDir, 'app/components/shared-enhanced-form.tsx');
+          // v0.44: the /shared route's markup lives in the imported compiled
+          // page element module; the edit exercises the same SSR-runner
+          // invalidation chain for compiled modules.
+          const componentPath = join(fixtureDir, 'app/components/page-shared.tsx');
           const original = await Deno.readTextFile(componentPath);
           const changed = original.replace('Shared submit', 'Fresh SSR dependency');
           assert(changed !== original, 'fixture replacement sentinel was not found');

@@ -110,7 +110,7 @@ export function buildEntryDescriptor(
   imports.push({ from: 'hono/body-limit', names: ['bodyLimit'], alias: '__bodyLimit' });
   imports.push({
     from: '@openelement/element',
-    names: ['renderDsd', 'renderDsdTree', 'escapeHtml'],
+    names: ['renderDsd', 'escapeHtml'],
   });
 
   // Conditional middleware imports

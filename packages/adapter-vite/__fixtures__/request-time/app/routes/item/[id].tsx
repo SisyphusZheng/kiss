@@ -5,16 +5,17 @@
  * to the ':param' route pattern: the loader echoes params.id per request, and
  * the action exercises the full protocol on a parameterized URL — empty note
  * -> fail(422) re-render; valid note -> 303 PRG back to the same item.
+ * v0.44: markup compiled in components/page-item.tsx; the descriptor
+ * projector replaces the render-scope useActionData() hook.
  */
 import {
   definePage,
   fail,
   type OpenElementActionFailure,
+  type PagePropsContext,
   redirect,
-  useActionData,
 } from '@openelement/app';
-
-export const tagName = 'page-item';
+import ItemPage from '../../components/page-item.tsx';
 
 interface ItemData {
   id: string;
@@ -40,26 +41,19 @@ export function action(ctx: {
   throw redirect(`/item/${encodeURIComponent(ctx.params.id)}?noted=${encodeURIComponent(note)}`);
 }
 
-const ItemPage = definePage<ItemData>({
+export default definePage<ItemData>(ItemPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — item' },
-  render({ data, request }) {
-    const actionData = useActionData() as ItemActionData | undefined;
-    const noted = request ? new URL(request.url).searchParams.get('noted') : undefined;
-    return (
-      <main>
-        <h1>request-time item</h1>
-        <p id='item-id'>id={data?.id ?? ''}</p>
-        <form method='post' data-open-enhance>
-          <input id='note' name='note' type='text' value={actionData?.note ?? ''} />
-          <button id='submit' type='submit'>Save</button>
-        </form>
-        {actionData?.error ? <p id='error'>{actionData.error}</p> : null}
-        <p id='noted'>noted={noted ?? ''}</p>
-      </main>
-    );
+  props(context: PagePropsContext<ItemData>) {
+    const actionData = context.actionData as ItemActionData | undefined;
+    const noted = context.request
+      ? new URL(context.request.url).searchParams.get('noted')
+      : undefined;
+    return {
+      idText: `id=${context.data?.id ?? ''}`,
+      note: actionData?.note ?? '',
+      notedText: `noted=${noted ?? ''}`,
+      hasError: actionData?.error ? 1 : 0,
+    };
   },
 });
-
-customElements.define(tagName, ItemPage);
-export default ItemPage;

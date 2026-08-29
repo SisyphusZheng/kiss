@@ -4,11 +4,12 @@
  * The loader derives data from the incoming request (query param `x`) and a
  * per-process counter, so two requests must never return identical HTML.
  * A counter island verifies hydration behaves the same as on static pages.
+ * v0.44: the page markup is the compiled Part Program in
+ * components/page-live.tsx; the descriptor's props projector maps loader
+ * data onto the page's compiled properties.
  */
 import { definePage } from '@openelement/app';
-import '../islands/live-counter.tsx';
-
-export const tagName = 'page-live';
+import LivePage from '../components/page-live.tsx';
 
 interface LiveData {
   x: string;
@@ -26,20 +27,13 @@ export function loader(ctx: { request: Request }): LiveData {
   };
 }
 
-const LivePage = definePage<LiveData>({
+export default definePage<LiveData>(LivePage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — live' },
-  render({ data }) {
-    return (
-      <main>
-        <h1>request-time live</h1>
-        <p id='x-value'>x={data?.x ?? ''}</p>
-        <p id='nonce'>nonce={data?.nonce ?? 0}</p>
-        <live-counter></live-counter>
-      </main>
-    );
+  props({ data }) {
+    return {
+      xText: `x=${data?.x ?? ''}`,
+      nonceText: `nonce=${data?.nonce ?? 0}`,
+    };
   },
 });
-
-customElements.define(tagName, LivePage);
-export default LivePage;

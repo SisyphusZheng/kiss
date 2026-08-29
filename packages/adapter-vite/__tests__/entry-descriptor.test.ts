@@ -125,10 +125,13 @@ Deno.test('renderEntry: produces valid module code', () => {
   const code = renderEntry(desc);
 
   assertStringIncludes(code, "import { Hono } from 'hono'");
+  // v0.44 (ADR-0143): the sync compiled renderDsd is the only serializer
+  // import — the legacy VNode tree renderer is gone.
   assertStringIncludes(
     code,
-    "import { renderDsd, renderDsdTree, escapeHtml } from '@openelement/element'",
+    "import { renderDsd, escapeHtml } from '@openelement/element'",
   );
+  assertEquals(code.includes('renderDsdTree'), false);
   assertStringIncludes(code, 'export default app');
   assertStringIncludes(code, 'const app = new Hono()');
 });

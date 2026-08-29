@@ -549,3 +549,151 @@ Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe 
   unknownPart.parts[0].k = 'future';
   assertThrows(() => validatePartProgram(unknownPart), Error, 'unknown part kind');
 });
+
+Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', async (t) => {
+  const { compileElementSpike, CompiledSpikeError } = await import(
+    '../src/internal/compiler/compile.ts'
+  );
+
+  const prelude = [
+    "import { OpenElement } from '@openelement/element';",
+    "import { defineIslandConfig } from '@openelement/app';",
+    'declare function element(tag: string, options?: { root: string }): ClassDecorator;',
+    'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+  ].join('\n');
+
+  await t.step('default-exported class with a shadow root and the island policy statement', () => {
+    const source = [
+      prelude,
+      "export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });",
+      "@element('oe-alpha8-page', { root: 'shadow-open' })",
+      'export default class Alpha8Page extends OpenElement {',
+      "  @property({ reflect: false }) label = 'ready';",
+      '  render() { return <main><h1>{this.label}</h1></main>; }',
+      '}',
+    ].join('\n');
+    const { code, program } = compileElementSpike(source, '/project/app/routes/alpha8.tsx');
+    assertEquals(program.root.kind, 'shadow-open');
+    assertStringIncludes(code, 'export default class Alpha8Page extends OpenElement {');
+    // The island delivery policy is copied verbatim into the compiled module.
+    assertStringIncludes(
+      code,
+      "export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });",
+    );
+  });
+
+  await t.step(
+    'nested custom-element hosts lower as static shells with prop-Part attributes',
+    () => {
+      const source = [
+        prelude,
+        "@element('oe-alpha8-host')",
+        'export class Alpha8Host extends OpenElement {',
+        "  @property({ reflect: false }) marker = '';",
+        '  render() {',
+        '    return <main><decoupled-view marker={this.marker}></decoupled-view><live-counter></live-counter></main>;',
+        '  }',
+        '}',
+      ].join('\n');
+      const { program } = compileElementSpike(source, '/project/app/components/host.tsx');
+      const template = JSON.stringify(program.template);
+      assert(template.includes('"tag":"decoupled-view"'), template);
+      assert(template.includes('"tag":"live-counter"'), template);
+      const propPart = program.parts.find((part: { k: string }) => part.k === 'prop') as
+        | { name?: string; signal?: string }
+        | undefined;
+      assertEquals(propPart?.name, 'marker');
+      assertEquals(propPart?.signal, 'marker');
+    },
+  );
+
+  await t.step('nested custom-element hosts inside list Region items', () => {
+    const source = [
+      prelude,
+      "@element('oe-alpha8-list')",
+      'export class Alpha8List extends OpenElement {',
+      '  @property({ reflect: false }) items: Array<{ id: string; text: string }> = [];',
+      '  render() {',
+      '    return <ul>{this.items.map((item) => <li key={item.id}>{item.text}<live-counter></live-counter></li>)}</ul>;',
+      '  }',
+      '}',
+    ].join('\n');
+    const { program } = compileElementSpike(source, '/project/app/components/list.tsx');
+    const each = program.parts.find((part: { k: string }) => part.k === 'each');
+    assert(each, 'each Region must exist');
+    assert(JSON.stringify(each).includes('"tag":"live-counter"'));
+  });
+
+  await t.step('fail-closed grammar boundaries for the new constructs', () => {
+    const base = [
+      prelude,
+      "@element('oe-alpha8-bad')",
+      'export class Alpha8Bad extends OpenElement {',
+      "  @property({ reflect: false }) marker = '';",
+      '  __RENDER__',
+      '}',
+    ].join('\n');
+    const render = (body: string) => base.replace('__RENDER__', body);
+    const expectFailure = (source: string, code: string, fragment: string) => {
+      let thrown: unknown;
+      try {
+        compileElementSpike(source, '/project/app/components/bad.tsx');
+      } catch (error) {
+        thrown = error;
+      }
+      assert(thrown instanceof CompiledSpikeError, `expected ${code} failure`);
+      const text = String(thrown);
+      assertStringIncludes(text, code);
+      assertStringIncludes(text, fragment);
+    };
+
+    // Host children (slots) are outside grammar v1.
+    expectFailure(
+      render('render() { return <main><live-counter><span>x</span></live-counter></main>; }'),
+      'OEC9017',
+      'may not have children',
+    );
+    // Host event handlers are outside grammar v1.
+    expectFailure(
+      render(
+        'render() { return <main><live-counter onClick={this.marker}></live-counter></main>; }',
+      ),
+      'OEC9017',
+      'event handlers',
+    );
+    // Host refs are outside grammar v1.
+    expectFailure(
+      render('render() { return <main><live-counter ref={this.marker}></live-counter></main>; }'),
+      'OEC9017',
+      'may not carry a ref',
+    );
+    // Component (uppercase) tags remain rejected.
+    expectFailure(
+      render('render() { return <main><Widget></Widget></main>; }'),
+      'OEC9010',
+      'compiler grammar',
+    );
+    // Unknown root modes are rejected at the decorator.
+    expectFailure(
+      render('render() { return <main></main>; }').replace(
+        "@element('oe-alpha8-bad')",
+        "@element('oe-alpha8-bad', { root: 'sideways' })",
+      ),
+      'OEC9002',
+      'root "sideways" is unsupported',
+    );
+    // A runtime top-level statement that is not the island policy fails closed.
+    expectFailure(
+      render('render() { return <main></main>; }') + '\nexport const other = Math.random();',
+      'OEC9008',
+      'runtime top-level statements',
+    );
+    // The island policy must stay a static defineIslandConfig object literal.
+    expectFailure(
+      render('render() { return <main></main>; }') +
+        '\nexport const openElement = defineIslandConfig(compute());',
+      'OEC9008',
+      'runtime top-level statements',
+    );
+  });
+});

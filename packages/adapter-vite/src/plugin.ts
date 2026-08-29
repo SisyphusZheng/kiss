@@ -161,8 +161,16 @@ export function createOpenPlugin(
   const ctx = externalCtx || new OpenElementBuildContext(resolvedOptions);
   // Per-plugin-instance compiler state only. It is used to distinguish a
   // compatible behavior edit from a Part Program shape edit during HMR; no
-  // module-global cache can leak a program between Vite builds.
+  // module-global cache can leak a program between Vite builds. The shape
+  // excludes the program sourceMap: source offsets shift on ANY edit
+  // (including behavior-only method-body edits), so comparing them would
+  // force a full reload for every keystroke instead of only for
+  // template/Part/Region shape changes.
   const compiledProgramShapes = new Map<string, string>();
+  const programShape = (program: unknown): string => {
+    const { sourceMap: _sourceMap, ...shape } = program as Record<string, unknown>;
+    return JSON.stringify(shape);
+  };
 
   // Pre-generate workspace aliases (sync, once, cached in ctx).
   // Phase 1 config, Phase 2 client build, and Phase 3 SSG build
@@ -289,6 +297,10 @@ export function createOpenPlugin(
 
   const corePlugin: Plugin = {
     name: 'open:core',
+    // The transform hook compiles @element modules and must see the authored
+    // TSX source: enforce 'pre' so it runs before Vite's builtin TS/JSX
+    // lowering (see internal/compiler/plugin.ts).
+    enforce: 'pre',
 
     config(userConfig) {
       if (userConfig.resolve?.alias) {
@@ -342,7 +354,7 @@ export function createOpenPlugin(
         const result = compileElementModule(code, id);
         if (!result) return null;
         const key = id.split('?', 1)[0];
-        compiledProgramShapes.set(key, JSON.stringify(result.program));
+        compiledProgramShapes.set(key, programShape(result.program));
         return {
           code: result.code,
           map: createCompiledElementSourceMap(code, result.code, id, result.program),
@@ -368,7 +380,7 @@ export function createOpenPlugin(
           compiledProgramShapes.delete(hmr.file);
           return;
         }
-        const nextShape = JSON.stringify(result.program);
+        const nextShape = programShape(result.program);
         const previousShape = compiledProgramShapes.get(hmr.file);
         compiledProgramShapes.set(hmr.file, nextShape);
         if (previousShape !== undefined && previousShape !== nextShape) {
@@ -591,6 +603,21 @@ export function createOpenPlugin(
           const mod = server.moduleGraph.getModuleById(id);
           if (mod) server.moduleGraph.invalidateModule(mod);
         }
+        // .mdx route modules resolve to '\0open-mdx:*.tsx' virtual modules
+        // (plugin-mdx.ts): the module graph keys them by the virtual id, so a
+        // route-dir .mdx edit must drop them by prefix or the SSR runner would
+        // keep serving the stale compiled page.
+        const idMap = server.moduleGraph.idToModuleMap;
+        if (!idMap) return;
+        for (const mod of idMap.keys()) {
+          if (mod.startsWith('\0open-mdx:')) {
+            const moduleFile = mod.slice('\0open-mdx:'.length, -'.tsx'.length);
+            if (moduleFile === latestChangedFile) {
+              const found = server.moduleGraph.getModuleById(mod);
+              if (found) server.moduleGraph.invalidateModule(found);
+            }
+          }
+        }
       };
 
       /**
@@ -713,7 +740,7 @@ export function createOpenPlugin(
   // rendering, so Vite's built-in SPA middleware (index.html + HMR) is all we
   // need. Skip the SSR dev server entirely.
   const plugins: Plugin[] = [
-    mdxPlugin(),
+    mdxPlugin({ routesDir: resolvedOptions.routesDir }),
     corePlugin,
     createGeneratedDataResolverPlugin({ root: process.cwd() }),
     optionalPackageStubsPlugin(),

@@ -58,8 +58,10 @@ function __statusHtml(title, message) { return "<main><h1>" + title + "</h1><p>"
 function wrapInDocument(content, opts) {
   return "<!DOCTYPE html><html lang=\\"" + opts.lang + "\\\"><head><title>" + opts.title + "</title></head><body>" + content + "</body></html>";
 }
-function jsx(tag, props) { return { tag: tag, props: props }; }
-async function __renderAppShell(node, routePath) { ${options.renderAppShellBody} }
+function __ssr(tag, props) { return tag; }
+function __pageProps(routeModule, context) { return { context: context }; }
+function __pageErrorProps(routeModule, error, context) { return { error: error, context: context }; }
+function __renderAppShell(pageHtml, routePath) { ${options.renderAppShellBody} }
 `;
 
   const mod = await import(
@@ -70,7 +72,7 @@ async function __renderAppShell(node, routePath) { ${options.renderAppShellBody}
 
 Deno.test('renderRoute: happy path returns html with empty errors', async () => {
   const renderRoute = await loadGeneratedRenderRoute({
-    renderAppShellBody: 'return "<div>ok " + node.tag + "</div>";',
+    renderAppShellBody: 'return "<div>ok " + pageHtml + "</div>";',
   });
   const result = await renderRoute('/boom');
   assertStringIncludes(result.html, '<div>ok boom-page</div>');

@@ -166,8 +166,8 @@ Deno.test('renderEntry: _renderer.ts generates wrap call', () => {
   // Generated code should reference renderer variable names
   assertStringIncludes(code, '$specialRenderer');
   assertStringIncludes(code, '$guideRenderer');
-  // Renderer wrap call uses VNode input and c (Hono context)
-  assertStringIncludes(code, '.default.wrap(node, c)');
+  // Renderer wrap call receives the rendered page HTML and c (Hono context)
+  assertStringIncludes(code, '.default.wrap(__content, c)');
 });
 
 Deno.test('renderEntry: _middleware.ts generates app.use scope', () => {
@@ -325,24 +325,28 @@ Deno.test('renderEntry: imports Hono and DSD renderer', () => {
   const code = renderEntry(desc);
 
   assertStringIncludes(code, "import { Hono } from 'hono'");
-  // v0.5.0: DSD renderer replaces @lit-labs/ssr
-  assertStringIncludes(code, 'renderDsd');
-  assertStringIncludes(code, 'renderDsdTree');
-  assertStringIncludes(code, "import { jsx } from '@openelement/element'");
+  // v0.5.0: DSD renderer replaces @lit-labs/ssr; v0.44: the compiled sync
+  // renderDsd is the only serializer — no runtime JSX or tree renderer.
+  assertStringIncludes(code, "import { renderDsd, escapeHtml } from '@openelement/element'");
+  assertFalse(code.includes('renderDsdTree'));
+  assertFalse(code.includes("import { jsx } from '@openelement/element'"));
+  // wrapInDocument is a codegen-owned runtime helper since 0.44.
+  assertFalse(code.includes("import { wrapInDocument } from '@openelement/element'"));
+  assertStringIncludes(code, 'function wrapInDocument(html, options = {}) {');
 });
 
-Deno.test('renderEntry: app shell is built from VNode tree, not HTML replace', () => {
+Deno.test('renderEntry: app shell composes the page host through the compiled serializer', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     ssg: true,
     appShell: { tagName: 'open-layout', import: '@openelement/ui/open-layout', props: {} },
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, 'async function __renderAppShell(routeNode, routePath');
+  assertStringIncludes(code, 'function __renderAppShell(pageHtml, routePath');
   assertStringIncludes(code, '"tagName": "open-layout"');
-  assertStringIncludes(code, 'import "@openelement/ui/open-layout";');
-  assertStringIncludes(code, 'renderDsd(shell.tagName, { props: layoutProps })');
-  assertStringIncludes(code, 'layoutResult.html.slice(0, index) + pageHtml');
+  assertStringIncludes(code, 'import * as __shell_0 from "@openelement/ui/open-layout";');
+  assertStringIncludes(code, '__ssr(shell.tagName, layoutProps, { route: routePath })');
+  assertStringIncludes(code, 'layoutHtml.slice(0, index) + content + layoutHtml.slice(index)');
 });
 
 Deno.test('renderEntry: unconfigured appShell defaults to false (no import)', () => {
@@ -351,7 +355,7 @@ Deno.test('renderEntry: unconfigured appShell defaults to false (no import)', ()
 
   assertFalse(code.includes('import "@openelement/ui/open-layout";'));
   assertStringIncludes(code, '"default": false');
-  assertStringIncludes(code, 'if (!shell) return pageHtml;');
+  assertStringIncludes(code, 'if (!shell) return content;');
 });
 
 Deno.test('renderEntry: appShell false renders route content without default layout import', () => {
@@ -360,7 +364,7 @@ Deno.test('renderEntry: appShell false renders route content without default lay
 
   assertFalse(code.includes('import "@openelement/ui/open-layout";'));
   assertStringIncludes(code, '"default": false');
-  assertStringIncludes(code, 'if (!shell) return pageHtml;');
+  assertStringIncludes(code, 'if (!shell) return content;');
 });
 
 Deno.test('renderEntry: custom appShell import and props are generated from config', () => {
@@ -374,7 +378,7 @@ Deno.test('renderEntry: custom appShell import and props are generated from conf
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, 'import "/app/components/blog-layout.tsx";');
+  assertStringIncludes(code, 'import * as __shell_0 from "/app/components/blog-layout.tsx";');
   assertStringIncludes(code, '"tagName": "blog-layout"');
   assertStringIncludes(code, '"siteName": "Field Notes"');
 });
@@ -392,7 +396,7 @@ Deno.test('renderEntry: route meta layout can select named layouts', () => {
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, 'import "/app/components/post-layout.tsx";');
+  assertStringIncludes(code, 'import * as __shell_0 from "/app/components/post-layout.tsx";');
   assertStringIncludes(
     code,
     'const layout = Object.prototype.hasOwnProperty.call(routeMeta, "layout")',
@@ -410,14 +414,15 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
     code,
     'const __data = typeof $pageIndex.loader === "function" ? await $pageIndex.loader(__loadContext) : undefined',
   );
-  assertStringIncludes(code, '__openElementParams: __params');
-  assertStringIncludes(code, '__openElementData: __data');
-  assertFalse(
-    code.includes(', data: __data'),
-    'Request loader data must not serialize as a public host prop (#1129/#1130)',
+  // v0.44 (ADR-0143): request-scoped data reaches the compiled page ONLY
+  // through the descriptor's props projector — the compiled serializer maps
+  // declared compiled properties onto the host; the legacy __openElement*
+  // host-prop channel is gone (the #1129/#1130 guarantee is structural).
+  assertStringIncludes(
+    code,
+    '__ssr(__tag, __pageProps($pageIndex, { data: __data, actionData: undefined, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue })',
   );
-  assertStringIncludes(code, '__openElementRoute: __routeContext');
-  assertStringIncludes(code, '__openElementMeta: __routeMetaValue');
+  assertFalse(code.includes('__openElementData'));
   assertEquals(code.includes('module?.meta'), false);
   assertEquals(code.includes('page.layout'), false);
   assertStringIncludes(code, 'title: __page.head?.title || "openElement"');
@@ -440,8 +445,10 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
     code,
     'data = typeof info.module.loader === "function" ? await info.module.loader(loadContext) : undefined;',
   );
-  assertStringIncludes(code, '__openElementParams: params');
-  assertStringIncludes(code, '__openElementRoute: loadContext.route');
+  assertStringIncludes(
+    code,
+    '__pageProps(info.module, { data, actionData: undefined, params, request: options.request, route: loadContext.route, meta: routeMeta })',
+  );
   assertStringIncludes(code, 'filePath: "index.ts"');
   assertStringIncludes(
     code,
@@ -465,7 +472,7 @@ Deno.test('renderEntry: lifecycle control produces redirect and not-found respon
     'redirect: { location: error.location, status: error.status }',
   );
   assertStringIncludes(code, 'notFound: true');
-  assertStringIncludes(code, '__openElementError: err');
+  assertStringIncludes(code, '__pageErrorProps($pageIndex, err,');
 });
 
 Deno.test('renderEntry: SSG renderRoute renders the page error component on failure', () => {
@@ -477,8 +484,8 @@ Deno.test('renderEntry: SSG renderRoute renders the page error component on fail
   // catch, and the failure still surfaces as a 500 result carrying the
   // RenderError (no silent normal-page write).
   assertStringIncludes(code, 'if (typeof page.error === "function") {');
-  assertStringIncludes(code, '__openElementError: error');
-  assertStringIncludes(code, '__renderAppShell(errorNode, routePath');
+  assertStringIncludes(code, '__pageErrorProps(info.module, error,');
+  assertStringIncludes(code, '__renderAppShell(__ssr(info.tagName,');
   assertStringIncludes(
     code,
     'return { html: errorHtml, status: 500, errors: [renderError], componentCount: errorComponentCount, renderTimeMs };',
@@ -926,7 +933,7 @@ Deno.test('renderEntry: private,no-cache is emitted only after a successful rend
   // The Cache-Control relaxation must sit between the shell render and the
   // response return: emitted BEFORE __renderAppShell it leaks onto the
   // redirect/notFound/error responses produced by the catch block below.
-  const renderIndex = code.indexOf('await __renderAppShell(node,');
+  const renderIndex = code.indexOf('__renderAppShell(__content,');
   const relaxIndex = code.indexOf("c.header('Cache-Control', 'private, no-cache');");
   const returnIndex = code.indexOf(
     'return c.html(__withDevClientScript(wrapInDocument(content, {',
@@ -1065,7 +1072,7 @@ Deno.test('renderEntry: /404 page route emits the styled notFound fallback (#923
   assertStringIncludes(code, 'app.notFound(async (c) => {');
   assertStringIncludes(code, '// Styled 404 (#923)');
   assertStringIncludes(code, 'page404.loader === "function"');
-  assertStringIncludes(code, '__renderAppShell(node, c.req.path || "/404",');
+  assertStringIncludes(code, '__renderAppShell(__content, c.req.path || "/404",');
   // Fallback renders with a forced 404 status and degrades to the plain
   // status page on failure — never a 500 from the fallback itself.
   assertStringIncludes(code, 'wrapInDocument(content, {');

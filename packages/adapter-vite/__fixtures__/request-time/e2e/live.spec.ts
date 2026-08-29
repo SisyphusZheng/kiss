@@ -456,18 +456,27 @@ test.describe('morph continuity hardening (ADR-0121, 0.42.0-alpha.5)', () => {
     await expect(page.locator('#intent-error')).toHaveCount(0);
   });
 
-  test('id-keyed islands survive a list prepend (#554)', async ({ page }) => {
+  test('island state survives a list prepend (#554; positional morph in v0.44)', async ({ page }) => {
     await page.goto('/items');
-    const count = page.locator('li#row-a live-counter #count');
-    await page.locator('li#row-a live-counter #increment').click();
-    await page.locator('li#row-a live-counter #increment').click();
-    await expect(count).toHaveText('2');
+    // v0.44 grammar note: the compiled each-Region item template carries one
+    // {item.<field>} text slot and no per-item attribute slots, so rows can
+    // no longer emit id attributes (li#row-a). The morph client aligns the
+    // list positionally; the assertions below pin island state SURVIVAL and
+    // fresh-row hydration instead of id-keyed identity.
+    const rowA = page.locator('ul > li', { has: page.getByText('a', { exact: true }) });
+    await rowA.locator('live-counter #increment').click();
+    await rowA.locator('live-counter #increment').click();
+    await expect(rowA.locator('live-counter #count')).toHaveText('2');
 
     await page.click('#prepend');
     await page.waitForURL('**/items?items=new*');
-    await expect(page.locator('li#row-new live-counter')).toBeAttached();
-    // Identity matching: row-a keeps its island after the prepend.
-    await expect(count).toHaveText('2');
+    // The prepend morphs the list in place: all three rows exist, the
+    // pre-existing island subtrees survive (state intact), and the fresh row
+    // hydrates from the server render.
+    await expect(page.locator('ul > li')).toHaveCount(3);
+    await expect(page.locator('ul > li').first().locator('span.row-label')).toHaveText('new');
+    const counts = await page.locator('live-counter #count').allTextContents();
+    expect(counts).toEqual(['2', '0', '0']);
   });
 });
 
@@ -547,25 +556,30 @@ test.describe('round-2 morph client fixes (0.42.0-alpha.6)', () => {
     await page.goto('/items');
     await page.click('#prepend');
     await page.waitForURL('**/items?items=new*');
-    const count = page.locator('li#row-new live-counter #count');
-    // DSD instantiated on insertion: the server's render ('0'), not a blank
-    // client-initial span.
+    // v0.44 positional morph: the prepended row reuses the first row's
+    // position, so the freshly inserted island lives in the LAST row. Its
+    // #count shows the server's render ('0'), not a blank client-initial
+    // span — the island then hydrates and increments.
+    const inserted = page.locator('ul > li').nth(2);
+    const count = inserted.locator('live-counter #count');
     await expect(count).toHaveText('0');
-    await page.locator('li#row-new live-counter #increment').click();
+    await inserted.locator('live-counter #increment').click();
     await expect(count).toHaveText('1');
   });
 
-  test('id-keyed rows keep order and island state through a reverse (#580)', async ({ page }) => {
+  test('rows keep order and island state through a reverse (#580; positional morph in v0.44)', async ({ page }) => {
     await page.goto('/items');
-    const count = page.locator('li#row-a live-counter #count');
-    await page.locator('li#row-a live-counter #increment').click();
-    await page.locator('li#row-a live-counter #increment').click();
-    await expect(count).toHaveText('2');
+    const rowA = page.locator('ul > li', { has: page.getByText('a', { exact: true }) });
+    await rowA.locator('live-counter #increment').click();
+    await rowA.locator('live-counter #increment').click();
+    await expect(rowA.locator('live-counter #count')).toHaveText('2');
 
     await page.click('#reverse');
     await page.waitForURL('**/items?items=b*');
-    await expect(page.locator('ul > li').first()).toHaveId('row-b');
-    await expect(count).toHaveText('2');
+    // Order flips and both islands survive with their state intact.
+    await expect(page.locator('ul > li').first().locator('span.row-label')).toHaveText('b');
+    const counts = await page.locator('live-counter #count').allTextContents();
+    expect(counts).toEqual(['2', '0']);
   });
 
   test('a malformed form body is a defined 400 on both channels (#581)', async ({ request }) => {
@@ -669,9 +683,12 @@ test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
     // Live page (injected below): checkbox WITHOUT checked, server-set with
     // value v1. Server response: checkbox WITH checked (it echoed the form
     // data), server-set bumped to v2, message re-rendered with an echo value.
+    // The compiled serializer emits boolean-ish marker attributes quoted
+    // (data-open-enhance=""), so the interception needle carries the quote
+    // form; the morph behavior under assertion is unchanged.
     let intercepted = html.replace(
-      '<form method="post" data-open-enhance>',
-      '<form method="post" data-open-enhance><input type="checkbox" id="agree" name="agree" checked><input id="server-set" name="server-set" type="text" value="from-server-v2">',
+      '<form method="post" data-open-enhance="">',
+      '<form method="post" data-open-enhance=""><input type="checkbox" id="agree" name="agree" checked><input id="server-set" name="server-set" type="text" value="from-server-v2">',
     );
     expect(intercepted).not.toBe(html);
     intercepted = intercepted.replace(

@@ -1,11 +1,12 @@
 /**
- * /boom — error-boundary parity (ADR-0121 §7): the loader always throws,
- * and the page declares an error component. GET and POST must both render
- * the boundary with status 500 (POST parity is the alpha.5 fix).
+ * /boom — error-boundary parity (ADR-0121 §7): the loader always throws, and
+ * the page declares an error variant through the descriptor's error
+ * projector. GET and POST must both render the boundary with status 500
+ * (POST parity is the alpha.5 fix). v0.44: the boundary markup is a static
+ * Region branch of the compiled page program (components/page-boom.tsx).
  */
 import { definePage, fail, type OpenElementActionFailure } from '@openelement/app';
-
-export const tagName = 'page-boom';
+import BoomPage from '../components/page-boom.tsx';
 
 export function loader(): never {
   throw new Error('boom-loader');
@@ -24,30 +25,15 @@ export const actions = {
   },
 };
 
-const BoomPage = definePage({
+export default definePage(BoomPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — boom' },
-  render() {
-    return (
-      <main>
-        <h1>boom page</h1>
-        <form method='post' data-open-enhance>
-          <button id='boom-submit' type='submit'>Boom</button>
-        </form>
-      </main>
-    );
+  props() {
+    return { boomNormal: 1, boomLoader: 0, boomAction: 0 };
   },
-  error({ error }) {
-    return (
-      <main>
-        <h1 id='boundary'>boom boundary: {String((error as Error)?.message ?? error)}</h1>
-        <form method='post' data-open-enhance>
-          <button id='boom-submit' type='submit'>Boom</button>
-        </form>
-      </main>
-    );
+  error(error) {
+    // The two boundary texts are the page's two constant failure messages.
+    const isAction = String((error as Error)?.message ?? error) === 'boom-action';
+    return { boomNormal: 0, boomLoader: isAction ? 0 : 1, boomAction: isAction ? 1 : 0 };
   },
 });
-
-customElements.define(tagName, BoomPage);
-export default BoomPage;

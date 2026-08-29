@@ -10,7 +10,6 @@ import type { EntryDescriptor } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
-  pagePropsExpr,
   renderMatchingRenderersFn,
   routeRevalidateExpr,
   routeTagNameExpr,
@@ -112,26 +111,17 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '    const data = typeof info.module.loader === "function" ? await info.module.loader(loadContext) : undefined;',
   );
   lines.push(
-    `    const props = ${
-      pagePropsExpr({
-        paramsExpr: 'params',
-        dataExpr: 'data',
-        actionDataExpr: 'undefined',
-        requestExpr: 'options.request',
-        routeExpr: 'loadContext.route',
-        metaExpr: 'routeMeta',
-      })
-    };`,
+    '    const props = __pageProps(info.module, { data, actionData: undefined, params, request: options.request, route: loadContext.route, meta: routeMeta });',
   );
   lines.push('    if (locale) props.locale = locale;');
-  lines.push('    let node = jsx(info.tagName, props);');
+  lines.push('    let content = __ssr(info.tagName, props, { route: routePath });');
   lines.push('    for (const renderer of __matchingRenderers(routePath)) {');
   lines.push(
-    '      node = await renderer.wrap(node, __rendererContext(routePath, params));',
+    '      content = await renderer.wrap(content, __rendererContext(routePath, params));',
   );
   lines.push('    }');
   lines.push(
-    '    const content = await __renderAppShell(node, routePath, { locale, routeMeta });',
+    '    content = __renderAppShell(content, routePath, { locale, routeMeta });',
   );
   lines.push(
     '    const renderTimeMs = typeof performance !== "undefined" ? performance.now() - startTime : 0;',
@@ -209,16 +199,13 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '    const renderTimeMs = typeof performance !== "undefined" ? performance.now() - startTime : 0;',
   );
   // Error-boundary parity with the dev/server route handler
-  // (renderRouteHandler): a page declaring an error component renders it with
-  // __openElementError; the failure still surfaces as a 500 result carrying
-  // the caught RenderError.
+  // (renderRouteHandler): a page declaring an error projector renders its
+  // compiled error variant through the descriptor seam; the failure still
+  // surfaces as a 500 result carrying the caught RenderError.
   lines.push('    if (typeof page.error === "function") {');
   lines.push('      try {');
   lines.push(
-    '        const errorNode = jsx(info.tagName, { ...params, __openElementParams: params, __openElementError: error, __openElementRequest: options.request, __openElementRoute: loadContext.route, __openElementMeta: routeMeta });',
-  );
-  lines.push(
-    '        const errorContent = await __renderAppShell(errorNode, routePath, { locale, routeMeta });',
+    '        const errorContent = __renderAppShell(__ssr(info.tagName, __pageErrorProps(info.module, error, { data: undefined, actionData: undefined, params, request: options.request, route: loadContext.route, meta: routeMeta }), { route: routePath }), routePath, { locale, routeMeta });',
   );
   lines.push(
     '        const errorComponentCount = (errorContent.match(/<template shadowrootmode="open"/g) || []).length;',

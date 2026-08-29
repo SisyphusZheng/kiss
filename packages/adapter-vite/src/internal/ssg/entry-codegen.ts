@@ -14,7 +14,6 @@ import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
   pageDefinitionExpr,
-  pagePropsExpr,
   rendererScopeMatches,
   routeMetaExpr,
   routeTagNameExpr,
@@ -154,36 +153,45 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   lines.push(`    const __actionStatus = __actionResult.status;`);
 }
 
+/** Emissions shared by the success path and the error-boundary channel. */
+function renderRouteContentLines(
+  lines: string[],
+  ctx: RouteHandlerEmitContext,
+  propsExpr: string,
+  indent: string,
+): void {
+  const { matchingRenderers, pathLiteral } = ctx;
+  // The page renders as its own compiled host element via __ssr; the page
+  // descriptor's props projector maps request-scoped data onto the compiled
+  // properties. Renderer modules (_renderer.ts) wrap the rendered HTML string.
+  lines.push(`${indent}let __content = __ssr(__tag, ${propsExpr}, { route: ${pathLiteral} })`);
+  if (matchingRenderers.length > 0) {
+    lines.push(`${indent}// Renderer tree wrapping (outer -> inner)`);
+    for (const renderer of matchingRenderers) {
+      lines.push(`${indent}__content = await ${renderer.varName}.default.wrap(__content, c)`);
+    }
+  }
+  lines.push(
+    `${indent}const content = __renderAppShell(__content, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
+  );
+}
+
 /**
- * Emit the success path (jsx render, renderer tree, document wrap) and the
- * catch block (redirect, not-found, nearest error boundary, 500 fallback).
+ * Emit the success path (compiled __ssr render, renderer tree, document wrap)
+ * and the catch block (redirect, not-found, nearest error boundary, 500).
  */
 function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitContext): void {
   const { isAction, matchingRenderers, docConfig, pathLiteral, headExtrasExpr } = ctx;
 
-  lines.push(
-    `    let node = jsx(__tag, ${
-      pagePropsExpr({
-        paramsExpr: '__params',
-        dataExpr: '__data',
-        actionDataExpr: isAction ? '__actionData' : 'undefined',
-        requestExpr: 'c.req.raw',
-        routeExpr: '__routeContext',
-        metaExpr: '__routeMetaValue',
-      })
-    })`,
+  renderRouteContentLines(
+    lines,
+    ctx,
+    `__pageProps(${ctx.route.varName}, { data: __data, actionData: ${
+      isAction ? '__actionData' : 'undefined'
+    }, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue })`,
+    '    ',
   );
   lines.push('');
-
-  if (matchingRenderers.length > 0) {
-    lines.push(`    // Renderer tree wrapping (outer -> inner)`);
-    for (const renderer of matchingRenderers) {
-      lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
-    }
-  }
-  lines.push(
-    `    const content = await __renderAppShell(node, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
-  );
   if (!isAction) {
     // #943: successful GET pages relax no-store to private,no-cache so the UA
     // can bfcache/scroll-restore them (ADR-0121 section 6 amendment). The
@@ -262,15 +270,20 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     lines.push(`    }`);
   }
   // ADR-0121 section 7 (#551): POST takes the same nearest-error-boundary
-  // channel as GET — the page's error component renders with status 500.
+  // channel as GET — the page's error variant renders with status 500.
   {
     lines.push(`    if (typeof __page.error === "function") {`);
     lines.push(`      try {`);
     lines.push(
-      `        const errorNode = jsx(__tag, { ...__params, __openElementParams: __params, __openElementError: err, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMetaValue })`,
+      `        let __errorHtml = __ssr(__tag, __pageErrorProps(${ctx.route.varName}, err, { data: undefined, actionData: undefined, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue }), { route: ${pathLiteral} })`,
     );
+    if (matchingRenderers.length > 0) {
+      for (const renderer of matchingRenderers) {
+        lines.push(`        __errorHtml = await ${renderer.varName}.default.wrap(__errorHtml, c)`);
+      }
+    }
     lines.push(
-      `        const errorContent = await __renderAppShell(errorNode, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
+      `        const errorContent = __renderAppShell(__errorHtml, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
     );
     lines.push(`        return c.html(__withDevClientScript(wrapInDocument(errorContent, {`);
     for (
