@@ -23,6 +23,11 @@ boundaries.
 PR CI remains authoritative for exact SHAs, but the full matrix runs only for the
 alpha.8 integration PR to `dev`. Workspace agents run targeted gates.
 
+Every workspace begins from the exact #1193 base. Because `dev` requires linear
+history, alpha.8 consumes exact source SHAs, cherry-picks reviewed commit series and
+records a source-to-integrated SHA mapping. Source evidence is never relabeled as the
+integrated candidate.
+
 ## Consequences
 
 - Architecture work proceeds concurrently instead of through one central dispatch and

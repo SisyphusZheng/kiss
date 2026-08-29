@@ -2,6 +2,7 @@ import { assert, assertEquals } from '@std/assert';
 import { loadV044RoleConfig, V044_ROLE_CONFIG_PATH } from './config/load-v044-roles.ts';
 import {
   type ReleaseDoctrineTexts,
+  validateAlphaWorkspaceConfig,
   validateAlphaWorkspaceTopology,
   validateExecutionState,
   validateExecutorContract,
@@ -25,6 +26,10 @@ function validState(): Record<string, unknown> {
     ]),
     authoritativeCiOwner: 'alpha.8 exact-SHA pull request',
     betaThreeRoleExecutorConfig: V044_ROLE_CONFIG_PATH,
+    parallelReady: true,
+    integrationBaseEvidenceIssue: 1193,
+    workspaceConfig: 'tools/config/v044-alpha-workspaces.json',
+    collaborationContract: 'docs/current/v0.44.0-ALPHA-CONTRACT.md',
   };
 }
 
@@ -61,6 +66,23 @@ Deno.test('Beta executor capability remains pinned but is not activated by Alpha
   drifted.executor.contextTokens = 128000;
   drifted.executor.defaultEffort = 'low';
   assert(validateExecutorContract(drifted).length >= 2);
+});
+
+Deno.test('executable Alpha workspace config has seven disjoint writers and one aggregator', async () => {
+  const workspaceConfig = JSON.parse(
+    await Deno.readTextFile('tools/config/v044-alpha-workspaces.json'),
+  );
+  assertEquals(validateAlphaWorkspaceConfig(workspaceConfig), []);
+
+  const overlap = structuredClone(workspaceConfig);
+  overlap.workspaces[1].writePaths.push(overlap.workspaces[0].writePaths[0]);
+  assert(
+    validateAlphaWorkspaceConfig(overlap).some((failure) => failure.includes('overlaps')),
+  );
+
+  const missing = structuredClone(workspaceConfig);
+  missing.workspaces = missing.workspaces.filter((entry: { id: string }) => entry.id !== 'alpha.6');
+  assert(validateAlphaWorkspaceConfig(missing).some((failure) => failure.includes('alpha.6')));
 });
 
 function alphaPlan(): string {
@@ -128,6 +150,9 @@ async function doctrineCorpus(): Promise<ReleaseDoctrineTexts> {
     issueMap: await Deno.readTextFile('docs/roadmap/v0.44.0-ISSUES.md'),
     versionPlan: await Deno.readTextFile('docs/current/VERSION_PLAN.md'),
     alphaSop: await Deno.readTextFile('docs/governance/V044_ALPHA_WORKSPACE_SOP.md'),
+    alphaPrompt: await Deno.readTextFile(
+      'docs/prompts/v0.44.0-ALPHA-SEVEN-SUBAGENTS.md',
+    ),
     betaSop: await Deno.readTextFile('docs/governance/V044_AGENT_LOOP_SOP.md'),
     betaPrompt: await Deno.readTextFile('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md'),
     plan: await Deno.readTextFile('docs/current/v0.44.0-EXECUTION-PLAN.md'),

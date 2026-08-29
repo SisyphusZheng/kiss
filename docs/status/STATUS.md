@@ -11,7 +11,7 @@ Updated: 2026-08-29
 - Published stable package line: `v0.43.3` on npm `latest`
 - Current development mode: internal parallel Alpha workspaces
 - Minimum branch rules: active on `dev` and `main` through ruleset `21775463`
-- Remaining start gate: freeze shared contract/path ownership and record the common base
+- Alpha parallel start gate: the exact #1193 closure SHA is the common base
 - Deferred hardening: #1192 Beta.3 with #1156 #1187 #1188 #1189
 - Long-term `1.0.0` target: unscheduled
 
@@ -25,6 +25,11 @@ PR #1194 landed the earlier acceleration baseline at exact SHA
 `e3e7b8ae5ddc7faddb8267c36494be73f18701e8` with 9/9 PR checks green. ADR-0147
 supersedes that baseline's Alpha execution topology with the workspace train described
 here.
+
+PR #1195 landed the corrected workspace train at exact SHA
+`cdfcb5433e58f9fde68377afc12643b045bfd385`. The exact #1193 closure SHA freezes the
+collaboration contract and executable ownership map and is the alpha.1-alpha.7 common
+base.
 
 Alpha.1 through Alpha.7 will be separate worktrees, branches and agents running
 concurrently from one frozen base. Alpha.8 will be the only integration workspace and

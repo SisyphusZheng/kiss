@@ -11,12 +11,14 @@ published versions.
 
 ## Start gate
 
-Do not clone workspaces until the shared contract, path ownership and exact common base
-SHA are recorded. After that gate, create alpha.1 through alpha.7 together.
+Do not clone workspaces until #1193 is closed with the shared contract, executable path
+ownership and exact common-base SHA. After that gate, create alpha.1 through alpha.7
+together from the recorded SHA.
 
 ## Workspace ownership
 
 - One worktree, branch and writing agent per Alpha workspace.
+- `tools/config/v044-alpha-workspaces.json` is the executable write boundary.
 - The agent owns implementation, tests, fixtures, commits and its branch.
 - No thinker/implementer handoff and no release verifier inside Alpha.
 - Do not run `v044:executor:check` during Alpha; it launches the dormant Beta role
@@ -37,8 +39,9 @@ and the fast push tier. They do not run or claim the full repository matrix.
 ## Final aggregation
 
 Alpha.8 is created as the integration workspace and has one integration agent. That
-agent consumes exact accepted workspace SHAs, integrates them in dependency order,
-resolves cross-workspace failures, and owns the final pull request to `dev`.
+agent consumes exact accepted source SHAs, linearly cherry-picks the reviewed commit
+series in dependency order, records a source-to-integrated SHA mapping, resolves
+cross-workspace failures, and owns the final pull request to `dev`.
 
 Only the alpha.8 PR full CI is authoritative for the integrated SHA. Failure creates a
 new alpha.8 SHA and repeats PR CI; it does not create a fresh release verifier.

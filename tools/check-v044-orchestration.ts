@@ -17,6 +17,7 @@ function requiredFiles(config: V044RoleConfig): string[] {
     'tools/check-role-neutral-docs.ts',
     'docs/adr/ADR-0146-three-role-agent-execution-control-plane.md',
     'docs/adr/ADR-0147-internal-alpha-workspace-train.md',
+    'docs/current/v0.44.0-ALPHA-CONTRACT.md',
     'docs/current/v0.44.0-AUTONOMOUS-GOAL.md',
     'docs/current/v0.44.0-EXECUTION-PLAN.md',
     'docs/current/v0.44.0-EXECUTION-STATE.json',
@@ -25,8 +26,10 @@ function requiredFiles(config: V044RoleConfig): string[] {
     'docs/governance/V044_AGENT_LOOP_SOP.md',
     'docs/governance/V044_ISSUE_SOP.md',
     'docs/prompts/v0.44.0-ALPHA-WORKSPACE-TRAIN.md',
+    'docs/prompts/v0.44.0-ALPHA-SEVEN-SUBAGENTS.md',
     'docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md',
     'docs/roadmap/v0.44.0-ISSUES.md',
+    'tools/config/v044-alpha-workspaces.json',
   ];
 }
 
@@ -91,6 +94,18 @@ export function validateExecutionState(
   }
   if (!config.profiles.implementer || !config.profiles.releaseVerifier) {
     failures.push('Beta role profiles must remain configured for post-Alpha release work');
+  }
+  if (state.parallelReady !== true) {
+    failures.push('Alpha workspace state must be parallelReady after #1193 closes');
+  }
+  if (state.integrationBaseEvidenceIssue !== 1193) {
+    failures.push('Alpha common-base evidence must resolve from issue #1193');
+  }
+  if (state.workspaceConfig !== 'tools/config/v044-alpha-workspaces.json') {
+    failures.push('Alpha state must reference the executable workspace configuration');
+  }
+  if (state.collaborationContract !== 'docs/current/v0.44.0-ALPHA-CONTRACT.md') {
+    failures.push('Alpha state must reference the collaboration contract');
   }
   return failures;
 }
@@ -159,6 +174,68 @@ const WORKSPACE_ISSUES = [
   { workspace: 'alpha.8', issues: [1181] },
 ] as const;
 
+type AlphaWorkspaceConfig = {
+  schemaVersion?: unknown;
+  commonBase?: Record<string, unknown>;
+  contract?: unknown;
+  workspaces?: Array<Record<string, unknown>>;
+  integration?: Record<string, unknown>;
+};
+
+export function validateAlphaWorkspaceConfig(raw: AlphaWorkspaceConfig): string[] {
+  const failures: string[] = [];
+  if (raw.schemaVersion !== 1) failures.push('Alpha workspace config schemaVersion must be 1');
+  if (raw.commonBase?.branch !== 'dev' || raw.commonBase?.evidenceIssue !== 1193) {
+    failures.push('Alpha workspace config common base must resolve from dev and issue #1193');
+  }
+  if (raw.contract !== 'docs/current/v0.44.0-ALPHA-CONTRACT.md') {
+    failures.push('Alpha workspace config must reference the collaboration contract');
+  }
+
+  const workspaces = raw.workspaces ?? [];
+  const owners = new Map<string, string>();
+  for (const expected of WORKSPACE_ISSUES.slice(0, 7)) {
+    const workspace = workspaces.find((entry) => entry.id === expected.workspace);
+    if (!workspace) {
+      failures.push(`Alpha workspace config omits ${expected.workspace}`);
+      continue;
+    }
+    const issues = Array.isArray(workspace.issues) ? workspace.issues : [];
+    for (const issue of expected.issues) {
+      if (!issues.includes(issue)) failures.push(`${expected.workspace} config omits #${issue}`);
+    }
+    const writePaths = Array.isArray(workspace.writePaths) ? workspace.writePaths : [];
+    if (writePaths.length === 0 || writePaths.some((path) => typeof path !== 'string')) {
+      failures.push(`${expected.workspace} must own one or more string write paths`);
+      continue;
+    }
+    for (const path of writePaths as string[]) {
+      if (path.startsWith('/') || path.includes('..')) {
+        failures.push(`${expected.workspace} has unsafe write path ${path}`);
+      }
+      for (const [ownedPath, owner] of owners) {
+        const overlap = path === ownedPath ||
+          (path.endsWith('/') && ownedPath.startsWith(path)) ||
+          (ownedPath.endsWith('/') && path.startsWith(ownedPath));
+        if (overlap) {
+          failures.push(`${expected.workspace} write path ${path} overlaps ${owner}:${ownedPath}`);
+        }
+      }
+      owners.set(path, expected.workspace);
+    }
+  }
+  if (workspaces.length !== 7) {
+    failures.push('Alpha workspace config must contain exactly 7 writers');
+  }
+  if (
+    raw.integration?.id !== 'alpha.8' || raw.integration?.issue !== 1181 ||
+    raw.integration?.role !== 'sole-aggregator' || raw.integration?.authoritativeFullCi !== true
+  ) {
+    failures.push('Alpha integration config must make alpha.8 the sole full-CI aggregator');
+  }
+  return failures;
+}
+
 export function validateAlphaWorkspaceTopology(plan: string): string[] {
   const failures: string[] = [];
   const lines = plan.split('\n');
@@ -211,6 +288,7 @@ export interface ReleaseDoctrineTexts {
   issueMap: string;
   versionPlan: string;
   alphaSop: string;
+  alphaPrompt: string;
   betaSop: string;
   betaPrompt: string;
   plan: string;
@@ -222,6 +300,7 @@ export function validateReleaseDoctrine(texts: ReleaseDoctrineTexts): string[] {
   const issueMap = normalize(texts.issueMap);
   const versionPlan = normalize(texts.versionPlan);
   const alphaSop = normalize(texts.alphaSop);
+  const alphaPrompt = normalize(texts.alphaPrompt);
   const betaSop = normalize(texts.betaSop);
   const betaPrompt = normalize(texts.betaPrompt);
   const plan = normalize(texts.plan);
@@ -261,12 +340,25 @@ export function validateReleaseDoctrine(texts: ReleaseDoctrineTexts): string[] {
       'Alpha.8 is created as the integration workspace',
       'No three-role GO or release-verifier session',
       'Do not run `v044:executor:check` during Alpha',
+      '`tools/config/v044-alpha-workspaces.json` is the executable write boundary',
     ]
   ) {
     if (!alphaSop.includes(required)) failures.push(`Alpha workspace SOP omits "${required}"`);
   }
   if (/start a fresh release verifier/iu.test(alphaSop)) {
     failures.push('Alpha workspace SOP starts a release verifier');
+  }
+
+  for (
+    const required of [
+      'Launch one subagent per workspace',
+      'fewer than seven subagent slots',
+      'source-to-integrated SHA mapping',
+      'Only alpha.8 opens a pull request to `dev`',
+      'does not use the thinker, implementer or release-verifier loop',
+    ]
+  ) {
+    if (!alphaPrompt.includes(required)) failures.push(`seven-subagent prompt omits "${required}"`);
   }
 
   for (
@@ -324,6 +416,16 @@ async function main(): Promise<void> {
   failures.push(...validateExecutionState(state, config));
   failures.push(...validateExecutorContract(config));
 
+  let alphaWorkspaceConfig: AlphaWorkspaceConfig = {};
+  try {
+    alphaWorkspaceConfig = JSON.parse(
+      await read('tools/config/v044-alpha-workspaces.json'),
+    ) as AlphaWorkspaceConfig;
+  } catch (error) {
+    failures.push(`Alpha workspace config is not valid JSON: ${String(error)}`);
+  }
+  failures.push(...validateAlphaWorkspaceConfig(alphaWorkspaceConfig));
+
   const plan = await read('docs/current/v0.44.0-EXECUTION-PLAN.md');
   const issueMap = await read('docs/roadmap/v0.44.0-ISSUES.md');
   for (const issue of REQUIRED_ISSUES) {
@@ -336,6 +438,7 @@ async function main(): Promise<void> {
     issueMap,
     versionPlan: await read('docs/current/VERSION_PLAN.md'),
     alphaSop: await read('docs/governance/V044_ALPHA_WORKSPACE_SOP.md'),
+    alphaPrompt: await read('docs/prompts/v0.44.0-ALPHA-SEVEN-SUBAGENTS.md'),
     betaSop: await read('docs/governance/V044_AGENT_LOOP_SOP.md'),
     betaPrompt: await read('docs/prompts/v0.44.0-THINKER-ORCHESTRATOR.md'),
     plan,

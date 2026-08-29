@@ -38,9 +38,10 @@ the Alpha integration workspace has produced one coherent framework SHA.
 Before cloning implementation workspaces:
 
 1. #1193 minimum `dev`/`main` history safety is active.
-2. Freeze the smallest code-first Part Program, DOM marker/claim, runtime ownership,
-   and Island boundary contract.
-3. Record real path ownership and one exact common base SHA.
+2. `v0.44.0-ALPHA-CONTRACT.md` freezes the minimum semantic seams already accepted
+   by ADR-0143 and proved by #1160.
+3. `tools/config/v044-alpha-workspaces.json` records disjoint write ownership.
+4. #1193 closure evidence records the exact fast-forwarded common base SHA.
 
 This is a short shared freeze, not a governance wave.
 
@@ -57,7 +58,7 @@ This is a short shared freeze, not a governance wave.
 | alpha.7     | Performance / Qualification | #1176                                        | budgets, benchmarks, browser/runtime and packed-consumer qualification |
 | alpha.8     | Final Integration           | #1181                                        | absorb all accepted workspace SHAs and produce one coherent candidate  |
 
-The first seven workspaces begin from the same base and run concurrently. A workspace
+The first seven workspaces begin from that exact base and run concurrently. A workspace
 may use contract fixtures or mocks for another workspace, but may not introduce a
 fallback architecture, private cross-package import, workspace alias, compatibility
 shim, or unilateral shared-contract change.
@@ -73,8 +74,9 @@ workspace.
 The alpha.8 integration workspace is the only Alpha workspace that aggregates other
 branches. Its agent:
 
-1. consumes the exact accepted head SHA from alpha.1 through alpha.7;
-2. integrates them in dependency order without changing their identities;
+1. consumes the exact accepted source head SHA from alpha.1 through alpha.7;
+2. integrates their reviewed commit series in dependency order through linear
+   cherry-picks and records the source-to-integrated SHA mapping;
 3. resolves interface and integration failures in the integration workspace;
 4. proves compiler -> Part Program -> SSR/fresh DOM/existing-DOM claim -> signals ->
    islands -> Vite -> Nitro/server -> real application;
