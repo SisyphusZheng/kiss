@@ -3,13 +3,20 @@
  *
  * Vite integration boundary for the alpha.0 TSX-to-Part Program compiler.
  * The hook activates only for .tsx modules that opt into the compiled model
- * via the `@element(` marker; everything else passes through untouched.
- * Unsupported grammar fails the build through this.error() with a
- * source-located OEC9xx diagnostic — there is no runtime fallback.
+ * with a real `@element(...)` decorator application on a class declaration;
+ * everything else passes through untouched. Admission is two-staged: a cheap
+ * `@element(` substring prefilter keeps plain modules off the AST path, then
+ * an AST check (the compiler's own decorator detection) confirms the
+ * application before compilation commits — a module that merely mentions the
+ * marker inside a string literal or comment is not compiled. Unsupported
+ * grammar in a genuinely decorated module still fails the build through
+ * this.error() with a source-located OEC9xx diagnostic — there is no runtime
+ * fallback.
  *
  * Internal alpha.0 spike only: not part of the public adapter API.
  */
 
+import ts from 'typescript';
 import type { Plugin } from 'vite';
 import { CompiledSpikeError, compileElementSpike, type CompileSpikeResult } from './compile.ts';
 
@@ -26,17 +33,38 @@ interface CompiledElementSourceMap {
   x_openElement?: unknown;
 }
 
+/** Cheap first stage: the marker substring must appear in a .tsx module. */
 export function isCompiledElementModule(code: string, id: string): boolean {
   return /\.tsx(?:\?|$)/.test(id) && code.includes(COMPILED_ELEMENT_MARKER);
 }
 
 /**
+ * Precise second stage behind the substring prefilter, mirroring the
+ * compiler's own decorator detection in compile.ts: a real `@element(...)`
+ * decorator application on a class declaration. Modules that only mention
+ * the marker in a string literal or comment do not reach the compiler.
+ */
+export function hasElementDecoratorApplication(code: string, id: string): boolean {
+  const sf = ts.createSourceFile(id, code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
+  return sf.statements.some((statement) =>
+    ts.isClassDeclaration(statement) &&
+    (ts.getDecorators(statement) ?? []).some((decorator) => {
+      const expr = decorator.expression;
+      return ts.isCallExpression(expr) && expr.expression.getText(sf) === 'element';
+    })
+  );
+}
+
+/**
  * Compile one opted-in module without binding the caller to Vite. The core
  * adapter hook and the inline SSR/client builds all use this same function,
- * which prevents duplicate compiler implementations from drifting.
+ * which prevents duplicate compiler implementations from drifting. Returns
+ * null for modules without a real @element decorator application, so
+ * marker-mentioning modules pass through untouched.
  */
 export function compileElementModule(code: string, id: string): CompileSpikeResult | null {
   if (!isCompiledElementModule(code, id)) return null;
+  if (!hasElementDecoratorApplication(code, id)) return null;
   return compileElementSpike(code, id);
 }
 
@@ -97,9 +125,8 @@ export function compiledElementPlugin(): Plugin {
     name: 'open:compiled-element',
 
     transform(code, id) {
-      if (!isCompiledElementModule(code, id)) return null;
       try {
-        return compileElementModule(code, id)!.code;
+        return compileElementModule(code, id)?.code ?? null;
       } catch (error) {
         if (error instanceof CompiledSpikeError) {
           this.error(error.message);

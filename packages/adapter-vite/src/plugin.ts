@@ -755,9 +755,12 @@ export function createOpenPlugin(
     devIslandClientPlugin(resolvedOptions, ctx),
   );
 
-  // #1160 (v0.44.0-alpha.0 spike): opt-in compiled-element transform. The
-  // flag keeps the internal spike isolated from the default 0.43 pipeline;
-  // plugin ordering/count for the default pipeline is unchanged.
+  // #1160 / ADR-0143: compiled-element compilation is mandatory in the
+  // default 0.44 pipeline — the open:core transform hook above compiles every
+  // .tsx module carrying a real @element decorator application. This flag only
+  // adds the standalone open:compiled-element plugin; generated output carries
+  // no @element marker, so a module is never compiled twice when both hooks
+  // see it.
   if (resolvedOptions.compiledSpike) {
     plugins.push(compiledElementPlugin());
   }
