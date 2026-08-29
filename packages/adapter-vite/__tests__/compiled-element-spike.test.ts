@@ -54,6 +54,12 @@ function transformOf(plugin: Plugin): TransformHook {
   return plugin.transform as unknown as TransformHook;
 }
 
+function decodeBase64(value: string): string {
+  const binary = atob(value);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
 Deno.test('compiled-element spike - harness sanity (fixtures load)', async () => {
   const counter = await readFixture('counter.tsx');
   const expected = await readFixture('expected-program.json');
@@ -69,14 +75,11 @@ Deno.test('compiled-element spike - plugin registration through createOpenPlugin
 
   await t.step('opt-in spike flag registers the compiler plugin', async () => {
     // Behavior-first ordering (repair-1, R3): the pipeline assertion runs
-    // BEFORE the new compiler module is imported, so on a base-SHA checkout
-    // this step fails because the opt-in pipeline lacks the plugin — not
-    // because a module cannot be resolved. The cast keeps the RED-authored
-    // test compiling against the not-yet-widened signature.
-    const spikeOptions = { compiledSpike: true } as unknown as Parameters<
-      typeof createOpenPlugin
-    >[0];
-    const plugins = createOpenPlugin(spikeOptions);
+    // BEFORE the compiler module is imported, so a regression fails because
+    // the opt-in pipeline lacks the plugin — not because a module cannot be
+    // resolved. createOpenPlugin() now accepts `compiledSpike` in its options
+    // type, so the flag is passed directly without a cast.
+    const plugins = createOpenPlugin({ compiledSpike: true });
     assertEquals(plugins.some((p) => p.name === 'open:compiled-element'), true);
     const { compiledElementPlugin } = await loadPluginModule();
     assertEquals(compiledElementPlugin().name, 'open:compiled-element');
@@ -180,6 +183,23 @@ Deno.test('compiled-element spike - fixture transforms through the Vite hook', a
   await t.step('re-running the transform yields byte-identical output', () => {
     const again = transform.call(failingContext(), source, id);
     assertEquals(again, emitted);
+  });
+
+  await t.step('inline source map carries x_openElement v1 program source records', async () => {
+    const marker = '//# sourceMappingURL=data:application/json;base64,';
+    const line = emitted!.split('\n').find((candidate) => candidate.startsWith(marker));
+    assert(line, 'generated code must embed an inline base64 source map');
+    const map = JSON.parse(decodeBase64(line.slice(marker.length)));
+    assertEquals(map.version, 3);
+    assertEquals(map.sources, [id]);
+    // sourcesContent carries the original TSX source verbatim.
+    assertEquals(map.sourcesContent, [source]);
+    // The frozen fixture program is the source of truth for the v1 records:
+    // x_openElement must deep-equal its sourceMap (file + every record).
+    const expected = JSON.parse(await readFixture('expected-program.json'));
+    assertEquals(map.x_openElement.version, 1);
+    assertEquals(map.x_openElement, expected.sourceMap);
+    assertEquals(map.x_openElement.records.length, expected.sourceMap.records.length);
   });
 
   await t.step('measurement evidence is recorded', () => {
