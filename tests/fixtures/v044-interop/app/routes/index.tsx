@@ -1,0 +1,13 @@
+/** @jsxImportSource @openelement/element */
+import { definePage } from '@openelement/app';
+
+export default definePage({
+  route: { path: '/' },
+  head: {
+    title: 'OpenElement v0.44 interoperability corpus',
+  },
+  renderIntent: { mode: 'static', streaming: 'auto', revalidate: false },
+  render() {
+    return <v044-interop-fixture />;
+  },
+});
