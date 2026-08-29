@@ -9,8 +9,8 @@
  *   Everything else resolves to Web Standards: URL, fetch, import.meta.url,
  *   console - so the runtime works in Deno, Node, Bun and Edge.
  *
- * Rendering: DSD (Declarative Shadow DOM) string concatenation
- * Islands: Custom Element registration + prop deserialization
+ * Rendering is owned by generated Part Programs. This module contains only
+ * reusable platform helpers and contracts; it is not a renderer barrel.
  *
  * Build orchestration (Vite plugins) lives in @openelement/adapter-vite.
  * For the unified openElement() entry, use @openelement/adapter-vite.
@@ -48,23 +48,7 @@ export { createIsrCacheKey } from './isr.ts';
 export type { CacheAdapter, CacheEntry, IsrCacheEntry, IsrCacheResult } from '../protocol/isr.ts';
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
-export { renderDsd } from './render-dsd.ts';
-export type { RenderDsdOptions } from './render-dsd.ts';
-export { serializeAttrs } from './render-ir.ts';
 export { camelToKebab } from './tag-utils.ts';
-export type {
-  DsdComponent,
-  DsdComponentConstructor,
-  DsdOptions,
-  DsdRenderMetrics,
-  HydrationHint,
-  RenderErrorCode,
-  RenderHooks,
-  RenderInput,
-  RenderOutput,
-  RenderPhase,
-  SsrAdmissionDecision,
-} from '../protocol/render.ts';
 export type {
   OpenElementAttribute,
   OpenElementCssPart,
@@ -84,34 +68,8 @@ export { consumeContext, type Context, createContext, provideContext } from './s
 export { createLogger } from './logger.ts';
 export { assertValidTagName, isValidTagName } from './tag-utils.ts';
 export { normalizeSeparators, pathToTagName } from './path-utils.ts';
-export { bindSsrProps, defineCustomElement, defineIsland, getSsrProps } from './island.ts';
-export type { IslandOptions } from '../protocol/island.ts';
 export { transformIslandSource } from './island-transform.ts';
 export type { IslandTransformOptions, IslandTransformResult } from '../protocol/island.ts';
-
-// Unified binding layer (ADR-0109 Phase 1)
-export { applyBindingDescriptor, commitBindings } from './binding-activation.ts';
-export {
-  bindAttr,
-  bindClass,
-  bindConditional,
-  bindEvent,
-  bindHtml,
-  bindList,
-  bindRef,
-  bindRender,
-  bindStaticAttr,
-  bindStaticBoolean,
-  bindStaticProp,
-  bindStaticStyle,
-  bindText,
-} from './binding-descriptor.ts';
-export type {
-  BindingDescriptor,
-  BindingDispose,
-  BindingLifecycle,
-  BindingRenderer,
-} from './binding-descriptor.ts';
 
 // Data adapters — type contract surface only (ADR-0095)
 export type {
@@ -127,33 +85,6 @@ export type {
   SpaLoaderContext,
 } from '../protocol/data.ts';
 
-// v0.24.1 (ADR-0057): JSX + Signal component model
-// VNode & jsx-runtime
-export type { VNode } from '../protocol/vnode.ts';
-export { isVNode } from './vnode.ts';
-export { Fragment, trustedHtml } from './jsx-runtime.ts';
-// Renderers
-export { renderToDom } from './jsx-render-dom.ts';
-export { renderDsdTree } from './render-ir.ts';
-export {
-  createEventMarkerContext,
-  type EventMarkerContext,
-  eventMarkerId,
-  eventTypeFromProp,
-  serializeEventMarkers,
-} from './event-marker.ts';
-export {
-  collectEventBindings,
-  type EventBindingRecord,
-  hydrateEventMarkers,
-} from './event-hydration.ts';
-export { hasSelfHydrated, HydrationScope, markSelfHydrated } from './hydration-scope.ts';
-// #942: pre-hydration click capture/replay
-export {
-  ensurePreHydrationClickCapture,
-  flushPendingClicks,
-  isPreHydrationClickCaptureInstalled,
-} from './pre-hydration-click.ts';
 export {
   deepGetElementById,
   ensureDeepFragmentNavigation,
