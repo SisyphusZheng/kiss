@@ -233,6 +233,39 @@ export function validateAlphaWorkspaceConfig(raw: AlphaWorkspaceConfig): string[
   ) {
     failures.push('Alpha integration config must make alpha.8 the sole full-CI aggregator');
   }
+  // #1181: the alpha.8 restricted integration permission must be recorded as an
+  // executable write-path whitelist, not prose. Entries are repo-relative file
+  // paths or '/'-suffixed directory prefixes; bare top-level directories and
+  // glob/absolute/parent-escaping entries are rejected so the boundary stays
+  // bounded and machine-checkable.
+  const integrationPaths = raw.integration?.writePaths;
+  if (
+    !Array.isArray(integrationPaths) || integrationPaths.length === 0 ||
+    integrationPaths.some((path) => typeof path !== 'string')
+  ) {
+    failures.push('Alpha integration config must record a non-empty string write-path whitelist');
+  } else {
+    const bareTopLevel = [
+      'packages/',
+      'tools/',
+      'docs/',
+      'www/',
+      'examples/',
+      'tests/',
+      'benchmarks/',
+      'e2e/',
+    ];
+    for (const path of integrationPaths as string[]) {
+      if (
+        path === '' || path === '.' || path.startsWith('/') || path.includes('..') ||
+        path.includes('*')
+      ) {
+        failures.push(`Alpha integration has unsafe write path ${path}`);
+      } else if (bareTopLevel.includes(path)) {
+        failures.push(`Alpha integration write path ${path} is a bare top-level directory`);
+      }
+    }
+  }
   return failures;
 }
 

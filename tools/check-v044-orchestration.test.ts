@@ -85,6 +85,34 @@ Deno.test('executable Alpha workspace config has seven disjoint writers and one 
   assert(validateAlphaWorkspaceConfig(missing).some((failure) => failure.includes('alpha.6')));
 });
 
+Deno.test('alpha.8 integration whitelist is required, bounded and safe', async () => {
+  const workspaceConfig = JSON.parse(
+    await Deno.readTextFile('tools/config/v044-alpha-workspaces.json'),
+  );
+
+  const absent = structuredClone(workspaceConfig);
+  delete absent.integration.writePaths;
+  assert(
+    validateAlphaWorkspaceConfig(absent).some((failure) =>
+      failure.includes('write-path whitelist')
+    ),
+  );
+
+  const bare = structuredClone(workspaceConfig);
+  bare.integration.writePaths = ['packages/'];
+  assert(
+    validateAlphaWorkspaceConfig(bare).some((failure) => failure.includes('bare top-level')),
+  );
+
+  const unsafe = structuredClone(workspaceConfig);
+  unsafe.integration.writePaths = ['../outside.ts'];
+  assert(validateAlphaWorkspaceConfig(unsafe).some((failure) => failure.includes('unsafe')));
+
+  const glob = structuredClone(workspaceConfig);
+  glob.integration.writePaths = ['packages/element/**'];
+  assert(validateAlphaWorkspaceConfig(glob).some((failure) => failure.includes('unsafe')));
+});
+
 function alphaPlan(): string {
   return [
     'The Alpha train uses parallel development in independent workspaces and one final integration workspace.',
