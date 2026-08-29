@@ -305,7 +305,7 @@ function makeHost(counters: Counters) {
 
 const PROGRAM_URL = new URL('../../__fixtures__/compiled-claim/program.json', import.meta.url);
 const CONTENT_URL = new URL(
-  '../../__fixtures__/compiled-claim/expected-content.html',
+  '../../__fixtures__/compiled-claim/expected-content.html.txt',
   import.meta.url,
 );
 

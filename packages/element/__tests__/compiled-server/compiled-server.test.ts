@@ -35,9 +35,9 @@ const FIXTURE_PROGRAM_URL = new URL(
 );
 
 const FIXTURE_EXPECTED_URLS = {
-  light: new URL('../../__fixtures__/compiled-server/expected-light.html', import.meta.url),
-  open: new URL('../../__fixtures__/compiled-server/expected-open.html', import.meta.url),
-  closed: new URL('../../__fixtures__/compiled-server/expected-closed.html', import.meta.url),
+  light: new URL('../../__fixtures__/compiled-server/expected-light.html.txt', import.meta.url),
+  open: new URL('../../__fixtures__/compiled-server/expected-open.html.txt', import.meta.url),
+  closed: new URL('../../__fixtures__/compiled-server/expected-closed.html.txt', import.meta.url),
 };
 
 const STATIC_ONLY_PROGRAM_URL = new URL(
@@ -45,7 +45,7 @@ const STATIC_ONLY_PROGRAM_URL = new URL(
   import.meta.url,
 );
 const STATIC_ONLY_EXPECTED_URL = new URL(
-  '../../__fixtures__/compiled-server/static-only-expected.html',
+  '../../__fixtures__/compiled-server/static-only-expected.html.txt',
   import.meta.url,
 );
 
