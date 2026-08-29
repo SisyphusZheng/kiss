@@ -1,15 +1,18 @@
 /**
- * @openelement/app — adversarial Preact hydration lifecycle tests (#1146, area 2).
+ * @openelement/app — adversarial Preact hydration lifecycle tests (#1146,
+ * area 2), rebased onto the v0.44 foreign-element bridge (ADR-0143).
  *
- * The smoke suite hydrates into an EMPTY stub root (preact-smoke.test.ts).
- * These cases attack the gaps around clientActivate()/hydrate()/ownership:
- *   2a. First hydration over a shadow root pre-populated with real SSR
+ * The v0.44 island hydrates its host's LIGHT-DOM children (there is no DSD
+ * shadow root): connectedCallback() hydrates when the host carries
+ * prerendered content and the island is ssr-enabled, otherwise renders fresh.
+ * These cases attack the gaps around connectedCallback()/hydrate()/ownership:
+ *   2a. First hydration over a light host pre-populated with real SSR
  *       children must bind the existing tree (no duplication/replacement),
- *       flow data-ssr-props and signal props, and keep teardown exactly-once.
+ *       flow attribute and options props, and keep teardown exactly-once.
  *   2b. hydrate → update → real detach → reconnect must keep a single tree,
  *       a single mount per attach, and no leaked effect subscriptions.
- *   2c. Double clientActivate() on the same host (upgrade race) must behave
- *       as an idempotent update through the Preact owner, not a second mount.
+ *   2c. Double connectedCallback() on the same host (upgrade race) is an
+ *       idempotent no-op through the Preact owner, not a second mount.
  *
  * Stub fidelity note: StubTextNode inherits setAttribute() from StubNode, so
  * it fails preact's hydration matcher, which uses `'setAttribute' in value`
@@ -19,7 +22,7 @@
  */
 
 import { assert, assertEquals } from '@std/assert';
-import { OpenElement, signal } from '@openelement/element';
+import { signal } from '@openelement/element';
 import { h } from 'preact';
 import { useLayoutEffect } from 'preact/hooks';
 import { definePreactIsland } from '../src/preact.ts';
@@ -27,13 +30,40 @@ import { installDomStubs, StubNode, StubTextNode } from './dom-stubs.ts';
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
-/** Build a stub shadow root pre-populated with the DSD children SSR emitted. */
-function ssrRoot(tag: string, text: string): { root: StubNode; element: StubNode } {
-  const root = new StubNode();
+/** A host pre-populated with the light-DOM children the server prerendered. */
+function hostWithSsrContent(tag: string, text: string): { host: StubNode; element: StubNode } {
+  const host = new StubNode();
   const element = new StubNode(1, tag);
   element.appendChild(new StubTextNode(text) as unknown as Node);
-  root.appendChild(element as unknown as Node);
-  return { root, element };
+  host.appendChild(element as unknown as Node);
+  return { host, element };
+}
+
+interface TestIsland extends HTMLElement {
+  connectedCallback(): void;
+  disconnectedCallback(): void;
+  update(): void;
+}
+
+/**
+ * Instantiate the island, move its content in from the "server" host, and
+ * stub a flippable connection state (the shared stub element reports
+ * isConnected=true unconditionally). Returns the connection flag handle.
+ */
+function islandWithContent(
+  ctor: ReturnType<typeof definePreactIsland>,
+  ssr: { host: StubNode },
+): { instance: TestIsland; setConnected(value: boolean): void } {
+  const instance = new ctor() as TestIsland;
+  for (const child of [...ssr.host.childNodes]) {
+    instance.appendChild(child);
+  }
+  let connected = true;
+  Object.defineProperty(instance, 'isConnected', {
+    configurable: true,
+    get: () => connected,
+  });
+  return { instance, setConnected: (value) => connected = value };
 }
 
 // ─── 2a. First hydration onto real pre-existing SSR children ───────
@@ -54,60 +84,41 @@ Deno.test('Preact adversarial 2a: first hydration binds real SSR children withou
     const ctor = definePreactIsland('test-adv-ssr-hydrate', Component as never, {
       props: { count } as never,
     });
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      disconnectedCallback: () => void;
-      shadowRoot: ShadowRoot | null;
-    };
+    const { host, element } = hostWithSsrContent('P', 'Hello, SSR! Count: 0');
+    const { instance, setConnected } = islandWithContent(ctor, { host });
+    // The attribute channel carries the SSR-era props.
+    instance.setAttribute('name', 'SSR');
 
-    // Realistic SSR payload: render-dsd.ts serializes hydration props into
-    // data-ssr-props, and the shadow root already contains the rendered
-    // markup. _Base is locked at module load without HTMLElement, so
-    // getAttribute/isConnected are stubbed per-instance (same approach as
-    // the attribute stubs in preact-smoke.test.ts).
-    let ssrProps: Record<string, unknown> = { name: 'SSR' };
-    Object.defineProperty(instance, 'getAttribute', {
-      configurable: true,
-      value: (name: string) => name === 'data-ssr-props' ? JSON.stringify(ssrProps) : null,
-    });
-    let connected = true;
-    Object.defineProperty(instance, 'isConnected', {
-      configurable: true,
-      get: () => connected,
-    });
-    const { root, element } = ssrRoot('P', 'Hello, SSR! Count: 0');
-    instance.shadowRoot = root as unknown as ShadowRoot;
-
-    instance.clientActivate();
+    instance.connectedCallback();
 
     // The pre-existing SSR element is bound in place: mounted once, no
     // duplication, no replacement.
     assertEquals(starts, 1);
     assertEquals(cleanups, 0);
-    assertEquals(root.childNodes.length, 1);
-    assert(root.childNodes[0] === (element as unknown as Node));
-    // data-ssr-props and the options signal both flowed into the render.
-    assertEquals(root.textContent, 'Hello, SSR! Count: 0');
+    assertEquals(instance.childNodes.length, 1);
+    assert(instance.childNodes[0] === (element as unknown as Node));
+    // The attribute prop and the options signal both flowed into the render.
+    assertEquals(instance.textContent, 'Hello, SSR! Count: 0');
 
-    // Signal + prop updates re-render through the Preact owner in place.
+    // Signal + attribute updates re-render through the Preact owner in place.
     count.value = 7;
-    ssrProps = { name: 'Client' };
-    instance.requestUpdate();
-    assertEquals(root.textContent, 'Hello, Client! Count: 7');
-    assertEquals(root.childNodes.length, 1);
-    assert(root.childNodes[0] === (element as unknown as Node));
+    instance.setAttribute('name', 'Client');
+    instance.update();
+    assertEquals(instance.textContent, 'Hello, Client! Count: 7');
+    assertEquals(instance.childNodes.length, 1);
+    assert(instance.childNodes[0] === (element as unknown as Node));
     assertEquals(starts, 1);
     assertEquals(cleanups, 0);
 
     // Teardown stays exactly-once, even under a double-detach storm.
-    connected = false;
+    setConnected(false);
     instance.disconnectedCallback();
     instance.disconnectedCallback();
     await Promise.resolve();
     await Promise.resolve();
     assertEquals(cleanups, 1);
     assertEquals(starts, 1);
-    assertEquals(root.childNodes.length, 0);
+    assertEquals(instance.childNodes.length, 0);
   } finally {
     restore();
   }
@@ -129,64 +140,56 @@ Deno.test('Preact adversarial 2b: hydrate-update-detach-reconnect keeps one tree
       return h('div', null, p.label ?? 'ssr');
     };
     const ctor = definePreactIsland('test-adv-lifecycle', Component as never, { props });
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      disconnectedCallback: () => void;
-      shadowRoot: ShadowRoot | null;
-    };
-    let connected = true;
-    Object.defineProperty(instance, 'isConnected', {
-      configurable: true,
-      get: () => connected,
-    });
-    const { root, element } = ssrRoot('DIV', 'ssr');
-    instance.shadowRoot = root as unknown as ShadowRoot;
+    const { host, element } = hostWithSsrContent('DIV', 'ssr');
+    const { instance, setConnected } = islandWithContent(ctor, { host });
 
     // 1. Hydrate over the SSR tree.
-    instance.clientActivate();
+    instance.connectedCallback();
     assertEquals(starts, 1);
-    assert(root.childNodes[0] === (element as unknown as Node));
+    assert(instance.childNodes[0] === (element as unknown as Node));
 
     // 2. In-place update: no remount, no cleanup, element identity kept.
     props.label = 'updated';
-    instance.requestUpdate();
-    assertEquals(root.textContent, 'updated');
+    instance.update();
+    assertEquals(instance.textContent, 'updated');
     assertEquals(starts, 1);
     assertEquals(cleanups, 0);
-    assert(root.childNodes[0] === (element as unknown as Node));
+    assert(instance.childNodes[0] === (element as unknown as Node));
 
     // 3. Real detach: the deferred teardown unmounts exactly once.
-    connected = false;
+    setConnected(false);
     instance.disconnectedCallback();
     await Promise.resolve();
+    await Promise.resolve();
     assertEquals(cleanups, 1);
-    assertEquals(root.childNodes.length, 0);
+    assertEquals(instance.childNodes.length, 0);
 
     // 4. Reconnect: a fresh tree through the existing Preact owner — no
     //    hydrate replay, no duplicate mount.
-    connected = true;
-    instance.clientActivate();
+    setConnected(true);
+    instance.connectedCallback();
     assertEquals(starts, 2);
     assertEquals(cleanups, 1);
-    assertEquals(root.childNodes.length, 1);
-    assertEquals(root.textContent, 'updated');
+    assertEquals(instance.childNodes.length, 1);
+    assertEquals(instance.textContent, 'updated');
 
     // 5. Final teardown exactly once: every mount was cleaned up, so no
     //    effect subscription leaked across the lifecycle.
-    connected = false;
+    setConnected(false);
     instance.disconnectedCallback();
+    await Promise.resolve();
     await Promise.resolve();
     assertEquals(cleanups, 2);
     assertEquals(starts, cleanups);
-    assertEquals(root.childNodes.length, 0);
+    assertEquals(instance.childNodes.length, 0);
   } finally {
     restore();
   }
 });
 
-// ─── 2c. Double clientActivate on the same host (upgrade race) ─────
+// ─── 2c. Double connectedCallback on the same host (upgrade race) ──
 
-Deno.test('Preact adversarial 2c: double clientActivate is an idempotent update, not a second tree (#1146)', async () => {
+Deno.test('Preact adversarial 2c: double connectedCallback is an idempotent no-op, not a second tree (#1146)', async () => {
   const restore = installDomStubs();
   try {
     let starts = 0;
@@ -199,34 +202,25 @@ Deno.test('Preact adversarial 2c: double clientActivate is an idempotent update,
       return h('div', null, 'raced');
     };
     const ctor = definePreactIsland('test-adv-double-activate', Component as never);
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      disconnectedCallback: () => void;
-      shadowRoot: ShadowRoot | null;
-    };
-    let connected = true;
-    Object.defineProperty(instance, 'isConnected', {
-      configurable: true,
-      get: () => connected,
-    });
-    // Upgrade race on a DSD host: the shadow root is already SSR-populated.
-    const { root, element } = ssrRoot('DIV', 'raced');
-    instance.shadowRoot = root as unknown as ShadowRoot;
+    // Upgrade race on a hydrated host: the light DOM is already populated.
+    const { host, element } = hostWithSsrContent('DIV', 'raced');
+    const { instance, setConnected } = islandWithContent(ctor, { host });
 
-    // Two activations without an intervening disconnect: the first hydrates,
-    // the second must go through the existing Preact owner as an update.
-    instance.clientActivate();
-    instance.clientActivate();
+    // Two connections without an intervening disconnect: the first hydrates,
+    // the second is a no-op (the Preact owner already owns the tree).
+    instance.connectedCallback();
+    instance.connectedCallback();
 
     assertEquals(starts, 1);
     assertEquals(cleanups, 0);
-    assertEquals(root.childNodes.length, 1);
-    assert(root.childNodes[0] === (element as unknown as Node));
-    assertEquals(root.textContent, 'raced');
+    assertEquals(instance.childNodes.length, 1);
+    assert(instance.childNodes[0] === (element as unknown as Node));
+    assertEquals(instance.textContent, 'raced');
 
     // Ownership is still singular afterwards: one detach, one teardown.
-    connected = false;
+    setConnected(false);
     instance.disconnectedCallback();
+    await Promise.resolve();
     await Promise.resolve();
     assertEquals(cleanups, 1);
     assertEquals(starts, 1);

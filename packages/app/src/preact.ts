@@ -1,17 +1,23 @@
 /**
- * @openelement/app/preact — Preact island support.
+ * @openelement/app/preact — Preact island support (v0.44).
  *
- * Creates custom elements that extend OpenElement and render Preact
- * components through the DSD SSR pipeline. On the server, the Preact
- * component is rendered to a string using preact-render-to-string and
- * wrapped as trusted HTML in OpenElement's render(). On the client,
- * preactHydrate or preactRender takes over in the clientActivate() hook.
+ * The island is a plain autonomous custom element — it does NOT extend
+ * OpenElement and carries no compiled Part Program (foreign-element
+ * semantics: no DSD shadow, no kernel claim). Server-side prerendering renders
+ * the Preact component with preact-render-to-string into the host's light-DOM
+ * content (`PreactIslandConstructor.renderSsr`); on the client,
+ * connectedCallback hydrates that surviving light-DOM content with
+ * preactHydrate (ssr: true) or renders from scratch with preactRender.
+ *
+ * Props come from the static `options.props` plus the host element's
+ * attributes (attribute values are always strings). The removed
+ * getSsrProps/DATA_SSR_PROPS channel is gone: islands that need structured
+ * server data read it from attributes or module scope.
  *
  * @module @openelement/app/preact
  */
 
-import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
-import { assertValidTagName, DATA_SSR_PROPS, getSsrProps } from '@openelement/element';
+import { assertValidTagName } from '@openelement/element';
 import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import { renderToString } from 'preact-render-to-string';
@@ -26,13 +32,24 @@ type PreactIslandComponent<
 
 export interface PreactIslandOptions {
   /**
-   * Server-render the island into DSD (default). Set `false` for a CSR-only
-   * island rendered from scratch in clientActivate(). Note: `hydrate`/`dsd`
-   * strategies from defineIslandConfig() are not supported here — the island
-   * activates immediately.
+   * Server-render the island's light-DOM content (default). Set `false` for a
+   * CSR-only island rendered from scratch in connectedCallback(). Note:
+   * `hydrate`/`dsd` strategies from defineIslandConfig() are not supported
+   * here — the island activates immediately.
    */
   ssr?: boolean;
   props?: PreactIslandProps;
+}
+
+/** A Preact island constructor plus its server-render seam. */
+export interface PreactIslandConstructor extends CustomElementConstructor {
+  /**
+   * Render the component to the host's light-DOM inner HTML. Returns '' when
+   * the island is CSR-only (`ssr: false`). Hosts/pipelines that prerender
+   * foreign island content call this and inject the result as the host's
+   * light-DOM children; the client then hydrates it in place.
+   */
+  renderSsr(props?: PreactIslandProps): string;
 }
 
 function collectAttributes(host: HTMLElement): PreactIslandProps {
@@ -40,7 +57,6 @@ function collectAttributes(host: HTMLElement): PreactIslandProps {
   const attrs = host.attributes;
   if (!attrs) return props;
   for (const attr of Array.from(attrs)) {
-    if (attr.name === DATA_SSR_PROPS) continue;
     props[attr.name] = attr.value;
   }
   return props;
@@ -53,7 +69,6 @@ function resolveProps(
   return {
     ...baseProps,
     ...collectAttributes(host),
-    ...(getSsrProps(host) ?? {}),
   };
 }
 
@@ -63,63 +78,44 @@ export function definePreactIsland<
   tagName: string,
   Component: PreactIslandComponent<Props>,
   options: PreactIslandOptions = {},
-): CustomElementConstructor {
+): PreactIslandConstructor {
   assertValidTagName(tagName);
   const baseProps = options.props ?? {};
 
-  class OpenElementPreactIsland extends OpenElement {
+  class OpenElementPreactIsland extends HTMLElement {
     #preactMounted = false;
-    #preactActivated = false;
     #detachGeneration = 0;
 
     #preactVNode() {
       return h(Component, resolveProps(this, baseProps) as Props);
     }
 
-    override render(): VNode | null {
-      if (typeof document === 'undefined') {
-        // SSR path: render Preact component to string, return as trusted HTML
-        const html = renderToString(this.#preactVNode());
-        return trustedHtml(html);
-      }
-      // Client: let clientActivate() handle Preact hydration/render
-      return null;
-    }
-
-    protected override clientActivate(): void {
+    connectedCallback(): void {
       // A same-turn DOM move disconnects and reconnects before the deferred
       // teardown below. Invalidate that teardown and keep Preact as the sole
       // owner of the existing tree.
       this.#detachGeneration++;
-      const root = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
+      if (this.#preactMounted) return;
       const vnode = this.#preactVNode();
-      if (!this.#preactActivated && options.ssr !== false) {
-        // DSD hydration: the shadow DOM already has SSR-rendered content
-        preactHydrate(vnode, root);
+      if (options.ssr !== false && this.childNodes.length > 0) {
+        // Light-DOM hydration: the host's server-rendered content survives.
+        preactHydrate(vnode, this);
       } else {
-        // CSR, reconnect, or a same-turn DOM move: render/update through the
-        // existing Preact owner instead of hydrating the same tree twice.
-        preactRender(vnode, root);
+        preactRender(vnode, this);
       }
-      this.#preactActivated = true;
       this.#preactMounted = true;
     }
 
-    override update(): void {
-      if (typeof document === 'undefined' || !this.#preactMounted) {
-        super.update();
-        return;
-      }
-      const root = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
-      preactRender(this.#preactVNode(), root);
+    /**
+     * Imperative re-render seam (e.g. after module-scope signal changes):
+     * re-renders through the existing Preact owner when mounted.
+     */
+    update(): void {
+      if (!this.#preactMounted) return;
+      preactRender(this.#preactVNode(), this);
     }
 
-    override requestUpdate(): void {
-      this.update();
-    }
-
-    override disconnectedCallback(): void {
-      super.disconnectedCallback();
+    disconnectedCallback(): void {
       const generation = ++this.#detachGeneration;
       queueMicrotask(() => {
         if (
@@ -127,16 +123,22 @@ export function definePreactIsland<
           this.isConnected ||
           !this.#preactMounted
         ) return;
-        const root = this.shadowRoot;
-        if (root) preactRender(null, root);
+        preactRender(null, this);
         this.#preactMounted = false;
       });
     }
+
+    /** Server prerender seam: light-DOM content HTML for the host. */
+    static renderSsr(props?: PreactIslandProps): string {
+      if (options.ssr === false) return '';
+      return renderToString(h(Component, { ...baseProps, ...(props ?? {}) } as Props));
+    }
   }
 
-  // #952: same dev-SSR re-define semantics as defineElement — the marked SSR
-  // stub registry outlives module re-evaluation, so island edits must
-  // overwrite the stale class; browser registries keep the duplicate guard.
+  // #952: same dev-SSR re-define semantics as compiled island registration —
+  // the marked SSR stub registry outlives module re-evaluation, so island
+  // edits must overwrite the stale class; browser registries keep the
+  // duplicate guard.
   // Contract: the marker name is chartered as SSR_REGISTRY_STUB_MARKER in
   // @openelement/element internal/protocol/ssr-registry-markers.ts (#965);
   // app cannot import element internals, so keep the literal in sync.

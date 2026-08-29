@@ -1,8 +1,16 @@
+/**
+ * @openelement/app — SPA bootstrap tests (v0.44 compiled contract).
+ *
+ * Page hosts are compiled elements: defineApp projects loader/action state
+ * onto the page's compiled properties through the descriptor's props/error
+ * projectors (or the default params+data projection), assigned as
+ * pre-connect own properties that the element facade reconciles at connect.
+ * The legacy definePage render-function + applyPageHostData seam is gone.
+ */
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
-import { defineApp, definePage, notFound, redirect } from '../src/index.ts';
+import { defineApp, definePage, notFound, type PagePropsContext, redirect } from '../src/index.ts';
 import { assertValidTagName } from '@openelement/element';
 import type { RouteConfig } from '../src/internal/router/client-router.ts';
-import { applyPageHostData, type PageHostElement } from '../src/internal/page-host-data.ts';
 
 Deno.test('SPA interface accepts custom-element routes', () => {
   const routes: RouteConfig[] = [{ path: '/', tagName: 'app-home' }];
@@ -19,51 +27,65 @@ Deno.test('SPA route contract rejects legacy component callbacks at type level',
   assertEquals(Object.hasOwn(route, 'component'), false);
 });
 
-Deno.test('SPA page-host adapter supplies the canonical definePage context', () => {
-  let received: unknown;
-  const Page = definePage<{ title: string }, { slug: string }>({
-    render(context) {
-      received = context;
-      return null;
+// ─── v0.44 page-projection test helpers ────────────────────────────
+
+interface ProbeCalls {
+  normal: PagePropsContext[];
+  errors: Array<{ error: unknown; context: PagePropsContext }>;
+}
+
+/**
+ * A page class carrying a recording projector pair. definePage() only
+ * requires a constructor (the pipeline fail-closes on uncompiled classes at
+ * render time); the SPA path exercises the descriptor seam, not the compiler.
+ */
+function defineProbePage(calls: ProbeCalls): CustomElementConstructor {
+  const Page = class {} as unknown as CustomElementConstructor;
+  return definePage(Page, {
+    props(context) {
+      calls.normal.push(context);
+      return {
+        ...context.params,
+        ...(typeof context.data === 'object' && context.data !== null &&
+            !Array.isArray(context.data)
+          ? context.data as Record<string, unknown>
+          : {}),
+      };
+    },
+    error(error, context) {
+      calls.errors.push({ error, context });
+      return { errored: true };
     },
   });
-  const host = Object.create(Page.prototype) as InstanceType<typeof Page> & PageHostElement;
-  const request = new Request('https://example.test/articles/hello');
-  applyPageHostData(host, {
-    data: { title: 'Hello' },
-    actionData: { saved: true },
-    params: { slug: 'hello' },
-    request,
-    route: { path: '/articles/:slug' },
-    meta: { section: 'guide' },
-  });
+}
 
-  host.render();
-
-  assertEquals(received, {
-    data: { title: 'Hello' },
-    params: { slug: 'hello' },
-    request,
-    route: { path: '/articles/:slug' },
-    meta: { section: 'guide' },
-    props: { data: { title: 'Hello' } },
-  });
-});
-
-Deno.test('defineApp mounts loader data and route context into a real definePage host', async () => {
-  let received: unknown;
-  const Page = definePage<{ title: string }, { slug: string }>({
-    render(context) {
-      received = context;
-      return null;
+function stubRegistry(classes: Record<string, unknown>): () => void {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'customElements');
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: {
+      get: (tag: string) => (classes as Record<string, unknown>)[tag],
+      define() {},
     },
   });
+  return () => {
+    if (descriptor) Object.defineProperty(globalThis, 'customElements', descriptor);
+    else delete (globalThis as Record<string, unknown>).customElements;
+  };
+}
+
+Deno.test('defineApp mounts loader data and route context through the page props projector', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'article-page': Page });
+
+  const hosts: Record<string, unknown>[] = [];
   const root = {
     innerHTML: '',
     addEventListener() {},
     removeEventListener() {},
-    appendChild(host: InstanceType<typeof Page>) {
-      host.render();
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
       return host;
     },
   };
@@ -72,7 +94,7 @@ Deno.test('defineApp mounts loader data and route context into a real definePage
     configurable: true,
     value: {
       querySelector: () => root,
-      createElement: () => Object.create(Page.prototype),
+      createElement: () => ({}),
     },
   });
 
@@ -88,19 +110,22 @@ Deno.test('defineApp mounts loader data and route context into a real definePage
   try {
     app.mount('#app');
     await new Promise((resolve) => setTimeout(resolve, 0));
-    const context = received as {
-      data: unknown;
-      params: unknown;
-      request: Request;
-      route: unknown;
-    };
+    assertEquals(calls.errors, []);
+    assertEquals(calls.normal.length, 1);
+    const context = calls.normal[0];
     assertEquals(context.data, { title: 'hello:yes' });
     assertEquals(context.params, { slug: 'hello', preview: 'yes' });
-    assertEquals(context.request.url, 'https://example.test/articles/hello?preview=yes');
+    assertEquals(context.request?.url, 'https://example.test/articles/hello?preview=yes');
     assertEquals(context.route, { path: '/articles/:slug' });
+    // The projected values landed on the host as pre-connect own properties.
+    assertEquals(hosts.length, 1);
+    assertEquals(hosts[0].slug, 'hello');
+    assertEquals(hosts[0].preview, 'yes');
+    assertEquals(hosts[0].title, 'hello:yes');
   } finally {
     app.dispose();
     env.restore();
+    restoreRegistry();
   }
 });
 
@@ -135,19 +160,18 @@ Deno.test('defineApp rejects missing targets and safely remounts and redisposes'
 
 Deno.test('defineApp action delegation handles shadow paths and action failures without crashing', async () => {
   let submit: ((event: Event) => void) | undefined;
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'home-page': Page });
   let renders = 0;
-  const requests: Request[] = [];
-  const actionResults: unknown[] = [];
   const root = {
     innerHTML: '',
     addEventListener(type: string, listener: (event: Event) => void) {
       if (type === 'submit') submit = listener;
     },
     removeEventListener() {},
-    appendChild(host: PageHostElement) {
+    appendChild() {
       renders++;
-      if (host.__openElementRequest) requests.push(host.__openElementRequest);
-      actionResults.push(host.__openElementActionData);
     },
   };
   const env = stubNavigableEnvironment(root, '/');
@@ -176,36 +200,32 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
     await new Promise((resolve) => setTimeout(resolve, 0));
     assertEquals(prevented, true);
     assertEquals(renders, 2);
-    assertEquals(actionResults[1], { error: 'Action failed' });
-    assertEquals(requests[0], requests[1]);
+    assertEquals(calls.normal.length, 2);
+    // The action failure rides the projector's actionData channel.
+    assertEquals(calls.normal[1].actionData, { error: 'Action failed' });
+    assertEquals(calls.normal[0].request, calls.normal[1].request);
 
     // Non-form submissions and routes without an action are ignored.
     submit?.({ target: {}, composedPath: () => [], preventDefault() {} } as unknown as Event);
   } finally {
     app.dispose();
     env.restore();
+    restoreRegistry();
   }
 });
 
-Deno.test('defineApp routes loader failures to the page error channel, not the data channel (#676)', async () => {
-  let rendered: unknown;
-  let errored: unknown;
-  const Page = definePage<{ title: string }, { slug: string }>({
-    render(context) {
-      rendered = context;
-      return null;
-    },
-    error(context) {
-      errored = context;
-      return null;
-    },
-  });
+Deno.test('defineApp routes loader failures to the page error projector, not the data channel (#676)', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'article-page': Page });
+
+  const hosts: Record<string, unknown>[] = [];
   const root = {
     innerHTML: '',
     addEventListener() {},
     removeEventListener() {},
-    appendChild(host: InstanceType<typeof Page>) {
-      host.render();
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
       return host;
     },
   };
@@ -214,7 +234,7 @@ Deno.test('defineApp routes loader failures to the page error channel, not the d
     configurable: true,
     value: {
       querySelector: () => root,
-      createElement: () => Object.create(Page.prototype),
+      createElement: () => ({}),
     },
   });
 
@@ -230,16 +250,19 @@ Deno.test('defineApp routes loader failures to the page error channel, not the d
   try {
     app.mount('#app');
     await new Promise((resolve) => setTimeout(resolve, 0));
-    // The error definition renders with the stable failure shape...
-    const context = errored as { data: unknown; error: unknown; params: unknown };
-    assertEquals(context.error, { error: 'Loader failed' });
+    // The error projector receives the stable failure shape...
+    assertEquals(calls.errors.length, 1);
+    assertEquals(calls.errors[0].error, { error: 'Loader failed' });
     // ...and the data channel stays empty instead of carrying a fake shape.
-    assertEquals(context.data, undefined);
-    assertEquals(context.params, { slug: 'hello' });
-    assertEquals(rendered, undefined);
+    assertEquals(calls.errors[0].context.data, undefined);
+    assertEquals(calls.errors[0].context.params, { slug: 'hello' });
+    assertEquals(calls.normal, []);
+    // The error projection landed on the host.
+    assertEquals(hosts[0].errored, true);
   } finally {
     app.dispose();
     env.restore();
+    restoreRegistry();
   }
 });
 
@@ -350,12 +373,12 @@ function stubNavigableEnvironment(root: unknown, initialPath: string) {
 }
 
 Deno.test('defineApp navigates when the SPA loader throws redirect() (#731)', async () => {
-  const hosts: PageHostElement[] = [];
+  const hosts: Record<string, unknown>[] = [];
   const root = {
     innerHTML: '',
     addEventListener() {},
     removeEventListener() {},
-    appendChild(host: PageHostElement) {
+    appendChild(host: Record<string, unknown>) {
       hosts.push(host);
       return host;
     },
@@ -386,10 +409,10 @@ Deno.test('defineApp navigates when the SPA loader throws redirect() (#731)', as
     // The redirect navigated instead of becoming page data...
     assertEquals(env.pushed, ['/login']);
     assertEquals(app.router?.currentPath, '/login');
-    // ...and the destination route rendered with its own loader data.
+    // ...and the destination route rendered with its own loader data
+    // (default projection: loader-data record entries land on the host).
     assertEquals(hosts.length, 1);
-    assertEquals(hosts[0].data, { page: 'login' });
-    assertEquals(hosts[0].__openElementError, undefined);
+    assertEquals(hosts[0].page, 'login');
   } finally {
     app.dispose();
     env.restore();
@@ -397,12 +420,12 @@ Deno.test('defineApp navigates when the SPA loader throws redirect() (#731)', as
 });
 
 Deno.test('defineApp keeps current page data when a guard vetoes the loader redirect (#802)', async () => {
-  const hosts: PageHostElement[] = [];
+  const hosts: Record<string, unknown>[] = [];
   const root = {
     innerHTML: '',
     addEventListener() {},
     removeEventListener() {},
-    appendChild(host: PageHostElement) {
+    appendChild(host: Record<string, unknown>) {
       hosts.push(host);
       return host;
     },
@@ -436,7 +459,7 @@ Deno.test('defineApp keeps current page data when a guard vetoes the loader redi
     app.mount('#app');
     await new Promise((resolve) => setTimeout(resolve, 0));
     assertEquals(hosts.length, 1);
-    assertEquals(hosts[0].data, { page: 'home' });
+    assertEquals(hosts[0].page, 'home');
 
     await app.router?.navigate('/away');
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -447,7 +470,7 @@ Deno.test('defineApp keeps current page data when a guard vetoes the loader redi
     assertEquals(env.pushed, ['/away']);
     assertEquals(app.router?.currentPath, '/away');
     assertEquals(hosts.length, 1);
-    assertEquals(hosts[0].data, { page: 'home' });
+    assertEquals(hosts[0].page, 'home');
   } finally {
     app.dispose();
     env.restore();
@@ -456,14 +479,14 @@ Deno.test('defineApp keeps current page data when a guard vetoes the loader redi
 
 Deno.test('defineApp keeps current page data when a guard vetoes the post-action loader redirect (#810)', async () => {
   let submit: ((event: Event) => void) | undefined;
-  const hosts: PageHostElement[] = [];
+  const hosts: Record<string, unknown>[] = [];
   const root = {
     innerHTML: '',
     addEventListener(type: string, listener: (event: Event) => void) {
       if (type === 'submit') submit = listener;
     },
     removeEventListener() {},
-    appendChild(host: PageHostElement) {
+    appendChild(host: Record<string, unknown>) {
       hosts.push(host);
       return host;
     },
@@ -498,7 +521,7 @@ Deno.test('defineApp keeps current page data when a guard vetoes the post-action
     app.mount('#app');
     await new Promise((resolve) => setTimeout(resolve, 0));
     assertEquals(hosts.length, 1);
-    assertEquals(hosts[0].data, { page: 'home' });
+    assertEquals(hosts[0].page, 'home');
 
     submit?.({
       target: { tagName: 'FORM' },
@@ -513,7 +536,7 @@ Deno.test('defineApp keeps current page data when a guard vetoes the post-action
     assertEquals(env.pushed, []);
     assertEquals(app.router?.currentPath, '/');
     assertEquals(hosts.length, 1);
-    assertEquals(hosts[0].data, { page: 'home' });
+    assertEquals(hosts[0].page, 'home');
   } finally {
     app.dispose();
     env.restore();
@@ -522,14 +545,14 @@ Deno.test('defineApp keeps current page data when a guard vetoes the post-action
 
 Deno.test('defineApp navigates when the SPA action throws redirect() (#731)', async () => {
   let submit: ((event: Event) => void) | undefined;
-  const hosts: PageHostElement[] = [];
+  const hosts: Record<string, unknown>[] = [];
   const root = {
     innerHTML: '',
     addEventListener(type: string, listener: (event: Event) => void) {
       if (type === 'submit') submit = listener;
     },
     removeEventListener() {},
-    appendChild(host: PageHostElement) {
+    appendChild(host: Record<string, unknown>) {
       hosts.push(host);
       return host;
     },
@@ -567,43 +590,31 @@ Deno.test('defineApp navigates when the SPA action throws redirect() (#731)', as
     // PRG: the redirect navigated to the destination route...
     assertEquals(env.pushed, ['/done']);
     assertEquals(app.router?.currentPath, '/done');
-    // ...and no host ever received a normalized action failure.
-    assertEquals(hosts.map((host) => host.data), [{ page: 'home' }, { page: 'done' }]);
-    assertEquals(hosts.every((host) => host.__openElementActionData === undefined), true);
+    // ...and both renders used the data channel (default projection).
+    assertEquals(hosts.map((host) => host.page), ['home', 'done']);
   } finally {
     app.dispose();
     env.restore();
   }
 });
 
-Deno.test('defineApp routes loader notFound() to the page error channel (#731)', async () => {
-  let rendered: unknown;
-  let errored: unknown;
-  const Page = definePage<{ title: string }, { slug: string }>({
-    render(context) {
-      rendered = context;
-      return null;
-    },
-    error(context) {
-      errored = context;
-      return null;
-    },
-  });
+Deno.test('defineApp routes loader notFound() to the page error projector (#731)', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'article-page': Page });
+
   const root = {
     innerHTML: '',
     addEventListener() {},
     removeEventListener() {},
-    appendChild(host: InstanceType<typeof Page>) {
-      host.render();
-      return host;
-    },
+    appendChild() {},
   };
   const env = stubNavigableEnvironment(root, '/articles/hello');
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
     value: {
       querySelector: () => root,
-      createElement: () => Object.create(Page.prototype),
+      createElement: () => ({}),
     },
   });
   const app = defineApp({
@@ -621,52 +632,42 @@ Deno.test('defineApp routes loader notFound() to the page error channel (#731)',
     app.mount('#app');
     await new Promise((resolve) => setTimeout(resolve, 0));
     // The original 404 error rides the error channel (never normalized, never
-    // a navigation) so the error definition can read its status/message.
-    const context = errored as { data: unknown; error: unknown; params: unknown };
-    assertEquals((context.error as Error).name, 'OpenElementNotFound');
-    assertEquals((context.error as Error).message, 'no such article');
-    assertEquals((context.error as { status: number }).status, 404);
-    assertEquals(context.data, undefined);
-    assertEquals(context.params, { slug: 'hello' });
-    assertEquals(rendered, undefined);
+    // a navigation) so the error projector can read its status/message.
+    assertEquals(calls.errors.length, 1);
+    assertEquals((calls.errors[0].error as Error).name, 'OpenElementNotFound');
+    assertEquals((calls.errors[0].error as Error).message, 'no such article');
+    assertEquals((calls.errors[0].error as { status: number }).status, 404);
+    assertEquals(calls.errors[0].context.data, undefined);
+    assertEquals(calls.errors[0].context.params, { slug: 'hello' });
+    assertEquals(calls.normal, []);
     assertEquals(env.pushed, []);
   } finally {
     app.dispose();
     env.restore();
+    restoreRegistry();
   }
 });
 
-Deno.test('defineApp routes action notFound() to the page error channel (#731)', async () => {
+Deno.test('defineApp routes action notFound() to the page error projector (#731)', async () => {
   let submit: ((event: Event) => void) | undefined;
-  let rendered: unknown;
-  let errored: unknown;
-  const Page = definePage<{ page: string }>({
-    render(context) {
-      rendered = context;
-      return null;
-    },
-    error(context) {
-      errored = context;
-      return null;
-    },
-  });
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'home-page': Page });
+
   const root = {
     innerHTML: '',
     addEventListener(type: string, listener: (event: Event) => void) {
       if (type === 'submit') submit = listener;
     },
     removeEventListener() {},
-    appendChild(host: InstanceType<typeof Page>) {
-      host.render();
-      return host;
-    },
+    appendChild() {},
   };
   const env = stubNavigableEnvironment(root, '/');
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
     value: {
       querySelector: () => root,
-      createElement: () => Object.create(Page.prototype),
+      createElement: () => ({}),
     },
   });
   const app = defineApp({
@@ -685,8 +686,9 @@ Deno.test('defineApp routes action notFound() to the page error channel (#731)',
     app.mount('#app');
     await new Promise((resolve) => setTimeout(resolve, 0));
     // Initial render used the data channel, not the error channel.
-    assertEquals((rendered as { data: unknown }).data, { page: 'home' });
-    assertEquals(errored, undefined);
+    assertEquals(calls.normal.length, 1);
+    assertEquals(calls.normal[0].data, { page: 'home' });
+    assertEquals(calls.errors, []);
     submit?.({
       target: { tagName: 'FORM' },
       composedPath: () => [],
@@ -695,15 +697,16 @@ Deno.test('defineApp routes action notFound() to the page error channel (#731)',
     await new Promise((resolve) => setTimeout(resolve, 0));
     // The action's notFound renders the error channel in place — no
     // navigation, no normalized action failure, loader data preserved.
-    const context = errored as { data: unknown; error: unknown };
-    assertEquals((context.error as Error).name, 'OpenElementNotFound');
-    assertEquals((context.error as Error).message, 'cannot save');
-    assertEquals((context.error as { status: number }).status, 404);
-    assertEquals(context.data, { page: 'home' });
+    assertEquals(calls.errors.length, 1);
+    assertEquals((calls.errors[0].error as Error).name, 'OpenElementNotFound');
+    assertEquals((calls.errors[0].error as Error).message, 'cannot save');
+    assertEquals((calls.errors[0].error as { status: number }).status, 404);
+    assertEquals(calls.errors[0].context.data, { page: 'home' });
     assertEquals(env.pushed, []);
     assertEquals(app.router?.currentPath, '/');
   } finally {
     app.dispose();
     env.restore();
+    restoreRegistry();
   }
 });

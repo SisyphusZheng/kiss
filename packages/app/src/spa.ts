@@ -10,9 +10,9 @@ import {
   type RouterInstance,
   type RouterMode,
 } from './internal/router/client-router.ts';
-import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
 import { normalizeActionFailure, normalizeLoaderFailure } from './internal/action-error.ts';
-import { isOpenElementNotFound, isOpenElementRedirect } from './authoring.ts';
+import { isOpenElementNotFound, isOpenElementRedirect, projectPageProps } from './authoring.ts';
+import type { OpenElementPageDescriptor, PagePropsContext } from './authoring.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
 import { isDevMode } from './internal/dev-mode.ts';
 import { assertValidTagName, createLogger, ERROR_PREFIX } from '@openelement/element';
@@ -20,6 +20,42 @@ import { assertValidTagName, createLogger, ERROR_PREFIX } from '@openelement/ele
 const log = createLogger('spa');
 
 const development = isDevMode();
+
+/** Read the page descriptor definePage() attached to the registered class. */
+function pageDescriptorOf(tagName: string): OpenElementPageDescriptor | undefined {
+  if (typeof customElements === 'undefined') return undefined;
+  const ctor = customElements.get(tagName) as
+    | (CustomElementConstructor & { openElementPage?: OpenElementPageDescriptor })
+    | undefined;
+  return ctor?.openElementPage;
+}
+
+/**
+ * Project loader/action state onto a compiled page host (v0.44): the page's
+ * compiled properties receive the projected values as pre-connect own
+ * properties, which the element facade reconciles into the compiled signals
+ * at connect. Without a descriptor projector the default projection applies
+ * (params + loader-data record entries); the error projector, when declared,
+ * wins on the loader/action failure channel so the page's error variant
+ * renders — mirroring the server entry chain.
+ */
+function applyCompiledPageProps(
+  el: HTMLElement,
+  route: RouteConfig,
+  context: PagePropsContext,
+  error: unknown,
+): void {
+  const descriptor = pageDescriptorOf(route.tagName);
+  const projected = error !== undefined && typeof descriptor?.error === 'function'
+    ? descriptor.error(error, context)
+    : typeof descriptor?.props === 'function'
+    ? descriptor.props(context)
+    : projectPageProps(context);
+  const host = el as HTMLElement & Record<string, unknown>;
+  for (const [key, value] of Object.entries(projected ?? {})) {
+    host[key] = value;
+  }
+}
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -55,16 +91,16 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   /**
    * Run loader for current route (if any). On failure returns a normalized
    * page error (#676) instead of fake loader data — the error rides the page
-   * error channel (`__openElementError`), mirroring the action failure
-   * channel (normalizeActionFailure), so pages render their error definition
-   * rather than silently receiving an empty data shape.
+   * error channel (the descriptor's error projector, v0.44), mirroring the
+   * action failure channel (normalizeActionFailure), so pages render their
+   * error variant rather than silently receiving an empty data shape.
    *
    * redirect()/notFound() are control flow, not failures (#731): a redirect
    * navigates the router (a committed navigation bumps renderId, so the
    * in-flight render cycle aborts before committing; a guard-vetoed redirect
    * is flagged via `redirected` so the caller keeps the current page data
    * instead of clearing it — #802), and a notFound rides the same page error
-   * channel with the original error so the error definition can read its 404
+   * channel with the original error so the error projector can read its 404
    * status/message — mirroring the server chain.
    */
   async function runLoader(): Promise<{ data: unknown; error?: unknown; redirected?: boolean }> {
@@ -106,19 +142,18 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       return;
     }
 
-    const el = document.createElement(route.tagName) as PageHostElement;
+    const el = document.createElement(route.tagName);
     const request = typeof location === 'undefined' ? undefined : requestCache.get(
       new URL(router.currentPath || '/', location.href).href,
     );
-    applyPageHostData(el, {
+    applyCompiledPageProps(el, route, {
       data: currentLoaderData,
       actionData: currentActionData,
       params: router.params,
       request,
       route: { path: route.path },
       meta: {},
-      error: currentLoaderError,
-    });
+    }, currentLoaderError);
     rootEl.appendChild(el);
   }
 

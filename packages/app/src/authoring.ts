@@ -1,33 +1,24 @@
 import { ERROR_PREFIX } from '@openelement/element';
 /**
- * @openelement/app - JSX-first application authoring API.
+ * @openelement/app - application authoring API for the compiled architecture.
  *
  * This file is intentionally free of Vite/build imports. Route modules can
  * import from @openelement/app without pulling adapter-vite into the runtime
  * graph.
+ *
+ * v0.44 (ADR-0143): a route module's default export is the COMPILED page
+ * element class itself — `@element('page-home') export default class
+ * HomePage extends OpenElement { ... }` produced by the
+ * `open:compiled-element` transform. `definePage(Class, descriptor?)`
+ * attaches the page descriptor (head, route, renderIntent, the props
+ * projector and the error projector) to that class as the `openElementPage`
+ * static the pipeline reads; it never creates classes and never holds a
+ * render function. There is no runtime JSX render path.
  */
 
-import {
-  collectPublicProps,
-  defineElement,
-  type ElementDefinition,
-  isValidTagName,
-  OpenElement,
-  OpenElementError,
-  type VNode,
-} from '@openelement/element';
-import { defineIsland as defineRuntimeIsland, HYDRATION_STRATEGIES } from '@openelement/element';
-import {
-  __enterDataContext,
-  __exitDataContext,
-  createRenderDataContext,
-  popData,
-  pushActionData,
-  pushLoaderData,
-  type RenderDataContext,
-} from './internal/router/data-context-store.ts';
+import { isValidTagName, OpenElementError } from '@openelement/element';
+import { HYDRATION_STRATEGIES } from '@openelement/element';
 import type { HydrationStrategy } from '@openelement/element';
-import type { PageHostElement } from './internal/page-host-data.ts';
 
 /**
  * Where a page renders (#609, ADR-0123):
@@ -197,89 +188,84 @@ interface PageHead {
   dangerouslyHeadFragments?: string[];
 }
 
-interface PageRenderContext<
+/**
+ * The request-scoped context handed to a page's props projector. Everything a
+ * compiled page can render must pass through here: the compiled render() only
+ * reads `this.<property>`, so the projector is the single deterministic seam
+ * that maps loader data, action data, params and request onto the page's
+ * compiled properties (v0.44, ADR-0143).
+ */
+export interface PagePropsContext<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > {
-  data: Data;
+  data: Data | undefined;
+  actionData: unknown;
   params: Params;
   request?: Request;
   route: PageRouteContext;
   meta: PageMeta;
-  props: Record<string, unknown>;
 }
 
-interface PageErrorContext<
+/**
+ * Maps the request-scoped context onto the page's compiled properties.
+ * Declared as part of the page descriptor; the generated server entry and the
+ * SPA bootstrap call it per render and feed the result to renderDsd() props
+ * (server) or pre-connect property sets (SPA).
+ */
+export type PagePropsProjector<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
-> extends PageRenderContext<Data, Params> {
-  error: unknown;
-}
+> = (context: PagePropsContext<Data, Params>) => Record<string, unknown>;
 
-type PageRenderFunction<
+/**
+ * Maps a caught render/loader/action failure onto the error variant of the
+ * page's compiled properties. Its presence declares that the page's compiled
+ * markup carries an error variant (the generated entry renders the page with
+ * these props and status 500 — the POST/GET error-boundary channel of
+ * ADR-0121 §7); without it the generic status page answers.
+ */
+export type PageErrorProjector<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
-> = (context: PageRenderContext<Data, Params>) => VNode | null;
+> = (
+  error: unknown,
+  context: PagePropsContext<Data, Params>,
+) => Record<string, unknown>;
 
-type PageErrorFunction<
-  Data = unknown,
-  Params extends Record<string, string> = Record<string, string>,
-> = (context: PageErrorContext<Data, Params>) => VNode | null;
-
-interface PageDefinition<
+interface PageDescriptorInput<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > {
   route?: PageRouteIntent;
   head?: PageHead;
   renderIntent?: PageRenderIntent;
-  render: PageRenderFunction<Data, Params>;
-  error?: PageErrorFunction<Data, Params>;
+  props?: PagePropsProjector<Data, Params>;
+  error?: PageErrorProjector<Data, Params>;
 }
 
-interface OpenElementPageDescriptor<
+/**
+ * The page descriptor the pipeline reads (`module.default.openElementPage`).
+ * Attached to the compiled page class by definePage(); the class owns the
+ * render program, so the descriptor carries metadata and projectors only.
+ */
+export interface OpenElementPageDescriptor<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
-> extends Omit<PageDefinition<Data, Params>, 'render' | 'renderIntent'> {
+> {
   kind: 'page';
+  route?: PageRouteIntent;
+  head?: PageHead;
   renderIntent: NormalizedPageRenderIntent;
-  render: PageRenderFunction<Data, Params>;
+  props?: PagePropsProjector<Data, Params>;
+  error?: PageErrorProjector<Data, Params>;
 }
 
-abstract class ApplicationPageElement extends OpenElement implements PageHostElement {
-  __openElementParams?: Record<string, string>;
-  __openElementData?: unknown;
-  data?: unknown;
-  __openElementActionData?: unknown;
-  __openElementRequest?: Request;
-  __openElementRoute?: PageRouteContext;
-  __openElementMeta?: PageMeta;
-  __openElementError?: unknown;
-  __openElementRenderDataContext?: RenderDataContext;
-
-  __openElementEvaluateRender<T>(render: () => T): T {
-    const context = this.__openElementRenderDataContext;
-    if (!context) return render();
-    __enterDataContext(context);
-    try {
-      return render();
-    } finally {
-      __exitDataContext();
-    }
-  }
-
-  __openElementDisposeRenderDataContext(): void {
-    const context = this.__openElementRenderDataContext;
-    if (!context) return;
-    popData(context);
-    this.__openElementRenderDataContext = undefined;
-  }
-}
-
-type PageConstructor<
+/** A compiled element class carrying the page descriptor static. */
+export type PageComponentConstructor<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
-> = typeof OpenElement & {
+> = CustomElementConstructor & {
   openElementPage: OpenElementPageDescriptor<Data, Params>;
 };
 
@@ -287,117 +273,114 @@ const PAGE_DESCRIPTOR_FIELDS = new Set([
   'route',
   'head',
   'renderIntent',
-  'render',
+  'props',
   'error',
 ]);
 
-const ISLAND_CONFIG_FIELDS = new Set([
-  'ssr',
-  'dsd',
-  'hydrate',
-  'media',
-  'tags',
-  'tagNames',
-  'exportNames',
-]);
-const ISLAND_DELIVERY_STRATEGIES = [...HYDRATION_STRATEGIES, 'media'] as const;
-const HYDRATION_STRATEGY_SET: ReadonlySet<string> = new Set(ISLAND_DELIVERY_STRATEGIES);
-
-function assertCanonicalPageDefinition(input: unknown): asserts input is PageDefinition {
-  if (typeof input === 'function') {
-    throw new Error(
-      `${ERROR_PREFIX} definePage() requires a canonical object descriptor. ` +
-        'Use definePage({ route, head, renderIntent, render, error }).',
-    );
-  }
-  if (typeof input !== 'object' || input === null) {
-    throw new Error(`${ERROR_PREFIX} definePage() requires an object descriptor.`);
-  }
-  for (const key of Object.keys(input)) {
-    if (PAGE_DESCRIPTOR_FIELDS.has(key)) continue;
-    throw new Error(
-      `${ERROR_PREFIX} definePage() does not accept top-level "${key}". ` +
-        'Use only route, head, renderIntent, render, and error.',
-    );
-  }
-  if (typeof (input as { render?: unknown }).render !== 'function') {
-    throw new Error(`${ERROR_PREFIX} definePage() descriptor requires a render() function.`);
-  }
-}
-
 /**
- * Define a file-route page.
+ * Attach a page descriptor to a compiled page element class.
  *
- * The returned class is an OpenElement-compatible custom element constructor, so
- * the existing renderer pipeline remains unchanged while app authors write JSX
- * functions instead of class components.
+ * Canonical 0.44 page authoring: the route module default-exports the
+ * compiled class (produced by the open:compiled-element transform) wrapped in
+ * definePage(). The descriptor holds head/route/renderIntent metadata plus
+ * the optional props/error projectors; it must NOT create classes or hold a
+ * render function — the compiled class's Part Program is the render.
+ *
+ *   import { definePage } from '@openelement/app';
+ *   import { HomePage } from '../components/page-home.tsx';
+ *   export const loader = async (ctx) => ({ ... });   // module named exports
+ *   export default definePage(HomePage, {
+ *     head: { title: 'Home' },
+ *     props: ({ data }) => ({ heading: data?.heading ?? '' }),
+ *   });
  */
 export function definePage<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 >(
-  input: PageDefinition<Data, Params>,
-): PageConstructor<Data, Params> {
-  assertCanonicalPageDefinition(input);
-  const definition = input;
+  componentClass: CustomElementConstructor,
+  descriptor?: PageDescriptorInput<Data, Params>,
+): PageComponentConstructor<Data, Params> {
+  if (
+    typeof componentClass !== 'function' ||
+    // Arrow functions are not constructors (no prototype): the compiled page
+    // element class must be one.
+    !componentClass.prototype
+  ) {
+    throw new Error(
+      `${ERROR_PREFIX} definePage() requires the compiled page element class as its first ` +
+        'argument: definePage(HomePage, { head, renderIntent, props, error }). The class is ' +
+        'produced by the open:compiled-element transform (@element(...) class extends OpenElement).',
+    );
+  }
+  if (descriptor !== undefined) {
+    if (typeof descriptor !== 'object' || descriptor === null || Array.isArray(descriptor)) {
+      throw new Error(`${ERROR_PREFIX} definePage() requires an object descriptor.`);
+    }
+    for (const key of Object.keys(descriptor)) {
+      if (PAGE_DESCRIPTOR_FIELDS.has(key)) continue;
+      throw new Error(
+        `${ERROR_PREFIX} definePage() does not accept top-level "${key}". ` +
+          'Use only route, head, renderIntent, props, and error. Compiled pages render from ' +
+          'their Part Program — there is no render() function field (v0.44).',
+      );
+    }
+    if (descriptor.props !== undefined && typeof descriptor.props !== 'function') {
+      throw new Error(`${ERROR_PREFIX} definePage() props must be a projector function.`);
+    }
+    if (descriptor.error !== undefined && typeof descriptor.error !== 'function') {
+      throw new Error(`${ERROR_PREFIX} definePage() error must be an error projector function.`);
+    }
+  }
   // ADR-0121 (#572): validate the mode at definition time — a typo like
   // 'dynmaic' must not silently prerender a request-time page.
-  const renderMode = definition.renderIntent?.mode ?? 'static';
+  const renderMode = descriptor?.renderIntent?.mode ?? 'static';
   if (renderMode !== 'static' && renderMode !== 'dynamic') {
     throw new Error(
       `${ERROR_PREFIX} renderIntent.mode must be 'static' or 'dynamic' ` +
-        `(got "${String(definition.renderIntent?.mode)}").`,
+        `(got "${String(descriptor?.renderIntent?.mode)}").`,
     );
   }
-  const pageDescriptor = {
+  const pageDescriptor: OpenElementPageDescriptor<Data, Params> = {
     kind: 'page',
-    ...definition,
+    ...(descriptor?.route !== undefined ? { route: descriptor.route } : {}),
+    ...(descriptor?.head !== undefined ? { head: descriptor.head } : {}),
     renderIntent: {
       mode: renderMode,
-      revalidate: definition.renderIntent?.revalidate ?? false,
+      revalidate: descriptor?.renderIntent?.revalidate ?? false,
     },
-  } as OpenElementPageDescriptor<Data, Params>;
+    ...(descriptor?.props !== undefined ? { props: descriptor.props } : {}),
+    ...(descriptor?.error !== undefined ? { error: descriptor.error } : {}),
+  };
 
-  class OpenElementPage extends ApplicationPageElement {
-    static openElementPage = pageDescriptor;
+  Object.defineProperty(componentClass, 'openElementPage', {
+    value: pageDescriptor,
+    writable: true,
+    configurable: true,
+  });
+  return componentClass as PageComponentConstructor<Data, Params>;
+}
 
-    override render(): VNode | null {
-      // Provide loader/action data to hooks (useLoaderData / useActionData).
-      // The stack is request-scoped. The element renderer calls the evaluator
-      // below around every deferred function component / For callback, so the
-      // context covers complete VNode evaluation without staying globally
-      // active across an await (#1126).
-      this.__openElementDisposeRenderDataContext();
-      const dataCtx = createRenderDataContext();
-      const loaderData = this.__openElementData !== undefined ? this.__openElementData : this.data;
-      pushLoaderData(dataCtx, loaderData);
-      pushActionData(dataCtx, this.__openElementActionData);
-      this.__openElementRenderDataContext = dataCtx;
-      try {
-        const params = (this.__openElementParams ?? this.params ?? {}) as Params;
-        const data = loaderData as Data;
-        const context = {
-          data,
-          params,
-          request: this.__openElementRequest,
-          route: this.__openElementRoute ?? {},
-          meta: this.__openElementMeta ?? {},
-          props: collectPublicProps(this),
-        };
-
-        return this.__openElementEvaluateRender(() =>
-          this.__openElementError !== undefined && definition.error
-            ? definition.error({ ...context, error: this.__openElementError })
-            : definition.render(context)
-        );
-      } catch (error) {
-        this.__openElementDisposeRenderDataContext();
-        throw error;
-      }
+/**
+ * Default request-to-props projection used when a page descriptor declares no
+ * props projector: route params first, then loader-data record entries. The
+ * compiled serializer consumes only the page's declared compiled properties,
+ * so extra entries are ignored. Shared by the generated server entries and
+ * the SPA bootstrap (each carries its own copy — generated code cannot import
+ * this module's internals).
+ */
+export function projectPageProps(
+  context: { params?: Record<string, string>; data?: unknown },
+): Record<string, unknown> {
+  const props: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(context.params ?? {})) props[key] = value;
+  const data = context.data;
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      props[key] = value;
     }
   }
-
-  return OpenElementPage;
+  return props;
 }
 
 export type IslandDeliveryStrategy = HydrationStrategy | 'media';
@@ -420,6 +403,18 @@ export interface IslandConfig {
   /** Named constructor exports keyed by delivered custom-element tag. */
   exportNames?: Readonly<Record<string, string>>;
 }
+
+const ISLAND_CONFIG_FIELDS = new Set([
+  'ssr',
+  'dsd',
+  'hydrate',
+  'media',
+  'tags',
+  'tagNames',
+  'exportNames',
+]);
+const ISLAND_DELIVERY_STRATEGIES = [...HYDRATION_STRATEGIES, 'media'] as const;
+const HYDRATION_STRATEGY_SET: ReadonlySet<string> = new Set(ISLAND_DELIVERY_STRATEGIES);
 
 function validateIslandMedia(media: unknown): string {
   if (typeof media !== 'string' || media.trim() === '') {
@@ -538,22 +533,4 @@ export function defineIslandConfig(config: IslandConfig): IslandConfig {
     ...(tags === undefined ? {} : { tags }),
     ...(tagNames === undefined ? {} : { tagNames }),
   };
-}
-
-export function defineIsland<Props extends Record<string, unknown> = Record<string, unknown>>(
-  tagName: string,
-  input: ((props: Props) => VNode | null) | ElementDefinition<Props> | CustomElementConstructor,
-  options: IslandConfig = {},
-): CustomElementConstructor {
-  const componentClass = typeof input === 'function' && input.prototype?.render
-    ? input as CustomElementConstructor
-    : defineElement(tagName, input as ((props: Props) => VNode | null) | ElementDefinition<Props>);
-  return defineRuntimeIsland(tagName, componentClass, {
-    // The 0.43 element runtime owns only its legacy scheduling type. Media
-    // delivery is consumed by the adapter's generated activation artifact;
-    // the metadata export remains the authoritative build-side policy.
-    hydrate: options.hydrate === 'media' ? undefined : options.hydrate,
-    dsd: options.dsd,
-    ssr: options.ssr,
-  });
 }

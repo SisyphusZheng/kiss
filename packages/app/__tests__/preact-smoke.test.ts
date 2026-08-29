@@ -1,34 +1,32 @@
 /**
- * @openelement/app — Preact island smoke test.
+ * @openelement/app — Preact island smoke test (v0.44 foreign-element
+ * contract).
  *
  * Proves the Preact island bridge works end-to-end:
- *   1. Simple Preact component renders in SSR
- *   2. Props are passed from openElement options
+ *   1. renderSsr() prerenders the component to light-DOM content HTML
+ *   2. Props are passed from the island options
  *   3. Props are collected from element attributes
- *   4. Signal state changes are reflected in render output
- *   5. Client activation sets up shadow root
- *   6. Dismount via disconnectedCallback cleans up
+ *   4. State changes are reflected through the imperative update() seam
+ *   5. connectedCallback() renders/hydrates the light host (no shadow root)
+ *   6. disconnectedCallback() unmounts through the Preact owner (deferred)
  *
- * This test is the alpha.4 Preact Island Proof gate.
+ * This test is the alpha.4 Preact Island Proof gate, rebased onto the 0.44
+ * zero-OpenElement-runtime bridge (ADR-0143).
  */
 
-import { assertEquals, assertExists, assertInstanceOf, assertStringIncludes } from '@std/assert';
-import { OpenElement } from '@openelement/element';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { signal } from '@openelement/element';
 import { h } from 'preact';
 import { useLayoutEffect } from 'preact/hooks';
 import { definePreactIsland, type PreactIslandOptions } from '../src/preact.ts';
 import { installDomStubs, StubNode, suppressDocument } from './dom-stubs.ts';
 
-// ─── Helpers ───────────────────────────────────────────────────────
-
-/** Extract the trustedHtml content from a VNode returned by OpenElement.render(). */
-function extractTrustedHtml(vnode: unknown): string {
-  assertExists(vnode);
-  const props = (vnode as { props: Record<string, unknown> }).props;
-  assertExists(props.html);
-  return String(props.html);
-}
+/** The lifecycle surface under test (this lib.dom lacks the callbacks). */
+type IslandInstance = HTMLElement & {
+  connectedCallback(): void;
+  disconnectedCallback(): void;
+  update(): void;
+};
 
 // ─── Tests ─────────────────────────────────────────────────────────
 
@@ -64,21 +62,16 @@ Deno.test('Preact island smoke: DOM stub tracks parentNode and insertion order',
   assertEquals(threw, true);
 });
 
-// ── 1. Simple Preact component renders inside an openElement island (SSR) ──
+// ── 1. renderSsr prerenders the component to light-DOM content HTML ──
 
-Deno.test('Preact island smoke: SSR renders a simple component', () => {
+Deno.test('Preact island smoke: renderSsr renders a simple component', () => {
   const restore = installDomStubs();
   const restoreDoc = suppressDocument();
   try {
     const Component = () => h('p', null, 'Hello openElement');
     const ctor = definePreactIsland('test-smoke-simple', Component as never);
-    const instance = new ctor() as OpenElement;
 
-    const result = instance.render();
-    // The SSR VNode carries the trusted-HTML tag symbol
-    assertExists(result);
-    assertEquals(String((result as { tag: symbol }).tag), 'Symbol(openelement.html)');
-    const html = extractTrustedHtml(result);
+    const html = ctor.renderSsr();
     assertStringIncludes(html, 'Hello openElement');
     assertStringIncludes(html, '<p>');
   } finally {
@@ -87,16 +80,15 @@ Deno.test('Preact island smoke: SSR renders a simple component', () => {
   }
 });
 
-Deno.test('Preact island smoke: SSR renders nested Preact components', () => {
+Deno.test('Preact island smoke: renderSsr renders nested Preact components', () => {
   const restore = installDomStubs();
   const restoreDoc = suppressDocument();
   try {
     const Inner = ({ text }: { text: string }) => h('span', { class: 'inner' }, text);
     const Outer = () => h('div', null, h(Inner, { text: 'nested' }));
     const ctor = definePreactIsland('test-nested', Outer as never);
-    const instance = new ctor() as OpenElement;
 
-    const html = extractTrustedHtml(instance.render());
+    const html = ctor.renderSsr();
     assertStringIncludes(html, 'nested');
     assertStringIncludes(html, 'inner');
   } finally {
@@ -105,9 +97,9 @@ Deno.test('Preact island smoke: SSR renders nested Preact components', () => {
   }
 });
 
-// ── 2. Preact component receives props from openElement ──
+// ── 2. Preact component receives props from the island options ──
 
-Deno.test('Preact island smoke: SSR passes props from options', () => {
+Deno.test('Preact island smoke: renderSsr passes props from options', () => {
   const restore = installDomStubs();
   const restoreDoc = suppressDocument();
   try {
@@ -116,262 +108,94 @@ Deno.test('Preact island smoke: SSR passes props from options', () => {
     const ctor = definePreactIsland('test-props-options', Component as never, {
       props: { greeting: 'Hi', name: 'World' },
     });
-    const instance = new ctor() as OpenElement;
 
-    const html = extractTrustedHtml(instance.render());
-    assertStringIncludes(html, 'Hi, World!');
+    assertStringIncludes(ctor.renderSsr(), 'Hi, World!');
   } finally {
     restoreDoc();
     restore();
   }
 });
 
-Deno.test('Preact island smoke: SSR passes props from element attributes', () => {
+// ── 3. Props are collected from element attributes ──
+
+Deno.test('Preact island smoke: client render collects attributes as props', () => {
   const restore = installDomStubs();
-  const restoreDoc = suppressDocument();
   try {
-    const Component = (props: { label: string }) => h('span', null, props.label);
-    const ctor = definePreactIsland('test-attr-props', Component as never);
-    const instance = new ctor() as OpenElement;
+    const Component = (props: { label?: string }) => h('p', null, `label=${props.label}`);
+    const ctor = definePreactIsland('test-props-attrs', Component as never);
+    const instance = new ctor() as IslandInstance;
+    instance.setAttribute('label', 'from-attr');
 
-    // _Base locked at module load (no HTMLElement).
-    // Monkey-patch attributes so resolveProps picks them up during SSR.
-    Object.defineProperty(instance, 'attributes', {
-      get: () => [{ name: 'label', value: 'FromAttribute' }],
-    });
-
-    const html = extractTrustedHtml(instance.render());
-    assertStringIncludes(html, 'FromAttribute');
+    instance.connectedCallback();
+    assertStringIncludes(instance.textContent, 'label=from-attr');
   } finally {
-    restoreDoc();
     restore();
   }
 });
 
-Deno.test('Preact island smoke: element attributes override options.props', () => {
+Deno.test('Preact island smoke: attributes override the static options props', () => {
   const restore = installDomStubs();
-  const restoreDoc = suppressDocument();
   try {
-    const Component = (props: { label: string }) => h('span', null, props.label);
-    const ctor = definePreactIsland('test-override-props', Component as never, {
-      props: { label: 'Default' },
+    const Component = (props: { greeting?: string; name?: string }) =>
+      h('p', null, `${props.greeting}, ${props.name}!`);
+    const ctor = definePreactIsland('test-props-merge', Component as never, {
+      props: { greeting: 'Hi', name: 'World' } as never,
     });
-    const instance = new ctor() as OpenElement;
+    const instance = new ctor() as IslandInstance;
+    instance.setAttribute('name', 'Attribute');
 
-    // _Base locked at module load. Monkey-patch attributes.
-    Object.defineProperty(instance, 'attributes', {
-      get: () => [{ name: 'label', value: 'Overridden' }],
-    });
-
-    const html = extractTrustedHtml(instance.render());
-    assertStringIncludes(html, 'Overridden');
+    instance.connectedCallback();
+    assertStringIncludes(instance.textContent, 'Hi, Attribute!');
   } finally {
-    restoreDoc();
     restore();
   }
 });
 
-Deno.test('Preact island smoke: SSR renders boolean-like props', () => {
+// ── 4. Signal state changes are reflected through update() ──
+
+Deno.test('Preact island smoke: signal state changes re-render through update()', () => {
   const restore = installDomStubs();
-  const restoreDoc = suppressDocument();
-  try {
-    const Component = (props: { disabled: string }) =>
-      h('button', { disabled: props.disabled === 'true' }, 'click');
-    const ctor = definePreactIsland('test-bool-prop', Component as never, {
-      props: { disabled: 'true' },
-    });
-    const instance = new ctor() as OpenElement;
-
-    const html = extractTrustedHtml(instance.render());
-    assertStringIncludes(html, 'disabled');
-  } finally {
-    restoreDoc();
-    restore();
-  }
-});
-
-// ── 3. Preact component responds to state changes ──
-
-Deno.test('Preact island smoke: signal state change reflected in SSR re-render', () => {
-  const restore = installDomStubs();
-  const restoreDoc = suppressDocument();
   try {
     const count = signal(0);
     const Component = (props: { count: { value: number } }) =>
-      h('output', null, String(props.count.value));
-    const ctor = definePreactIsland('test-signal-change', Component as never, {
-      props: { count } as never,
-    });
-    const instance = new ctor() as OpenElement;
+      h('p', null, `count=${props.count.value}`);
+    const options: PreactIslandOptions = { props: { count } };
+    const ctor = definePreactIsland('test-signal-update', Component as never, options);
+    const instance = new ctor() as IslandInstance;
 
-    // Initial render
-    assertEquals(
-      extractTrustedHtml(instance.render()).includes('<output>0</output>'),
-      true,
-    );
+    instance.connectedCallback();
+    assertStringIncludes(instance.textContent, 'count=0');
 
-    // Change signal value
-    count.value = 42;
-    assertEquals(
-      extractTrustedHtml(instance.render()).includes('<output>42</output>'),
-      true,
-    );
-
-    // Change again
-    count.value = 99;
-    assertEquals(
-      extractTrustedHtml(instance.render()).includes('<output>99</output>'),
-      true,
-    );
+    count.value = 3;
+    instance.update();
+    assertStringIncludes(instance.textContent, 'count=3');
   } finally {
-    restoreDoc();
     restore();
   }
 });
 
-Deno.test('Preact island smoke: multiple signals in one component', () => {
-  const restore = installDomStubs();
-  const restoreDoc = suppressDocument();
-  try {
-    const firstName = signal('Alice');
-    const lastName = signal('Smith');
-    const Component = (props: {
-      first: { value: string };
-      last: { value: string };
-    }) => h('span', null, `${props.first.value} ${props.last.value}`);
-    const ctor = definePreactIsland('test-multi-signal', Component as never, {
-      props: { first: firstName, last: lastName } as never,
-    });
-    const instance = new ctor() as OpenElement;
+// ── 5. connectedCallback renders into the light host (no shadow root) ──
 
-    assertEquals(
-      extractTrustedHtml(instance.render()).includes('Alice Smith'),
-      true,
-    );
-
-    firstName.value = 'Bob';
-    assertEquals(
-      extractTrustedHtml(instance.render()).includes('Bob Smith'),
-      true,
-    );
-  } finally {
-    restoreDoc();
-    restore();
-  }
-});
-
-// ── 4. Client activation path ──
-
-Deno.test('Preact island smoke: render() returns null on client path', () => {
+Deno.test('Preact island smoke: client activation renders into the light host', () => {
   const restore = installDomStubs();
   try {
-    const Component = () => h('div', null, 'client');
-    const ctor = definePreactIsland('test-client-null', Component as never);
-    const instance = new ctor() as OpenElement;
+    const Component = () => h('div', { class: 'client-root' }, 'activated');
+    const ctor = definePreactIsland('test-client-root', Component as never);
+    const instance = new ctor() as IslandInstance;
 
-    // On client (document exists), render() skips and returns null
-    assertEquals(instance.render(), null);
+    instance.connectedCallback();
+
+    assertEquals(instance.shadowRoot, null);
+    assertEquals(instance.childNodes.length, 1);
+    assertStringIncludes(instance.textContent, 'activated');
   } finally {
     restore();
   }
 });
 
-Deno.test('Preact island smoke: clientActivate creates shadow root', () => {
-  const restore = installDomStubs();
-  try {
-    const Component = () => h('div', null, 'hydrated');
-    const ctor = definePreactIsland('test-shadow-create', Component as never);
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      shadowRoot: ShadowRoot | null;
-    };
+// ── 6. disconnectedCallback unmounts through the Preact owner ──
 
-    // _Base locked at module load (no HTMLElement).
-    // Provide a stub shadow root so clientActivate doesn't call attachShadow.
-    const stubRoot = new StubNode() as unknown as ShadowRoot;
-    instance.shadowRoot = stubRoot;
-
-    // Before activation, shadow root should exist (we set it)
-    assertExists(instance.shadowRoot);
-
-    instance.clientActivate();
-
-    // Shadow root should persist
-    assertExists(instance.shadowRoot);
-    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'hydrated');
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: clientActivate with ssr=false uses render path', () => {
-  const restore = installDomStubs();
-  try {
-    const Component = () => h('div', null, 'csr');
-    const ctor = definePreactIsland('test-csr-island', Component as never, {
-      ssr: false,
-    });
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      shadowRoot: ShadowRoot | null;
-    };
-
-    // _Base locked at module load. Provide a stub shadow root.
-    const stubRoot = new StubNode() as unknown as ShadowRoot;
-    instance.shadowRoot = stubRoot;
-
-    // With ssr: false, clientActivate uses preactRender instead of preactHydrate.
-    instance.clientActivate();
-
-    assertExists(instance.shadowRoot);
-    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'csr');
-  } finally {
-    restore();
-  }
-});
-
-// ── 5. Dismount / cleanup ──
-
-Deno.test('Preact island smoke: dismount does not throw', () => {
-  const restore = installDomStubs();
-  try {
-    const Component = () => h('div', null, 'content');
-    const ctor = definePreactIsland('test-dismount-safe', Component as never);
-    const instance = new ctor() as OpenElement & {
-      disconnectedCallback?: () => void;
-    };
-
-    // disconnectedCallback should be callable without throwing
-    // (it disposes hydration scope, static props, and lifecycle abort)
-    instance.disconnectedCallback!();
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: update stays with the Preact renderer owner', () => {
-  const restore = installDomStubs();
-  try {
-    const props: { label: string } = { label: 'initial' };
-    const Component = (props: { label?: string }) => h('div', null, props.label ?? 'initial');
-    const ctor = definePreactIsland('test-preact-owned-update', Component as never, { props });
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      shadowRoot: ShadowRoot | null;
-    };
-    instance.shadowRoot = new StubNode() as unknown as ShadowRoot;
-    instance.clientActivate();
-    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'initial');
-
-    props.label = 'updated';
-    instance.requestUpdate();
-    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'updated');
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: real detach unmounts once; same-turn move does not', async () => {
+Deno.test('Preact island smoke: disconnect unmounts after a microtask', async () => {
   const restore = installDomStubs();
   try {
     let starts = 0;
@@ -381,95 +205,30 @@ Deno.test('Preact island smoke: real detach unmounts once; same-turn move does n
         starts++;
         return () => cleanups++;
       }, []);
-      return h('div', null, 'owned');
+      return h('p', null, 'mounted');
     };
-    const ctor = definePreactIsland('test-preact-owned-detach', Component as never);
-    const instance = new ctor() as OpenElement & {
-      clientActivate: () => void;
-      shadowRoot: ShadowRoot | null;
-      disconnectedCallback: () => void;
-    };
-    let connected = true;
+    const ctor = definePreactIsland('test-dismount', Component as never);
+    const instance = new ctor() as IslandInstance;
+
+    instance.connectedCallback();
+    assertEquals(starts, 1);
+    assertStringIncludes(instance.textContent, 'mounted');
+
+    // Simulate the real detach (the stub element reports isConnected=true
+    // otherwise): the deferred teardown must observe the disconnected state.
+    const connected = false;
     Object.defineProperty(instance, 'isConnected', {
       configurable: true,
       get: () => connected,
     });
-    instance.shadowRoot = new StubNode() as unknown as ShadowRoot;
-    instance.clientActivate();
-    assertEquals(starts, 1);
-
-    connected = false;
     instance.disconnectedCallback();
-    connected = true;
-    instance.clientActivate();
-    await Promise.resolve();
+    // Deferred teardown: nothing runs synchronously.
     assertEquals(cleanups, 0);
-    assertEquals(starts, 1);
-
-    connected = false;
-    instance.disconnectedCallback();
+    await Promise.resolve();
     await Promise.resolve();
     assertEquals(cleanups, 1);
+    assertEquals(instance.childNodes.length, 0);
   } finally {
     restore();
   }
-});
-
-// ── 6. definePreactIsland contract ──
-
-Deno.test('Preact island smoke: definePreactIsland returns a class extending OpenElement', () => {
-  const restore = installDomStubs();
-  try {
-    const ctor = definePreactIsland('test-contract', () => null);
-    // Should be a class
-    assertEquals(typeof ctor, 'function');
-    // Should extend OpenElement
-    const instance = new ctor();
-    assertInstanceOf(instance, OpenElement);
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: definePreactIsland registers custom element', () => {
-  const restore = installDomStubs();
-  try {
-    const tagName = 'test-reg-smoke';
-    const ctor = definePreactIsland(tagName, () => null);
-    const registry = globalThis.customElements as unknown as Map<
-      string,
-      CustomElementConstructor
-    >;
-    assertEquals(registry.get(tagName), ctor);
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: rejects invalid custom element tag names', () => {
-  const restore = installDomStubs();
-  try {
-    let threw = false;
-    try {
-      definePreactIsland('InvalidTag', () => null);
-    } catch (e: unknown) {
-      threw = true;
-      assertStringIncludes(String(e), 'not a valid custom element name');
-    }
-    assertEquals(threw, true);
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: options are fail-closed — hydrate/dsd fields are type errors (#767)', () => {
-  // PreactIslandOptions is narrowed to { ssr?, props? }: definePreactIsland
-  // never reads hydrate/dsd, so passing them must fail at type level instead
-  // of silently behaving differently from defineIsland.
-  const options: PreactIslandOptions = {
-    ssr: false,
-    // @ts-expect-error hydrate is a defineIslandConfig-only field
-    hydrate: 'visible',
-  };
-  assertEquals(options.ssr, false);
 });
