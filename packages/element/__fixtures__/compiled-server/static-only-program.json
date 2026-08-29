@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "tag": "oe-static-card",
+  "template": [
+    {
+      "k": "el",
+      "tag": "p",
+      "attrs": [["data-kind", "static"]],
+      "children": [{"k": "text", "value": "server-only"}]
+    }
+  ],
+  "parts": []
+}

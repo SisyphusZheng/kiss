@@ -1,0 +1,189 @@
+import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
+import type { PartProgramSpike } from '../../src/internal/compiled/program.ts';
+
+const PROGRAM = {
+  version: 1,
+  tag: 'oe-alpha3-card',
+  template: [{
+    k: 'el',
+    tag: 'input',
+    attrs: [['class', 'card'] as [string, string]],
+    children: [],
+  }],
+  parts: [{
+    k: 'prop',
+    index: 0,
+    signal: 'value',
+    name: 'value',
+    path: [0],
+  }],
+};
+
+const HOST = {
+  signals: {
+    value: {
+      value: 'server & safe',
+      subscribe: () => () => {},
+    },
+  },
+  handlers: {},
+};
+
+const FIXTURE_PROGRAM_URL = new URL(
+  '../../__fixtures__/compiled-server/program.json',
+  import.meta.url,
+);
+
+const FIXTURE_EXPECTED_URLS = {
+  light: new URL('../../__fixtures__/compiled-server/expected-light.html', import.meta.url),
+  open: new URL('../../__fixtures__/compiled-server/expected-open.html', import.meta.url),
+  closed: new URL('../../__fixtures__/compiled-server/expected-closed.html', import.meta.url),
+};
+
+const STATIC_ONLY_PROGRAM_URL = new URL(
+  '../../__fixtures__/compiled-server/static-only-program.json',
+  import.meta.url,
+);
+const STATIC_ONLY_EXPECTED_URL = new URL(
+  '../../__fixtures__/compiled-server/static-only-expected.html',
+  import.meta.url,
+);
+
+async function readFixtureProgram(): Promise<PartProgramSpike> {
+  return JSON.parse(await Deno.readTextFile(FIXTURE_PROGRAM_URL)) as PartProgramSpike;
+}
+
+function fixtureHost() {
+  const signal = <T>(value: T) => ({
+    value,
+    subscribe: () => () => {},
+  });
+  return {
+    signals: {
+      count: signal(0),
+      label: signal('ready'),
+      items: signal([{ id: 'a', text: 'alpha' }, { id: 'b', text: 'beta' }]),
+    },
+    handlers: {},
+  };
+}
+
+Deno.test('alpha.3 server serialization is one deterministic program across root modes', async () => {
+  const { serializeCompiledProgram } = await import(
+    '../../src/internal/compiled/server/index.ts'
+  );
+
+  assertEquals(
+    serializeCompiledProgram(PROGRAM, HOST, { mode: 'light' }),
+    '<oe-alpha3-card data-oe-light><input class="card" value="server &amp; safe"></oe-alpha3-card>',
+  );
+  assertEquals(
+    serializeCompiledProgram(PROGRAM, HOST, { mode: 'open' }),
+    '<oe-alpha3-card><template shadowrootmode="open"><input class="card" value="server &amp; safe"></template></oe-alpha3-card>',
+  );
+  assertEquals(
+    serializeCompiledProgram(PROGRAM, HOST, { mode: 'closed' }),
+    '<oe-alpha3-card><template shadowrootmode="closed"><input class="card" value="server &amp; safe"></template></oe-alpha3-card>',
+  );
+});
+
+Deno.test('alpha.3 server fixture is deterministic and agrees with the seed serializer', async () => {
+  const { serializeCompiledProgram, serializeProgramContent } = await import(
+    '../../src/internal/compiled/server/index.ts'
+  );
+  const { serializeToHtml: serializeSeed } = await import(
+    '../../src/internal/compiled/runtime.ts'
+  );
+  const program = await readFixtureProgram();
+  const host = fixtureHost();
+  const [light, open, closed] = await Promise.all([
+    Deno.readTextFile(FIXTURE_EXPECTED_URLS.light),
+    Deno.readTextFile(FIXTURE_EXPECTED_URLS.open),
+    Deno.readTextFile(FIXTURE_EXPECTED_URLS.closed),
+  ]);
+
+  assertEquals(serializeCompiledProgram(program, host, { mode: 'light' }), light.trimEnd());
+  assertEquals(serializeCompiledProgram(program, host, { mode: 'open' }), open.trimEnd());
+  assertEquals(serializeCompiledProgram(program, host, { mode: 'closed' }), closed.trimEnd());
+  assertEquals(
+    serializeCompiledProgram(program, host, { mode: 'open' }),
+    serializeCompiledProgram(program, host, { mode: 'open' }),
+  );
+  assertEquals(
+    serializeProgramContent(program, host),
+    serializeSeed(program, host as unknown as Parameters<typeof serializeSeed>[1]),
+  );
+});
+
+Deno.test('alpha.3 server output escapes values, supports native DSD flags, and fails closed', async () => {
+  const { serializeCompiledProgram, serializeProgramContent } = await import(
+    '../../src/internal/compiled/server/index.ts'
+  );
+  const staticProgram = {
+    version: 1,
+    tag: 'oe-static',
+    template: [{
+      k: 'el',
+      tag: 'p',
+      attrs: [['title', 'a&"<>\'']],
+      children: [{ k: 'text', value: '<safe & text>' }],
+    }],
+    parts: [],
+  };
+  assertEquals(
+    serializeProgramContent(staticProgram, {}),
+    '<p title="a&amp;&quot;&lt;&gt;&#39;">&lt;safe &amp; text&gt;</p>',
+  );
+  assertEquals(
+    serializeCompiledProgram(staticProgram, {}, {
+      mode: 'open',
+      hostAttrs: [['data-id', 'a&"'], ['aria-label', 'card']],
+      dsd: {
+        delegatesFocus: true,
+        clonable: true,
+        serializable: true,
+        slotAssignment: 'manual',
+        customElementRegistry: true,
+      },
+    }),
+    '<oe-static data-id="a&amp;&quot;" aria-label="card"><template shadowrootmode="open" shadowrootdelegatesfocus shadowrootclonable shadowrootserializable shadowrootslotassignment="manual" shadowrootcustomelementregistry><p title="a&amp;&quot;&lt;&gt;&#39;">&lt;safe &amp; text&gt;</p></template></oe-static>',
+  );
+
+  const unsafe = structuredClone(staticProgram);
+  unsafe.template[0].attrs = [['onclick', 'alert(1)']];
+  const error = assertThrows(() => serializeProgramContent(unsafe, {}), Error);
+  assertStringIncludes(error.message, 'executable attribute');
+  const rawText = structuredClone(staticProgram);
+  rawText.template[0].tag = 'script';
+  assertThrows(() => serializeProgramContent(rawText, {}), Error);
+
+  const nestedProgram = {
+    version: 1,
+    tag: 'oe-nested',
+    template: [{
+      k: 'el',
+      tag: 'oe-child',
+      attrs: [['data-owner', 'alpha3']],
+      children: [{
+        k: 'el',
+        tag: 'x-third-party',
+        attrs: [],
+        children: [{ k: 'text', value: 'foreign' }],
+      }],
+    }],
+    parts: [],
+  };
+  assertEquals(
+    serializeCompiledProgram(nestedProgram, {}, { mode: 'open' }),
+    '<oe-nested><template shadowrootmode="open"><oe-child data-owner="alpha3"><x-third-party>foreign</x-third-party></oe-child></template></oe-nested>',
+  );
+});
+
+Deno.test('alpha.3 static-only server fixture needs no client signal artifact', async () => {
+  const { serializeProgramContent } = await import(
+    '../../src/internal/compiled/server/index.ts'
+  );
+  const program = JSON.parse(await Deno.readTextFile(STATIC_ONLY_PROGRAM_URL));
+  const expected = (await Deno.readTextFile(STATIC_ONLY_EXPECTED_URL)).trimEnd();
+  assertEquals(serializeProgramContent(program, {}), expected);
+});
