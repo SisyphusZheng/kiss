@@ -1,8 +1,8 @@
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import type { PartProgramSpike } from '../../src/internal/compiled/program.ts';
+import { testProgram } from '../compiled-runtime/test-program.ts';
 
-const PROGRAM = {
-  version: 1,
+const PROGRAM = testProgram({
   tag: 'oe-alpha3-card',
   template: [{
     k: 'el',
@@ -17,7 +17,7 @@ const PROGRAM = {
     name: 'value',
     path: [0],
   }],
-};
+});
 
 const HOST = {
   signals: {
@@ -119,8 +119,7 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
   const { serializeCompiledProgram, serializeProgramContent } = await import(
     '../../src/internal/compiled/server/index.ts'
   );
-  const staticProgram = {
-    version: 1,
+  const staticProgram = testProgram({
     tag: 'oe-static',
     template: [{
       k: 'el',
@@ -129,7 +128,7 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
       children: [{ k: 'text', value: '<safe & text>' }],
     }],
     parts: [],
-  };
+  });
   assertEquals(
     serializeProgramContent(staticProgram, {}),
     '<p title="a&amp;&quot;&lt;&gt;&#39;">&lt;safe &amp; text&gt;</p>',
@@ -150,16 +149,19 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
   );
 
   const unsafe = structuredClone(staticProgram);
-  unsafe.template[0].attrs = [['onclick', 'alert(1)']];
+  const unsafeRoot = unsafe.template[0];
+  if (unsafeRoot.k !== 'el') throw new Error('test setup: expected an element root');
+  unsafeRoot.attrs = [['onclick', 'alert(1)']];
   const error = assertThrows(() => serializeProgramContent(unsafe, {}), Error);
-  assertStringIncludes(error.message, 'executable attribute');
+  assertStringIncludes(error.message, 'unsafe name');
   const rawText = structuredClone(staticProgram);
-  rawText.template[0].tag = 'script';
+  const rawTextRoot = rawText.template[0];
+  if (rawTextRoot.k !== 'el') throw new Error('test setup: expected an element root');
+  rawTextRoot.tag = 'script';
   assertThrows(() => serializeProgramContent(rawText, {}), Error);
 
   const inheritedItem = Object.create({ id: 'a', text: 'alpha' });
-  const eachProgram = {
-    version: 1,
+  const eachProgram = testProgram({
     tag: 'oe-each',
     template: [{ k: 'part', index: 0 }],
     parts: [{
@@ -170,7 +172,7 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
       field: 'text',
       item: [{ k: 'ival' }],
     }],
-  };
+  });
   const inheritedError = assertThrows(
     () =>
       serializeProgramContent(eachProgram, {
@@ -183,7 +185,9 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
   assertStringIncludes(inheritedError.message, 'each Region item needs');
 
   const unsafeProperty = structuredClone(PROGRAM);
-  unsafeProperty.parts[0].name = '__proto__';
+  const propertyPart = unsafeProperty.parts[0];
+  if (propertyPart.k !== 'prop') throw new Error('test setup: expected a prop Part');
+  propertyPart.name = '__proto__';
   const propertyError = assertThrows(
     () => serializeProgramContent(unsafeProperty, HOST),
     Error,
@@ -197,8 +201,7 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
   );
   assertStringIncludes(signalError.message, 'missing signal');
 
-  const nestedProgram = {
-    version: 1,
+  const nestedProgram = testProgram({
     tag: 'oe-nested',
     template: [{
       k: 'el',
@@ -212,7 +215,7 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
       }],
     }],
     parts: [],
-  };
+  });
   assertEquals(
     serializeCompiledProgram(nestedProgram, {}, { mode: 'open' }),
     '<oe-nested><template shadowrootmode="open"><oe-child data-owner="alpha3"><x-third-party>foreign</x-third-party></oe-child></template></oe-nested>',

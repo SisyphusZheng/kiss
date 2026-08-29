@@ -10,9 +10,6 @@
 
 export const PART_PROGRAM_VERSION = 1 as const;
 
-/** Kept as a source-level name for the alpha.0 fixture while the schema is v1. */
-export const PART_PROGRAM_SPIKE_VERSION = PART_PROGRAM_VERSION;
-
 export type RootMode = 'light' | 'shadow-open' | 'shadow-closed';
 
 export interface ProgramRoot {
@@ -1132,10 +1129,4 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
   for (const sourceId of expectedSourceIds) {
     if (!sourceIds.has(sourceId)) fail(`sourceMap is missing record ${sourceId}`);
   }
-}
-
-/** Compatibility source name for alpha.0 tests; validation remains strict v1. */
-export function validateSpikeProgram(raw: unknown): PartProgramSpike {
-  validatePartProgram(raw);
-  return raw;
 }

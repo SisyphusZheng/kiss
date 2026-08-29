@@ -5,12 +5,12 @@ import {
   createFreshDom,
   serializeToHtml,
 } from '../../src/internal/compiled/runtime.ts';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
+import { validatePartProgram } from '../../src/internal/compiled/program.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { parseHtml, TestDocument, type TestElement, toHtml } from './test-dom.ts';
+import { testProgram } from './test-program.ts';
 
-const FIXED_PROGRAM = validateSpikeProgram({
-  version: 1,
+const FIXED_PROGRAM = testProgram({
   tag: 'oe-fixed-parts',
   template: [{
     k: 'el',
@@ -24,7 +24,7 @@ const FIXED_PROGRAM = validateSpikeProgram({
   parts: [
     { k: 'attr', index: 0, signal: 'title', name: 'title', path: [0] },
     { k: 'prop', index: 1, signal: 'value', name: 'value', path: [0, 0] },
-    { k: 'boolean', index: 2, signal: 'disabled', name: 'disabled', path: [0, 0] },
+    { k: 'bool', index: 2, signal: 'disabled', name: 'disabled', path: [0, 0] },
     { k: 'class', index: 3, signal: 'classes', path: [0] },
     { k: 'style', index: 4, signal: 'styles', path: [0] },
     {
@@ -132,12 +132,19 @@ Deno.test('fixed Parts share normalized commits across fresh and claim paths', (
 
 Deno.test('fixed Part errors are explicit and unsupported claim shapes fail closed', () => {
   const host = fixedHost();
-  const missingHandlerProgram = validateSpikeProgram({
+  const eventIndex = FIXED_PROGRAM.parts.findIndex((part) => part.k === 'event');
+  const missingHandlerProgram = {
     ...FIXED_PROGRAM,
     parts: FIXED_PROGRAM.parts.map((part) =>
-      part.k === 'event' ? { ...part, signal: 'missing-handler' } : part
+      part.k === 'event' ? { ...part, signal: 'missingHandler' } : part
     ),
-  });
+    dependencies: FIXED_PROGRAM.dependencies.map((dependency) =>
+      dependency.owner.kind === 'part' && dependency.owner.index === eventIndex
+        ? { ...dependency, signal: 'missingHandler' }
+        : dependency
+    ),
+  };
+  validatePartProgram(missingHandlerProgram);
   assertThrows(
     () =>
       createFreshDom(
@@ -157,13 +164,12 @@ Deno.test('fixed Part errors are explicit and unsupported claim shapes fail clos
   assertStringIncludes(error.message, 'unexpected attribute');
 });
 
-Deno.test('an empty fixed-Part path targets the sole template root element', () => {
+Deno.test('a fixed-Part path of [0] targets the sole template root; an empty path fails closed', () => {
   const title = signal('initial');
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-root-path',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
-    parts: [{ k: 'attr', index: 0, signal: 'title', name: 'title', path: [] }],
+    parts: [{ k: 'attr', index: 0, signal: 'title', name: 'title', path: [0] }],
   });
   const host = { signals: { title }, handlers: {} } as unknown as CompiledSpikeHost;
   const html = serializeToHtml(program, host);
@@ -189,12 +195,20 @@ Deno.test('an empty fixed-Part path targets the sole template root element', () 
   title.value = 'claimed update';
   assertEquals(claimedDiv.getAttribute('title'), 'claimed update');
   claimed.dispose();
+
+  const emptyPath = {
+    ...program,
+    parts: program.parts.map((part) => part.k === 'attr' ? { ...part, path: [] } : part),
+    locations: program.locations.map((location) =>
+      location.kind === 'sink' ? { ...location, path: [] } : location
+    ),
+  };
+  assertThrows(() => validatePartProgram(emptyPath), Error, 'path must target an element');
 });
 
 Deno.test('signal-driven event Parts replace handlers without duplicating listeners', () => {
   const handler = signal<unknown>(() => {});
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-event-replace',
     template: [{ k: 'el', tag: 'button', attrs: [], children: [] }],
     parts: [{ k: 'event', index: 0, event: 'click', signal: 'handler', path: [0] }],
@@ -235,8 +249,7 @@ Deno.test('style Parts normalize vendor-prefixed and custom declarations', () =>
     msTransition: 'opacity',
     '--accent': 'red',
   });
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-style-normalization',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
     parts: [{ k: 'style', index: 0, signal: 'styles', path: [0] }],

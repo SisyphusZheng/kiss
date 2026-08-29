@@ -419,12 +419,29 @@ function regionOwner(
   return end ? { kind: 'region', parent, anchor, end, part } : fallback;
 }
 
+/**
+ * Narrow the keyed-Region fields the server/claim grammar requires. Program
+ * validation already rejects field-less `each` Regions for these modes; this
+ * guard keeps the type-level invariant explicit and fail-closed.
+ */
+function eachKeyAndField(
+  part: SpikeEachPart,
+  path: string,
+  owner: ClaimOwner,
+): { key: string; field: string } {
+  if (part.key === undefined || part.field === undefined) {
+    claimFailure(path, 'each Region needs key and field', owner);
+  }
+  return { key: part.key, field: part.field };
+}
+
 function itemRecords(
   part: SpikeEachPart,
   value: unknown,
   path: string,
   owner: ClaimOwner,
 ): Array<Record<string, unknown>> {
+  const { key: keyField, field: valueField } = eachKeyAndField(part, path, owner);
   if (!Array.isArray(value)) {
     claimFailure(path, 'each Region dependency must contain an array', owner);
   }
@@ -433,16 +450,16 @@ function itemRecords(
   value.forEach((item, index) => {
     if (!isRecordValue(item)) claimFailure(`${path}[${index}]`, 'item must be a record', owner);
     if (
-      !Object.prototype.hasOwnProperty.call(item, part.key) ||
-      !Object.prototype.hasOwnProperty.call(item, part.field)
+      !Object.prototype.hasOwnProperty.call(item, keyField) ||
+      !Object.prototype.hasOwnProperty.call(item, valueField)
     ) {
       claimFailure(
         `${path}[${index}]`,
-        `item needs ${JSON.stringify(part.key)} and ${JSON.stringify(part.field)}`,
+        `item needs ${JSON.stringify(keyField)} and ${JSON.stringify(valueField)}`,
         owner,
       );
     }
-    const key = stringValue(item[part.key], `${path}[${index}].${part.key}`, owner);
+    const key = stringValue(item[keyField], `${path}[${index}].${keyField}`, owner);
     if (seen.has(key)) claimFailure(path, `duplicate key ${JSON.stringify(key)}`, owner);
     seen.add(key);
     items.push(item);
@@ -501,6 +518,7 @@ function claimItemNodes(
   path: string,
   owner: ClaimOwner,
 ): { consumed: number; entryNodes: Node[]; texts: Text[] } {
+  const { field } = eachKeyAndField(part, path, owner);
   const entryNodes: Node[] = [];
   const texts: Text[] = [];
   let used = 0;
@@ -509,7 +527,7 @@ function claimItemNodes(
     if (!dom) claimFailure(path, 'missing item node', owner);
     if (node.k === 'ival') {
       if (!isText(dom)) claimFailure(path, 'expected item value text', owner);
-      const expected = stringValue(item[part.field], path, owner);
+      const expected = stringValue(item[field], path, owner);
       if (dom.data !== expected) {
         claimFailure(path, `item text drift: expected ${JSON.stringify(expected)}`, owner);
       }
@@ -546,6 +564,7 @@ function claimItemChildren(
   path: string,
   owner: ClaimOwner,
 ): Text[] {
+  const { field } = eachKeyAndField(part, path, owner);
   const texts: Text[] = [];
   for (let index = 0; index < node.children.length; index++) {
     const child = node.children[index];
@@ -553,7 +572,7 @@ function claimItemChildren(
     const childPath = `${path}.children[${index}]`;
     if (!dom) claimFailure(childPath, 'missing item child', owner);
     if (child.k === 'ival') {
-      if (!isText(dom) || dom.data !== stringValue(item[part.field], childPath, owner)) {
+      if (!isText(dom) || dom.data !== stringValue(item[field], childPath, owner)) {
         claimFailure(childPath, 'item text drift', owner);
       }
       texts.push(dom);
@@ -688,7 +707,11 @@ function scanChildren(
           scopedOwner,
         );
         cursor += claimed.consumed;
-        const key = stringValue(item[part.key], nodePath, scopedOwner);
+        const key = stringValue(
+          item[eachKeyAndField(part, nodePath, scopedOwner).key],
+          nodePath,
+          scopedOwner,
+        );
         byKey.set(key, { key, nodes: claimed.entryNodes, texts: claimed.texts });
       }
       const end = expectComment(
@@ -749,7 +772,7 @@ function createPlan(
       signalOf(host, part.signal);
       plan.props.push({ part, element });
     } else if (part.k === 'event') {
-      const handler = handlers[part.handler];
+      const handler = part.handler === undefined ? undefined : handlers[part.handler];
       if (typeof handler !== 'function') {
         throw new CompiledProgramValidationError(
           `parts[${part.index}].handler`,
@@ -808,9 +831,16 @@ function buildItemNodes(
   part: SpikeEachPart,
   item: Record<string, unknown>,
 ): Node[] {
+  if (part.field === undefined) {
+    throw new CompiledProgramValidationError(
+      `parts[${part.index}].field`,
+      'each Region item value slot needs a field',
+    );
+  }
+  const field = part.field;
   const build = (nodes: SpikeTreeNode[]): Node[] =>
     nodes.map((node) => {
-      if (node.k === 'ival') return doc.createTextNode(String(item[part.field]));
+      if (node.k === 'ival') return doc.createTextNode(String(item[field]));
       if (node.k === 'text') return doc.createTextNode(node.value);
       if (node.k === 'el') {
         const element = doc.createElement(node.tag);
@@ -1047,7 +1077,9 @@ function attachPlan(
     }
     const handlers = handlersOf(host);
     for (const binding of plan.events) {
-      const handler = handlers[binding.part.handler];
+      const handler = binding.part.handler === undefined
+        ? undefined
+        : handlers[binding.part.handler];
       if (!handler) {
         throw new CompiledProgramValidationError(
           `parts[${binding.part.index}]`,
@@ -1073,18 +1105,19 @@ function attachPlan(
 function updateEach(state: EachState, value: unknown, root: Node): void {
   const owner: RootClaimOwner = { kind: 'root', root };
   const items = itemRecords(state.part, value, state.path, owner);
+  const { key: keyField, field: valueField } = eachKeyAndField(state.part, state.path, owner);
   const parent = state.end.parentNode;
   if (!parent || state.anchor.parentNode !== parent) return;
   const nextEntries: EachEntry[] = [];
   const nextByKey = new Map<string, EachEntry>();
   for (const item of items) {
-    const key = stringValue(item[state.part.key], state.path, owner);
+    const key = stringValue(item[keyField], state.path, owner);
     let entry = state.byKey.get(key);
     if (!entry) {
       entry = { key, nodes: buildItemNodes(documentFor(parent), state.part, item), texts: [] };
       collectItemValueTexts(state.part.item, entry.nodes, entry.texts);
     } else {
-      const nextText = stringValue(item[state.part.field], state.path, owner);
+      const nextText = stringValue(item[valueField], state.path, owner);
       for (const text of entry.texts) if (text.data !== nextText) text.data = nextText;
     }
     nextEntries.push(entry);

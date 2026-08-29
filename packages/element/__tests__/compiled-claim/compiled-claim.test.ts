@@ -12,6 +12,7 @@ import {
   replayPreUpgradeEvents,
 } from '../../src/internal/compiled/claim/index.ts';
 import { serializeProgramContent } from '../../src/internal/compiled/server/index.ts';
+import { testProgram } from '../compiled-runtime/test-program.ts';
 
 interface Counters {
   createdElements: number;
@@ -365,31 +366,42 @@ Deno.test('alpha.3 claim preserves identity, live state, and one pre-upgrade eve
   assertEquals(dom.h1Value.data, '2');
 });
 
-Deno.test('alpha.3 claim resolves fixed sinks through expanded dynamic anchors', () => {
-  const program = {
-    version: 1,
+Deno.test('alpha.3 claim resolves fixed sinks across expanded dynamic anchors', () => {
+  // The fixed sinks follow a static wrapper whose dynamic text Part expands at
+  // runtime; the unified path-safety rule keeps sink paths statically indexed,
+  // and the claim walk still crosses the expanded anchor before the sinks.
+  const program = testProgram({
     tag: 'oe-alpha3-path',
     template: [{
       k: 'el',
       tag: 'section',
       attrs: [],
       children: [
-        { k: 'part', index: 0 },
+        { k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] },
         { k: 'el', tag: 'input', attrs: [], children: [] },
       ],
     }],
     parts: [
       { k: 'text', index: 0, signal: 'label' },
       { k: 'prop', index: 1, signal: 'label', name: 'value', path: [0, 1] },
-      { k: 'event', index: 2, event: 'click', handler: 'increment', path: [0, 1] },
+      {
+        k: 'event',
+        index: 2,
+        event: 'click',
+        handler: 'increment',
+        action: { kind: 'method', name: 'increment' },
+        path: [0, 1],
+      },
     ],
-  };
+  });
   const doc = new TestDocument();
   const root = element(doc, 'host');
   const section = element(doc, 'section');
-  section.appendChild(doc.createComment('oe:p0'));
+  const labelSlot = element(doc, 'div');
+  labelSlot.appendChild(doc.createComment('oe:p0'));
   const labelText = doc.createTextNode('ready');
-  section.appendChild(labelText);
+  labelSlot.appendChild(labelText);
+  section.appendChild(labelSlot);
   const input = element(doc, 'input', [['value', 'ready']]);
   input.simulateUserInput('typed before claim');
   section.appendChild(input);
@@ -397,7 +409,7 @@ Deno.test('alpha.3 claim resolves fixed sinks through expanded dynamic anchors',
   const controls = makeHost(doc.counters);
 
   const instance = claimExistingDom(program, controls.host, root as unknown as Node);
-  assertStrictEquals(section.childNodes[2] as TestElement, input);
+  assertStrictEquals(section.childNodes[1] as TestElement, input);
   assertEquals(input.value, 'typed before claim');
   controls.label.value = 'after claim';
   assertEquals(labelText.data, 'after claim');
@@ -566,7 +578,7 @@ Deno.test('alpha.3 fail-closed validation rejects executable program attributes'
     () => serializeProgramContent(program, { signals: {} }),
     Error,
   );
-  assertStringIncludes(error.message, 'executable attribute');
+  assertStringIncludes(error.message, 'unsafe name');
 });
 
 Deno.test('alpha.3 claim rejects duplicate keyed Region data before attaching', async () => {
@@ -646,8 +658,7 @@ Deno.test('alpha.3 keyed Region moves, reuses, updates, and removes only owned e
 });
 
 Deno.test('alpha.3 claim preserves nested custom-element node identity without entering its internals', () => {
-  const program = {
-    version: 1,
+  const program = testProgram({
     tag: 'oe-alpha3-nested',
     template: [{
       k: 'el',
@@ -661,7 +672,7 @@ Deno.test('alpha.3 claim preserves nested custom-element node identity without e
       }],
     }],
     parts: [],
-  };
+  });
   const doc = new TestDocument();
   const root = element(doc, 'host');
   const shell = element(doc, 'x-shell', [['data-owner', 'alpha3']]);

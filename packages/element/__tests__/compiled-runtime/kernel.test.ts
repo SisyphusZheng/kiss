@@ -2,12 +2,11 @@ import { assert, assertEquals, assertFalse, assertStrictEquals, assertThrows } f
 import { CompiledErrorBoundary } from '../../src/error-boundary.ts';
 import { ElementFormController } from '../../src/open-element-form.ts';
 import { CompiledElementKernel } from '../../src/internal/compiled/runtime/kernel.ts';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { TestDocument, type TestElement, type TestShadowRoot, toHtml } from './test-dom.ts';
+import { testProgram } from './test-program.ts';
 
-const KERNEL_PROGRAM = validateSpikeProgram({
-  version: 1,
+const KERNEL_PROGRAM = testProgram({
   tag: 'oe-kernel-test',
   template: [{
     k: 'el',
@@ -162,8 +161,7 @@ Deno.test('kernel reconnect cycles never duplicate event listeners', () => {
   const element = document.createElement('oe-kernel-test');
   const message = signal('x');
   const handler = signal<unknown>(() => {});
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-kernel-test',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [

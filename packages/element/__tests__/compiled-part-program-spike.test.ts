@@ -1,8 +1,8 @@
 /**
  * @openelement/element — #1160 compiled Part Program spike (runtime vertical).
  *
- * Behavior-first coverage proving the ADR-0143 replacement path on the frozen
- * alpha.0 fixture program (packages/adapter-vite/__fixtures__/
+ * Behavior-first coverage proving the ADR-0143 replacement path on the
+ * canonical alpha.1 fixture program (packages/adapter-vite/__fixtures__/
  * compiled-element-spike/expected-program.json — the same artifact the Vite
  * transform test asserts structurally):
  *   - server serialization, fresh DOM creation and existing-DOM claim consume
@@ -17,7 +17,7 @@
  *     recorded against a frozen 0.43-equivalent proxy (evidence, not a
  *     performance GO claim)
  *
- * The runtime modules are loaded via dynamic import so a RED run proves the
+ * The runtime module is loaded via dynamic import so a RED run proves the
  * harness works while the new vertical behavior is absent. The minimal fake
  * DOM below implements only the standard DOM surface the compiled runtime is
  * allowed to touch (Deno's runner provides no browser DOM).
@@ -27,6 +27,7 @@ import { assertEquals, assertStrictEquals, assertStringIncludes, assertThrows } 
 import { signal } from '../src/internal/signal/framework.ts';
 import type { WritableSignal } from '../src/internal/signal/types.ts';
 import { SIGNAL_BRAND } from '../src/internal/protocol/signal.ts';
+import { validatePartProgram } from '../src/internal/compiled/program.ts';
 
 // ─── Minimal instrumented DOM harness ────────────────────────────────
 
@@ -353,10 +354,8 @@ const PROGRAM_URL = new URL(
   import.meta.url,
 );
 
-async function loadSpike() {
-  const programModule = await import('../src/internal/compiled/program.ts');
-  const runtime = (await import('../src/internal/compiled/runtime.ts')) as unknown as SpikeRuntime;
-  return { programModule, runtime };
+async function loadSpike(): Promise<SpikeRuntime> {
+  return (await import('../src/internal/compiled/runtime.ts')) as unknown as SpikeRuntime;
 }
 
 function makeHost(counters: SubCounters) {
@@ -446,9 +445,10 @@ Deno.test('compiled part program spike - harness sanity', async () => {
 });
 
 Deno.test('compiled part program spike - one program, three execution modes', async (t) => {
-  const { programModule, runtime } = await loadSpike();
+  const runtime = await loadSpike();
   const programJson = await Deno.readTextFile(PROGRAM_URL);
-  const program = programModule.validateSpikeProgram(JSON.parse(programJson));
+  const program = JSON.parse(programJson);
+  validatePartProgram(program);
 
   await t.step('program evidence: bytes and instruction count', () => {
     const programBytes = new TextEncoder().encode(programJson).length;
@@ -642,13 +642,13 @@ Deno.test('compiled part program spike - one program, three execution modes', as
     const broken = JSON.parse(programJson);
     broken.parts[0] = { ...broken.parts[0], index: 7 };
     assertThrows(
-      () => programModule.validateSpikeProgram(broken),
+      () => validatePartProgram(broken),
       Error,
       'parts[0].index must equal its position',
     );
     const wrongVersion = JSON.parse(programJson);
     wrongVersion.version = 2;
-    assertThrows(() => programModule.validateSpikeProgram(wrongVersion), Error, 'version');
+    assertThrows(() => validatePartProgram(wrongVersion), Error, 'version');
   });
 
   await t.step('measurement evidence against the frozen 0.43-equivalent proxy', () => {

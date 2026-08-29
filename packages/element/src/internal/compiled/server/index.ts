@@ -104,7 +104,15 @@ function serializeHostAttributes(
           'host attributes must be [name, value] pairs',
         );
       }
-      return pair as unknown as CompiledHostAttribute;
+      const name: unknown = pair[0];
+      if (typeof name !== 'string') {
+        throw new CompiledProgramValidationError(
+          `hostAttrs[${index}]`,
+          'host attribute name must be a string',
+        );
+      }
+      const value: unknown = pair[1];
+      return [name, value] as CompiledHostAttribute;
     });
   } else if (raw && typeof raw === 'object') {
     pairs = Object.entries(raw);
@@ -177,6 +185,14 @@ function itemsFor(
   ctx: SerializeContext,
   part: SpikeEachPart,
 ): Array<Record<string, unknown>> {
+  if (part.key === undefined || part.field === undefined) {
+    throw new CompiledProgramValidationError(
+      `parts[${part.index}]`,
+      'each Region needs key and field',
+    );
+  }
+  const keyField = part.key;
+  const valueField = part.field;
   const value = signalOf(ctx.host, part.signal).value;
   if (!Array.isArray(value)) {
     throw new CompiledProgramValidationError(
@@ -194,15 +210,15 @@ function itemsFor(
       );
     }
     if (
-      !Object.prototype.hasOwnProperty.call(item, part.key) ||
-      !Object.prototype.hasOwnProperty.call(item, part.field)
+      !Object.prototype.hasOwnProperty.call(item, keyField) ||
+      !Object.prototype.hasOwnProperty.call(item, valueField)
     ) {
       throw new CompiledProgramValidationError(
         `parts[${part.index}].signal[${ordinal}]`,
-        `each Region item needs ${JSON.stringify(part.key)} and ${JSON.stringify(part.field)}`,
+        `each Region item needs ${JSON.stringify(keyField)} and ${JSON.stringify(valueField)}`,
       );
     }
-    const key = String(item[part.key]);
+    const key = String(item[keyField]);
     if (seen.has(key)) {
       throw new CompiledProgramValidationError(
         `parts[${part.index}].signal`,
@@ -234,8 +250,15 @@ function serializeItemNodes(
   part: SpikeEachPart,
   item: Record<string, unknown>,
 ): string {
+  const field = part.field;
+  if (field === undefined) {
+    throw new CompiledProgramValidationError(
+      `parts[${part.index}].field`,
+      'each Region item value slot needs a field',
+    );
+  }
   return nodes.map((node) => {
-    if (node.k === 'ival') return escapeText(String(item[part.field]));
+    if (node.k === 'ival') return escapeText(String(item[field]));
     if (node.k === 'text') return escapeText(node.value);
     if (node.k === 'el') {
       const attrs = node.attrs.map(([name, value]) => serializeAttribute(name, value)).join('');

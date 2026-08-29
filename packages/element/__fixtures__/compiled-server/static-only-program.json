@@ -1,13 +1,100 @@
 {
   "version": 1,
   "tag": "oe-static-card",
+  "root": {
+    "id": "root",
+    "kind": "light",
+    "nodes": [
+      "e0"
+    ]
+  },
   "template": [
     {
       "k": "el",
+      "id": "e0",
       "tag": "p",
-      "attrs": [["data-kind", "static"]],
-      "children": [{ "k": "text", "value": "server-only" }]
+      "attrs": [
+        [
+          "data-kind",
+          "static"
+        ]
+      ],
+      "children": [
+        {
+          "k": "text",
+          "value": "server-only"
+        }
+      ]
     }
   ],
-  "parts": []
+  "parts": [],
+  "regions": [],
+  "dependencies": [],
+  "locations": [
+    {
+      "id": "e0",
+      "kind": "element",
+      "tag": "p",
+      "path": [
+        0
+      ]
+    }
+  ],
+  "sourceMap": {
+    "version": 1,
+    "file": "/project/app/islands/static-card.tsx",
+    "records": [
+      {
+        "id": "root",
+        "kind": "root",
+        "source": {
+          "file": "/project/app/islands/static-card.tsx",
+          "start": {
+            "offset": 0,
+            "line": 1,
+            "column": 1
+          },
+          "end": {
+            "offset": 8,
+            "line": 1,
+            "column": 9
+          }
+        }
+      },
+      {
+        "id": "e0",
+        "kind": "element",
+        "source": {
+          "file": "/project/app/islands/static-card.tsx",
+          "start": {
+            "offset": 16,
+            "line": 2,
+            "column": 1
+          },
+          "end": {
+            "offset": 24,
+            "line": 2,
+            "column": 9
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "tag": "oe-static-card",
+    "className": "StaticCard",
+    "sourceFile": "/project/app/islands/static-card.tsx",
+    "properties": [],
+    "observedAttributes": [],
+    "cem": {
+      "tagName": "oe-static-card",
+      "className": "StaticCard",
+      "declaration": {
+        "name": "StaticCard",
+        "module": "/project/app/islands/static-card.tsx"
+      },
+      "attributes": [],
+      "members": []
+    }
+  }
 }

@@ -11,8 +11,8 @@ import {
 } from '../../src/internal/signal/selection.ts';
 import { computed, effect, signal } from '../../src/internal/signal/framework.ts';
 import { type CompiledSpikeHost, createFreshDom } from '../../src/internal/compiled/runtime.ts';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { TestDocument, toHtml } from './test-dom.ts';
+import { testProgram } from './test-program.ts';
 
 // Engine selection is module-global and locks as soon as signals exist, so
 // this file's tests run in definition order: select first, exercise the
@@ -60,8 +60,7 @@ Deno.test('a different engine after signal creation fails closed', () => {
 
 Deno.test('a compiled Part update flow runs through the selected engine', () => {
   const message = signal('one');
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-selected-engine',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [{ k: 'text', index: 0, signal: 'message' }],

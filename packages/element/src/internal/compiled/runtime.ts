@@ -1,11 +1,13 @@
 /**
- * @openelement/element — compiled Part Program runtime (v0.44 alpha.2).
+ * @openelement/element — compiled Part Program runtime (v0.44 alpha.8).
  *
- * A Part Program is executed by three entry points in this file:
+ * A Part Program v1 is executed by three entry points in this file:
  * `serializeToHtml`, `createFreshDom`, and `claimExistingDom`. They share the
  * same tree/Part/Region semantics. The browser path never performs selector or
  * marker discovery: markers are emitted and claimed only at compiler-owned
  * dynamic anchors, while fixed Parts resolve their compiler-owned paths once.
+ * Part `location` records are the auditable identity of those same addresses;
+ * the validator proves they agree with `path` before any mode runs.
  */
 
 import type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
@@ -14,8 +16,8 @@ import {
   partAnchorEndMarker,
   partAnchorMarker,
   type PartProgramSpike,
-  type SpikeAttributePart,
-  type SpikeBooleanPart,
+  type SpikeAttrPart,
+  type SpikeBoolPart,
   type SpikeChildPart,
   type SpikeClassPart,
   type SpikeEachPart,
@@ -28,7 +30,7 @@ import {
   type SpikeTextPart,
   type SpikeTreeNode,
   type SpikeWhenPart,
-  validateSpikeProgram,
+  validatePartProgram,
 } from './program.ts';
 
 /** Structured diagnostic for claim-time structure/identity drift. */
@@ -196,19 +198,13 @@ function subscribeWrites(
 
 function isFixedPart(part: PartProgramSpike['parts'][number]): part is SpikeFixedPart {
   return (
-    part.k === 'attr' || part.k === 'prop' || part.k === 'boolean' || part.k === 'class' ||
+    part.k === 'attr' || part.k === 'prop' || part.k === 'bool' || part.k === 'class' ||
     part.k === 'style' || part.k === 'event' || part.k === 'ref'
   );
 }
 
 function fixedPartsAtPath(ctx: MountContext, path: number[]): SpikeFixedPart[] {
   const parts = [...(ctx.fixedPartsByPath.get(path.join('.')) ?? [])];
-  // The validator gives [] the same meaning as the sole template root. During
-  // tree traversal that element is visited at template path [0], so include
-  // both spellings and restore Part-table order for deterministic sinks.
-  if (path.length === 1 && path[0] === 0) {
-    parts.push(...(ctx.fixedPartsByPath.get('') ?? []));
-  }
   return parts.sort((left, right) => left.index - right.index);
 }
 
@@ -902,19 +898,14 @@ function mountPart(
 
 /** Resolve a compiler-owned static path without any selector/discovery walk. */
 function resolvePath(root: Node, path: number[], where: string): Element {
-  // Program paths are relative to the template node list. An empty path is
-  // therefore the sole template-root element, not the host/root container
-  // that receives the template nodes.
-  let node: Node;
+  // Program paths are relative to the template node list: the first index
+  // selects a child of the mount root (the sole template root element lives at
+  // path [0]). The validator rejects empty paths, so every path walks at least
+  // once into the template.
   if (path.length === 0) {
-    const templateRoot = root.childNodes[0];
-    if (!templateRoot) {
-      throw new Error(`[compiled-runtime] ${where}: path [] unresolved`);
-    }
-    node = templateRoot;
-  } else {
-    node = root;
+    throw new Error(`[compiled-runtime] ${where}: path [] unresolved`);
   }
+  let node: Node = root;
   for (const index of path) {
     const child = node.childNodes[index];
     if (!child) throw new Error(`[compiled-runtime] ${where}: path [${path.join(',')}] unresolved`);
@@ -958,7 +949,7 @@ function applyBoolean(element: Element, name: string, value: boolean): void {
 function installValuePart(
   ctx: MountContext,
   root: Node,
-  part: SpikeAttributePart | SpikePropPart | SpikeBooleanPart | SpikeClassPart | SpikeStylePart,
+  part: SpikeAttrPart | SpikePropPart | SpikeBoolPart | SpikeClassPart | SpikeStylePart,
   mode: 'fresh' | 'claim',
 ): void {
   const element = resolvePath(root, part.path, `${part.k} Part`);
@@ -988,7 +979,7 @@ function installValuePart(
     return;
   }
 
-  if (part.k === 'boolean') {
+  if (part.k === 'bool') {
     let current = Boolean(initial);
     if (mode === 'fresh') applyBoolean(element, part.name, current);
     subscribeWrites(ctx, scope, part.signal, (value) => {
@@ -1118,7 +1109,7 @@ function installRefPart(ctx: MountContext, root: Node, part: SpikeRefPart): void
 function attachFixedParts(ctx: MountContext, root: Node, mode: 'fresh' | 'claim'): void {
   for (const part of ctx.program.parts) {
     if (
-      part.k === 'attr' || part.k === 'prop' || part.k === 'boolean' || part.k === 'class' ||
+      part.k === 'attr' || part.k === 'prop' || part.k === 'bool' || part.k === 'class' ||
       part.k === 'style'
     ) {
       installValuePart(ctx, root, part, mode);
@@ -1148,7 +1139,8 @@ export function createFreshDom(
   root: Node,
 ): CompiledSpikeInstance {
   noteCompiledProgramActivated();
-  const ctx = createContext(validateSpikeProgram(program), host);
+  validatePartProgram(program);
+  const ctx = createContext(program, host);
   const doc = root.ownerDocument;
   if (!doc) throw new Error('[compiled-runtime] root must have an ownerDocument');
   if (root.childNodes.length > 0) {
@@ -1221,7 +1213,7 @@ function serializedFixedAttributes(
       const next = attributeValue(value);
       if (next === null) attrs.delete(part.name);
       else attrs.set(part.name, next);
-    } else if (part.k === 'boolean') {
+    } else if (part.k === 'bool') {
       const value = signalOf(ctx, part.signal).value;
       if (value) attrs.set(part.name, '');
       else attrs.delete(part.name);
@@ -1306,7 +1298,8 @@ function serializeNode(
 
 /** Server serialization: the same program renders deterministic HTML. */
 export function serializeToHtml(program: PartProgramSpike, host: CompiledSpikeHost): string {
-  const ctx = createContext(validateSpikeProgram(program), host);
+  validatePartProgram(program);
+  const ctx = createContext(program, host);
   return ctx.program.template.map((node, index) => serializeNode(ctx, node, [index])).join('');
 }
 
@@ -1326,7 +1319,7 @@ function expectComment(node: Node, marker: string, path: string): Comment {
 function dynamicAttributeNames(ctx: MountContext, path: number[]): Set<string> {
   const names = new Set<string>();
   for (const part of fixedPartsAtPath(ctx, path)) {
-    if (part.k === 'attr' || part.k === 'prop' || part.k === 'boolean') names.add(part.name);
+    if (part.k === 'attr' || part.k === 'prop' || part.k === 'bool') names.add(part.name);
     if (part.k === 'class') names.add('class');
     if (part.k === 'style') names.add('style');
   }
@@ -1633,7 +1626,8 @@ export function claimExistingDom(
   root: Node,
 ): CompiledSpikeInstance {
   noteCompiledProgramActivated();
-  const ctx = createContext(validateSpikeProgram(program), host);
+  validatePartProgram(program);
+  const ctx = createContext(program, host);
   try {
     const consumed = claimNodes(ctx, root, 0, ctx.program.template, 'template', [], ctx.rootScope);
     if (consumed !== root.childNodes.length) claimFailure('template', 'unexpected trailing nodes');
@@ -1649,7 +1643,7 @@ export function claimExistingDom(
   }
 }
 
-/** Canonical alpha.2 entry-point aliases. */
+/** Canonical entry-point aliases. */
 export const createPartProgram = createFreshDom;
 export const serializePartProgram = serializeToHtml;
 export const claimPartProgram = claimExistingDom;

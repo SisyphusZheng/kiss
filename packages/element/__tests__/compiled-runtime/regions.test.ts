@@ -4,14 +4,13 @@ import {
   createFreshDom,
   serializeToHtml,
 } from '../../src/internal/compiled/runtime.ts';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { SIGNAL_BRAND } from '../../src/internal/protocol/signal.ts';
 import type { CompiledSpikeHost } from '../../src/internal/compiled/runtime.ts';
 import { parseHtml, TestDocument, type TestElement, type TestText, toHtml } from './test-dom.ts';
+import { testProgram } from './test-program.ts';
 
-const REGION_PROGRAM = validateSpikeProgram({
-  version: 1,
+const REGION_PROGRAM = testProgram({
   tag: 'oe-regions',
   template: [{
     k: 'el',
@@ -124,8 +123,7 @@ Deno.test('Regions own nested lifetimes and keyed identity in fresh DOM', () => 
 });
 
 Deno.test('unkeyed Regions reuse index-owned nodes and claim preserves identity', () => {
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-unkeyed',
     template: [{ k: 'el', tag: 'ul', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [{
@@ -167,8 +165,7 @@ Deno.test('unkeyed Regions reuse index-owned nodes and claim preserves identity'
 });
 
 Deno.test('empty dynamic text and child values keep fresh and claim structure aligned', () => {
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-empty-regions',
     template: [{
       k: 'el',
@@ -216,8 +213,7 @@ Deno.test('empty dynamic text and child values keep fresh and claim structure al
 
 Deno.test('item value slots create their text node when an item becomes non-empty', () => {
   const items = signal([{ id: 'a', text: '' }]);
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-item-values',
     template: [{ k: 'el', tag: 'ul', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [{
@@ -274,8 +270,7 @@ Deno.test('item value slots create their text node when an item becomes non-empt
 
 Deno.test('direct item value slots keep empty and multi-node item ranges ordered', () => {
   const items = signal([{ id: 'a', text: '' }, { id: 'b', text: 'B' }]);
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-direct-item-values',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [{
@@ -309,8 +304,7 @@ Deno.test('direct item value slots keep empty and multi-node item ranges ordered
 Deno.test('nested list Regions retain item-slot insertion context after branch swaps', () => {
   const visible = signal(0);
   const items = signal([{ id: 'a', text: '' }]);
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-nested-item-values',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [
@@ -370,8 +364,7 @@ Deno.test('a failed item build disposes subscriptions created before the failure
       };
     },
   };
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-failed-item',
     template: [{ k: 'el', tag: 'ul', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [

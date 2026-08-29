@@ -2,12 +2,11 @@ import { assertEquals, assertStrictEquals, assertThrows } from '@std/assert';
 import { CompiledElementKernel } from '../../src/internal/compiled/runtime/kernel.ts';
 import { CompiledContextService } from '../../src/internal/compiled/runtime/context.ts';
 import { createContext } from '../../src/internal/core/signal-context.ts';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { TestDocument, type TestElement } from './test-dom.ts';
+import { testProgram } from './test-program.ts';
 
-const CONTEXT_PROGRAM = validateSpikeProgram({
-  version: 1,
+const CONTEXT_PROGRAM = testProgram({
   tag: 'oe-context-test',
   template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
   parts: [{ k: 'text', index: 0, signal: 'message' }],

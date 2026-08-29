@@ -1,9 +1,8 @@
 import { assertEquals, assertThrows } from '@std/assert';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
+import { testProgram } from './test-program.ts';
 
-Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
-  const program = validateSpikeProgram({
-    version: 1,
+Deno.test('fixed Parts validate every exact DOM sink', () => {
+  const program = testProgram({
     tag: 'oe-fixed-parts',
     template: [{
       k: 'el',
@@ -14,7 +13,7 @@ Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
     parts: [
       { k: 'attr', index: 0, signal: 'title', name: 'title', path: [0] },
       { k: 'prop', index: 1, signal: 'value', name: 'value', path: [0] },
-      { k: 'boolean', index: 2, signal: 'disabled', name: 'disabled', path: [0] },
+      { k: 'bool', index: 2, signal: 'disabled', name: 'disabled', path: [0] },
       { k: 'class', index: 3, signal: 'classes', path: [0] },
       { k: 'style', index: 4, signal: 'styles', path: [0] },
       {
@@ -22,6 +21,7 @@ Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
         index: 5,
         event: 'click',
         handler: 'onClick',
+        action: { kind: 'method', name: 'onClick' },
         options: { capture: true, once: true, passive: false },
         path: [0],
       },
@@ -32,7 +32,7 @@ Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
   assertEquals(program.parts.map((part) => part.k), [
     'attr',
     'prop',
-    'boolean',
+    'bool',
     'class',
     'style',
     'event',
@@ -43,8 +43,7 @@ Deno.test('alpha.2 fixed Parts validate every exact DOM sink', () => {
 Deno.test('program validation rejects void elements with children', () => {
   assertThrows(
     () =>
-      validateSpikeProgram({
-        version: 1,
+      testProgram({
         tag: 'oe-invalid-void',
         template: [{
           k: 'el',

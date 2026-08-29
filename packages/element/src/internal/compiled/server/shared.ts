@@ -1,17 +1,20 @@
 /**
- * Shared validation and host access for the alpha.3 server and claim modes.
+ * Shared validation and host access for the compiled server and claim modes.
  *
- * This module deliberately consumes the serialized Part Program shape from the
- * alpha.0 seed. It owns no DOM discovery and performs no rendering fallback:
- * malformed programs and unsafe values are rejected before either execution
- * mode can produce or attach to output.
+ * This module deliberately consumes the unified Part Program v1 shape defined
+ * in `../program.ts`. It owns no DOM discovery and performs no rendering
+ * fallback: malformed programs and unsafe values are rejected before either
+ * execution mode can produce or attach to output. The server/claim grammar is
+ * the compiler-emitted vocabulary — fixed `prop`/`event` sinks, `text` Parts,
+ * and `when`/`each` Regions with static branches; other unified-schema kinds
+ * fail closed here.
  */
 
 import {
   type PartProgramSpike,
   type SpikePart,
   type SpikeTreeNode,
-  validateSpikeProgram,
+  validatePartProgram,
 } from '../program.ts';
 
 export interface CompiledSignalLike<T = unknown> {
@@ -218,7 +221,7 @@ function validateLocations(program: PartProgramSpike): void {
         fail(nodePath, `Part anchor index ${String(node.index)} is outside parts`);
       }
       const part = program.parts[node.index];
-      if (part.k !== 'text' && part.k !== 'when' && part.k !== 'each') {
+      if (part.k !== 'text' && part.k !== 'when' && part.k !== 'each' && part.k !== 'child') {
         fail(nodePath, 'anchor must reference a text Part or Region');
       }
       const count = (anchorCounts.get(node.index) ?? 0) + 1;
@@ -229,7 +232,7 @@ function validateLocations(program: PartProgramSpike): void {
   walkAnchors(program.template, 'template');
 
   program.parts.forEach((part) => {
-    if (part.k === 'text' || part.k === 'when' || part.k === 'each') {
+    if (part.k === 'text' || part.k === 'when' || part.k === 'each' || part.k === 'child') {
       if (anchorCounts.get(part.index) !== 1) {
         fail(`parts[${part.index}]`, 'every dynamic Part/Region must have exactly one anchor');
       }
@@ -252,7 +255,7 @@ function validateLocations(program: PartProgramSpike): void {
         )
       );
       if (duplicate) fail(`parts[${part.index}]`, 'multiple property Parts own one DOM sink');
-    } else {
+    } else if (part.k === 'event') {
       const duplicate = program.parts.some((other) =>
         other !== part && other.k === 'event' && other.event === part.event &&
         other.path.length === part.path.length && other.path.every((value, i) =>
@@ -264,21 +267,27 @@ function validateLocations(program: PartProgramSpike): void {
   });
 }
 
-/** Validate the seed program plus alpha.3's security and ownership invariants. */
+/** Validate the unified program plus the server/claim security and ownership invariants. */
 export function assertCompiledProgram(raw: unknown): PartProgramSpike {
-  let program: PartProgramSpike;
   try {
-    program = validateSpikeProgram(raw);
+    validatePartProgram(raw);
   } catch (error) {
     if (error instanceof CompiledProgramValidationError) throw error;
     const detail = error instanceof Error ? error.message : String(error);
     fail('program', detail);
   }
+  const program = raw;
   validateTag(program.tag, 'tag');
   validateStaticNodes(program.template, 'template', false, true);
   program.parts.forEach(validatePart);
   validateLocations(program);
   return program;
+}
+
+function isCompiledSignal(value: unknown): value is CompiledSignalLike<unknown> {
+  if (!isRecord(value)) return false;
+  if (typeof value.subscribe !== 'function') return false;
+  return 'value' in value;
 }
 
 /** Read one compiled dependency without subscribing or discovering anything. */
@@ -292,14 +301,14 @@ export function signalOf(host: unknown, name: string): CompiledSignalLike<unknow
       `missing signal ${JSON.stringify(name)}`,
     );
   }
-  const signal = host.signals[name];
-  if (!isRecord(signal) || typeof signal.subscribe !== 'function' || !('value' in signal)) {
+  const signal: unknown = host.signals[name];
+  if (!isCompiledSignal(signal)) {
     throw new CompiledProgramValidationError(
       'host.signals',
       `missing signal ${JSON.stringify(name)}`,
     );
   }
-  return signal as unknown as CompiledSignalLike<unknown>;
+  return signal;
 }
 
 export function handlersOf(host: unknown): Record<string, (event: unknown) => void> {

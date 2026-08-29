@@ -4,8 +4,8 @@ import { createTestEngine } from '../../src/internal/signal/test-engine.ts';
 import { type BatchedSignalEngine, isBatchCapable } from '../../src/internal/signal/types.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { type CompiledSpikeHost, createFreshDom } from '../../src/internal/compiled/runtime.ts';
-import { validateSpikeProgram } from '../../src/internal/compiled/program.ts';
 import { TestDocument, type TestElement, toHtml } from './test-dom.ts';
+import { testProgram } from './test-program.ts';
 
 function exerciseEngine(engine: BatchedSignalEngine, batched: boolean): string[] {
   const source = engine.signal(1);
@@ -108,8 +108,7 @@ Deno.test('the framework intrinsics default to the Preact engine', () => {
 Deno.test('compiled Part subscriptions track the lazy engine without an initial echo', () => {
   const engine = createTestEngine();
   const message = engine.signal('initial');
-  const program = validateSpikeProgram({
-    version: 1,
+  const program = testProgram({
     tag: 'oe-lazy-part',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [{ k: 'text', index: 0, signal: 'message' }],
