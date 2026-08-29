@@ -157,6 +157,46 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
   rawText.template[0].tag = 'script';
   assertThrows(() => serializeProgramContent(rawText, {}), Error);
 
+  const inheritedItem = Object.create({ id: 'a', text: 'alpha' });
+  const eachProgram = {
+    version: 1,
+    tag: 'oe-each',
+    template: [{ k: 'part', index: 0 }],
+    parts: [{
+      k: 'each',
+      index: 0,
+      signal: 'items',
+      key: 'id',
+      field: 'text',
+      item: [{ k: 'ival' }],
+    }],
+  };
+  const inheritedError = assertThrows(
+    () =>
+      serializeProgramContent(eachProgram, {
+        signals: {
+          items: { value: [inheritedItem], subscribe: () => () => {} },
+        },
+      }),
+    Error,
+  );
+  assertStringIncludes(inheritedError.message, 'each Region item needs');
+
+  const unsafeProperty = structuredClone(PROGRAM);
+  unsafeProperty.parts[0].name = '__proto__';
+  const propertyError = assertThrows(
+    () => serializeProgramContent(unsafeProperty, HOST),
+    Error,
+  );
+  assertStringIncludes(propertyError.message, 'unsafe property sink name');
+
+  const inheritedSignals = Object.create({ value: HOST.signals.value });
+  const signalError = assertThrows(
+    () => serializeProgramContent(PROGRAM, { signals: inheritedSignals }),
+    Error,
+  );
+  assertStringIncludes(signalError.message, 'missing signal');
+
   const nestedProgram = {
     version: 1,
     tag: 'oe-nested',

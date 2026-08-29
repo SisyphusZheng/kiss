@@ -40,6 +40,7 @@ const HTML_TAG_RE = /^[a-z][a-z0-9._:-]*$/;
 const ATTRIBUTE_NAME_RE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
 const EVENT_NAME_RE = /^[a-z][a-z0-9:.-]*$/;
 const FORBIDDEN_ATTRIBUTE_NAMES = new Set(['srcdoc']);
+const FORBIDDEN_PROPERTY_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
 const RAW_TEXT_TAGS = new Set(['script', 'style']);
 const VOID_TAGS = new Set([
   'area',
@@ -78,6 +79,13 @@ function validateAttributeName(name: string, path: string): void {
   const lower = name.toLowerCase();
   if (lower.startsWith('on') || FORBIDDEN_ATTRIBUTE_NAMES.has(lower)) {
     fail(path, `event or executable attribute ${JSON.stringify(name)} is not supported`);
+  }
+}
+
+function validatePropertyName(name: string, path: string): void {
+  validateAttributeName(name, path);
+  if (FORBIDDEN_PROPERTY_NAMES.has(name.toLowerCase())) {
+    fail(path, `unsafe property sink name ${JSON.stringify(name)}`);
   }
 }
 
@@ -140,7 +148,7 @@ function validatePart(part: SpikePart, index: number): void {
       return;
     case 'prop':
       if (!part.signal || !part.name) fail(path, 'property Part needs signal and name');
-      validateAttributeName(part.name, `${path}.name`);
+      validatePropertyName(part.name, `${path}.name`);
       if (
         part.path.length === 0 ||
         part.path.some((value) => !Number.isInteger(value) || value < 0)
@@ -277,6 +285,12 @@ export function assertCompiledProgram(raw: unknown): PartProgramSpike {
 export function signalOf(host: unknown, name: string): CompiledSignalLike<unknown> {
   if (!isRecord(host) || !isRecord(host.signals)) {
     throw new CompiledProgramValidationError('host', 'expected a signals record');
+  }
+  if (!Object.prototype.hasOwnProperty.call(host.signals, name)) {
+    throw new CompiledProgramValidationError(
+      'host.signals',
+      `missing signal ${JSON.stringify(name)}`,
+    );
   }
   const signal = host.signals[name];
   if (!isRecord(signal) || typeof signal.subscribe !== 'function' || !('value' in signal)) {

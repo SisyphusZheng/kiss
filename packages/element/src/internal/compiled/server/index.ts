@@ -193,7 +193,10 @@ function itemsFor(
         'each Region items must be records',
       );
     }
-    if (!(part.key in item) || !(part.field in item)) {
+    if (
+      !Object.prototype.hasOwnProperty.call(item, part.key) ||
+      !Object.prototype.hasOwnProperty.call(item, part.field)
+    ) {
       throw new CompiledProgramValidationError(
         `parts[${part.index}].signal[${ordinal}]`,
         `each Region item needs ${JSON.stringify(part.key)} and ${JSON.stringify(part.field)}`,

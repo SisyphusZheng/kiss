@@ -168,11 +168,15 @@ function eventList(
   source: ClaimOptions['preUpgradeEvents'],
 ): readonly PreUpgradeEvent[] {
   if (!source) return [];
-  if ('stop' in source) {
+  if (Array.isArray(source)) return source;
+  if (typeof source === 'object' && 'stop' in source) {
     source.stop();
     return source.events;
   }
-  return source;
+  throw new CompiledProgramValidationError(
+    'preUpgradeEvents',
+    'expected an event array or capture object',
+  );
 }
 
 /** Replay each captured record at most once, and only while its target remains owned. */
@@ -261,6 +265,7 @@ interface ClaimPlan {
   regions: RegionState[];
   props: PropBinding[];
   events: EventBinding[];
+  elements: Map<string, Element>;
 }
 
 type SpikePartOf<P> = P extends { parts: Array<infer T> } ? T : never;
@@ -427,7 +432,10 @@ function itemRecords(
   const items: Array<Record<string, unknown>> = [];
   value.forEach((item, index) => {
     if (!isRecordValue(item)) claimFailure(`${path}[${index}]`, 'item must be a record', owner);
-    if (!(part.key in item) || !(part.field in item)) {
+    if (
+      !Object.prototype.hasOwnProperty.call(item, part.key) ||
+      !Object.prototype.hasOwnProperty.call(item, part.field)
+    ) {
       claimFailure(
         `${path}[${index}]`,
         `item needs ${JSON.stringify(part.key)} and ${JSON.stringify(part.field)}`,
@@ -579,7 +587,7 @@ function scanChildren(
   path: string,
   programPath: readonly number[],
   owner: ClaimOwner,
-  plan: Pick<ClaimPlan, 'textBindings' | 'regions'>,
+  plan: Pick<ClaimPlan, 'textBindings' | 'regions' | 'elements'>,
 ): number {
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index];
@@ -596,6 +604,7 @@ function scanChildren(
     if (node.k === 'el') {
       const dom = childAt(parent, cursor++);
       if (!isElement(dom)) claimFailure(nodePath, `expected <${node.tag}>`, owner);
+      plan.elements.set(nodeProgramPath.join('.'), dom);
       const dynamicNames = dynamicNamesFor(program, nodeProgramPath);
       verifyStaticElement(dom, node, nodePath, owner, dynamicNames);
       const consumed = scanChildren(
@@ -696,29 +705,19 @@ function scanChildren(
   return cursor;
 }
 
-function resolvePath(
-  root: Node,
-  path: readonly number[],
-  owner: ClaimOwner,
-  label: string,
-): Element {
-  let current: Node = root;
-  for (const index of path) {
-    const next = childAt(current, index);
-    if (!next) claimFailure(label, `path [${path.join(',')}] is unresolved`, owner);
-    current = next;
-  }
-  if (!isElement(current)) claimFailure(label, `path [${path.join(',')}] is not an element`, owner);
-  return current;
-}
-
 function createPlan(
   program: PartProgramSpike,
   host: unknown,
   root: Node,
 ): ClaimPlan {
   const owner: RootClaimOwner = { kind: 'root', root };
-  const plan: ClaimPlan = { textBindings: [], regions: [], props: [], events: [] };
+  const plan: ClaimPlan = {
+    textBindings: [],
+    regions: [],
+    props: [],
+    events: [],
+    elements: new Map(),
+  };
   const consumed = scanChildren(
     program,
     host,
@@ -737,7 +736,14 @@ function createPlan(
   const handlers = handlersOf(host);
   for (const part of program.parts) {
     if (part.k === 'prop') {
-      const element = resolvePath(root, part.path, owner, `parts[${part.index}].path`);
+      const element = plan.elements.get(part.path.join('.'));
+      if (!element) {
+        claimFailure(
+          `parts[${part.index}].path`,
+          `path [${part.path.join(',')}] is unresolved`,
+          owner,
+        );
+      }
       // Read the dependency now so missing signals cannot leave an earlier
       // subscription attached during the later attach phase.
       signalOf(host, part.signal);
@@ -750,7 +756,14 @@ function createPlan(
           `missing host handler ${JSON.stringify(part.handler)}`,
         );
       }
-      const element = resolvePath(root, part.path, owner, `parts[${part.index}].path`);
+      const element = plan.elements.get(part.path.join('.'));
+      if (!element) {
+        claimFailure(
+          `parts[${part.index}].path`,
+          `path [${part.path.join(',')}] is unresolved`,
+          owner,
+        );
+      }
       plan.events.push({ part, element });
     }
   }
@@ -972,10 +985,25 @@ function attachPlan(
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
-    for (const unsubscribe of cleanup.splice(0)) unsubscribe();
-    for (const { element, type, listener } of listeners.splice(0)) {
-      element.removeEventListener(type, listener);
+    let cleanupFailed = false;
+    let firstCleanupError: unknown;
+    for (const unsubscribe of cleanup.splice(0)) {
+      try {
+        unsubscribe();
+      } catch (error) {
+        if (!cleanupFailed) firstCleanupError = error;
+        cleanupFailed = true;
+      }
     }
+    for (const { element, type, listener } of listeners.splice(0)) {
+      try {
+        element.removeEventListener(type, listener);
+      } catch (error) {
+        if (!cleanupFailed) firstCleanupError = error;
+        cleanupFailed = true;
+      }
+    }
+    if (cleanupFailed) throw firstCleanupError;
   };
   try {
     for (const binding of plan.textBindings) {
@@ -986,15 +1014,16 @@ function attachPlan(
     for (const state of plan.regions) {
       if (state.kind === 'when') {
         subscribeWrites(host, state.part.signal, (value) => {
+          const parent = state.end.parentNode;
+          if (!parent || state.anchor.parentNode !== parent) return;
           const next = activeWhen(state.part, value, state.path, {
             kind: 'region',
-            parent: state.end.parentNode ?? root,
+            parent,
             anchor: state.anchor,
             end: state.end,
             part: state.part,
           });
-          if (next === state.current || !state.end.parentNode) return;
-          const parent = state.end.parentNode;
+          if (next === state.current) return;
           const replacement = buildRegionContent(state.part, host, documentFor(parent));
           let current = state.anchor.nextSibling;
           while (current && current !== state.end) {
@@ -1032,7 +1061,11 @@ function attachPlan(
     replayPreUpgradeEvents(root, eventList(options.preUpgradeEvents));
     return { dispose };
   } catch (error) {
-    dispose();
+    try {
+      dispose();
+    } catch {
+      // Preserve the attach failure while still attempting every cleanup.
+    }
     throw error;
   }
 }
@@ -1041,7 +1074,7 @@ function updateEach(state: EachState, value: unknown, root: Node): void {
   const owner: RootClaimOwner = { kind: 'root', root };
   const items = itemRecords(state.part, value, state.path, owner);
   const parent = state.end.parentNode;
-  if (!parent) return;
+  if (!parent || state.anchor.parentNode !== parent) return;
   const nextEntries: EachEntry[] = [];
   const nextByKey = new Map<string, EachEntry>();
   for (const item of items) {
@@ -1094,13 +1127,20 @@ export function claimExistingDom(
   root: Node,
   options: ClaimOptions = {},
 ): CompiledClaimInstance {
+  // Stop a live capture before staged validation so a failed claim cannot
+  // leave its root listener installed. The captured records are replayed only
+  // after the complete plan has attached successfully.
+  const capturedEvents = eventList(options.preUpgradeEvents);
+  const attachOptions = capturedEvents === options.preUpgradeEvents
+    ? options
+    : { ...options, preUpgradeEvents: capturedEvents };
   const program = assertCompiledProgram(raw);
   const recovery = options.recovery ?? 'throw';
   let recovered = false;
   for (;;) {
     try {
       const plan = createPlan(program, host, root);
-      return attachPlan(plan, host, root, options);
+      return attachPlan(plan, host, root, attachOptions);
     } catch (error) {
       if (!(error instanceof PartProgramClaimError)) throw error;
       options.onMismatch?.(error);

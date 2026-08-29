@@ -365,6 +365,48 @@ Deno.test('alpha.3 claim preserves identity, live state, and one pre-upgrade eve
   assertEquals(dom.h1Value.data, '2');
 });
 
+Deno.test('alpha.3 claim resolves fixed sinks through expanded dynamic anchors', () => {
+  const program = {
+    version: 1,
+    tag: 'oe-alpha3-path',
+    template: [{
+      k: 'el',
+      tag: 'section',
+      attrs: [],
+      children: [
+        { k: 'part', index: 0 },
+        { k: 'el', tag: 'input', attrs: [], children: [] },
+      ],
+    }],
+    parts: [
+      { k: 'text', index: 0, signal: 'label' },
+      { k: 'prop', index: 1, signal: 'label', name: 'value', path: [0, 1] },
+      { k: 'event', index: 2, event: 'click', handler: 'increment', path: [0, 1] },
+    ],
+  };
+  const doc = new TestDocument();
+  const root = element(doc, 'host');
+  const section = element(doc, 'section');
+  section.appendChild(doc.createComment('oe:p0'));
+  const labelText = doc.createTextNode('ready');
+  section.appendChild(labelText);
+  const input = element(doc, 'input', [['value', 'ready']]);
+  input.simulateUserInput('typed before claim');
+  section.appendChild(input);
+  root.appendChild(section);
+  const controls = makeHost(doc.counters);
+
+  const instance = claimExistingDom(program, controls.host, root as unknown as Node);
+  assertStrictEquals(section.childNodes[2] as TestElement, input);
+  assertEquals(input.value, 'typed before claim');
+  controls.label.value = 'after claim';
+  assertEquals(labelText.data, 'after claim');
+  assertEquals(input.value, 'after claim');
+  input.dispatchEvent(new TestEvent('click'));
+  assertEquals(controls.clicks, 1);
+  instance.dispose();
+});
+
 Deno.test('alpha.3 claim reads the owned fixture and server content without a second renderer', async () => {
   const program = await loadProgram();
   const counters: Counters = {
@@ -401,6 +443,43 @@ Deno.test('alpha.3 claim stages validation before resources and reports a struct
   assertEquals(doc.counters.createdElements, beforeElements);
 });
 
+Deno.test('alpha.3 failed claim stops a live pre-upgrade capture', async () => {
+  const program = await loadProgram();
+  const doc = new TestDocument();
+  const dom = makeSsrDom(doc);
+  dom.h1.childNodes[0] = doc.createTextNode('Count? ');
+  dom.h1.childNodes[0].parentNode = dom.h1;
+  const { host } = makeHost(doc.counters);
+  const capture = capturePreUpgradeEvents(
+    dom.root as unknown as EventTarget,
+    ['click'],
+  );
+
+  assertThrows(
+    () =>
+      claimExistingDom(program, host, dom.root as unknown as Node, {
+        preUpgradeEvents: capture,
+      }),
+    PartProgramClaimError,
+  );
+  dom.button.dispatchEvent(new TestEvent('click'));
+  assertEquals(capture.events.length, 0);
+
+  const invalidCapture = capturePreUpgradeEvents(
+    dom.root as unknown as EventTarget,
+    ['click'],
+  );
+  assertThrows(
+    () =>
+      claimExistingDom({ version: 2 }, host, dom.root as unknown as Node, {
+        preUpgradeEvents: invalidCapture,
+      }),
+    Error,
+  );
+  dom.button.dispatchEvent(new TestEvent('click'));
+  assertEquals(invalidCapture.events.length, 0);
+});
+
 Deno.test('alpha.3 owning recovery replaces only a bounded Region range', async () => {
   const program = await loadProgram();
   const doc = new TestDocument();
@@ -426,6 +505,32 @@ Deno.test('alpha.3 owning recovery replaces only a bounded Region range', async 
   count.value = 1;
   const replacement = dom.div.childNodes[4] as TestElement;
   assertEquals((replacement.childNodes[0] as TestText).data, 'positive');
+});
+
+Deno.test('alpha.3 detached Region anchors stop updates at the owning boundary', async () => {
+  const program = await loadProgram();
+  const doc = new TestDocument();
+  const dom = makeSsrDom(doc);
+  const { host, count, items } = makeHost(doc.counters);
+  const instance = claimExistingDom(program, host, dom.root as unknown as Node);
+
+  const whenAnchor = dom.div.childNodes[3];
+  dom.div.removeChild(whenAnchor);
+  const parity = dom.parity;
+  const beforeWhenElements = doc.counters.createdElements;
+  count.value = 1;
+  assertStrictEquals(dom.div.childNodes[3], parity);
+  assertEquals((parity.childNodes[0] as TestText).data, 'zero');
+  assertEquals(doc.counters.createdElements, beforeWhenElements);
+
+  const listAnchor = dom.ul.childNodes[0];
+  dom.ul.removeChild(listAnchor);
+  const initialItems = [...dom.items];
+  items.value = [{ id: 'c', text: 'gamma' }];
+  assertEquals(dom.ul.childNodes.length, 3);
+  assertStrictEquals(dom.ul.childNodes[0], initialItems[0]);
+  assertStrictEquals(dom.ul.childNodes[1], initialItems[1]);
+  instance.dispose();
 });
 
 Deno.test('alpha.3 owning recovery can replace only the root owner after root drift', async () => {
@@ -477,6 +582,25 @@ Deno.test('alpha.3 claim rejects duplicate keyed Region data before attaching', 
   );
   assertEquals(error.ownerKind, 'region');
   assertStringIncludes(error.message, 'duplicate key');
+  assertEquals(counters.subscriptions, 0);
+  assertEquals(counters.listenerAdds, 0);
+});
+
+Deno.test('alpha.3 claim rejects inherited keyed Region fields before attaching', async () => {
+  const program = await loadProgram();
+  const doc = new TestDocument();
+  const dom = makeSsrDom(doc);
+  const counters = doc.counters;
+  const controls = makeHost(counters);
+  const inherited = Object.create({ id: 'a', text: 'alpha' }) as { id: string; text: string };
+  controls.items.value = [inherited];
+
+  const error = assertThrows(
+    () => claimExistingDom(program, controls.host, dom.root as unknown as Node),
+    PartProgramClaimError,
+  );
+  assertEquals(error.ownerKind, 'region');
+  assertStringIncludes(error.message, 'item needs');
   assertEquals(counters.subscriptions, 0);
   assertEquals(counters.listenerAdds, 0);
 });
