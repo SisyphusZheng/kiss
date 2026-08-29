@@ -26,7 +26,7 @@
   },
   "staticOutput": {
     "runtimeBytes": 0,
-    "transferredBytes": 198,
+    "transferredBytes": 219,
     "scriptTags": 0
   },
   "environment": {
@@ -68,13 +68,13 @@
         "subscriptions": 2
       },
       "timing": {
-        "serializeMs": 0.185,
-        "freshMs": 0.289,
-        "claimMs": 0.201,
-        "updateMs": 0.03,
-        "churnMs": 0.888
+        "serializeMs": 0.193,
+        "freshMs": 0.944,
+        "claimMs": 1.805,
+        "updateMs": 0.033,
+        "churnMs": 3.594
       },
-      "heapGrowthBytes": 2138472,
+      "heapGrowthBytes": 0,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
       "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul></ul></div>"
@@ -106,13 +106,13 @@
         "subscriptions": 3
       },
       "timing": {
-        "serializeMs": 0.056,
-        "freshMs": 0.055,
-        "claimMs": 0.024,
-        "updateMs": 0.091,
-        "churnMs": 0.966
+        "serializeMs": 0.124,
+        "freshMs": 0.164,
+        "claimMs": 0.046,
+        "updateMs": 0.243,
+        "churnMs": 2.722
       },
-      "heapGrowthBytes": 0,
+      "heapGrowthBytes": 1720624,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
       "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul></ul></div>"
@@ -144,13 +144,13 @@
         "subscriptions": 3
       },
       "timing": {
-        "serializeMs": 0.07,
-        "freshMs": 0.102,
-        "claimMs": 0.129,
-        "updateMs": 0.089,
-        "churnMs": 0.755
+        "serializeMs": 0.077,
+        "freshMs": 0.114,
+        "claimMs": 0.458,
+        "updateMs": 0.096,
+        "churnMs": 4.914
       },
-      "heapGrowthBytes": 3119336,
+      "heapGrowthBytes": 0,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
       "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul><!--oe:p3--><li>alpha</li><li>beta</li><li>gamma</li><li>delta</li><!--oe:/p3--></ul></div>"
@@ -182,20 +182,20 @@
         "subscriptions": 4
       },
       "timing": {
-        "serializeMs": 0.027,
-        "freshMs": 0.013,
-        "claimMs": 0.038,
-        "updateMs": 0.038,
-        "churnMs": 1.614
+        "serializeMs": 0.03,
+        "freshMs": 0.018,
+        "claimMs": 0.042,
+        "updateMs": 0.041,
+        "churnMs": 3.488
       },
-      "heapGrowthBytes": 5460896,
+      "heapGrowthBytes": 5346152,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
       "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul><!--oe:p4--><li>item-00</li><li>item-01</li><li>item-02</li><li>item-03</li><li>item-04</li><li>item-05</li><li>item-06</li><li>item-07</li><li>item-08</li><li>item-09</li><li>item-10</li><li>item-11</li><!--oe:/p4--></ul></div>"
     }
   ],
   "resources": {
-    "maxHeapGrowthBytes": 5460896,
+    "maxHeapGrowthBytes": 5346152,
     "maxRetainedSubscriptions": 0,
     "maxRetainedListeners": 0
   },

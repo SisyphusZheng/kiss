@@ -184,6 +184,15 @@ export function evaluateV044Performance(
         continue;
       }
       if (!evidence.passed) failures.push(`browser evidence failed for ${browserName}`);
+      if (!evidence.claimReady) {
+        failures.push(`${browserName} browser claim readiness failed`);
+      }
+      if (!evidence.identityPreserved) {
+        failures.push(`${browserName} browser identity preservation failed`);
+      }
+      if (!evidence.liveValuePreserved) {
+        failures.push(`${browserName} browser live value preservation failed`);
+      }
       if (evidence.pageErrors.length > budgets.maxBrowserPageErrors) {
         failures.push(
           `${browserName} browser page errors ${evidence.pageErrors.length} exceeds ` +

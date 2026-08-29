@@ -48,4 +48,19 @@ Deno.test('alpha.7 qualification rejects critical regressions and incomplete evi
     requireBrowsers: true,
   });
   assertStringIncludes(browserFailures.join('\n'), 'browser evidence');
+
+  const forgedBrowser = structuredClone(report) as V044PerformanceReport;
+  forgedBrowser.browser = (['chromium', 'firefox', 'webkit'] as const).map((browser) => ({
+    browser,
+    passed: true,
+    pageErrors: [],
+    claimReady: true,
+    identityPreserved: browser !== 'firefox',
+    liveValuePreserved: true,
+    serializedBytes: 384,
+  }));
+  const continuityFailures = evaluateV044Performance(forgedBrowser, definition, {
+    requireBrowsers: true,
+  });
+  assertStringIncludes(continuityFailures.join('\n'), 'identity preservation');
 });
