@@ -6,7 +6,7 @@
  * directly — the ambient @element/@property decorators are compile-time-only
  * input and throw at module evaluation outside the adapter transform.
  */
-import { compileElementSpike } from '../../../../packages/adapter-vite/src/internal/compiler/compile.ts';
+import { compileElementSpike } from '../../../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 
 const ELEMENT_URL = new URL('../../../../packages/element/src/index.ts', import.meta.url).href;
 const APP_URL = new URL('../../../../packages/app/src/index.ts', import.meta.url).href;

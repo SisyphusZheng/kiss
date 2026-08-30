@@ -148,6 +148,7 @@
       "packages/adapter-vite/__fixtures__/request-time/",
       "packages/adapter-vite/__fixtures__/static-only/",
       "packages/adapter-vite/__tests__/compiled-element-spike.test.ts",
+      "packages/adapter-vite/__tests__/compiler-semantic-core-boundary.test.ts",
       "packages/adapter-vite/__tests__/v044-delivery/",
       "packages/app/",
       "packages/ui/",

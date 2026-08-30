@@ -18,7 +18,11 @@
 
 import ts from 'typescript';
 import type { Plugin } from 'vite';
-import { CompiledSpikeError, compileElementSpike, type CompileSpikeResult } from './compile.ts';
+import {
+  CompiledSpikeError,
+  compileElementSpike,
+  type CompileSpikeResult,
+} from './semantic-core/compile.ts';
 
 export const COMPILED_ELEMENT_MARKER = '@element(';
 

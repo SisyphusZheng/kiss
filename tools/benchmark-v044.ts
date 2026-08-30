@@ -11,7 +11,7 @@
  */
 
 import { fromFileUrl, join, resolve } from '@std/path';
-import { compileElementSpike } from '../packages/adapter-vite/src/internal/compiler/compile.ts';
+import { compileElementSpike } from '../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 import {
   claimExistingDom,
   createFreshDom,

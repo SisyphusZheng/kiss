@@ -397,7 +397,9 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
   await t.step(
     'list Regions admit multi-field item slots and fail closed on non-item expressions',
     async () => {
-      const { compileElementSpike } = await import('../src/internal/compiler/compile.ts');
+      const { compileElementSpike } = await import(
+        '../src/internal/compiler/semantic-core/compile.ts'
+      );
       // alpha.8: item templates carry one ival/iattr slot per item field — a row
       // may bind {item.text} twice and per-item attributes (id, href, ...).
       const source = [
@@ -523,8 +525,8 @@ Deno.test('compiled-element alpha.1 - canonical program records and decorator lo
 
 Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe identity', async () => {
   const [{ compileElementSpike }, { validatePartProgram }] = await Promise.all([
-    import('../src/internal/compiler/compile.ts'),
-    import('../src/internal/compiler/program.ts'),
+    import('../src/internal/compiler/semantic-core/compile.ts'),
+    import('../src/internal/compiler/semantic-core/program.ts'),
   ]);
   const source = await readFixture('counter.tsx');
   const program = compileElementSpike(source, '/project/app/islands/counter.tsx').program;
@@ -584,7 +586,7 @@ Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe 
 
 Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', async (t) => {
   const { compileElementSpike, CompiledSpikeError } = await import(
-    '../src/internal/compiler/compile.ts'
+    '../src/internal/compiler/semantic-core/compile.ts'
   );
 
   const prelude = [
