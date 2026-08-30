@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import StandardsRegistryPage from '../../components/article-routes/architecture-standards-registry.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Reference', label: 'WC Standards Contract', order: 80 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class StandardsRegistryPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'architecture', slug: 'standards-registry' } as const;
-}
-
-export const tagName = 'standards-registry-page';
-defineCustomElement(tagName, StandardsRegistryPage);
-export default StandardsRegistryPage;
+export default definePage(StandardsRegistryPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('architecture', 'standards-registry', locale) };
+  },
+});

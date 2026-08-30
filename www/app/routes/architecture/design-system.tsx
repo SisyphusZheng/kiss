@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import DesignSystemPage from '../../components/article-routes/architecture-design-system.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Reference', label: 'Design System', order: 15 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class DesignSystemPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'architecture', slug: 'design-system' } as const;
-}
-
-export const tagName = 'design-system-page';
-defineCustomElement(tagName, DesignSystemPage);
-export default DesignSystemPage;
+export default definePage(DesignSystemPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('architecture', 'design-system', locale) };
+  },
+});

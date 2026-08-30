@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import ComparisonPage from '../../components/article-routes/architecture-comparison.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Principles', label: 'Comparison', order: 20 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class ComparisonPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'architecture', slug: 'comparison' } as const;
-}
-
-export const tagName = 'comparison-page';
-defineCustomElement(tagName, ComparisonPage);
-export default ComparisonPage;
+export default definePage(ComparisonPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('architecture', 'comparison', locale) };
+  },
+});
