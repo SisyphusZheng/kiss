@@ -18,7 +18,7 @@
  */
 declare function element(tag: string): ClassDecorator;
 
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import { compiledStyle, HERO_CURSOR_CSS } from '../site-ui/compiled-style.ts';
 import { readIslandState, writeIslandState } from '../site-ui/island-state.ts';

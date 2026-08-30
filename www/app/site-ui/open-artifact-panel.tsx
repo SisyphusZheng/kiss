@@ -2,7 +2,7 @@
 /** A private WWW frame for inspectable product evidence, never a UI export. */
 declare function element(tag: string): ClassDecorator;
 
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 
 @element('open-artifact-panel')

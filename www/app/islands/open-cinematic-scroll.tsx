@@ -2,7 +2,7 @@
 /** One passive coordinator for the Cinematic V2 native scroll timeline. */
 declare function element(tag: string): ClassDecorator;
 
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
 import { compiledStyle } from '../site-ui/compiled-style.ts';
 import { readIslandState, writeIslandState } from '../site-ui/island-state.ts';
 import { defineIslandConfig } from '@openelement/app';
