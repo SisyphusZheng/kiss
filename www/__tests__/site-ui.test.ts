@@ -15,7 +15,7 @@ for (const [tagName, path] of siteModules) {
   });
 }
 
-Deno.test('open-layout declares the compiler-owned hydrated app-shell contract', async () => {
+Deno.test('open-layout is an explicitly hydrated compiled app-shell island', async () => {
   const url = new URL('../app/islands/open-layout.tsx', import.meta.url);
   const source = await Deno.readTextFile(url);
   assertStringIncludes(
@@ -24,4 +24,11 @@ Deno.test('open-layout declares the compiler-owned hydrated app-shell contract',
   );
   assertStringIncludes(source, "@element('open-layout')");
   assertStringIncludes(source, 'export default class OpenLayout extends OpenElement');
+  const result = compileElementSpike(source, url.pathname);
+  assertEquals(result.program.tag, 'open-layout');
+  assertEquals(result.program.regions.length, 2);
+  assertEquals(
+    result.program.metadata.properties.map((property) => property.name),
+    ['headerNav', 'footerText', 'siteName'],
+  );
 });
