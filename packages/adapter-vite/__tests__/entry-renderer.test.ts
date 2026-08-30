@@ -420,7 +420,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   // host-prop channel is gone (the #1129/#1130 guarantee is structural).
   assertStringIncludes(
     code,
-    '__ssr(__tag, __pageProps($pageIndex, { data: __data, actionData: undefined, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue })',
+    '__ssr(__tag, __pageProps($pageIndex, { data: __data, actionData: undefined, params: __params, request: c.req.raw, locale: __localeFromPath(c.req.path, __getDefaultLocale()), route: __routeContext, meta: __routeMetaValue })',
   );
   assertFalse(code.includes('__openElementData'));
   assertEquals(code.includes('module?.meta'), false);
@@ -447,7 +447,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   );
   assertStringIncludes(
     code,
-    '__pageProps(info.module, { data, actionData: undefined, params, request: options.request, route: loadContext.route, meta: routeMeta })',
+    '__pageProps(info.module, { data, actionData: undefined, params, request: options.request, locale, route: loadContext.route, meta: routeMeta })',
   );
   assertStringIncludes(code, 'filePath: "index.ts"');
   assertStringIncludes(

@@ -188,7 +188,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     ctx,
     `__pageProps(${ctx.route.varName}, { data: __data, actionData: ${
       isAction ? '__actionData' : 'undefined'
-    }, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue })`,
+    }, params: __params, request: c.req.raw, locale: __localeFromPath(c.req.path, __getDefaultLocale()), route: __routeContext, meta: __routeMetaValue })`,
     '    ',
   );
   lines.push('');
@@ -275,7 +275,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     lines.push(`    if (typeof __page.error === "function") {`);
     lines.push(`      try {`);
     lines.push(
-      `        let __errorHtml = __ssr(__tag, __pageErrorProps(${ctx.route.varName}, err, { data: undefined, actionData: undefined, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue }), { route: ${pathLiteral} })`,
+      `        let __errorHtml = __ssr(__tag, __pageErrorProps(${ctx.route.varName}, err, { data: undefined, actionData: undefined, params: __params, request: c.req.raw, locale: __localeFromPath(c.req.path, __getDefaultLocale()), route: __routeContext, meta: __routeMetaValue }), { route: ${pathLiteral} })`,
     );
     if (matchingRenderers.length > 0) {
       for (const renderer of matchingRenderers) {

@@ -203,6 +203,8 @@ export interface PagePropsContext<
   actionData: unknown;
   params: Params;
   request?: Request;
+  /** Resolved application locale for this render, when i18n is configured. */
+  locale?: string;
   route: PageRouteContext;
   meta: PageMeta;
 }

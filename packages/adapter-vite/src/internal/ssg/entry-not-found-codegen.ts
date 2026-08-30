@@ -55,7 +55,7 @@ export function renderNotFoundRoute(
     `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
   );
   lines.push(
-    `    let __content = __ssr(__tag, __pageProps(${route.varName}, { data: __data, actionData: undefined, params: __params, request: c.req.raw, route: __routeContext, meta: __routeMetaValue }), { route: ${
+    `    let __content = __ssr(__tag, __pageProps(${route.varName}, { data: __data, actionData: undefined, params: __params, request: c.req.raw, locale: __localeFromPath(c.req.path, __getDefaultLocale()), route: __routeContext, meta: __routeMetaValue }), { route: ${
       quoteGeneratedJavaScriptValue(route.path)
     } })`,
   );

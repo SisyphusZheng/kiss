@@ -111,7 +111,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '    const data = typeof info.module.loader === "function" ? await info.module.loader(loadContext) : undefined;',
   );
   lines.push(
-    '    const props = __pageProps(info.module, { data, actionData: undefined, params, request: options.request, route: loadContext.route, meta: routeMeta });',
+    '    const props = __pageProps(info.module, { data, actionData: undefined, params, request: options.request, locale, route: loadContext.route, meta: routeMeta });',
   );
   lines.push('    if (locale) props.locale = locale;');
   lines.push('    let content = __ssr(info.tagName, props, { route: routePath });');
@@ -205,7 +205,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   lines.push('    if (typeof page.error === "function") {');
   lines.push('      try {');
   lines.push(
-    '        const errorContent = __renderAppShell(__ssr(info.tagName, __pageErrorProps(info.module, error, { data: undefined, actionData: undefined, params, request: options.request, route: loadContext.route, meta: routeMeta }), { route: routePath }), routePath, { locale, routeMeta });',
+    '        const errorContent = __renderAppShell(__ssr(info.tagName, __pageErrorProps(info.module, error, { data: undefined, actionData: undefined, params, request: options.request, locale, route: loadContext.route, meta: routeMeta }), { route: routePath }), routePath, { locale, routeMeta });',
   );
   lines.push(
     '        const errorComponentCount = (errorContent.match(/<template shadowrootmode="open"/g) || []).length;',
