@@ -1,321 +1,10 @@
-export const meta = { section: '', label: 'Roadmap', order: 10 };
-export const tagName = 'page-roadmap';
-
-// Strategic anchors: Web Components-native, static-first application framework.
-
-import { defineCustomElement, OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/element';
+import { definePage } from '@openelement/app';
 import { PUBLISHED_PACKAGE_VERSION, PUBLISHED_STABLE_VERSION } from '../data/version.ts';
-import '@openelement/ui/open-badge';
-import '@openelement/ui/open-button';
-import '@openelement/site-ui/open-standards-visual.tsx';
-import '@openelement/site-ui/open-artifact-panel.tsx';
-import '@openelement/site-ui/open-section-frame.tsx';
-import '@openelement/site-ui/open-reading-shell.tsx';
-import '@openelement/site-ui/open-page-rail.tsx';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
+import RoadmapPage from '../components/page-roadmap.tsx';
 
-const pageSheet = new StyleSheet();
-pageSheet.replaceSync(`
-  :host {
-    display: block;
-    color: var(--text-primary);
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  h1,
-  h2,
-  h3,
-  p {
-    margin-block-start: 0;
-  }
-
-  .now-callout {
-    margin: var(--size-5) 0 var(--size-6);
-    padding: var(--size-4) var(--size-5);
-    border: var(--border-size-1) solid var(--border);
-    border-inline-start: var(--size-1) solid var(--brand);
-    border-radius: var(--radius-2);
-  }
-
-  .now-callout .now-title {
-    margin: var(--size-3) 0 var(--size-2);
-    color: var(--text-primary);
-    font-weight: var(--font-weight-7);
-    line-height: 1.3;
-  }
-
-  .now-callout .now-copy {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-  }
-
-  .metric-label,
-  .rule-label,
-  .rule-title {
-    color: var(--brand);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-    letter-spacing: 0;
-    text-transform: uppercase;
-  }
-
-  .now p,
-  .tl-copy,
-  .truth p,
-  .truth li,
-  .rule-copy,
-  .rule-text,
-  .matrix-copy {
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-  }
-
-  /* vertical timeline: square nodes, evidence-first versions */
-  .roadmap-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, .38fr);
-    gap: clamp(2rem, 6vw, 5rem);
-    align-items: start;
-  }
-
-  .timeline {
-    position: relative;
-    display: grid;
-  }
-
-  .timeline::before {
-    content: "";
-    position: absolute;
-    inset-block: var(--size-2);
-    inset-inline-start: calc(var(--size-2) / 2);
-    width: var(--border-size-1);
-    background: var(--border);
-  }
-
-  .tl-row {
-    position: relative;
-    padding: var(--size-5) 0 var(--size-5) var(--size-8);
-  }
-
-  .tl-node {
-    position: absolute;
-    inset-inline-start: 0;
-    inset-block-start: calc(var(--size-5) + var(--size-3));
-    width: var(--size-2);
-    height: var(--size-2);
-  }
-
-  .tl-stable .tl-node {
-    background: var(--brand);
-  }
-
-  .tl-next .tl-node {
-    border: var(--border-size-2) solid var(--violet-8);
-    background: var(--bg-base);
-  }
-
-  .tl-next .tl-node::after {
-    content: "";
-    position: absolute;
-    inset: var(--size-1);
-    background: var(--violet-8);
-  }
-
-  .tl-planned .tl-node {
-    border: var(--border-size-2) solid color-mix(in srgb, var(--violet-5) 55%, transparent);
-  }
-
-  .tl-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--size-3) var(--size-4);
-  }
-
-  .tl-version {
-    color: var(--text-primary);
-    font-size: clamp(2rem, 4.2vw, 3.6rem);
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -.03em;
-  }
-
-  .tl-next .tl-version {
-    color: var(--violet-8);
-  }
-
-  .tl-planned .tl-version {
-    color: transparent;
-    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--violet-5) 55%, transparent);
-  }
-
-  .tl-theme {
-    color: var(--violet-8);
-    font-family: var(--font-serif);
-    font-size: clamp(1.25rem, 1.9vw, 1.7rem);
-    font-style: italic;
-    font-weight: 400;
-  }
-
-  .tl-planned .tl-theme {
-    color: var(--violet-5);
-  }
-
-  .stamp {
-    padding: var(--size-1) var(--size-3);
-    border-radius: var(--radius-1);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-7);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  .stamp-current {
-    background: var(--brand);
-    color: var(--on-brand);
-  }
-
-  .stamp-next {
-    border: var(--border-size-1) solid var(--violet-8);
-    color: var(--violet-8);
-  }
-
-  .tl-status {
-    color: var(--text-muted);
-    font-size: var(--font-size-00);
-    letter-spacing: .1em;
-    text-transform: uppercase;
-  }
-
-  .tl-copy {
-    max-width: 560px;
-    margin-block: var(--size-3) 0;
-  }
-
-  .rule-callout {
-    position: sticky;
-    top: calc(var(--nav-height) + var(--size-6));
-    padding: var(--size-5);
-    border: var(--border-size-1) solid color-mix(in srgb, var(--violet-5) 45%, transparent);
-    border-radius: var(--radius-2);
-    background: var(--violet-0);
-    box-shadow: inset var(--size-1) 0 0 var(--brand);
-  }
-
-  .rule-title {
-    margin-block-end: var(--size-3);
-    color: var(--violet-8);
-  }
-
-  .rule-text {
-    margin-block-end: 0;
-  }
-
-  .truth-grid {
-    display: grid;
-    grid-template-columns: minmax(0, .95fr) minmax(0, .95fr) minmax(0, .72fr);
-    gap: var(--size-5);
-  }
-
-  .truth h2 {
-    margin-block: 0 var(--size-4);
-    color: var(--text-primary);
-    font-size: var(--font-size-3);
-    line-height: 1.08;
-    letter-spacing: 0;
-  }
-
-  .truth ul {
-    display: grid;
-    gap: var(--size-2);
-    margin: 0;
-    padding-inline-start: var(--size-5);
-  }
-
-  .matrix {
-    display: grid;
-    border-block-start: var(--border-size-1) solid var(--border);
-  }
-
-  .matrix-row {
-    display: grid;
-    grid-template-columns: minmax(132px, .28fr) minmax(0, 1fr);
-    gap: var(--size-5);
-    padding-block: var(--size-5);
-    border-block-end: var(--border-size-1) solid var(--border);
-  }
-
-  .matrix-row:last-child {
-    border-block-end: 0;
-  }
-
-  .visual-grid {
-    display: grid;
-    grid-template-columns: minmax(0, .88fr) minmax(0, 1fr);
-    gap: var(--size-5);
-  }
-
-  .rule-list {
-    display: grid;
-    gap: var(--size-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .rule-list li {
-    display: grid;
-    grid-template-columns: minmax(110px, .32fr) minmax(0, 1fr);
-    gap: var(--size-4);
-    padding-block: var(--size-4);
-    border-block-end: var(--border-size-1) solid var(--border);
-  }
-
-  .rule-list li:last-child {
-    border-block-end: 0;
-  }
-
-  .nav-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--size-3);
-    width: min(1180px, calc(100% - 3rem));
-    margin: clamp(4rem, 10vh, 8rem) auto 0;
-    padding-block-end: clamp(3rem, 8vh, 6rem);
-  }
-
-  @media (max-width: 1120px) {
-    .roadmap-grid,
-    .truth-grid,
-    .visual-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .rule-callout {
-      position: static;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .matrix-row,
-    .rule-list li {
-      grid-template-columns: 1fr;
-      gap: var(--size-2);
-    }
-
-    .tl-row {
-      padding-inline-start: var(--size-6);
-    }
-  }
-`);
+export const meta = { section: '', label: 'Roadmap', order: 10 };
+// Strategic anchors: Web Components-native, static-first application framework.
 
 type TimelineEntry = {
   version: string;
@@ -325,6 +14,22 @@ type TimelineEntry = {
   stamp?: 'CURRENT' | 'NEXT';
   status?: string;
 };
+
+interface RoadmapTimelineItem {
+  key: string;
+  rowClass: string;
+  version: string;
+  theme: string;
+  stampClass: string;
+  stampLabel: string;
+  copy: string;
+  status: string;
+}
+
+interface RoadmapListItem {
+  key: string;
+  value: string;
+}
 
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
@@ -583,199 +288,91 @@ const content = {
   },
 };
 
-export class RoadmapPage extends OpenElement {
-  static override styles = [pageSheet];
+export default definePage(RoadmapPage, {
+  props({ locale }) {
+    const resolved = contentLocale(locale ?? 'en');
+    const t = content[resolved];
+    const timeline: RoadmapTimelineItem[] = entries[resolved].map((phase) => {
+      // The current-line stamp follows the bump-maintained anchor
+      // (PUBLISHED_PACKAGE_VERSION) so a release bump re-marks the timeline
+      // without manual edits.
+      const stamp = phase.version === PUBLISHED_PACKAGE_VERSION ? 'CURRENT' : phase.stamp;
+      return {
+        key: phase.version,
+        rowClass: `tl-row tl-${phase.state}`,
+        version: phase.version,
+        theme: phase.theme,
+        stampClass: stamp ? `stamp stamp-${stamp.toLowerCase()}` : 'stamp',
+        stampLabel: stamp ? t.stamps[stamp] : '',
+        copy: phase.copy,
+        status: phase.status ?? '',
+      };
+    });
+    const listItems = (items: string[]): RoadmapListItem[] =>
+      items.map((value) => ({
+        key: value,
+        value,
+      }));
 
-  override render() {
-    const locale = contentLocale(this._getLocale('en'));
-    const t = content[locale];
-    const timeline = entries[locale];
-    return (
-      <main>
-        <open-reading-shell
-          rail
-          footer
-          metadata={JSON.stringify({
-            breadcrumb: 'Project',
-            title: t.pageTitle,
-            lede: t.heroLede,
-          })}
-        >
-          <open-page-rail slot='rail' items={t.railItems}></open-page-rail>
-
-          <section id='release-line'>
-            <open-section-frame>
-              <span slot='index'>{t.releaseLineIndex}</span>
-              <span slot='title'>{t.releaseLineTitle}</span>
-              <span slot='copy'>
-                {t.releaseLineCopy}
-              </span>
-              <div class='now-callout'>
-                <open-badge tone='warning'>{t.freezeBadge}</open-badge>
-                <p class='now-title'>
-                  {t.nowTitle}
-                </p>
-                <p class='now-copy'>
-                  {t.nowCopy(PUBLISHED_STABLE_VERSION)}
-                </p>
-              </div>
-              <div class='roadmap-grid'>
-                <div class='timeline' aria-label={t.timelineAria}>
-                  {timeline.map((phase) => {
-                    // The current-line stamp follows the bump-maintained anchor
-                    // (PUBLISHED_PACKAGE_VERSION) so a release bump re-marks the
-                    // timeline without manual edits.
-                    const stamp = phase.version === PUBLISHED_PACKAGE_VERSION
-                      ? 'CURRENT'
-                      : phase.stamp;
-                    return (
-                      <div class={`tl-row tl-${phase.state}`}>
-                        <span class='tl-node' aria-hidden='true'></span>
-                        <div class='tl-head'>
-                          <span class='tl-version'>{phase.version}</span>
-                          {stamp
-                            ? (
-                              <span class={`stamp stamp-${stamp.toLowerCase()}`}>
-                                {t.stamps[stamp]}
-                              </span>
-                            )
-                            : null}
-                          <span class='tl-theme'>{phase.theme}</span>
-                        </div>
-                        <p class='tl-copy'>{phase.copy}</p>
-                        {phase.status ? <span class='tl-status'>{phase.status}</span> : null}
-                      </div>
-                    );
-                  })}
-                </div>
-                <aside class='rule-callout'>
-                  <p class='rule-title'>{t.designRuleTitle}</p>
-                  <p class='rule-text'>
-                    {t.designRuleText}
-                  </p>
-                </aside>
-              </div>
-            </open-section-frame>
-          </section>
-
-          <section id='product-boundary'>
-            <open-section-frame>
-              <span slot='index'>{t.boundaryIndex}</span>
-              <span slot='title'>{t.boundaryTitle}</span>
-              <span slot='copy'>
-                {t.boundaryCopy}
-              </span>
-              <div class='truth-grid'>
-                <open-artifact-panel class='truth'>
-                  <span slot='label'>{t.inProductLabel}</span>
-                  <h2>{t.inProductTitle}</h2>
-                  <ul>
-                    {t.inProductItems.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                </open-artifact-panel>
-
-                <open-artifact-panel class='truth'>
-                  <span slot='label'>{t.outScopeLabel}</span>
-                  <h2>{t.outScopeTitle}</h2>
-                  <ul>
-                    {t.outScopeItems.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                </open-artifact-panel>
-
-                <open-artifact-panel class='truth'>
-                  <span slot='label'>{t.siteRuleLabel}</span>
-                  <h2>{t.siteRuleTitle}</h2>
-                  <p>
-                    {t.siteRuleText}
-                  </p>
-                </open-artifact-panel>
-              </div>
-            </open-section-frame>
-          </section>
-
-          <section id='decision-matrix'>
-            <open-section-frame>
-              <span slot='index'>{t.matrixIndex}</span>
-              <span slot='title'>{t.matrixTitle}</span>
-              <span slot='copy'>
-                {t.matrixCopy}
-              </span>
-              <div class='matrix'>
-                <div class='matrix-row'>
-                  <span class='metric-label'>{t.shipLabel}</span>
-                  <span class='matrix-copy'>
-                    {t.shipCopy}
-                  </span>
-                </div>
-                <div class='matrix-row'>
-                  <span class='metric-label'>{t.proveLabel}</span>
-                  <span class='matrix-copy'>
-                    {t.proveCopy}
-                  </span>
-                </div>
-                <div class='matrix-row'>
-                  <span class='metric-label'>{t.freezeLabel}</span>
-                  <span class='matrix-copy'>
-                    {t.freezeCopy}
-                  </span>
-                </div>
-              </div>
-            </open-section-frame>
-          </section>
-
-          <section id='system-visual'>
-            <open-section-frame>
-              <span slot='index'>{t.visualIndex}</span>
-              <span slot='title'>{t.visualTitle}</span>
-              <span slot='copy'>
-                {t.visualCopy}
-              </span>
-              <div class='visual-grid'>
-                <open-artifact-panel>
-                  <span slot='label'>{t.packageMatrixLabel}</span>
-                  <span slot='meta'>{t.productBoundaryMeta}</span>
-                  <open-standards-visual variant='packages' emphasis='high' motion='auto'>
-                  </open-standards-visual>
-                </open-artifact-panel>
-                <open-artifact-panel>
-                  <span slot='label'>{t.releaseDisciplineLabel}</span>
-                  <span slot='meta'>{t.v10PostureMeta}</span>
-                  <ul class='rule-list'>
-                    <li>
-                      <strong class='rule-label'>{t.noDriftLabel}</strong>
-                      <span class='rule-copy'>
-                        {t.noDriftCopy}
-                      </span>
-                    </li>
-                    <li>
-                      <strong class='rule-label'>{t.noGhostsLabel}</strong>
-                      <span class='rule-copy'>
-                        {t.noGhostsCopy}
-                      </span>
-                    </li>
-                    <li>
-                      <strong class='rule-label'>{t.noFogLabel}</strong>
-                      <span class='rule-copy'>
-                        {t.noFogCopy}
-                      </span>
-                    </li>
-                  </ul>
-                </open-artifact-panel>
-              </div>
-            </open-section-frame>
-          </section>
-
-          <nav class='nav-row' slot='footer'>
-            <open-button href='/architecture/architecture'>{t.architecture}</open-button>
-            <open-button href='/changelog'>{t.changelog}</open-button>
-            <open-button href='/guide/deployment'>{t.deployment}</open-button>
-          </nav>
-        </open-reading-shell>
-      </main>
-    );
-  }
-}
-
-defineCustomElement(tagName, RoadmapPage);
-
-export default RoadmapPage;
+    return {
+      metadata: {
+        breadcrumb: 'Project',
+        title: t.pageTitle,
+        lede: t.heroLede,
+      },
+      railItems: (JSON.parse(t.railItems) as Array<{ id: string; label: string }>).map((item) => ({
+        id: item.id,
+        href: `#${item.id}`,
+        label: item.label,
+        depth: '2',
+      })),
+      releaseLineIndex: t.releaseLineIndex,
+      releaseLineTitle: t.releaseLineTitle,
+      releaseLineCopy: t.releaseLineCopy,
+      freezeBadge: t.freezeBadge,
+      nowTitle: t.nowTitle,
+      nowCopy: t.nowCopy(PUBLISHED_STABLE_VERSION),
+      timelineAria: t.timelineAria,
+      timeline,
+      designRuleTitle: t.designRuleTitle,
+      designRuleText: t.designRuleText,
+      boundaryIndex: t.boundaryIndex,
+      boundaryTitle: t.boundaryTitle,
+      boundaryCopy: t.boundaryCopy,
+      inProductLabel: t.inProductLabel,
+      inProductTitle: t.inProductTitle,
+      inProductItems: listItems(t.inProductItems),
+      outScopeLabel: t.outScopeLabel,
+      outScopeTitle: t.outScopeTitle,
+      outScopeItems: listItems(t.outScopeItems),
+      siteRuleLabel: t.siteRuleLabel,
+      siteRuleTitle: t.siteRuleTitle,
+      siteRuleText: t.siteRuleText,
+      matrixIndex: t.matrixIndex,
+      matrixTitle: t.matrixTitle,
+      matrixCopy: t.matrixCopy,
+      shipLabel: t.shipLabel,
+      shipCopy: t.shipCopy,
+      proveLabel: t.proveLabel,
+      proveCopy: t.proveCopy,
+      freezeLabel: t.freezeLabel,
+      freezeCopy: t.freezeCopy,
+      visualIndex: t.visualIndex,
+      visualTitle: t.visualTitle,
+      visualCopy: t.visualCopy,
+      packageMatrixLabel: t.packageMatrixLabel,
+      productBoundaryMeta: t.productBoundaryMeta,
+      releaseDisciplineLabel: t.releaseDisciplineLabel,
+      v10PostureMeta: t.v10PostureMeta,
+      noDriftLabel: t.noDriftLabel,
+      noDriftCopy: t.noDriftCopy,
+      noGhostsLabel: t.noGhostsLabel,
+      noGhostsCopy: t.noGhostsCopy,
+      noFogLabel: t.noFogLabel,
+      noFogCopy: t.noFogCopy,
+      architecture: t.architecture,
+      changelog: t.changelog,
+      deployment: t.deployment,
+    };
+  },
+});
