@@ -8,6 +8,7 @@ const siteModules = [
   ['open-page-hero', '../app/site-ui/open-page-hero.tsx'],
   ['open-page-rail', '../app/site-ui/open-page-rail.tsx'],
   ['open-reading-shell', '../app/site-ui/open-reading-shell.tsx'],
+  ['open-article-view', '../app/site-ui/open-article-view.tsx'],
 ] as const;
 
 for (const [tagName, path] of siteModules) {
