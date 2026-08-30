@@ -35,3 +35,18 @@ Deno.test('open-layout is an explicitly hydrated compiled app-shell island', asy
     ['headerNav', 'footerText', 'siteName'],
   );
 });
+
+Deno.test('open-search keeps its view compiler-owned and its browser state external', async () => {
+  const url = new URL('../app/islands/open-search.tsx', import.meta.url);
+  const source = await Deno.readTextFile(url);
+  assertStringIncludes(
+    source,
+    "defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true })",
+  );
+  assertStringIncludes(source, "@element('open-search')");
+  assertStringIncludes(source, "from './open-search-controller.ts'");
+  const result = compileElementSpike(source, url.pathname);
+  assertEquals(result.program.tag, 'open-search');
+  assertEquals(result.program.metadata.properties, []);
+  assertEquals(result.program.parts.filter((part) => part.k === 'event').length, 3);
+});
