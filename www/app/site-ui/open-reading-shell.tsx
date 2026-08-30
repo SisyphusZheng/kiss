@@ -1,15 +1,21 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW long-form reading shell. */
-import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import { getJson, getStr } from './get-str.ts';
+declare function element(tag: string): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
+import { computed, OpenElement } from '@openelement/element';
+import { compiledStyle } from './compiled-style.ts';
 import type { ReadingMetadata, ReadingNavigation } from './page-contract.ts';
 
 /** Optional v4 editorial accent rendered in Instrument Serif after the title. */
 type ReadingMetadataV4 = ReadingMetadata & { accent?: string };
+type ReadingTag = { key: string; label: string };
 
-export const tagName = 'open-reading-shell';
-const sheet = new StyleSheet();
-sheet.replaceSync(`
+@element('open-reading-shell')
+export default class OpenReadingShell extends OpenElement {
+  static override styles = [compiledStyle(`
   :host{display:block}
   .shell{width:min(1180px,calc(100% - 3rem));margin:auto;padding:clamp(2rem,5vh,4rem) 0 clamp(4rem,9vh,7rem);display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(1.5rem,4vw,3rem)}
   :host([rail]) .shell{grid-template-columns:minmax(0,1fr) 220px}
@@ -42,54 +48,79 @@ sheet.replaceSync(`
     .rail{position:static;order:-1}
     .rail-label{display:none}
   }
-`);
-export default class OpenReadingShell extends OpenElement {
-  static override styles = [sheet];
-  override render() {
-    const metadata = getJson<ReadingMetadataV4>(this, 'metadata');
-    const navigation = getJson<ReadingNavigation>(this, 'navigation');
-    const previous = navigation?.previous?.href ?? getStr(this, 'previous', '');
-    const next = navigation?.next?.href ?? getStr(this, 'next', '');
-    const previousLabel = navigation?.previous?.label ?? getStr(this, 'previous-label', 'Previous');
-    const nextLabel = navigation?.next?.label ?? getStr(this, 'next-label', 'Next');
+`)];
+
+  @property({ reflect: false })
+  metadata: ReadingMetadataV4 = { breadcrumb: '', title: '' };
+  @property({ reflect: false })
+  navigation: ReadingNavigation = {};
+  @property({ reflect: false })
+  previous = '';
+  @property({ reflect: false })
+  next = '';
+  @property({ reflect: false })
+  previousLabel = 'Previous';
+  @property({ reflect: false })
+  nextLabel = 'Next';
+
+  @property({ reflect: false, attribute: false })
+  breadcrumb = computed(() => this.metadata?.breadcrumb ?? '');
+  @property({ reflect: false, attribute: false })
+  pageTitle = computed(() => this.metadata?.title ?? '');
+  @property({ reflect: false, attribute: false })
+  accent = computed(() => this.metadata?.accent ?? '');
+  @property({ reflect: false, attribute: false })
+  lede = computed(() => this.metadata?.lede ?? '');
+  @property({ reflect: false, attribute: false })
+  date = computed(() => this.metadata?.date ?? '');
+  @property({ reflect: false, attribute: false })
+  tags: ReadingTag[] = computed(() =>
+    (this.metadata?.tags ?? []).map((tag) => ({ key: tag, label: tag }))
+  ) as unknown as ReadingTag[];
+  @property({ reflect: false, attribute: false })
+  previousHref = computed(() => this.navigation?.previous?.href ?? this.previous);
+  @property({ reflect: false, attribute: false })
+  nextHref = computed(() => this.navigation?.next?.href ?? this.next);
+  @property({ reflect: false, attribute: false })
+  previousText = computed(() => this.navigation?.previous?.label ?? this.previousLabel);
+  @property({ reflect: false, attribute: false })
+  nextText = computed(() => this.navigation?.next?.label ?? this.nextLabel);
+  @property({ reflect: false, attribute: false })
+  hidePrevious = computed(() => !(this.navigation?.previous?.href ?? this.previous));
+  @property({ reflect: false, attribute: false })
+  hideNext = computed(() => !(this.navigation?.next?.href ?? this.next));
+
+  render() {
     return (
       <div class='shell'>
         <article class='main'>
           <span id='start' tabindex='-1'></span>
           <header class='meta'>
             <slot name='meta'>
-              {metadata
-                ? (
-                  <>
-                    <p class='breadcrumb'>
-                      <span>{metadata.breadcrumb}</span>
-                      <span class='crumb-sep'>/</span>
-                      <span class='crumb-current'>{metadata.title}</span>
-                    </p>
-                    <h1 class='title'>
-                      {metadata.title}
-                      {metadata.accent ? <span class='title-accent'>{metadata.accent}</span> : null}
-                    </h1>
-                    {metadata.lede ? <p class='lede'>{metadata.lede}</p> : null}
-                    {metadata.date || metadata.tags?.length
-                      ? (
-                        <p class='meta-row'>
-                          {metadata.date ? <time>{metadata.date}</time> : null}
-                          {metadata.tags?.map((tag) => <span key={tag}>{tag}</span>)}
-                        </p>
-                      )
-                      : null}
-                  </>
-                )
-                : null}
+              <div>
+                <p class='breadcrumb'>
+                  <span>{this.breadcrumb}</span>
+                  <span class='crumb-sep'>/</span>
+                  <span class='crumb-current'>{this.pageTitle}</span>
+                </p>
+                <h1 class='title'>
+                  {this.pageTitle}
+                  <span class='title-accent'>{this.accent}</span>
+                </h1>
+                <p class='lede'>{this.lede}</p>
+                <p class='meta-row'>
+                  <time>{this.date}</time>
+                  {this.tags.map((tag) => <span key={tag.key}>{tag.label}</span>)}
+                </p>
+              </div>
             </slot>
           </header>
           <slot></slot>
           <footer class='footer'>
             <slot name='footer'>
               <nav class='pager' aria-label='Page navigation'>
-                {previous ? <a href={previous}>← {previousLabel}</a> : <span></span>}
-                {next ? <a href={next}>{nextLabel} →</a> : <span></span>}
+                <a href={this.previousHref} hidden={this.hidePrevious}>← {this.previousText}</a>
+                <a href={this.nextHref} hidden={this.hideNext}>{this.nextText} →</a>
               </nav>
             </slot>
           </footer>
@@ -102,4 +133,3 @@ export default class OpenReadingShell extends OpenElement {
     );
   }
 }
-defineCustomElement(tagName, OpenReadingShell);
