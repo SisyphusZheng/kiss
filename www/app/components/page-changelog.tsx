@@ -84,7 +84,9 @@ export default class PageChangelog extends OpenElement {
               {this.metaSuffix}
             </p>
           </div>
-          <open-page-rail slot='rail' items={this.railItems}></open-page-rail>
+          <div slot='rail'>
+            <open-page-rail items={this.railItems}></open-page-rail>
+          </div>
           <p id='published'>{this.publishedIntro}</p>
           <div class='register' aria-label='Release register'>
             <div class='reg-row reg-current'>

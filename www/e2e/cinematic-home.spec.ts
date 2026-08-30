@@ -37,7 +37,7 @@ test.describe('Cinematic homepage', () => {
 
   test('view-source hero and scroll scenes work without hijacking scroll', async ({ page }) => {
     await page.goto('/');
-    const home = page.locator('open-home-page');
+    const home = page.locator('index-index');
     const dragon = home.locator('open-dragon-live-gaze');
     await expect(dragon).toHaveCount(1);
     await expect(dragon.locator('video')).toHaveCount(1);

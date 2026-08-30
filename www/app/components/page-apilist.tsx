@@ -108,7 +108,9 @@ export default class ApiCorePage extends OpenElement {
           footer
           metadata={this.metadata}
         >
-          <open-page-rail slot='rail' items={this.railItems}></open-page-rail>
+          <div slot='rail'>
+            <open-page-rail items={this.railItems}></open-page-rail>
+          </div>
           <open-section-frame>
             <span slot='index'>{this.s1Index}</span>
             <span slot='title'>{this.s1Title}</span>

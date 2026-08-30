@@ -77,33 +77,31 @@ export default class PageBlogPost extends OpenElement {
           <a href={this.blogHref}>← {this.backLabel}</a>
         </div>
 
-        <open-reading-shell
-          class={this.articleClass}
-          meta
-          rail
-          footer
-          navigation={this.navigation}
-        >
-          <div slot='meta'>
-            <p class='crumb'>
-              <a href={this.blogHref}>{this.breadcrumbLabel}</a>
-              <span class='crumb-sep'>/</span>
-              <span class='crumb-current'>{this.crumbCurrent}</span>
-            </p>
-            <h1 class='post-title'>{this.postTitle}</h1>
-            <p class='post-lede'>{this.lede}</p>
-            <p class='post-meta'>
-              <time>{this.date}</time>
-              {this.tags.map((tag) => <span key={tag.key}>· {tag.label}</span>)}
-            </p>
-          </div>
-          <open-page-rail slot='rail' items={this.railItems}></open-page-rail>
-          <div class='blog-content' innerHTML={this.articleHtml} trustedHtml />
-          <nav class='next-dispatch' aria-label='Next dispatch'>
-            <span class='next-label'>{this.nextDispatchLabel}</span>
-            <a href={this.nextDispatchHref}>{this.nextDispatchText}</a>
-          </nav>
-        </open-reading-shell>
+        <div class={this.articleClass}>
+          <open-reading-shell meta rail footer navigation={this.navigation}>
+            <div slot='meta'>
+              <p class='crumb'>
+                <a href={this.blogHref}>{this.breadcrumbLabel}</a>
+                <span class='crumb-sep'>/</span>
+                <span class='crumb-current'>{this.crumbCurrent}</span>
+              </p>
+              <h1 class='post-title'>{this.postTitle}</h1>
+              <p class='post-lede'>{this.lede}</p>
+              <p class='post-meta'>
+                <time>{this.date}</time>
+                {this.tags.map((tag) => <span key={tag.key}>· {tag.label}</span>)}
+              </p>
+            </div>
+            <div slot='rail'>
+              <open-page-rail items={this.railItems}></open-page-rail>
+            </div>
+            <div class='blog-content' innerHTML={this.articleHtml} trustedHtml />
+            <nav class='next-dispatch' aria-label='Next dispatch'>
+              <span class='next-label'>{this.nextDispatchLabel}</span>
+              <a href={this.nextDispatchHref}>{this.nextDispatchText}</a>
+            </nav>
+          </open-reading-shell>
+        </div>
       </main>
     );
   }

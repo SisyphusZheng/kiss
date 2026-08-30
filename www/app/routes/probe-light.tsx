@@ -23,7 +23,7 @@ declare function element(
 
 import { OpenElement } from '@openelement/element';
 
-@element('page-probe-light', { root: 'light' })
+@element('probe-light', { root: 'light' })
 export default class ProbeLightPage extends OpenElement {
   render() {
     return (

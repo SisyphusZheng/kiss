@@ -155,7 +155,9 @@ export default class RoadmapPage extends OpenElement {
     return (
       <main>
         <open-reading-shell rail footer metadata={this.metadata}>
-          <open-page-rail slot='rail' items={this.railItems}></open-page-rail>
+          <div slot='rail'>
+            <open-page-rail items={this.railItems}></open-page-rail>
+          </div>
 
           <section id='release-line'>
             <open-section-frame>

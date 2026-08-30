@@ -19,7 +19,7 @@
 import { exists } from './lib/fs.ts';
 import { gitTagExists, gitTrackedFiles, isAncestorCommit, runGit } from './lib/git.ts';
 import { normalizeSlashes } from './lib/path.ts';
-import { MOJIBAKE_CHARS, stripComments } from './lib/text.ts';
+import { MOJIBAKE_CHARS } from './lib/text.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
@@ -277,7 +277,11 @@ const currentCheck: DocsTruthCheck = {
 };
 
 // ─── www: current truth in routes ──────────────────────────────────────────
-const sourceRoots = ['www/app/routes', 'www/app/site-ui'];
+const sourceRoots = [
+  'www/app/routes',
+  'www/app/site-ui',
+  'www/app/components/article-routes',
+];
 
 const escapedCurrentVersion = PACKAGE_VERSION.replaceAll('.', '\\.');
 const escapedRegistryVersion = PREVIOUS_PACKAGE_VERSION.replaceAll('.', '\\.');
@@ -361,10 +365,24 @@ async function wwwCheckFile(file: string, issues: { file: string; text: string }
   ) {
     issues.push({ file, text: 'legacy per-page structural CSS' });
   }
-  const isContentRoute = file.startsWith('www/app/routes/guide/') ||
-    file.startsWith('www/app/routes/architecture/');
-  if (isContentRoute && !/extends ArticlePage\b/.test(text)) {
-    issues.push({ file, text: 'content route does not build on the shared article shell' });
+  const contentRoute = file.match(
+    /^www\/app\/routes\/(guide|architecture)\/([^/]+)\.tsx$/,
+  );
+  const isContentRoute = contentRoute !== null;
+  if (contentRoute) {
+    const [, collection, slug] = contentRoute;
+    if (!text.includes('definePage(')) {
+      issues.push({ file, text: 'content route is not a compiled definePage route' });
+    }
+    if (!text.includes(`projectArticlePage('${collection}', '${slug}', locale)`)) {
+      issues.push({
+        file,
+        text: `content route does not project the expected ${collection}/${slug} article`,
+      });
+    }
+    if (/\b(?:ArticlePage|defineCustomElement)\b/.test(text)) {
+      issues.push({ file, text: 'content route retains the legacy runtime article path' });
+    }
   }
   if (isContentRoute && /const content\s*=\s*\{|Record<'en' \| 'zh'/.test(text)) {
     issues.push({
@@ -372,21 +390,58 @@ async function wwwCheckFile(file: string, issues: { file: string; text: string }
       text: 'content route carries content records; content lives in www/content/<collection>/',
     });
   }
-  if (file === 'www/app/site-ui/article-page.tsx') {
-    if (!/open-page-rail[^>]+items=/.test(text)) {
+  const articleAdapter = file.match(
+    /^www\/app\/components\/article-routes\/([^/]+)\.tsx$/,
+  );
+  if (articleAdapter) {
+    const expectedTag = articleAdapter[1];
+    if (!text.includes(`@element('${expectedTag}')`)) {
+      issues.push({ file, text: `article adapter tag must match its path: ${expectedTag}` });
+    }
+    if (
+      (text.match(/@property\(/g) ?? []).length !== 1 || !/\bmodel:\s*ArticlePageModel\b/.test(text)
+    ) {
+      issues.push({ file, text: 'article adapter must expose exactly one typed model property' });
+    }
+    if (!/<open-article-view\s+model=\{this\.model\}/s.test(text)) {
+      issues.push({ file, text: 'article adapter does not delegate to the compiled article view' });
+    }
+    if (/\bdefineCustomElement\b/.test(text)) {
+      issues.push({ file, text: 'article adapter performs forbidden runtime registration' });
+    }
+  }
+  if (file === 'www/app/site-ui/open-article-view.tsx') {
+    if (!/<open-page-rail\s+items=\{this\.railItems\}/s.test(text)) {
       issues.push({ file, text: 'guide shell lacks a declared SSR outline' });
     }
-    if (!/<open-reading-shell\s+rail/.test(text)) {
+    if (!/<open-reading-shell\s+rail\s+footer/s.test(text)) {
       issues.push({ file, text: 'guide shell lacks the shared reading shell' });
     }
-    if (!/<open-reading-shell[^>]+metadata=/.test(text)) {
+    if (
+      !/<open-reading-shell[^>]+metadata=\{this\.metadata\}[^>]+navigation=\{this\.navigation\}/s
+        .test(text)
+    ) {
       issues.push({ file, text: 'guide shell lacks structured reading metadata' });
     }
-    if (!stripComments(text).includes("this._getLocale('en')")) {
+    if (!/innerHTML=\{this\.articleHtml\}\s+trustedHtml/.test(text)) {
       issues.push({
         file,
-        text: 'guide shell does not select content by locale (zh must render zh)',
+        text: 'guide shell lacks its explicit trusted compiled HTML sink',
       });
+    }
+  }
+  if (file === 'www/app/site-ui/article-page-model.ts') {
+    for (
+      const [contract, pattern] of [
+        ['locale selection', /contentLocale\(localeInput \?\? 'en'\)/],
+        ['article preparation', /prepareArticle\(/],
+        ['declared outline projection', /article\.outline\.map\(/],
+        ['localized navigation', /localizePath\(/],
+      ] as const
+    ) {
+      if (!pattern.test(text)) {
+        issues.push({ file, text: `article model lacks ${contract}` });
+      }
     }
   }
   if (file.includes('www/app/routes/blog/[slug].tsx') && /open-page-rail[^>]+auto/.test(text)) {

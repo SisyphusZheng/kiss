@@ -50,6 +50,12 @@ export default class OpenReadingShell extends OpenElement {
   }
 `)];
 
+  @property({ reflect: true })
+  rail = false;
+  @property({ reflect: true })
+  footer = false;
+  @property({ reflect: true })
+  meta = false;
   @property({ reflect: false })
   metadata: ReadingMetadataV4 = { breadcrumb: '', title: '' };
   @property({ reflect: false })

@@ -40,7 +40,7 @@ interface HelpRow {
   copy: string;
 }
 
-@element('page-contributing', { root: 'shadow-open' })
+@element('contributing-page', { root: 'shadow-open' })
 export default class PageContributing extends OpenElement {
   static override styles = pageContributingStyles;
 

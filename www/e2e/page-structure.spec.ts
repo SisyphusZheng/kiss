@@ -66,7 +66,7 @@ test.describe('Unified page structure', () => {
   test('404 remains a compact recovery scene without WebGL', async ({ page }) => {
     await page.goto('/404');
     await expect(page.locator('open-cinematic-atmosphere')).toHaveCount(0);
-    const scene = page.locator('page-404');
+    const scene = page.locator('el-404');
     await expect(scene.locator('h1')).toHaveText('404');
     await expect(scene).toContainText('Lost in the shadow DOM.');
     await expect(scene.locator('open-button[href="/"]')).toHaveCount(1);
@@ -75,25 +75,25 @@ test.describe('Unified page structure', () => {
 
   test('docs landing is a v4 manual index with four entrances', async ({ page }) => {
     await page.goto('/docs');
-    await expect(page.locator('page-docs h1')).toContainText('MANUAL.');
-    const entrances = page.locator('page-docs .entrance');
+    await expect(page.locator('docs-index h1')).toContainText('MANUAL.');
+    const entrances = page.locator('docs-index .entrance');
     await expect(entrances).toHaveCount(4);
     await expect(entrances.first()).toHaveAttribute('href', '/guide/getting-started');
   });
 
   test('blog index is a v4 dispatch journal with a featured band', async ({ page }) => {
     await page.goto('/blog');
-    await expect(page.locator('blog-index-page h1')).toHaveText('Dispatches.');
-    await expect(page.locator('blog-index-page .featured')).toHaveAttribute('href', /\/blog\/.+/);
-    expect(await page.locator('blog-index-page .row').count()).toBeGreaterThan(0);
+    await expect(page.locator('blog-index h1')).toHaveText('Dispatches.');
+    await expect(page.locator('blog-index .featured')).toHaveAttribute('href', /\/blog\/.+/);
+    expect(await page.locator('blog-index .row').count()).toBeGreaterThan(0);
   });
 
   test('contributing is a v4 lab page with terminal, checklist and help rows', async ({ page }) => {
     await page.goto('/contributing');
-    await expect(page.locator('page-contributing h1')).toContainText('BUILD IT');
-    await expect(page.locator('page-contributing open-code-block')).toHaveCount(1);
-    expect(await page.locator('page-contributing .checklist li').count()).toBeGreaterThan(0);
-    expect(await page.locator('page-contributing .help-row').count()).toBe(3);
+    await expect(page.locator('contributing-page h1')).toContainText('BUILD IT');
+    await expect(page.locator('contributing-page open-code-block')).toHaveCount(1);
+    expect(await page.locator('contributing-page .checklist li').count()).toBeGreaterThan(0);
+    expect(await page.locator('contributing-page .help-row').count()).toBe(3);
   });
 
   test('former hero pages render content-first, without a mega hero', async ({ page }) => {

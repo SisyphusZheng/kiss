@@ -23,7 +23,7 @@ declare function element(
   options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
 ): ClassDecorator;
 declare function property(
-  options: { reflect: boolean; attribute?: false },
+  options: { reflect: boolean; attribute?: string | false },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 import '@openelement/element';
@@ -34,6 +34,9 @@ export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true });
 
 @element('open-light-probe', { root: 'light' })
 export default class OpenLightProbe extends OpenElement {
+  @property({ reflect: true, attribute: 'class' })
+  hostClass = '';
+
   @property({ reflect: false })
   count = 0;
 

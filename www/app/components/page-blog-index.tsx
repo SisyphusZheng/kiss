@@ -15,7 +15,7 @@ declare function property(
   options: { reflect: boolean; attribute?: false },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-@element('blog-index-page')
+@element('blog-index')
 export default class BlogIndexPage extends OpenElement {
   static override styles = pageBlogIndexStyles;
 

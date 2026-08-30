@@ -48,16 +48,19 @@ export default class OpenArticleView extends OpenElement {
           <h1>404</h1>
           <p>{this.notFoundMessage}: {this.slug}</p>
         </div>
-        <open-reading-shell
-          class={this.articleClass}
-          rail
-          footer
-          metadata={this.metadata}
-          navigation={this.navigation}
-        >
-          <open-page-rail slot='rail' items={this.railItems}></open-page-rail>
-          <div class='article-content' innerHTML={this.articleHtml} trustedHtml />
-        </open-reading-shell>
+        <div class={this.articleClass}>
+          <open-reading-shell
+            rail
+            footer
+            metadata={this.metadata}
+            navigation={this.navigation}
+          >
+            <div slot='rail'>
+              <open-page-rail items={this.railItems}></open-page-rail>
+            </div>
+            <div class='article-content' innerHTML={this.articleHtml} trustedHtml />
+          </open-reading-shell>
+        </div>
       </main>
     );
   }

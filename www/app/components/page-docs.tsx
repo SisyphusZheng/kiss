@@ -6,7 +6,7 @@ declare function property(
   options: { reflect: boolean; attribute?: false },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-@element('page-docs')
+@element('docs-index')
 export default class PageDocs extends OpenElement {
   static override styles = pageDocsStyles;
 

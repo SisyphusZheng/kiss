@@ -33,7 +33,7 @@ declare function property(
   options: { reflect: boolean; attribute?: false },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-@element('open-home-page')
+@element('index-index')
 export default class PageHome extends OpenElement {
   static override styles = pageHomeStyles;
 
