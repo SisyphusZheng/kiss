@@ -1,120 +1,40 @@
 /** @jsxImportSource @openelement/element */
-/** Private WWW table of contents with progressive enhancement for active state. */
-import {
-  DATA_SSR_PROPS,
-  deepGetElementById,
-  defineCustomElement,
-  OpenElement,
-  StyleSheet,
-} from '@openelement/element';
-import type { PageOutlineItem } from './page-contract.ts';
+/** Compiler-owned WWW table of contents. */
+import { OpenElement } from '@openelement/element';
+import { compiledStyle } from './compiled-style.ts';
 
-export const tagName = 'open-page-rail';
+interface RailItem {
+  id: string;
+  href: string;
+  label: string;
+  depth: string;
+}
 
-/**
- * Outline targets live inside the host page's shadow root, which
- * document-level fragment navigation (and `document.getElementById`) cannot
- * reach. Walk the root chain upward so rail links resolve their headings.
- */
-const sheet = new StyleSheet();
-sheet.replaceSync(`
-  :host{display:block}details{display:block}summary{display:none}.links{display:grid;gap:var(--size-1);counter-reset:rail-item}a{display:block;padding:var(--size-1) 0 var(--size-1) var(--size-3);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);line-height:1.45;text-decoration:none;border-inline-start:var(--border-size-2) solid transparent}a::before{counter-increment:rail-item;content:"§" counter(rail-item) "  ";color:color-mix(in srgb,var(--text-muted) 70%,transparent)}a[data-depth="3"]{padding-inline-start:var(--size-5);font-size:calc(var(--font-size-00) * .94)}a:hover,a:focus-visible{color:var(--text-primary)}a[aria-current="location"]{color:var(--text-primary);font-weight:var(--font-weight-8);border-inline-start-color:var(--brand)}a[aria-current="location"]::before{color:var(--brand)}@media(max-width:900px){details{padding:var(--size-3);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface)}summary{display:block;cursor:pointer;color:var(--text-primary);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.12em;text-transform:uppercase}details:not([open]) .links{display:none}.links{padding-block-start:var(--size-3)}}
-`);
+declare function element(tag: string): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
+@element('open-page-rail')
 export default class OpenPageRail extends OpenElement {
-  #observer: IntersectionObserver | null = null;
-  #links: HTMLAnchorElement[] = [];
-  static override styles = [sheet];
-  override connectedCallback(): void {
-    super.connectedCallback();
-    requestAnimationFrame(() => {
-      if (matchMedia('(max-width: 900px)').matches) {
-        this.shadowRoot?.querySelector('details')?.removeAttribute('open');
-      }
-      this.#activate();
-    });
-  }
-  override disconnectedCallback(): void {
-    this.#observer?.disconnect();
-    super.disconnectedCallback();
-  }
-  #setCurrent(id: string): void {
-    for (const link of this.#links) {
-      if (link.hash === `#${id}`) {
-        link.setAttribute('aria-current', 'location');
-      } else {
-        link.removeAttribute('aria-current');
-      }
-    }
-  }
-  #activate(): void {
-    this.#links = [
-      ...this.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-      ...(this.shadowRoot?.querySelectorAll<HTMLAnchorElement>('a[href^="#"]') ?? []),
-    ];
-    const targets = this.#links.map((link) => deepGetElementById(link.hash.slice(1)))
-      .filter((
-        target,
-      ): target is HTMLElement => Boolean(target));
-    if (!targets.length || !('IntersectionObserver' in window)) return;
-    this.#observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) =>
-        entry.isIntersecting
-      ).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (!visible?.target.id) {
-        return;
-      }
-      this.#setCurrent(visible.target.id);
-    }, { rootMargin: '-18% 0px -70% 0px', threshold: 0 });
-    for (const target of targets) this.#observer.observe(target);
-  }
-  #items(): readonly PageOutlineItem[] {
-    // During SSR OpenElement supplies JSX props before it attaches attributes
-    // to the host. The property path therefore produces the complete DSD
-    // outline, while the attribute path covers browser-side upgrades.
-    const host = this as { items?: unknown };
-    let raw = typeof host.items === 'string' ? host.items : this.getAttribute('items');
-    if (!raw) {
-      try {
-        const props = JSON.parse(this.getAttribute(DATA_SSR_PROPS) ?? '{}') as {
-          items?: unknown;
-        };
-        raw = typeof props.items === 'string' ? props.items : null;
-      } catch {
-        raw = null;
-      }
-    }
-    if (!raw) return [];
-    try {
-      const value: unknown = JSON.parse(raw);
-      if (!Array.isArray(value)) return [];
-      return value.filter((item): item is PageOutlineItem =>
-        Boolean(
-          item && typeof item === 'object' && typeof (item as PageOutlineItem).id === 'string' &&
-            typeof (item as PageOutlineItem).label === 'string',
-        )
-      );
-    } catch {
-      return [];
-    }
-  }
-  override render() {
-    const items = this.#items();
+  static override styles = [compiledStyle(`
+  :host{display:block}details{display:block}summary{display:none}.links{display:grid;gap:var(--size-1);counter-reset:rail-item}a{display:block;padding:var(--size-1) 0 var(--size-1) var(--size-3);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);line-height:1.45;text-decoration:none;border-inline-start:var(--border-size-2) solid transparent}a::before{counter-increment:rail-item;content:"§" counter(rail-item) "  ";color:color-mix(in srgb,var(--text-muted) 70%,transparent)}a[data-depth="3"]{padding-inline-start:var(--size-5);font-size:calc(var(--font-size-00) * .94)}a:hover,a:focus-visible{color:var(--text-primary)}a[aria-current="location"]{color:var(--text-primary);font-weight:var(--font-weight-8);border-inline-start-color:var(--brand)}a[aria-current="location"]::before{color:var(--brand)}@media(max-width:900px){details{padding:var(--size-3);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface)}summary{display:block;cursor:pointer;color:var(--text-primary);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.12em;text-transform:uppercase}details:not([open]) .links{display:none}.links{padding-block-start:var(--size-3)}}
+`)];
+
+  @property({ reflect: false })
+  items: RailItem[] = [];
+
+  render() {
     return (
       <details open>
         <summary>On this page</summary>
         <nav class='links' aria-label='On this page'>
-          {items.length
-            ? items.map((item) => (
-              <a href={`#${item.id}`} data-depth={String(item.level ?? 2)}>{item.label}</a>
-            ))
-            : (
-              <slot>
-                <a href='#start'>Overview</a>
-              </slot>
-            )}
+          <a href='#start'>Overview</a>
+          {this.items.map((item) => (
+            <a key={item.id} href={item.href} data-depth={item.depth}>{item.label}</a>
+          ))}
         </nav>
       </details>
     );
   }
 }
-defineCustomElement(tagName, OpenPageRail);

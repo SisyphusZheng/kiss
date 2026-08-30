@@ -5,6 +5,8 @@ const siteModules = [
   ['open-lab-panel', '../app/site-ui/open-lab-panel.tsx'],
   ['open-lab-stage', '../app/site-ui/open-lab-stage.tsx'],
   ['open-standards-visual', '../app/site-ui/open-standards-visual.tsx'],
+  ['open-page-hero', '../app/site-ui/open-page-hero.tsx'],
+  ['open-page-rail', '../app/site-ui/open-page-rail.tsx'],
 ] as const;
 
 for (const [tagName, path] of siteModules) {
