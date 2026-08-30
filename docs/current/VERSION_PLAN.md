@@ -6,7 +6,7 @@ The published stable line remains `v0.43.3`. The active target is the internal,
 unpublished `v0.44.0-alpha.0` workspace baseline on `dev`.
 
 ADR-0147 defines Alpha execution. ADR-0146 remains the release-role authority and
-activates at Beta.1.
+activates at Beta.1. ADR-0149 defines the post-Alpha qualification ladder.
 
 - Repository package line: `v0.43.3`
 - npm registry line: `v0.43.3`
@@ -89,17 +89,27 @@ verifier session.
 
 ## Beta and release governance
 
-| Phase  | Responsibility                                                                           |
-| ------ | ---------------------------------------------------------------------------------------- |
-| Beta.1 | #1150 qualifies UI on the integrated framework and activates the three-role release loop |
-| Beta.2 | #1157 #1158 #1159 #1177 qualify content, API metadata and the real website               |
-| Beta.3 | #1192 #1156 #1187 #1188 #1189 harden governance, assets and publication                  |
-| RC     | #1178 exact-SHA real-product admission and the human architecture decision               |
-| Stable | Explicit approval after the full product ladder                                          |
+| Phase  | Responsibility                                                                                                                                |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beta.1 | Qualify and publish the integrated framework, activate the three-role loop, then converge remote branches to the `dev`/`main` long-lived pair |
+| Beta.2 | #1156 and #1187 establish release/governance foundations, Trusted Publishing, provenance, rulesets and mature pinned tools                    |
+| Beta.3 | #1150 qualifies the integrated UI system                                                                                                      |
+| Beta.4 | #1157 #1158 #1159 #1177 qualify content, API metadata, the real website and Starter                                                           |
+| Beta.5 | #1192 #1188 #1189 complete final evidence/document/media hardening and independent SaaS qualification of immutable artifacts                  |
+| RC     | #1178 admits the identical Beta.5 SHA and artifacts after the human architecture decision                                                     |
+| Stable | Explicit approval after the full product ladder and remaining soak                                                                            |
 
 At Beta.1 and later public boundaries, the configured thinker, implementer and fresh
 release verifier rules apply. PR CI remains the sole authoritative full matrix for an
 exact SHA. `latest` remains on stable 0.43.x until an explicitly approved 0.44 Stable
 release.
 
-`internal alpha workspaces -> beta.1 UI -> beta.2 website -> beta.3 hardening -> RC -> Stable`
+Beta.1 branch convergence is fail closed: every remote head is classified, every open
+PR is resolved or explicitly carried forward, and only an explicit reviewed deletion
+list may run. Unknown-owned branches and local user worktrees are never bulk deleted.
+
+Beta.5 is the immutable RC candidate. Any code, dependency, lockfile or artifact-byte
+change creates a new Beta.5 candidate and repeats SaaS qualification. RC promotion
+does not rebuild the artifacts and requires explicit human GO.
+
+`internal alpha.8 -> beta.1 framework -> beta.2 release foundations -> beta.3 UI -> beta.4 website -> beta.5 immutable real-product candidate -> RC -> Stable`

@@ -15,6 +15,13 @@ and GitHub Rulesets hold merge authority. Tags, Releases, assets, attestations, 
 provenance are durable published-version proof; temporary Actions artifacts are not
 the sole future proof.
 
-Alpha.0 is an internal exception only in that it is never published: it receives no
-tag, npm publication, GitHub Release, dist-tag, `main` promotion, or Alpha.1 feature
-work.
+All Alpha identifiers are internal and unpublished: they receive no tag, npm
+publication, GitHub Release, dist-tag or `main` promotion. ADR-0149 makes Beta.1 the
+first public v0.44 framework qualification and assigns Beta.2 the final Trusted
+Publishing, provenance and release-protection foundation.
+
+Beta.5 is the immutable RC candidate. Independent SaaS qualification binds to its
+exact commit SHA, package bytes, integrity records and provenance. RC may admit only
+those identical artifacts after explicit human GO. Any code, dependency, lockfile or
+artifact change creates a new Beta.5 candidate and invalidates the previous SaaS
+qualification for promotion.

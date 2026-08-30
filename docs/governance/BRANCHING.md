@@ -32,3 +32,22 @@ main ←── merge (CI 全绿) ── dev
 4. **Push `dev` before merging to `main`.** Wait for CI on `dev` first.
 5. **Tag only on `main`** after CI passes.
 6. **Never force-push `main` or `dev`.**
+
+## Beta.1 branch convergence
+
+ADR-0149 assigns Beta.1 one fail-closed remote branch convergence after the first
+public v0.44 framework release has durable exact-SHA evidence.
+
+1. Inventory every remote head and record its owner, SHA, pull-request state and
+   disposition.
+2. Merge, close, retarget or explicitly carry forward every open pull request before
+   considering its head branch for deletion.
+3. Delete only an explicit reviewed list of exact branch names. Globs, force-pushes,
+   name-based ownership guesses and deletion of unknown-owned branches are forbidden.
+4. Read back the remote heads and require `dev` and `main` to be the only long-lived
+   pair at gate completion.
+5. Treat local branches and user worktrees as separate state; this remote convergence
+   never recursively deletes them.
+
+After convergence, every Beta work branch starts from `dev` and is deleted after its
+PR is merged or closed.

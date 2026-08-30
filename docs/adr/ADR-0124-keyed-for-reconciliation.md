@@ -1,10 +1,16 @@
 # ADR-0124: Keyed List Reconciliation for `<For>`
 
-- Status: ACCEPTED (implemented on the v0.42.0-alpha.15 train, #890)
+- Status: SUPERSEDED for v0.44 by ADR-0143 compiled `each` Regions
 - Date: 2026-08-08
 - Builds on: ADR-0123 (standards-as-seams precedent), #890
 
 ## Context
+
+> v0.44 note: this decision records the retired runtime `<For>` binding behavior.
+> ADR-0143 removes that renderer. Compiled keyed `each` Regions fail closed on
+> duplicate keys before attachment or mutation, as covered by the compiled claim and
+> runtime Region suites; they do not preserve this ADR's duplicate-displacement
+> behavior.
 
 `applyList` (`packages/element/src/internal/core/binding-activation.ts`)
 re-rendered the entire list on every signal change: clear all children,

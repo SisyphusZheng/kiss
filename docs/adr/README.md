@@ -22,6 +22,9 @@ and tool configuration do not require an ADR.
 - `ADR-0144-governance-offload.md`
 - `ADR-0145-unified-content-graph.md` (scheduled for Alpha.7)
 - `ADR-0146-three-role-agent-execution-control-plane.md`
+- `ADR-0147-internal-alpha-workspace-train.md`
+- `ADR-0148-compiler-semantic-core-vite-integration-boundary.md`
+- `ADR-0149-v044-prerelease-qualification-ladder.md`
 
 The Alpha.0 ADR migration packet will replace this transitional list with the
 final active-decision set and manifest. No new ADR is required for that governance
