@@ -1,84 +1,10 @@
 /** WWW supported API reference page. */
-import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import '@openelement/site-ui/open-section-frame.tsx';
+import { definePage } from '@openelement/app';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
+import ApiCorePage, { type ApiPackageItem } from '../components/page-apilist.tsx';
 
-export const tagName = 'api-core-page';
 export const meta = { section: 'Reference', label: 'API Reference', order: 5 };
-
-const routeSheet = new StyleSheet();
-routeSheet.replaceSync(`
-  :host { display: block; color: var(--text-primary); }
-  * { box-sizing: border-box; }
-  p { margin: 0; }
-
-  /* registry table: hairline rows, display-grade package names */
-  .registry { border-block-start: var(--border-size-1) solid var(--border); }
-  .registry-head, .pkg-row {
-    display: grid;
-    grid-template-columns: minmax(0, .9fr) minmax(0, 1fr) auto;
-    gap: clamp(1rem, 4vw, 3rem);
-    align-items: start;
-  }
-  .registry-head {
-    padding-block: var(--size-3);
-    border-block-end: var(--border-size-1) solid var(--border);
-    color: var(--text-muted);
-    font-size: var(--font-size-micro);
-    font-weight: var(--font-weight-7);
-    letter-spacing: .18em;
-    text-transform: uppercase;
-  }
-  .pkg-row { padding-block: var(--size-6); border-block-end: var(--border-size-1) solid var(--border); }
-  .pkg-name {
-    display: block;
-    color: var(--violet-8);
-    font-size: clamp(1.7rem, 2.8vw, 2.5rem);
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -.03em;
-  }
-  .pkg-row[data-kind='optional'] .pkg-name { color: var(--text-secondary); }
-  .pkg-path { display: block; margin-block-start: var(--size-2); color: var(--text-muted); font-size: var(--font-size-00); }
-  .pkg-copy { margin-block-start: var(--size-3); color: var(--text-secondary); font-size: var(--font-size-0); line-height: var(--font-lineheight-3); }
-  .pkg-note { display: block; margin-block-start: var(--size-2); color: var(--text-muted); font-size: var(--font-size-00); line-height: var(--font-lineheight-3); }
-  .pkg-chips { display: flex; flex-wrap: wrap; gap: var(--size-2); }
-  .chip {
-    padding: var(--size-1) var(--size-2);
-    border-radius: var(--radius-1);
-    background: var(--violet-2);
-    color: var(--violet-8);
-    font-size: var(--font-size-00);
-  }
-  .kind {
-    padding: var(--size-1) var(--size-3);
-    border-radius: var(--radius-1);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-7);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-  .kind-core { background: var(--brand); color: var(--on-brand); }
-  .kind-build {
-    background: var(--violet-2);
-    color: var(--violet-8);
-    box-shadow: inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--violet-5) 55%, transparent);
-  }
-  .kind-optional {
-    border: var(--border-size-1) dashed color-mix(in srgb, var(--violet-5) 65%, transparent);
-    color: var(--text-secondary);
-  }
-  .footnote { padding-block-start: var(--size-6); color: var(--text-muted); font-size: var(--font-size-00); line-height: var(--font-lineheight-3); }
-  .footnote p + p { margin-block-start: var(--size-3); }
-  .footnote code { color: var(--violet-8); }
-
-  @media (max-width: 860px) {
-    .registry-head { display: none; }
-    .pkg-row { grid-template-columns: 1fr; gap: var(--size-3); }
-    .kind { justify-self: start; }
-  }
-`);
 
 type Locale = 'en' | 'zh';
 
@@ -253,77 +179,63 @@ const content = {
   },
 } as const;
 
-export class ApiCorePage extends OpenElement {
-  static override styles = [routeSheet];
-  override render() {
-    const locale: Locale = contentLocale(this._getLocale('en'));
-    const t = content[locale];
-    const kinds = kindLabels[locale];
-    const railItems = JSON.stringify(
-      packages.map((pkg) => ({ id: pkg.id, label: pkg.name, level: 3 })),
-    );
-    return (
-      <main>
-        <open-reading-shell
-          rail
-          footer
-          metadata={JSON.stringify({
-            breadcrumb: 'Reference',
-            title: t.pageTitle,
-            lede: t.lede(OPENELEMENT_VERSION),
-          })}
-        >
-          <open-page-rail slot='rail' items={railItems}></open-page-rail>
-          <open-section-frame>
-            <span slot='index'>{t.s1Index}</span>
-            <span slot='title'>{t.s1Title}</span>
-            <span slot='copy'>{t.s1Copy}</span>
-          </open-section-frame>
-          <open-section-frame>
-            <span slot='index'>{t.s2Index}</span>
-            <span slot='title'>{t.s2Title}</span>
-            <span slot='copy'>{t.s2Copy}</span>
-            <div class='registry'>
-              <div class='registry-head' aria-hidden='true'>
-                <span>{t.headPackage}</span>
-                <span>{t.headSubpaths}</span>
-                <span>{t.headKind}</span>
-              </div>
-              {packages.map((pkg) => (
-                <div class='pkg-row' id={pkg.id} data-kind={pkg.kind}>
-                  <div>
-                    <span class='pkg-name'>{pkg.name}</span>
-                    <span class='pkg-path'>{pkg.importPath}</span>
-                    <p class='pkg-copy'>{pkg.copy[locale]}</p>
-                    {pkg.notes[locale].map((note) => <span class='pkg-note' key={note}>{note}
-                    </span>)}
-                  </div>
-                  <div class='pkg-chips'>
-                    {pkg.exports.map((entry) => (
-                      <span class='chip' key={entry}>
-                        {entry}
-                        {pkg.internalExports?.includes(entry) ? '※' : ''}
-                      </span>
-                    ))}
-                  </div>
-                  <span class={`kind kind-${pkg.kind}`}>{kinds[pkg.kind]}</span>
-                </div>
-              ))}
-              <footer class='footnote'>
-                <p>{t.footnote(OPENELEMENT_VERSION)}</p>
-                <p>
-                  {t.footnoteCheckPre}
-                  <code>deno task package-surface:check</code>
-                  {t.footnoteCheckPost}
-                </p>
-              </footer>
-            </div>
-          </open-section-frame>
-        </open-reading-shell>
-      </main>
-    );
-  }
-}
-
-defineCustomElement(tagName, ApiCorePage);
-export default ApiCorePage;
+export default definePage(ApiCorePage, {
+  props({ locale }) {
+    const resolved: Locale = contentLocale(locale ?? 'en');
+    const t = content[resolved];
+    const kinds = kindLabels[resolved];
+    const projectPackage = (pkg: ApiPackage): ApiPackageItem => ({
+      id: pkg.id,
+      name: pkg.name,
+      importPath: pkg.importPath,
+      copy: pkg.copy[resolved],
+      note1: pkg.notes[resolved][0] ?? '',
+      note2: pkg.notes[resolved][1] ?? '',
+      note3: pkg.notes[resolved][2] ?? '',
+      export1: pkg.exports[0]
+        ? `${pkg.exports[0]}${pkg.internalExports?.includes(pkg.exports[0]) ? '※' : ''}`
+        : '',
+      export2: pkg.exports[1]
+        ? `${pkg.exports[1]}${pkg.internalExports?.includes(pkg.exports[1]) ? '※' : ''}`
+        : '',
+      export3: pkg.exports[2]
+        ? `${pkg.exports[2]}${pkg.internalExports?.includes(pkg.exports[2]) ? '※' : ''}`
+        : '',
+      export4: pkg.exports[3]
+        ? `${pkg.exports[3]}${pkg.internalExports?.includes(pkg.exports[3]) ? '※' : ''}`
+        : '',
+      export5: pkg.exports[4]
+        ? `${pkg.exports[4]}${pkg.internalExports?.includes(pkg.exports[4]) ? '※' : ''}`
+        : '',
+      kind: pkg.kind,
+      kindClass: `kind kind-${pkg.kind}`,
+      kindLabel: kinds[pkg.kind],
+    });
+    return {
+      metadata: {
+        breadcrumb: 'Reference',
+        title: t.pageTitle,
+        lede: t.lede(OPENELEMENT_VERSION),
+      },
+      railItems: packages.map((pkg) => ({
+        id: pkg.id,
+        href: `#${pkg.id}`,
+        label: pkg.name,
+        depth: '3',
+      })),
+      s1Index: t.s1Index,
+      s1Title: t.s1Title,
+      s1Copy: t.s1Copy,
+      s2Index: t.s2Index,
+      s2Title: t.s2Title,
+      s2Copy: t.s2Copy,
+      headPackage: t.headPackage,
+      headSubpaths: t.headSubpaths,
+      headKind: t.headKind,
+      footnote: t.footnote(OPENELEMENT_VERSION),
+      footnoteCheckPre: t.footnoteCheckPre,
+      footnoteCheckPost: t.footnoteCheckPost,
+      packages: packages.map(projectPackage),
+    };
+  },
+});
