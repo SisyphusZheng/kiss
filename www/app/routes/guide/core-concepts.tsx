@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import GuideCoreConceptsPage from '../../components/article-routes/guide-core-concepts.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Guide', label: 'Core Concepts', order: 10 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class GuideCoreConceptsPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'guide', slug: 'core-concepts' } as const;
-}
-
-export const tagName = 'guide-core-concepts-page';
-defineCustomElement(tagName, GuideCoreConceptsPage);
-export default GuideCoreConceptsPage;
+export default definePage(GuideCoreConceptsPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('guide', 'core-concepts', locale) };
+  },
+});

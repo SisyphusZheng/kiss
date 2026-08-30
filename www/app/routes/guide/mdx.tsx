@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import GuideMdxPage from '../../components/article-routes/guide-mdx.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Guide', label: 'MDX', order: 50 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class GuideMdxPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'guide', slug: 'mdx' } as const;
-}
-
-export const tagName = 'guide-mdx-page';
-defineCustomElement(tagName, GuideMdxPage);
-export default GuideMdxPage;
+export default definePage(GuideMdxPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('guide', 'mdx', locale) };
+  },
+});

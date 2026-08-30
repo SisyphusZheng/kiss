@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import GuideComparisonPage from '../../components/article-routes/guide-comparison.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Guide', label: 'Comparison', order: 25 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class GuideComparisonPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'guide', slug: 'comparison' } as const;
-}
-
-export const tagName = 'guide-comparison-page';
-defineCustomElement(tagName, GuideComparisonPage);
-export default GuideComparisonPage;
+export default definePage(GuideComparisonPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('guide', 'comparison', locale) };
+  },
+});

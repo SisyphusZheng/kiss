@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import GuideConfigurationPage from '../../components/article-routes/guide-configuration.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Guide', label: 'Configuration', order: 70 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class GuideConfigurationPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'guide', slug: 'configuration' } as const;
-}
-
-export const tagName = 'guide-configuration-page';
-defineCustomElement(tagName, GuideConfigurationPage);
-export default GuideConfigurationPage;
+export default definePage(GuideConfigurationPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('guide', 'configuration', locale) };
+  },
+});

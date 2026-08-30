@@ -1,13 +1,11 @@
+import { definePage } from '@openelement/app';
+import GuideDeploymentPage from '../../components/article-routes/guide-deployment.tsx';
+import { projectArticlePage } from '../../site-ui/article-page-model.ts';
+
 export const meta = { section: 'Guide', label: 'Deployment', order: 100 };
 
-import { defineCustomElement } from '@openelement/element';
-import { ArticlePage, articlePageStyles } from '@openelement/site-ui/article-page.tsx';
-
-export class GuideDeploymentPage extends ArticlePage {
-  static override styles = [articlePageStyles()];
-  static override article = { collection: 'guide', slug: 'deployment' } as const;
-}
-
-export const tagName = 'guide-deployment-page';
-defineCustomElement(tagName, GuideDeploymentPage);
-export default GuideDeploymentPage;
+export default definePage(GuideDeploymentPage, {
+  props({ locale }) {
+    return { model: projectArticlePage('guide', 'deployment', locale) };
+  },
+});
