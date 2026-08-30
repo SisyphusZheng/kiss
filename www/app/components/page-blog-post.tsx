@@ -1,0 +1,110 @@
+import { OpenElement } from '@openelement/element';
+import '@openelement/site-ui/open-reading-shell.tsx';
+import '../islands/open-page-rail.tsx';
+import { pageBlogPostStyles } from './page-blog-post-styles.ts';
+
+declare function element(tag: string): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
+interface BlogTag {
+  key: string;
+  label: string;
+}
+interface BlogRailItem {
+  id: string;
+  href: string;
+  label: string;
+  depth: string;
+}
+interface BlogNavigationItem {
+  href: string;
+  label: string;
+}
+interface BlogNavigation {
+  previous?: BlogNavigationItem;
+  next?: BlogNavigationItem;
+}
+
+@element('blog-slug')
+export default class PageBlogPost extends OpenElement {
+  static override styles = pageBlogPostStyles;
+
+  @property({ reflect: false, attribute: false })
+  notFoundClass = 'not-found';
+  @property({ reflect: false, attribute: false })
+  articleClass = 'is-hidden';
+  @property({ reflect: false, attribute: false })
+  notFoundMessage = '';
+  @property({ reflect: false, attribute: false })
+  slug = '';
+  @property({ reflect: false, attribute: false })
+  blogHref = '';
+  @property({ reflect: false, attribute: false })
+  backLabel = '';
+  @property({ reflect: false, attribute: false })
+  breadcrumbLabel = '';
+  @property({ reflect: false, attribute: false })
+  crumbCurrent = '';
+  @property({ reflect: false, attribute: false })
+  postTitle = '';
+  @property({ reflect: false, attribute: false })
+  lede = '';
+  @property({ reflect: false, attribute: false })
+  date = '';
+  @property({ reflect: false, attribute: false })
+  tags: BlogTag[] = [];
+  @property({ reflect: false, attribute: false })
+  railItems: BlogRailItem[] = [];
+  @property({ reflect: false, attribute: false })
+  navigation: BlogNavigation = {};
+  @property({ reflect: false, attribute: false })
+  articleHtml = '';
+  @property({ reflect: false, attribute: false })
+  nextDispatchLabel = '';
+  @property({ reflect: false, attribute: false })
+  nextDispatchHref = '';
+  @property({ reflect: false, attribute: false })
+  nextDispatchText = '';
+
+  render() {
+    return (
+      <main>
+        <div class={this.notFoundClass}>
+          <h1>404</h1>
+          <p>{this.notFoundMessage}: {this.slug}</p>
+          <a href={this.blogHref}>← {this.backLabel}</a>
+        </div>
+
+        <open-reading-shell
+          class={this.articleClass}
+          meta
+          rail
+          footer
+          navigation={this.navigation}
+        >
+          <div slot='meta'>
+            <p class='crumb'>
+              <a href={this.blogHref}>{this.breadcrumbLabel}</a>
+              <span class='crumb-sep'>/</span>
+              <span class='crumb-current'>{this.crumbCurrent}</span>
+            </p>
+            <h1 class='post-title'>{this.postTitle}</h1>
+            <p class='post-lede'>{this.lede}</p>
+            <p class='post-meta'>
+              <time>{this.date}</time>
+              {this.tags.map((tag) => <span key={tag.key}>· {tag.label}</span>)}
+            </p>
+          </div>
+          <open-page-rail slot='rail' items={this.railItems}></open-page-rail>
+          <div class='blog-content' innerHTML={this.articleHtml} trustedHtml />
+          <nav class='next-dispatch' aria-label='Next dispatch'>
+            <span class='next-label'>{this.nextDispatchLabel}</span>
+            <a href={this.nextDispatchHref}>{this.nextDispatchText}</a>
+          </nav>
+        </open-reading-shell>
+      </main>
+    );
+  }
+}
