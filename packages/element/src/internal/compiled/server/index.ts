@@ -16,13 +16,17 @@ import {
   type SpikeElementNode,
   type SpikeTreeNode,
   type SpikeWhenPart,
+  STATIC_STYLES_MARKER,
 } from '../program.ts';
 import {
   assertCompiledProgram,
   attributeNameIsSafe,
+  attributeValueOf,
+  classValueOf,
   CompiledProgramValidationError,
   isRecordValue,
   signalOf,
+  styleValueOf,
   voidElement,
 } from './shared.ts';
 
@@ -41,6 +45,12 @@ export interface CompiledDsdOptions {
 
 export type CompiledHostAttribute = readonly [name: string, value: unknown];
 
+// The serializer emits the component's static styles as the first child of
+// the DSD template (legacy renderDsd parity): never-upgrading hosts (pages)
+// need their styles in the SSR payload. The claim path skips exactly this
+// marked element; the client style scope still adopts the live sheets.
+export { STATIC_STYLES_MARKER } from '../program.ts';
+
 export interface CompiledServerOptions {
   /** Root ownership mode. Shadow modes become a native DSD template. */
   mode?: CompiledRootMode;
@@ -48,6 +58,13 @@ export interface CompiledServerOptions {
   hostAttrs?: readonly CompiledHostAttribute[] | Record<string, unknown>;
   /** Native DSD template flags for open/closed roots. */
   dsd?: CompiledDsdOptions;
+  /**
+   * Static component CSS (collected from the class's `styles` static by the
+   * caller). Emitted verbatim as one marked <style> element — the content is
+   * authored CSS, so a `</style` sequence fails closed instead of escaping
+   * into markup injection.
+   */
+  styleCss?: string;
 }
 
 const PROPERTY_PATH_SEPARATOR = '.';
@@ -56,6 +73,17 @@ interface SerializeContext {
   readonly program: PartProgramSpike;
   readonly host: unknown;
   readonly propPartsByPath: Map<string, Array<{ name: string; signal: string }>>;
+  /** attr/bool/class/style sinks keyed by template path (part-index order). */
+  readonly valueSinksByPath: Map<
+    string,
+    Array<{
+      k: 'attr' | 'bool' | 'class' | 'style';
+      signal: string;
+      name?: string;
+    }>
+  >;
+  /** html content sinks keyed by template path. */
+  readonly htmlSinksByPath: Map<string, { signal: string }>;
 }
 
 function escapeText(value: string): string {
@@ -77,14 +105,37 @@ function pathKey(path: readonly number[]): string {
 
 function createSerializeContext(program: PartProgramSpike, host: unknown): SerializeContext {
   const propPartsByPath = new Map<string, Array<{ name: string; signal: string }>>();
+  const valueSinksByPath = new Map<
+    string,
+    Array<{ k: 'attr' | 'bool' | 'class' | 'style'; signal: string; name?: string }>
+  >();
+  const htmlSinksByPath = new Map<string, { signal: string }>();
   for (const part of program.parts) {
-    if (part.k !== 'prop') continue;
-    const key = pathKey(part.path);
-    const parts = propPartsByPath.get(key) ?? [];
-    parts.push(part);
-    propPartsByPath.set(key, parts);
+    if (part.k === 'prop') {
+      const key = pathKey(part.path);
+      const parts = propPartsByPath.get(key) ?? [];
+      parts.push(part);
+      propPartsByPath.set(key, parts);
+      continue;
+    }
+    if (
+      part.k === 'attr' || part.k === 'bool' || part.k === 'class' || part.k === 'style'
+    ) {
+      const key = pathKey(part.path);
+      const sinks = valueSinksByPath.get(key) ?? [];
+      sinks.push(
+        part.k === 'attr' || part.k === 'bool'
+          ? { k: part.k, signal: part.signal, name: part.name }
+          : { k: part.k, signal: part.signal },
+      );
+      valueSinksByPath.set(key, sinks);
+      continue;
+    }
+    if (part.k === 'html') {
+      htmlSinksByPath.set(pathKey(part.path), { signal: part.signal });
+    }
   }
-  return { program, host, propPartsByPath };
+  return { program, host, propPartsByPath, valueSinksByPath, htmlSinksByPath };
 }
 
 function serializeAttribute(name: string, value: string): string {
@@ -181,18 +232,33 @@ function serializeDsdAttributes(options: CompiledDsdOptions | undefined): string
   return parts.join('');
 }
 
+/** Item fields referenced by an each Region's template (ival + iattr slots). */
+function itemTemplateFields(nodes: readonly SpikeTreeNode[], out = new Set<string>()): Set<string> {
+  for (const node of nodes) {
+    if (node.k === 'ival') {
+      if (node.field !== undefined) out.add(node.field);
+      continue;
+    }
+    if (node.k === 'el') {
+      for (const [, field] of node.iattrs ?? []) out.add(field);
+      itemTemplateFields(node.children, out);
+    }
+  }
+  return out;
+}
+
 function itemsFor(
   ctx: SerializeContext,
   part: SpikeEachPart,
 ): Array<Record<string, unknown>> {
-  if (part.key === undefined || part.field === undefined) {
+  if (part.key === undefined) {
     throw new CompiledProgramValidationError(
       `parts[${part.index}]`,
-      'each Region needs key and field',
+      'each Region needs key',
     );
   }
   const keyField = part.key;
-  const valueField = part.field;
+  const requiredFields = itemTemplateFields(part.item);
   const value = signalOf(ctx.host, part.signal).value;
   if (!Array.isArray(value)) {
     throw new CompiledProgramValidationError(
@@ -209,14 +275,19 @@ function itemsFor(
         'each Region items must be records',
       );
     }
-    if (
-      !Object.prototype.hasOwnProperty.call(item, keyField) ||
-      !Object.prototype.hasOwnProperty.call(item, valueField)
-    ) {
+    if (!Object.prototype.hasOwnProperty.call(item, keyField)) {
       throw new CompiledProgramValidationError(
         `parts[${part.index}].signal[${ordinal}]`,
-        `each Region item needs ${JSON.stringify(keyField)} and ${JSON.stringify(valueField)}`,
+        `each Region item needs ${JSON.stringify(keyField)}`,
       );
+    }
+    for (const field of requiredFields) {
+      if (!Object.prototype.hasOwnProperty.call(item, field)) {
+        throw new CompiledProgramValidationError(
+          `parts[${part.index}].signal[${ordinal}]`,
+          `each Region item needs ${JSON.stringify(field)}`,
+        );
+      }
     }
     const key = String(item[keyField]);
     if (seen.has(key)) {
@@ -245,25 +316,41 @@ function whenIsActive(
   }
 }
 
+/** Serialize one per-item attribute slot value with host-attribute semantics. */
+function serializeItemAttribute(value: unknown): string | null {
+  if (value === true) return '';
+  if (value === false || value === null || value === undefined) return null;
+  return String(value);
+}
+
 function serializeItemNodes(
   nodes: SpikeTreeNode[],
   part: SpikeEachPart,
   item: Record<string, unknown>,
 ): string {
-  const field = part.field;
-  if (field === undefined) {
-    throw new CompiledProgramValidationError(
-      `parts[${part.index}].field`,
-      'each Region item value slot needs a field',
-    );
-  }
   return nodes.map((node) => {
-    if (node.k === 'ival') return escapeText(String(item[field]));
+    if (node.k === 'ival') {
+      const field = node.field ?? part.field;
+      if (field === undefined) {
+        throw new CompiledProgramValidationError(
+          `parts[${part.index}].item`,
+          'item value slot needs a field',
+        );
+      }
+      return escapeText(String(item[field]));
+    }
     if (node.k === 'text') return escapeText(node.value);
     if (node.k === 'el') {
-      const attrs = node.attrs.map(([name, value]) => serializeAttribute(name, value)).join('');
-      if (voidElement(node.tag)) return `<${node.tag}${attrs}>`;
-      return `<${node.tag}${attrs}>${serializeItemNodes(node.children, part, item)}</${node.tag}>`;
+      const attrs = node.attrs.map(([name, value]) => serializeAttribute(name, value));
+      for (const [name, field] of node.iattrs ?? []) {
+        const serialized = serializeItemAttribute(item[field]);
+        if (serialized === null) continue;
+        attrs.push(serialized === '' ? ` ${name}` : serializeAttribute(name, serialized));
+      }
+      if (voidElement(node.tag)) return `<${node.tag}${attrs.join('')}>`;
+      return `<${node.tag}${attrs.join('')}>${
+        serializeItemNodes(node.children, part, item)
+      }</${node.tag}>`;
     }
     throw new CompiledProgramValidationError(
       `parts[${part.index}].item`,
@@ -278,11 +365,44 @@ function serializeElement(
   programPath: readonly number[],
 ): string {
   const attrs = node.attrs.map(([name, value]) => serializeAttribute(name, value));
-  for (const part of ctx.propPartsByPath.get(pathKey(programPath)) ?? []) {
+  const key = pathKey(programPath);
+  for (const sink of ctx.valueSinksByPath.get(key) ?? []) {
+    const value = signalOf(ctx.host, sink.signal).value;
+    if (sink.k === 'attr') {
+      const serialized = attributeValueOf(value);
+      if (serialized !== null) attrs.push(serializeAttribute(sink.name!, serialized));
+      continue;
+    }
+    if (sink.k === 'bool') {
+      if (value) attrs.push(` ${sink.name!}`);
+      continue;
+    }
+    if (sink.k === 'class') {
+      const serialized = classValueOf(value);
+      if (serialized !== '') attrs.push(serializeAttribute('class', serialized));
+      continue;
+    }
+    const serialized = styleValueOf(value);
+    if (serialized !== '') attrs.push(serializeAttribute('style', serialized));
+  }
+  for (const part of ctx.propPartsByPath.get(key) ?? []) {
     attrs.push(serializeAttribute(part.name, String(signalOf(ctx.host, part.signal).value)));
   }
   const open = `<${node.tag}${attrs.join('')}`;
   if (voidElement(node.tag)) return `${open}>`;
+  const htmlSink = ctx.htmlSinksByPath.get(key);
+  if (htmlSink) {
+    // Trusted-HTML sink: the value must be pre-sanitized build-time content;
+    // it replaces the element's (compiler-guaranteed empty) content verbatim.
+    const value = signalOf(ctx.host, htmlSink.signal).value;
+    if (typeof value !== 'string') {
+      throw new CompiledProgramValidationError(
+        `template[${programPath.join('][')}]`,
+        'html sink value must be a string',
+      );
+    }
+    return `${open}>${value}</${node.tag}>`;
+  }
   return `${open}>${serializeNodes(ctx, node.children, programPath)}</${node.tag}>`;
 }
 
@@ -364,7 +484,15 @@ export function serializeCompiledProgram(
   const hostAttrs = serializeHostAttributes(options.hostAttrs, mode);
   if (mode === 'light') return `<${program.tag}${hostAttrs}>${content}</${program.tag}>`;
   const dsdAttrs = serializeDsdAttributes(options.dsd);
-  return `<${program.tag}${hostAttrs}><template shadowrootmode="${mode}"${dsdAttrs}>${content}</template></${program.tag}>`;
+  const styleCss = options.styleCss ?? '';
+  if (/<\/style/i.test(styleCss)) {
+    throw new CompiledProgramValidationError(
+      'styleCss',
+      'static component CSS may not contain "</style"',
+    );
+  }
+  const styleElement = styleCss ? `<style ${STATIC_STYLES_MARKER}>${styleCss}</style>` : '';
+  return `<${program.tag}${hostAttrs}><template shadowrootmode="${mode}"${dsdAttrs}>${styleElement}${content}</template></${program.tag}>`;
 }
 
 /**

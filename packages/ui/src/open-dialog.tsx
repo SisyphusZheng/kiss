@@ -1,11 +1,14 @@
-/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-dialog
  *
  * Dialog component using native <dialog> element + popover API.
  * Per WHATWG HTML Living Standard sections 4.11.4 (dialog) and 6.9.2 (popover).
  *
- * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
+ * v0.44: compiled authoring (ADR-0143). The `open` boolean property drives the
+ * compiled bool sink on the inner <dialog>; the top-layer/modal choreography
+ * (showModal/show/close) stays imperative in methods. Modal-session state lives
+ * in the shared instance-state module (compiled classes carry only @property
+ * fields + methods).
  *
  * @csspart overlay - The dialog backdrop/element
  * @csspart header -The header bar
@@ -26,177 +29,177 @@
  * - `label` - Title text and aria-label of the dialog
  * - `mode` - `modal` (default, showModal()) or `non-modal` (show()); read at open time
  */
+import { effect, OpenElement } from '@openelement/element';
+import { element, property } from './compile-decorators.ts';
+import { overlayRecipe, recipe } from './component-recipes.ts';
+import { readInstanceState, writeInstanceState } from './instance-state.ts';
 
-import { OpenElement } from '@openelement/element';
-import type { StyleSheetLike } from '@openelement/element';
-import { overlayRecipe, recipe, type RenderResult } from './component-recipes.ts';
-
-export const tagName = 'open-dialog';
-
-const sheet: StyleSheetLike = recipe(`
-  :host {
-    display: inline-block;
-  }
-
-  ::slotted([slot="trigger"]) {
-    cursor: pointer;
-  }
-
-  dialog {
-    border: var(--border-size-1) solid var(--surface-border-strong);
-    border-radius: var(--overlay-radius);
-    background: var(--surface-overlay);
-    color: var(--text-primary);
-    padding: var(--size-6);
-    max-width: min(90vw, 480px);
-    box-shadow: var(--surface-highlight), var(--overlay-shadow);
-    font-family: var(--font-sans);
-  }
-
-  dialog::backdrop {
-    background: color-mix(in srgb, var(--gray-12) 68%, transparent);
-    backdrop-filter: blur(8px);
-  }
-
-  dialog[open] {
-    animation: dialogFadeIn 0.2s ease-out;
-  }
-
-  @keyframes dialogFadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .dialog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--size-4);
-  }
-
-  .dialog-title {
-    font-size: var(--font-size-2);
-    font-weight: var(--font-weight-6);
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .dialog-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-muted);
-    font-size: var(--font-size-2);
-    line-height: var(--font-lineheight-1);
-    padding: var(--size-1);
-    border-radius: var(--radius-1);
-    transition: color 0.15s ease;
-  }
-
-  .dialog-close:hover {
-    color: var(--text-primary);
-    background: var(--brand-subtle);
-  }
-
-  .dialog-body {
-    font-size: var(--font-size-1);
-    color: var(--text-secondary);
-    line-height: var(--font-lineheight-3);
-  }
-
-  .dialog-footer {
-    margin-top: var(--size-5);
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--size-2);
-  }
-
-  :host(:state(open)) dialog {
-    display: block;
-  }
-`);
-
+@element('open-dialog', { root: 'shadow-open', delegatesFocus: true })
 export class OpenDialog extends OpenElement {
-  static override styles = [overlayRecipe, sheet];
-  static override delegatesFocus = true;
-  // Only `open` is observed: attributeChangedCallback reacts to it alone.
-  // `label` is read at render time and `mode` at open time — observing them
-  // was a dead listener (nothing synced on change).
-  static override observedAttributes = ['open'];
+  static override styles = [
+    overlayRecipe,
+    recipe(`
+    :host {
+      display: inline-block;
+    }
 
-  /** True once showModal() has run for the current open session (#1030). */
-  private _modalActive = false;
+    ::slotted([slot='trigger']) {
+      cursor: pointer;
+    }
 
-  override render(): RenderResult {
-    // Keep the custom state in sync on every render. When the `open`
-    // attribute arrives via SSR markup, attributeChangedCallback fires at
-    // upgrade time — before ElementInternals and the shadow DOM exist — so
-    // the initial state would otherwise never be applied.
-    this._updateStates();
-    const label = this.getAttribute('label') || '';
+    dialog {
+      border: var(--border-size-1) solid var(--surface-border-strong);
+      border-radius: var(--overlay-radius);
+      background: var(--surface-overlay);
+      color: var(--text-primary);
+      padding: var(--size-6);
+      max-width: min(90vw, 480px);
+      box-shadow: var(--surface-highlight), var(--overlay-shadow);
+      font-family: var(--font-sans);
+    }
+
+    dialog::backdrop {
+      background: color-mix(in srgb, var(--gray-12) 68%, transparent);
+      backdrop-filter: blur(8px);
+    }
+
+    dialog[open] {
+      animation: dialogFadeIn 0.2s ease-out;
+    }
+
+    @keyframes dialogFadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--size-4);
+    }
+
+    .dialog-title {
+      font-size: var(--font-size-2);
+      font-weight: var(--font-weight-6);
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .dialog-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: var(--font-size-2);
+      line-height: var(--font-lineheight-1);
+      padding: var(--size-1);
+      border-radius: var(--radius-1);
+      transition: color 0.15s ease;
+    }
+
+    .dialog-close:hover {
+      color: var(--text-primary);
+      background: var(--brand-subtle);
+    }
+
+    .dialog-body {
+      font-size: var(--font-size-1);
+      color: var(--text-secondary);
+      line-height: var(--font-lineheight-3);
+    }
+
+    .dialog-footer {
+      margin-top: var(--size-5);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--size-2);
+    }
+
+    :host(:state(open)) dialog {
+      display: block;
+    }
+  `),
+  ];
+
+  /** Presence opens the dialog (reflected so JS property sets stay truthful). */
+  @property({ reflect: true, type: Boolean })
+  open = false;
+
+  @property({ reflect: false })
+  label = '';
+
+  render() {
     return (
-      <>
-        <slot name='trigger' onClick={() => this._handleTrigger()}></slot>
+      <div style='display:contents'>
+        <slot name='trigger' onClick={this.handleTrigger}></slot>
         <dialog
-          open={this.hasAttribute('open') ? true : undefined}
-          aria-label={label}
+          open={this.open}
+          aria-label={this.label}
           part='overlay'
-          onCancel={(e: Event) => this._handleCancel(e)}
-          onClose={() => this._handleNativeClose()}
+          onCancel={this.handleCancel}
+          onClose={this.handleNativeClose}
         >
-          <div className='dialog-header' part='header'>
-            <h2 className='dialog-title'>{label}</h2>
+          <div class='dialog-header' part='header'>
+            <h2 class='dialog-title'>{this.label}</h2>
             <button
               type='button'
-              className='dialog-close'
+              class='dialog-close'
               part='close'
               aria-label='Close'
-              onClick={() => this._handleClose()}
+              onClick={this.handleClose}
             >
-              &times;
+              ×
             </button>
           </div>
-          <div className='dialog-body' part='body'>
+          <div class='dialog-body' part='body'>
             <slot></slot>
           </div>
-          <div className='dialog-footer' part='footer'>
+          <div class='dialog-footer' part='footer'>
             <slot name='footer'></slot>
           </div>
         </dialog>
-      </>
+      </div>
     );
   }
 
-  override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
-    if (old === val) return;
-    if (name === 'open') {
-      this._updateStates();
-      this._syncDialogElement();
-    }
+  override onCsrRendered(): void {
+    this.syncOpenState();
   }
 
-  protected override onCsrRendered(): void {
-    this._syncOpenState();
+  override onDsdHydrated(): void {
+    this.syncOpenState();
   }
 
-  protected override onDsdHydrated(): void {
-    this._syncOpenState();
+  override disconnectedCallback(): void {
+    readInstanceState(this, 'openEffect', () => undefined as undefined | (() => void))?.();
+    writeInstanceState(this, 'openEffect', undefined);
+    super.disconnectedCallback();
   }
 
   /**
-   * Apply the initial `open` state once the shadow DOM exists. SSR markup
-   * like `<open-dialog open>` fires attributeChangedCallback at upgrade time,
-   * before the shadow root is populated — without this hook the inner
-   * <dialog> would stay closed/non-modal until the attribute changes again.
+   * Apply the `open` state once the shadow DOM exists, then keep it synced
+   * through the compiled signal — an effect over `this.open` covers attribute
+   * AND property writes with one channel (both routes convert into the signal
+   * before any sink or method runs). SSR markup like `<open-dialog open>`
+   * fires attributeChangedCallback at upgrade time — before ElementInternals
+   * and the shadow DOM exist — so the initial run here applies that state.
    */
-  private _syncOpenState(): void {
-    this._updateStates();
-    this._syncDialogElement();
+  private syncOpenState(): void {
+    this.updateStates();
+    this.syncDialogElement();
+    const off = effect(() => {
+      // Reading the property tracks the signal; the bodies stay idempotent.
+      void this.open;
+      this.updateStates();
+      this.syncDialogElement();
+    });
+    writeInstanceState(this, 'openEffect', off);
   }
 
-  private _updateStates(): void {
+  private updateStates(): void {
     if (!this._internals?.states) return;
-    if (this.hasAttribute('open')) {
+    if (this.open) {
       this._internals.states.add('open');
       this._internals.states.delete('closed');
     } else {
@@ -206,28 +209,29 @@ export class OpenDialog extends OpenElement {
   }
 
   show(): void {
-    this.setAttribute('open', '');
+    this.open = true;
   }
 
   close(): void {
-    this.removeAttribute('open');
+    this.open = false;
   }
 
   toggle(): void {
-    if (this.hasAttribute('open')) this.removeAttribute('open');
-    else this.setAttribute('open', '');
+    this.open = !this.open;
   }
 
-  private _syncDialogElement(): void {
+  private syncDialogElement(): void {
     const dialog = this.shadowRoot?.querySelector('dialog');
     if (!dialog) return;
-    if (this.hasAttribute('open')) {
+    // True once showModal() has run for the current open session (#1030).
+    const modalActive = readInstanceState(this, 'modalActive', () => false);
+    if (this.open) {
       if ((this.getAttribute('mode') || 'modal') === 'modal') {
         // Modal: showModal() puts the rest of the page on the inert top layer
         // natively — focus, hit-testing, and the accessibility tree are all
         // covered by the platform, so no hand-rolled sibling inert is needed.
-        if (this._modalActive) return;
-        // #1030: the initial render writes `open` onto the inner <dialog>
+        if (modalActive) return;
+        // #1030: the compiled bool sink writes `open` onto the inner <dialog>
         // (SSR DSD / CSR first render), so dialog.open may already be true
         // without showModal() having run — that state presents as NON-modal
         // (no top layer, no ::backdrop, no focus containment). Close the
@@ -235,18 +239,18 @@ export class OpenDialog extends OpenElement {
         // on an already-open dialog throws InvalidStateError.
         if (dialog.open) dialog.close();
         dialog.showModal();
-        this._modalActive = true;
+        writeInstanceState(this, 'modalActive', true);
       } else if (!dialog.open) {
         // Non-modal: show() leaves the page interactive by design.
         dialog.show();
       }
     } else {
       if (dialog.open) dialog.close();
-      this._modalActive = false;
+      writeInstanceState(this, 'modalActive', false);
     }
   }
 
-  private _handleNativeClose(): void {
+  private handleNativeClose(): void {
     // The attribute→modal transition above close()es the attribute-opened
     // dialog and immediately re-opens it via showModal(); if the resulting
     // close event is dispatched asynchronously it arrives after the re-open
@@ -254,23 +258,23 @@ export class OpenDialog extends OpenElement {
     // A genuine native close (e.g. form method="dialog") finds the platform
     // has already cleared dialog.open.
     const dialog = this.shadowRoot?.querySelector('dialog');
-    if (dialog?.open && this.hasAttribute('open')) return;
-    this._handleClose();
+    if (dialog?.open && this.open) return;
+    this.handleClose();
   }
 
-  private _handleClose(): void {
-    // removeAttribute('open') fires attributeChangedCallback, which already
-    // runs _updateStates() + _syncDialogElement() — no duplicate sync here.
-    this.removeAttribute('open');
+  private handleClose(): void {
+    // Clearing the property updates the compiled signal; the open effect runs
+    // updateStates() + syncDialogElement() — no duplicate sync here.
+    this.open = false;
     this.dispatchEvent(new CustomEvent('open-dialog-close', { bubbles: true, composed: true }));
   }
 
-  private _handleCancel(e: Event): void {
+  private handleCancel(e: Event): void {
     e.preventDefault();
-    this._handleClose();
+    this.handleClose();
   }
 
-  private _handleTrigger(): void {
+  private handleTrigger(): void {
     this.toggle();
   }
 }

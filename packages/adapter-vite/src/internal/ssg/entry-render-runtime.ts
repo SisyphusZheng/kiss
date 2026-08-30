@@ -74,9 +74,14 @@ export function renderRuntimeHelpers(
   lines.push('');
 
   // Nested-host expansion: compiled page programs serialize nested
-  // custom-element hosts as empty `<tag ...></tag>` shells. For each
+  // custom-element hosts as `<tag ...>children</tag>` shells. For each
   // SSR-admitted island tag (build-time list from the admission plan) the
-  // shells are expanded per render through the island's own compiled class.
+  // shells are expanded per render through the island's own compiled class
+  // (fail closed on an unknown or unregistered OpenElement host; client-only
+  // and foreign tags pass through per the admission plan). The shell's light
+  // children are preserved after the island's DSD template — slot projection
+  // is platform behavior (alpha.8). Same-tag nesting is outside this contract
+  // (the shell pattern pairs the first closing tag).
   // Attribute values were escaped by the compiled serializer (`>` cannot
   // appear raw inside a quoted value), so the shell pattern is exact.
   lines.push(
@@ -84,7 +89,7 @@ export function renderRuntimeHelpers(
   );
   lines.push('const __nestedShells = __ssrRenderableTags.map((tag) => [tag, new RegExp(');
   lines.push(
-    '  "<" + tag + "((?: [A-Za-z_:][-A-Za-z0-9_.:]*(?:=\\"[^\\"]*\\")?)*)></" + tag + ">", "g"',
+    '  "<" + tag + "((?: [A-Za-z_:][-A-Za-z0-9_.:]*(?:=\\"[^\\"]*\\")?)*)>([\\s\\S]*?)</" + tag + ">", "g"',
   );
   lines.push(')]);');
   lines.push('function __unescapeAttr(value) {');
@@ -121,10 +126,19 @@ export function renderRuntimeHelpers(
   lines.push('function __expandNestedHosts(html, sourceInfo, __depth) {');
   lines.push('  let out = html');
   lines.push('  for (const entry of __nestedShells) {');
-  lines.push('    out = out.replace(entry[1], (_match, attrText) =>');
+  lines.push('    out = out.replace(entry[1], (_match, attrText, inner) => {');
   lines.push(
-    '      __ssr(entry[0], __propsFromAttrs(entry[0], attrText || ""), sourceInfo, __depth + 1))',
+    '      const rendered = __ssr(entry[0], __propsFromAttrs(entry[0], attrText || ""), sourceInfo, __depth + 1);',
   );
+  lines.push('      const closing = "</" + entry[0] + ">";');
+  lines.push('      if (!rendered.endsWith(closing)) {');
+  lines.push(
+    '        throw new Error("[openElement] nested expansion of <" + entry[0] + "> did not produce a host document; the island must render its own host tag.")',
+  );
+  lines.push('      }');
+  lines.push('      if (!inner) return rendered;');
+  lines.push('      return rendered.slice(0, -closing.length) + inner + closing;');
+  lines.push('    });');
   lines.push('  }');
   lines.push('  return out');
   lines.push('}');

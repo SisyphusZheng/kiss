@@ -1,284 +1,271 @@
-/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-button
  *
  * Minimal button component following Swiss International Style.
  * Violet brand accents with subtle hover states.
  *
- * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
+ * v0.44: compiled authoring (ADR-0143). The anchor/button switch is compiled
+ * as two sibling controls, exactly one visible: `linkMode`/`buttonMode`
+ * computeds read the `href` property, and `hidden` sinks pick the visible
+ * branch — so SSR emits a working link (no-JS navigation) and the claim
+ * preserves it. Variant/size styling follows the reflected host attributes
+ * (:host([variant=...]) selectors); click/form behavior lives in methods.
  *
  * Variants: default (outlined), primary (filled), ghost (no border), accent (gradient)
  * Sizes: sm, md (default), lg
  *
- * @csspart control -The button or anchor element
+ * @csspart control - The visible button or anchor element
  *
  * Usage:
  * ```html
  * <open-button>Click me</open-button>
  * <open-button variant="primary">Submit</open-button>
  * <open-button size="sm" disabled>Small</open-button>
+ * <open-button href="/guide">Navigate</open-button>
  * ```
  */
+import { computed, OpenElement } from '@openelement/element';
+import { element, property } from './compile-decorators.ts';
+import { closestFormOf, controlRecipe, recipe, syncDisabledState } from './component-recipes.ts';
 
-import { OpenElement } from '@openelement/element';
-import type { StyleSheetLike } from '@openelement/element';
-import {
-  controlRecipe,
-  recipe,
-  type RenderResult,
-  syncDisabledState,
-} from './component-recipes.ts';
-
-export const tagName = 'open-button';
-
-const sheet: StyleSheetLike = recipe(`
-  :host {
-    display: inline-block;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--size-2);
-    font-family: var(--font-sans);
-    font-weight: var(--font-weight-8);
-    text-decoration: none;
-    cursor: pointer;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
-    background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
-    color: var(--ui-control-text);
-    border-radius: var(--ui-control-radius);
-    box-shadow: var(--ui-control-highlight);
-    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
-    white-space: nowrap;
-    letter-spacing: 0;
-  }
-
-  /* Sizes */
-  .btn--sm {
-    padding: var(--size-1) var(--size-3);
-    font-size: var(--font-size-0);
-    min-height: 30px;
-  }
-
-  .btn--md {
-    padding: var(--size-2) var(--size-4);
-    font-size: var(--font-size-1);
-    min-height: 38px;
-  }
-
-  .btn--lg {
-    padding: var(--size-3) var(--size-5);
-    font-size: var(--font-size-2);
-    min-height: 48px;
-  }
-
-  /* Variants */
-  .btn--default:hover {
-    color: var(--brand-deep);
-    border-color: var(--brand-light);
-    background: color-mix(in srgb, var(--brand-pale) 52%, var(--bg-elevated));
-  }
-
-  .btn--primary {
-    background: linear-gradient(135deg, var(--brand), var(--brand-light));
-    color: var(--on-brand);
-    border-color: transparent;
-    box-shadow: 0 var(--size-2) var(--size-5) color-mix(in srgb, var(--brand) 22%, transparent);
-  }
-
-  .btn--primary:hover {
-    background: linear-gradient(135deg, var(--brand-hover), var(--brand-light));
-    border-color: transparent;
-    transform: translateY(calc(var(--border-size-1) * -1));
-    box-shadow: 0 var(--size-3) var(--size-6) color-mix(in srgb, var(--brand) 28%, transparent);
-  }
-
-  .btn--ghost {
-    border-color: transparent;
-  }
-
-  .btn--ghost:hover {
-    background: color-mix(in srgb, var(--brand-pale) 38%, transparent);
-    border-color: transparent;
-  }
-
-  .btn--accent {
-    background: var(--brand);
-    color: var(--on-brand);
-    border-color: transparent;
-  }
-  .btn--accent:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.05);
-  }
-  .btn--accent:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-1);
-  }
-
-  /* States */
-  .btn:disabled,
-  .btn[aria-disabled="true"] {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  .btn:focus-visible {
-    outline: 2px solid var(--brand, var(--indigo-6));
-    outline-offset: 2px;
-  }
-
-  :host(:state(disabled)) .btn {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-`);
-
-function closestForm(element: Element): HTMLFormElement | null {
-  return typeof element.closest === 'function' ? element.closest('form') : null;
-}
-
+@element('open-button', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })
 export class OpenButton extends OpenElement {
-  static override styles = [controlRecipe, sheet];
-  static override delegatesFocus = true;
-  static override formAssociated = true;
-  static override observedAttributes = ['variant', 'size', 'disabled', 'href', 'target', 'type'];
+  static override styles = [
+    controlRecipe,
+    recipe(`
+    :host {
+      display: inline-block;
+    }
 
-  override render(): RenderResult {
-    const v = this.getAttribute('variant') || 'default';
-    const s = this.getAttribute('size') || 'md';
-    const d = this.hasAttribute('disabled');
-    const href = this.getAttribute('href') || '';
-    const target = this.getAttribute('target') || '';
-    const type = this.getAttribute('type') || 'button';
-    const classes = `control btn btn--${v} btn--${s}`;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--size-2);
+      font-family: var(--font-sans);
+      font-weight: var(--font-weight-8);
+      text-decoration: none;
+      cursor: pointer;
+      border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+      background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
+      color: var(--ui-control-text);
+      border-radius: var(--ui-control-radius);
+      box-shadow: var(--ui-control-highlight);
+      transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
+      white-space: nowrap;
+      letter-spacing: 0;
+    }
 
-    if (href) {
-      return (
+    .btn[hidden] {
+      display: none;
+    }
+
+    /* Sizes */
+    :host([size='sm']) .btn {
+      padding: var(--size-1) var(--size-3);
+      font-size: var(--font-size-0);
+      min-height: 30px;
+    }
+
+    :host(:not([size])) .btn,
+    :host([size='md']) .btn {
+      padding: var(--size-2) var(--size-4);
+      font-size: var(--font-size-1);
+      min-height: 38px;
+    }
+
+    :host([size='lg']) .btn {
+      padding: var(--size-3) var(--size-5);
+      font-size: var(--font-size-2);
+      min-height: 48px;
+    }
+
+    /* Variants (default is the base .btn treatment) */
+    :host(:not([variant])) .btn:hover,
+    :host([variant='default']) .btn:hover {
+      color: var(--brand-deep);
+      border-color: var(--brand-light);
+      background: color-mix(in srgb, var(--brand-pale) 52%, var(--bg-elevated));
+    }
+
+    :host([variant='primary']) .btn {
+      background: linear-gradient(135deg, var(--brand), var(--brand-light));
+      color: var(--on-brand);
+      border-color: transparent;
+      box-shadow: 0 var(--size-2) var(--size-5) color-mix(in srgb, var(--brand) 22%, transparent);
+    }
+
+    :host([variant='primary']) .btn:hover {
+      background: linear-gradient(135deg, var(--brand-hover), var(--brand-light));
+      border-color: transparent;
+      transform: translateY(calc(var(--border-size-1) * -1));
+      box-shadow: 0 var(--size-3) var(--size-6) color-mix(in srgb, var(--brand) 28%, transparent);
+    }
+
+    :host([variant='ghost']) .btn {
+      border-color: transparent;
+    }
+
+    :host([variant='ghost']) .btn:hover {
+      background: color-mix(in srgb, var(--brand-pale) 38%, transparent);
+      border-color: transparent;
+    }
+
+    :host([variant='accent']) .btn {
+      background: var(--brand);
+      color: var(--on-brand);
+      border-color: transparent;
+    }
+    :host([variant='accent']) .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+    :host([variant='accent']) .btn:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-1);
+    }
+
+    /* States */
+    .btn:disabled,
+    .btn[aria-disabled='true'] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--brand, var(--indigo-6));
+      outline-offset: 2px;
+    }
+
+    :host(:state(disabled)) .btn {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  `),
+  ];
+
+  @property({ reflect: true })
+  variant = 'default';
+
+  @property({ reflect: true })
+  size = 'md';
+
+  @property({ reflect: true, type: Boolean })
+  disabled = false;
+
+  /** When set, the control is a link (the anchor branch is the visible one). */
+  @property({ reflect: true })
+  href = '';
+
+  @property({ reflect: true })
+  target = '';
+
+  @property({ reflect: true })
+  type = 'button';
+
+  /** True when the anchor branch is the visible control. */
+  @property({ reflect: false, attribute: false })
+  linkMode = computed(() => this.href !== '') as unknown as boolean;
+
+  /** True when the button branch is the visible control. */
+  @property({ reflect: false, attribute: false })
+  buttonMode = computed(() => this.href === '') as unknown as boolean;
+
+  /** Disabled anchors lose their href entirely (#757/#1061). */
+  @property({ reflect: false, attribute: false })
+  linkHref = computed(() => this.disabled || this.href === '' ? null : this.href) as unknown as
+    | string
+    | null;
+
+  @property({ reflect: false, attribute: false })
+  linkTarget = computed(() => this.target === '' ? null : this.target) as unknown as string | null;
+
+  @property({ reflect: false, attribute: false })
+  linkRel = computed(() => this.target === '_blank' ? 'noopener noreferrer' : null) as unknown as
+    | string
+    | null;
+
+  @property({ reflect: false, attribute: false })
+  linkAriaDisabled = computed(() => this.disabled ? 'true' : null) as unknown as string | null;
+
+  render() {
+    return (
+      <span style='display:contents'>
         <a
-          className={classes}
+          class='control btn'
           part='control'
-          href={d ? undefined : href}
-          target={target || undefined}
-          aria-disabled={d ? 'true' : undefined}
-          rel={target === '_blank' ? 'noopener noreferrer' : undefined}
-          onClick={this._handleClick}
+          href={this.linkHref}
+          target={this.linkTarget}
+          rel={this.linkRel}
+          aria-disabled={this.linkAriaDisabled}
+          hidden={this.buttonMode}
+          onClick={this.handleClick}
         >
           <slot></slot>
         </a>
-      );
-    }
-
-    return (
-      <button
-        className={classes}
-        part='control'
-        disabled={d}
-        type={type}
-        onClick={this._handleClick}
-      >
-        <slot></slot>
-      </button>
+        <button
+          class='control btn'
+          part='control'
+          type={this.type}
+          disabled={this.disabled}
+          hidden={this.linkMode}
+          onClick={this.handleClick}
+        >
+          <slot></slot>
+        </button>
+      </span>
     );
   }
 
+  override onDsdHydrated(): void {
+    this.syncInternals();
+  }
+
+  override onCsrRendered(): void {
+    this.syncInternals();
+  }
+
   override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
+    super.attributeChangedCallback(name, old, val);
     if (old === val) return;
-    // href change may switch element type (a vs button) -full re-render
-    if (name === 'href') {
-      this._reRender();
-    } else if (name === 'disabled') {
-      this._syncDOM();
-      this._updateState();
-    } else {
-      this._syncDOM();
+    if (name === 'disabled') this.syncInternals();
+  }
+
+  private syncInternals(): void {
+    syncDisabledState(this._internals, this.disabled);
+  }
+
+  private handleClick(e: Event): void {
+    // Disabled guard (#757): the anchor branch (and programmatic click()) can
+    // reach this handler — a disabled open-button must not fire open-click,
+    // navigate, or submit. The anchor keeps its disabled href out of the DOM
+    // (linkHref computed); preventDefault covers the rest.
+    if (this.disabled) {
+      e.preventDefault();
+      return;
     }
-  }
-
-  private _syncDOM(): void {
-    const el = this.shadowRoot?.querySelector('.btn') as HTMLElement | null;
-    if (!el) return;
-    const v = this.getAttribute('variant') || 'default';
-    const s = this.getAttribute('size') || 'md';
-    el.className = `control btn btn--${v} btn--${s}`;
-    if (el instanceof HTMLButtonElement) {
-      el.disabled = this.hasAttribute('disabled');
-      // type is observed: keep the inner button in sync without re-render.
-      el.setAttribute('type', this.getAttribute('type') || 'button');
-    }
-    if (el instanceof HTMLAnchorElement) {
-      // Anchor branch: keep href/aria-disabled in sync in BOTH directions
-      // (#757). A disabled anchor loses its href entirely (CSS
-      // pointer-events:none alone still allows keyboard Enter / programmatic
-      // click navigation, and even href="" stays Tab-focusable, #1061);
-      // re-enabling must restore the href and drop aria-disabled.
-      if (this.hasAttribute('disabled')) {
-        el.removeAttribute('href');
-        el.setAttribute('aria-disabled', 'true');
-      } else {
-        el.setAttribute('href', this.getAttribute('href') || '');
-        el.removeAttribute('aria-disabled');
-      }
-      // target is observed too: mirror render() (and its _blank rel guard).
-      const target = this.getAttribute('target') || '';
-      if (target) {
-        el.setAttribute('target', target);
-      } else {
-        el.removeAttribute('target');
-      }
-      if (target === '_blank') {
-        el.setAttribute('rel', 'noopener noreferrer');
-      } else {
-        el.removeAttribute('rel');
-      }
-    }
-  }
-
-  private _reRender(): void {
-    // NOTE: We do NOT capture assignedNodes before innerHTML replacement.
-    // Light DOM children remain in the host element and automatically
-    // re-project to the new <slot> - no manual DOM manipulation needed.
-    // The previous approach (replaceChildren) incorrectly moved light DOM
-    // children into the shadow root, breaking slot projection.
-    this.update();
-  }
-
-  private _updateState(): void {
-    syncDisabledState(this._internals, this.hasAttribute('disabled'));
-  }
-
-  private _handleClick = (_e: Event): void => {
-    // Disabled guard (#757): native <button disabled> blocks clicks by itself,
-    // but the anchor branch (and programmatic click()) can still reach this
-    // handler — a disabled open-button must not fire open-click nor submit.
-    if (this.hasAttribute('disabled')) return;
 
     this.dispatchEvent(new CustomEvent('open-click', { bubbles: true, composed: true }));
 
-    // An <a> (href) branch is a navigation control, not a form control — it must
+    // The anchor branch is a navigation control, not a form control — it must
     // never submit/reset a form (异味③, #637). Only the <button> branch may
     // trigger form submission below.
-    if (this.hasAttribute('href')) return;
+    if (this.href !== '') return;
 
     // Form submission: when type="submit" or type="reset" and this element is
     // associated with a <form> (via formAssociated), the inner <button> lives
     // inside the shadow DOM and its native submit/reset behavior does NOT
     // reach the outer form. We must explicitly trigger it here.
-    const type = this.getAttribute('type') || 'button';
-    // formAssociated internals.form is only available when attached to DOM.
-    // Fall back to closest('form') for elements without _internals (test env).
-    const form = this._internals?.form ?? closestForm(this);
+    const form = this._internals?.form ?? closestFormOf(this);
     if (!form) return;
-    if (type === 'submit') {
-      this._submitForm(form);
-    } else if (type === 'reset') {
-      this._resetForm(form);
+    if (this.type === 'submit') {
+      this.submitForm(form);
+    } else if (this.type === 'reset') {
+      form.reset();
     }
-  };
+  }
 
   /**
    * Submit `form` on behalf of this element (v0.42.0-alpha.9, #637).
@@ -292,7 +279,7 @@ export class OpenButton extends OpenElement {
    * event.target is retargeted to this host, so the handler locates the
    * form through event.composedPath() (see spa.ts handleFormSubmit).
    */
-  private _submitForm(form: HTMLFormElement): void {
+  private submitForm(form: HTMLFormElement): void {
     // SubmitEvent may be unavailable in older runtimes; fall back to Event.
     const SubmitEventCtor = (globalThis as { SubmitEvent?: typeof SubmitEvent }).SubmitEvent;
     const submitEvent: Event = SubmitEventCtor
@@ -316,10 +303,5 @@ export class OpenButton extends OpenElement {
         formEl.submit();
       }
     }
-  }
-
-  /** Reset `form` on behalf of this element (v0.42.0-alpha.9, #637). */
-  private _resetForm(form: HTMLFormElement): void {
-    form.reset();
   }
 }

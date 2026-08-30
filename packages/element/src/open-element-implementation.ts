@@ -133,7 +133,7 @@ export class OpenElement extends OpenElementConfiguration {
     // class field initializers can be reconciled at connect time.
     installAccessors(properties, Object.getPrototypeOf(this), facadeStates);
 
-    const state = createFacadePropertyState(this, properties);
+    const state = createFacadePropertyState(this, properties, ctor.__computedFields);
     facadeStates.set(this, state);
 
     if (!program) return;

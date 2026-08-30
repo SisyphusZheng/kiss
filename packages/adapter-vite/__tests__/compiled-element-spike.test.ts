@@ -394,27 +394,59 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
     assertStringIncludes(ctx.messages[0], 'OEC9013');
   });
 
-  await t.step('list Regions reject multiple item value slots', () => {
-    const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-      "@element('oe-spike-duplicate-item-value')",
-      'export class DuplicateItemValue extends OpenElement {',
-      "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha' }];",
-      '  render() {',
-      '    return <ul>{this.items.map((item) => <li key={item.id}>{item.text}{item.text}</li>)}</ul>;',
-      '  }',
-      '}',
-    ].join('\n');
-    const ctx = failingContext();
-    assertThrows(
-      () => transform.call(ctx, source, '/project/app/islands/duplicate-item-value.tsx'),
-      Error,
-      'exactly one',
-    );
-    assertStringIncludes(ctx.messages[0], 'OEC9013');
-  });
+  await t.step(
+    'list Regions admit multi-field item slots and fail closed on non-item expressions',
+    async () => {
+      const { compileElementSpike } = await import('../src/internal/compiler/compile.ts');
+      // alpha.8: item templates carry one ival/iattr slot per item field — a row
+      // may bind {item.text} twice and per-item attributes (id, href, ...).
+      const source = [
+        "import { OpenElement } from '@openelement/element';",
+        'declare function element(tag: string): ClassDecorator;',
+        'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+        "@element('oe-spike-multi-field')",
+        'export class MultiField extends OpenElement {',
+        "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha', link: '/a' }];",
+        '  render() {',
+        '    return <ul>{this.items.map((item) => <li key={item.id} id={item.id}>{item.text}{item.text}<a href={item.link}>{item.text}</a></li>)}</ul>;',
+        '  }',
+        '}',
+      ].join('\n');
+      const program = compileElementSpike(source, '/project/app/islands/multi-field.tsx').program;
+      const each = program.parts.find((part: { k: string }) => part.k === 'each') as {
+        field?: string;
+        item: unknown[];
+      } | undefined;
+      assert(each, 'each Region must exist');
+      assertEquals(
+        each.field,
+        undefined,
+        'multi-field templates omit the Region field restatement',
+      );
+      assert(JSON.stringify(each.item).includes('"iattrs"'));
+
+      // Expressions that are not item field slots still fail closed.
+      const bad = [
+        "import { OpenElement } from '@openelement/element';",
+        'declare function element(tag: string): ClassDecorator;',
+        'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+        "@element('oe-spike-bad-item')",
+        'export class BadItem extends OpenElement {',
+        "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha' }];",
+        '  render() {',
+        '    return <ul>{this.items.map((item) => <li key={item.id}>{item.text.toUpperCase()}</li>)}</ul>;',
+        '  }',
+        '}',
+      ].join('\n');
+      const ctx = failingContext();
+      assertThrows(
+        () => transform.call(ctx, bad, '/project/app/islands/bad-item.tsx'),
+        Error,
+        'item child must be',
+      );
+      assertStringIncludes(ctx.messages[0], 'OEC9013');
+    },
+  );
 });
 
 Deno.test('compiled-element alpha.1 - canonical program records and decorator lowering', async () => {
@@ -647,13 +679,17 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       assertStringIncludes(text, fragment);
     };
 
-    // Host children (slots) are outside grammar v1.
-    expectFailure(
+    // Host children are the host's light content (slot projection is platform
+    // behavior): they lower with the ordinary grammar.
+    const withChildren = compileElementSpike(
       render('render() { return <main><live-counter><span>x</span></live-counter></main>; }'),
-      'OEC9017',
-      'may not have children',
+      '/project/app/components/host-children.tsx',
     );
-    // Host event handlers are outside grammar v1.
+    assert(
+      JSON.stringify(withChildren.program.template).includes('"tag":"live-counter"'),
+      'host children must lower',
+    );
+    // Host event handlers are outside the grammar.
     expectFailure(
       render(
         'render() { return <main><live-counter onClick={this.marker}></live-counter></main>; }',
@@ -661,7 +697,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       'OEC9017',
       'event handlers',
     );
-    // Host refs are outside grammar v1.
+    // Host refs are outside the grammar.
     expectFailure(
       render('render() { return <main><live-counter ref={this.marker}></live-counter></main>; }'),
       'OEC9017',
@@ -696,4 +732,102 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       'runtime top-level statements',
     );
   });
+
+  await t.step(
+    'computed fields, html sinks and element options (alpha.8 grammar extension)',
+    () => {
+      // Positive: computed field drives a bool sink; innerHTML sink; element
+      // options emit the facade statics.
+      const source = [
+        "import { computed, OpenElement } from '@openelement/element';",
+        'declare function element(tag: string, options?: { root: string; delegatesFocus?: boolean; formAssociated?: boolean }): ClassDecorator;',
+        'declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;',
+        "@element('oe-alpha8-computed', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })",
+        'export default class Alpha8Computed extends OpenElement {',
+        "  @property({ reflect: false }) label = '';",
+        "  @property({ reflect: false, attribute: false }) bodyHtml = '';",
+        "  @property({ reflect: false, attribute: false }) noLabel = computed(() => this.label === '') as unknown as boolean;",
+        '  render() {',
+        '    return <main><button hidden={this.noLabel}>{this.label}</button><div innerHTML={this.bodyHtml}></div></main>;',
+        '  }',
+        '}',
+      ].join('\n');
+      const { code, program } = compileElementSpike(source, '/project/app/components/computed.tsx');
+      const meta = program.metadata.properties.find((p: { name: string }) =>
+        p.name === 'noLabel'
+      ) as {
+        computed?: boolean;
+        deps?: string[];
+      };
+      assertEquals(meta.computed, true);
+      assertEquals(meta.deps, ['label']);
+      assert(program.parts.some((p: { k: string }) => p.k === 'html'), 'html Part must exist');
+      assertStringIncludes(code, 'static delegatesFocus = true;');
+      assertStringIncludes(code, 'static formAssociated = true;');
+      assertStringIncludes(code, 'static __computedFields = {');
+      assertStringIncludes(code, "noLabel: (__s) => computed(() => __s.label.value === '')");
+
+      const expectFailure = (src: string, code: string, fragment: string) => {
+        let thrown: unknown;
+        try {
+          compileElementSpike(src, '/project/app/components/bad-computed.tsx');
+        } catch (error) {
+          thrown = error;
+        }
+        assert(
+          thrown instanceof CompiledSpikeError,
+          `expected ${code} failure, got ${String(thrown)}`,
+        );
+        const text = String(thrown);
+        assertStringIncludes(text, code);
+        assertStringIncludes(text, fragment);
+      };
+      const badPrelude = [
+        "import { computed, OpenElement } from '@openelement/element';",
+        'declare function element(tag: string): ClassDecorator;',
+        'declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;',
+        "@element('oe-alpha8-bad-computed')",
+        'export class BadComputed extends OpenElement {',
+        "  @property({ reflect: false }) label = '';",
+      ].join('\n');
+
+      // A computed that reads an undeclared member fails closed.
+      expectFailure(
+        [
+          badPrelude,
+          "  @property({ reflect: false, attribute: false }) bad = computed(() => this.missing === '') as unknown as boolean;",
+          '  render() { return <main>{this.label}</main>; }',
+          '}',
+        ].join('\n'),
+        'OEC9024',
+        'this.missing',
+      );
+      // A computed with an attribute channel fails closed.
+      expectFailure(
+        [
+          badPrelude,
+          "  @property({ reflect: false }) bad = computed(() => this.label === '') as unknown as boolean;",
+          '  render() { return <main>{this.label}</main>; }',
+          '}',
+        ].join('\n'),
+        'OEC9025',
+        'attribute: false',
+      );
+      // An html sink with element children fails closed (the sink owns content).
+      expectFailure(
+        [
+          "import { OpenElement } from '@openelement/element';",
+          'declare function element(tag: string): ClassDecorator;',
+          'declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;',
+          "@element('oe-alpha8-bad-html')",
+          'export class BadHtml extends OpenElement {',
+          "  @property({ reflect: false, attribute: false }) bodyHtml = '';",
+          '  render() { return <main><div innerHTML={this.bodyHtml}><span>x</span></div></main>; }',
+          '}',
+        ].join('\n'),
+        'OEC9026',
+        'childless',
+      );
+    },
+  );
 });

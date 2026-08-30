@@ -91,8 +91,12 @@ export class CompiledElementKernel {
       themeManager.connect(this.#element);
       themeConnected = true;
       this.form.attach(this.#element, { formAssociated: this.#options.formAssociated });
+      const styles = this.#options.styles;
+      const styleCount = Array.isArray(styles) ? styles.length : styles ? 1 : 0;
       this.#instance = root.childNodes.length > 0
-        ? claimExistingDom(this.#program, this.#options, root)
+        ? claimExistingDom(this.#program, this.#options, root, {
+          expectStaticStyle: styleCount > 0,
+        })
         : createFreshDom(this.#program, this.#options, root);
       this.context.connect();
       if (this.errors.hasError) this.errors.reset();

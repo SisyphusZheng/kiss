@@ -100,19 +100,60 @@ function inferAttributeType(name: string): string {
   return 'string';
 }
 
-function parseObservedAttributes(text: string): string[] {
-  // Lazy match stops at the first closing bracket; observed attributes are flat string arrays.
-  const match = text.match(/static\s+(?:override\s+)?observedAttributes\s*=\s*\[([\s\S]*?)\]/);
-  if (!match) return [];
-  return match[1]
-    .split(/,\s*/)
-    .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
-    .filter(Boolean);
+function parseObservedAttributes(text: string): { name: string; type: string }[] {
+  // v0.44: compiled components declare attribute-backed properties with
+  // @property(...) decorators; the observed set is the compiled property list.
+  const source = parseTypeScript(text, 'component.tsx');
+  const out: { name: string; type: string }[] = [];
+  const kebab = (value: string): string => value.replace(/([A-Z])/g, '-$1').toLowerCase();
+  const visit = (node: ts.Node): void => {
+    if (ts.isPropertyDeclaration(node) && ts.isIdentifier(node.name)) {
+      const decorators = ts.getDecorators(node) ?? [];
+      for (const decorator of decorators) {
+        const call = decorator.expression;
+        if (!ts.isCallExpression(call) || call.expression.getText(source) !== 'property') continue;
+        const options = call.arguments[0];
+        if (!options || !ts.isObjectLiteralExpression(options)) continue;
+        let attribute: string | null | undefined;
+        let type = 'string';
+        for (const entry of options.properties) {
+          if (!ts.isPropertyAssignment(entry)) continue;
+          const key = entry.name.getText(source);
+          if (key === 'attribute') {
+            if (entry.initializer.kind === ts.SyntaxKind.FalseKeyword) attribute = null;
+            else if (ts.isStringLiteral(entry.initializer)) {
+              attribute = kebab(entry.initializer.text);
+            }
+          }
+          if (key === 'type') {
+            const typeName = entry.initializer.getText(source);
+            if (typeName === 'Boolean') type = 'boolean';
+            else if (typeName === 'Number') type = 'number';
+            else if (typeName === 'Array') type = 'array';
+            else if (typeName === 'Object') type = 'object';
+          }
+        }
+        if (attribute === null) continue;
+        const attrName = attribute ?? kebab(node.name.text);
+        const initializer = node.initializer?.getText(source) ?? '';
+        const inferred = type !== 'string'
+          ? type
+          : initializer === 'true' || initializer === 'false'
+          ? 'boolean'
+          : inferAttributeType(attrName);
+        out.push({ name: attrName, type: inferred });
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return out;
 }
 
 function parseTagName(text: string): string {
-  const match = text.match(/export\s+const\s+tagName\s*=\s*['"]([^'"]+)['"]/);
-  if (!match) throw new Error('Could not find tagName export');
+  // v0.44: the compiled program owns the tag — read the @element decorator.
+  const match = text.match(/@element\(\s*['"]([^'"]+)['"]/);
+  if (!match) throw new Error('Could not find @element(...) decorator');
   return match[1];
 }
 
@@ -250,9 +291,9 @@ function buildMeta(file: string, source: string): ComponentMeta {
   const tagName = parseTagName(source);
   const className = parseClassName(source, file);
   const observed = parseObservedAttributes(source);
-  const attributes: OpenElementAttribute[] = observed.map((name) => ({
+  const attributes: OpenElementAttribute[] = observed.map(({ name, type }) => ({
     name,
-    type: inferAttributeType(name),
+    type,
     description: `${name} attribute`,
   }));
 

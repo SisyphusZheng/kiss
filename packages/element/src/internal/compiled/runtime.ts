@@ -24,12 +24,14 @@ import {
   type SpikeElementNode,
   type SpikeEventPart,
   type SpikeFixedPart,
+  type SpikeHtmlPart,
   type SpikePropPart,
   type SpikeRefPart,
   type SpikeStylePart,
   type SpikeTextPart,
   type SpikeTreeNode,
   type SpikeWhenPart,
+  STATIC_STYLES_MARKER,
   validatePartProgram,
 } from './program.ts';
 
@@ -199,7 +201,7 @@ function subscribeWrites(
 function isFixedPart(part: PartProgramSpike['parts'][number]): part is SpikeFixedPart {
   return (
     part.k === 'attr' || part.k === 'prop' || part.k === 'bool' || part.k === 'class' ||
-    part.k === 'style' || part.k === 'event' || part.k === 'ref'
+    part.k === 'style' || part.k === 'html' || part.k === 'event' || part.k === 'ref'
   );
 }
 
@@ -281,10 +283,20 @@ function insertNodesBefore(parent: Node, nodes: readonly Node[], reference: Node
   for (const node of nodes) parent.insertBefore(node, reference);
 }
 
-function itemValue(part: SpikeEachPart, item: unknown): unknown {
-  if (part.field === undefined) return item;
+function itemValue(part: SpikeEachPart, item: unknown, field?: string): unknown {
+  const selected = field ?? part.field;
+  if (selected === undefined) return item;
   if (typeof item !== 'object' || item === null) return undefined;
-  return (item as Record<string, unknown>)[part.field];
+  return (item as Record<string, unknown>)[selected];
+}
+
+/** Per-item attribute slot value: bare when true, omitted when falsy/absent. */
+function itemAttrValue(item: unknown, field: string): string | null {
+  if (typeof item !== 'object' || item === null) return null;
+  const value = (item as Record<string, unknown>)[field];
+  if (value === true) return '';
+  if (value === false || value === null || value === undefined) return null;
+  return String(value);
 }
 
 function itemKey(part: SpikeEachPart, item: unknown, index: number): string {
@@ -327,6 +339,15 @@ interface ItemValueSlot {
   parent?: Node;
   before?: Node | null;
   position?: number;
+  /** Item field this slot renders (multi-field item templates). */
+  field?: string;
+}
+
+/** Per-item attribute slot tracked for keyed-reuse updates. */
+interface ItemAttrSlot {
+  element: Element;
+  name: string;
+  field: string;
 }
 
 interface ChildRegion {
@@ -344,6 +365,7 @@ interface EachEntry {
   scope: ResourceScope;
   nodes: Node[];
   valueSlots: ItemValueSlot[];
+  attrSlots: ItemAttrSlot[];
 }
 
 interface EachRegion {
@@ -423,6 +445,7 @@ function mountNodes(
   itemPart?: SpikeEachPart,
   itemValueSlots?: ItemValueSlot[],
   parent?: Node,
+  itemAttrSlots?: ItemAttrSlot[],
 ): Node[] {
   const out: Node[] = [];
   const slotStart = itemValueSlots?.length ?? 0;
@@ -436,8 +459,8 @@ function mountNodes(
         throw new Error('[compiled-runtime] item value slot outside an each Region');
       }
       if (!itemPart) throw new Error('[compiled-runtime] item value slot has no item Region');
-      const value = displayValue(itemValue(itemPart, item));
-      const slot: ItemValueSlot = { parent, position: out.length };
+      const value = displayValue(itemValue(itemPart, item, node.field));
+      const slot: ItemValueSlot = { parent, position: out.length, field: node.field };
       if (value.length > 0) {
         const text = doc.createTextNode(value);
         slot.text = text;
@@ -449,6 +472,16 @@ function mountNodes(
     if (node.k === 'el') {
       const el = doc.createElement(node.tag);
       for (const [name, value] of node.attrs) el.setAttribute(name, value);
+      if (node.iattrs !== undefined) {
+        if (item === NO_ITEM || !itemPart) {
+          throw new Error('[compiled-runtime] item attribute slot outside an each Region');
+        }
+        for (const [name, field] of node.iattrs) {
+          const value = itemAttrValue(item, field);
+          if (value !== null) el.setAttribute(name, value);
+          itemAttrSlots?.push({ element: el, name, field });
+        }
+      }
       for (
         const child of mountNodes(
           ctx,
@@ -459,6 +492,7 @@ function mountNodes(
           itemPart,
           itemValueSlots,
           el,
+          itemAttrSlots,
         )
       ) {
         el.appendChild(child);
@@ -489,13 +523,15 @@ function buildItem(
   part: SpikeEachPart,
   item: unknown,
   parent?: Node,
-): { nodes: Node[]; valueSlots: ItemValueSlot[]; scope: ResourceScope } {
+): { nodes: Node[]; valueSlots: ItemValueSlot[]; attrSlots: ItemAttrSlot[]; scope: ResourceScope } {
   const scope = regionScope.child();
   const valueSlots: ItemValueSlot[] = [];
+  const attrSlots: ItemAttrSlot[] = [];
   try {
     return {
-      nodes: mountNodes(ctx, scope, doc, part.item, item, part, valueSlots, parent),
+      nodes: mountNodes(ctx, scope, doc, part.item, item, part, valueSlots, parent, attrSlots),
       valueSlots,
+      attrSlots,
       scope,
     };
   } catch (error) {
@@ -703,7 +739,13 @@ function buildEach(
     }
     seen.add(key);
     const entry = buildItem(ctx, scope, doc, part, value[index], parent);
-    const stored = { key, scope: entry.scope, nodes: entry.nodes, valueSlots: entry.valueSlots };
+    const stored = {
+      key,
+      scope: entry.scope,
+      nodes: entry.nodes,
+      valueSlots: entry.valueSlots,
+      attrSlots: entry.attrSlots,
+    };
     region.entries.push(stored);
     region.byKey.set(key, stored);
     nodes.push(...entry.nodes);
@@ -771,8 +813,8 @@ function updateItemValues(
   regionParent: Node,
   regionReference: Node,
 ): void {
-  const next = displayValue(itemValue(part, item));
   for (const [index, slot] of entry.valueSlots.entries()) {
+    const next = displayValue(itemValue(part, item, slot.field));
     if (next.length === 0) {
       if (slot.text) removeItemValue(entry, slot, slot.text);
       continue;
@@ -788,6 +830,14 @@ function updateItemValues(
     const text = document.createTextNode(next);
     slot.text = text;
     insertItemValue(entry, index, text, regionParent, regionReference);
+  }
+  for (const slot of entry.attrSlots) {
+    const next = itemAttrValue(item, slot.field);
+    if (next === null) {
+      if (slot.element.hasAttribute(slot.name)) slot.element.removeAttribute(slot.name);
+    } else if (slot.element.getAttribute(slot.name) !== next) {
+      slot.element.setAttribute(slot.name, next);
+    }
   }
 }
 
@@ -949,12 +999,35 @@ function applyBoolean(element: Element, name: string, value: boolean): void {
 function installValuePart(
   ctx: MountContext,
   root: Node,
-  part: SpikeAttrPart | SpikePropPart | SpikeBoolPart | SpikeClassPart | SpikeStylePart,
+  part:
+    | SpikeAttrPart
+    | SpikePropPart
+    | SpikeBoolPart
+    | SpikeClassPart
+    | SpikeStylePart
+    | SpikeHtmlPart,
   mode: 'fresh' | 'claim',
 ): void {
   const element = resolvePath(root, part.path, `${part.k} Part`);
   const scope = ctx.rootScope.child();
   const initial = signalOf(ctx, part.signal).value;
+
+  if (part.k === 'html') {
+    if (typeof initial !== 'string') {
+      throw new Error('[compiled-runtime] html Part expects a string signal value');
+    }
+    let current = initial;
+    if (mode === 'fresh') (element as Element).innerHTML = current;
+    subscribeWrites(ctx, scope, part.signal, (value) => {
+      if (typeof value !== 'string') {
+        throw new Error('[compiled-runtime] html Part expects a string signal value');
+      }
+      if (Object.is(value, current)) return;
+      (element as Element).innerHTML = value;
+      current = value;
+    });
+    return;
+  }
 
   if (part.k === 'attr') {
     let current = attributeValue(initial);
@@ -1110,7 +1183,7 @@ function attachFixedParts(ctx: MountContext, root: Node, mode: 'fresh' | 'claim'
   for (const part of ctx.program.parts) {
     if (
       part.k === 'attr' || part.k === 'prop' || part.k === 'bool' || part.k === 'class' ||
-      part.k === 'style'
+      part.k === 'style' || part.k === 'html'
     ) {
       installValuePart(ctx, root, part, mode);
     } else if (part.k === 'event') {
@@ -1239,11 +1312,27 @@ function serializeElement(
   item: unknown,
   itemPart?: SpikeEachPart,
 ): string {
-  const attrs = serializedFixedAttributes(ctx, node, programPath)
-    .map(([name, value]) => ` ${name}="${escapeAttr(value)}"`)
-    .join('');
+  const attrList = serializedFixedAttributes(ctx, node, programPath);
+  if (node.iattrs !== undefined) {
+    if (item === NO_ITEM || !itemPart) {
+      throw new Error('[compiled-runtime] item attribute slot outside an each Region');
+    }
+    for (const [name, field] of node.iattrs) {
+      const value = itemAttrValue(item, field);
+      if (value !== null) attrList.push([name, value]);
+    }
+  }
+  const attrs = attrList.map(([name, value]) => ` ${name}="${escapeAttr(value)}"`).join('');
   const open = `<${node.tag}${attrs}`;
   if (VOID_TAGS.has(node.tag)) return `${open}>`;
+  const htmlSink = fixedPartsAtPath(ctx, programPath).find((part) => part.k === 'html');
+  if (htmlSink && htmlSink.k === 'html') {
+    const value = signalOf(ctx, htmlSink.signal).value;
+    if (typeof value !== 'string') {
+      throw new Error('[compiled-runtime] html Part expects a string signal value');
+    }
+    return `${open}>${value}</${node.tag}>`;
+  }
   const children = node.children
     .map((child, index) => serializeNode(ctx, child, [...programPath, index], item, itemPart))
     .join('');
@@ -1334,6 +1423,9 @@ function claimElementAttributes(
   programPath: number[],
 ): void {
   const dynamic = dynamicAttributeNames(ctx, programPath);
+  // Per-item attribute slots are verified with their item context by the
+  // caller; they are not static drift.
+  for (const [name] of node.iattrs ?? []) dynamic.add(name);
   for (const [name, value] of node.attrs) {
     if (dynamic.has(name)) continue;
     if (element.getAttribute(name) !== value) {
@@ -1409,6 +1501,7 @@ function claimNodes(
   item: unknown = NO_ITEM,
   itemPart?: SpikeEachPart,
   itemValueSlots?: ItemValueSlot[],
+  itemAttrSlots?: ItemAttrSlot[],
 ): number {
   const at = (index: number): Node => {
     const node = parent.childNodes[index];
@@ -1434,7 +1527,7 @@ function claimNodes(
     if (node.k === 'ival') {
       if (item === NO_ITEM) claimFailure(nodePath, 'item value slot outside an each Region');
       if (!itemPart) claimFailure(nodePath, 'item value slot has no item Region');
-      const expected = displayValue(itemValue(itemPart, item));
+      const expected = displayValue(itemValue(itemPart, item, node.field));
       if (expected.length > 0) {
         const dom = at(cursor++);
         if (!isText(dom)) claimFailure(nodePath, 'expected item value text');
@@ -1445,11 +1538,13 @@ function claimNodes(
           text: dom,
           parent,
           before: parent.childNodes[cursor] ?? null,
+          field: node.field,
         });
       } else {
         itemValueSlots?.push({
           parent,
           before: parent.childNodes[cursor] ?? null,
+          field: node.field,
         });
       }
       continue;
@@ -1461,7 +1556,29 @@ function claimNodes(
         claimFailure(nodePath, `expected <${node.tag}>, found <${dom.tagName.toLowerCase()}>`);
       }
       claimElementAttributes(ctx, dom, node, nodePath, nodeProgramPath);
-      const consumed = claimNodes(
+      if (node.iattrs !== undefined) {
+        // Per-item attribute slots carry the item context: values are verified
+        // against the item (deterministic) and tracked for keyed-reuse updates.
+        if (item === NO_ITEM || !itemPart) {
+          claimFailure(nodePath, 'item attribute slot outside an each Region');
+        }
+        for (const [name, field] of node.iattrs) {
+          const expected = itemAttrValue(item, field);
+          const actual = dom.getAttribute(name);
+          if (expected === null ? actual !== null : actual !== expected) {
+            claimFailure(
+              nodePath,
+              `item attribute drift on "${name}": expected ${JSON.stringify(expected)}`,
+            );
+          }
+          itemAttrSlots?.push({ element: dom, name, field });
+        }
+      }
+      // A trusted-HTML sink owns the target's whole content: the subtree is
+      // opaque to the claim (the program declares no structure inside it).
+      const hasHtmlSink = fixedPartsAtPath(ctx, nodeProgramPath)
+        .some((part) => part.k === 'html');
+      const consumed = hasHtmlSink ? dom.childNodes.length : claimNodes(
         ctx,
         dom,
         0,
@@ -1472,6 +1589,7 @@ function claimNodes(
         item,
         itemPart,
         itemValueSlots,
+        itemAttrSlots,
       );
       if (consumed !== dom.childNodes.length) {
         claimFailure(`${nodePath}.children`, 'unexpected trailing nodes');
@@ -1588,6 +1706,7 @@ function claimNodes(
         seen.add(key);
         const itemScope = partScope.child();
         const itemSlots: ItemValueSlot[] = [];
+        const itemAttrs: ItemAttrSlot[] = [];
         const before = cursor;
         cursor = claimNodes(
           ctx,
@@ -1600,12 +1719,14 @@ function claimNodes(
           currentItem,
           part,
           itemSlots,
+          itemAttrs,
         );
         const entry: EachEntry = {
           key,
           scope: itemScope,
           nodes: Array.from(parent.childNodes).slice(before, cursor),
           valueSlots: itemSlots,
+          attrSlots: itemAttrs,
         };
         region.entries.push(entry);
         region.byKey.set(key, entry);
@@ -1619,17 +1740,50 @@ function claimNodes(
   return cursor;
 }
 
+/** Claim-time options for the owning root's serialized static style sink. */
+export interface CompiledClaimOptions {
+  /**
+   * True when the claiming class carries static styles. The server serializer
+   * emits those styles as one marked `<style data-oe-static-styles>` element —
+   * the first template child — so a claim skips exactly that node. A marked
+   * style node on a style-less class is drift and fails closed.
+   */
+  expectStaticStyle?: boolean;
+}
+
+function isStaticStyleNode(node: Node | undefined): boolean {
+  return (
+    !!node && isElement(node) && node.tagName.toLowerCase() === 'style' &&
+    node.hasAttribute(STATIC_STYLES_MARKER)
+  );
+}
+
 /** Claim existing SSR DOM without allocating or overwriting live values. */
 export function claimExistingDom(
   program: PartProgramSpike,
   host: CompiledSpikeHost,
   root: Node,
+  options: CompiledClaimOptions = {},
 ): CompiledSpikeInstance {
   noteCompiledProgramActivated();
   validatePartProgram(program);
   const ctx = createContext(program, host);
+  const styleNode = root.childNodes[0];
+  const hasStaticStyle = isStaticStyleNode(styleNode);
+  if (hasStaticStyle && !options.expectStaticStyle) {
+    claimFailure('template', 'unexpected static style element');
+  }
+  const cursorStart = hasStaticStyle ? 1 : 0;
   try {
-    const consumed = claimNodes(ctx, root, 0, ctx.program.template, 'template', [], ctx.rootScope);
+    const consumed = claimNodes(
+      ctx,
+      root,
+      cursorStart,
+      ctx.program.template,
+      'template',
+      [],
+      ctx.rootScope,
+    );
     if (consumed !== root.childNodes.length) claimFailure('template', 'unexpected trailing nodes');
     attachFixedParts(ctx, root, 'claim');
     return instance(ctx);

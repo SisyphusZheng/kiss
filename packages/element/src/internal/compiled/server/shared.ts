@@ -5,9 +5,9 @@
  * in `../program.ts`. It owns no DOM discovery and performs no rendering
  * fallback: malformed programs and unsafe values are rejected before either
  * execution mode can produce or attach to output. The server/claim grammar is
- * the compiler-emitted vocabulary — fixed `prop`/`event` sinks, `text` Parts,
- * and `when`/`each` Regions with static branches; other unified-schema kinds
- * fail closed here.
+ * the compiler-emitted vocabulary — fixed `prop`/`attr`/`bool`/`class`/`style`/
+ * `html` sinks, `event` sinks, `text` Parts, and `when`/`each` Regions with
+ * static branches; other unified-schema kinds fail closed here.
  */
 
 import {
@@ -135,6 +135,25 @@ function validateStaticNodes(
     }
     validateTag(node.tag, `${nodePath}.tag`);
     validateAttributes(node.attrs, `${nodePath}.attrs`);
+    if (node.iattrs !== undefined) {
+      if (!allowItemValue) fail(`${nodePath}.iattrs`, 'item attribute slots need an each Region');
+      validateAttributes(
+        node.iattrs.map(([name, field]) => [name, field]),
+        `${nodePath}.iattrs`,
+      );
+      const staticNames = new Set(node.attrs.map(([name]) => name.toLowerCase()));
+      for (const [name, field] of node.iattrs) {
+        if (staticNames.has(name.toLowerCase())) {
+          fail(`${nodePath}.iattrs`, `item attribute slot duplicates static attribute ${name}`);
+        }
+        if (name.toLowerCase() === 'key') {
+          fail(`${nodePath}.iattrs`, 'item attribute slots may not bind the item key');
+        }
+        if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(field)) {
+          fail(`${nodePath}.iattrs`, `item attribute field ${field} must be an identifier`);
+        }
+      }
+    }
     if (VOID_TAGS.has(node.tag) && node.children.length > 0) {
       fail(nodePath, `void element <${node.tag}> may not have children`);
     }
@@ -145,6 +164,10 @@ function validateStaticNodes(
 function validatePart(part: SpikePart, index: number): void {
   const path = `parts[${index}]`;
   if (part.index !== index) fail(path, `index must equal its position (${index})`);
+  const fixedPathOk = part.k !== 'text' && part.k !== 'when' && part.k !== 'each'
+    ? 'path' in part && part.path.length > 0 &&
+      part.path.every((value) => Number.isInteger(value) && value >= 0)
+    : true;
   switch (part.k) {
     case 'text':
       if (!part.signal) fail(path, 'text Part needs a non-empty signal name');
@@ -152,11 +175,24 @@ function validatePart(part: SpikePart, index: number): void {
     case 'prop':
       if (!part.signal || !part.name) fail(path, 'property Part needs signal and name');
       validatePropertyName(part.name, `${path}.name`);
-      if (
-        part.path.length === 0 ||
-        part.path.some((value) => !Number.isInteger(value) || value < 0)
-      ) {
+      if (!fixedPathOk) {
         fail(`${path}.path`, 'property Part path must contain non-negative child indices');
+      }
+      return;
+    case 'attr':
+    case 'bool':
+      if (!part.signal || !part.name) fail(path, `${part.k} Part needs signal and name`);
+      validateAttributeName(part.name, `${path}.name`);
+      if (!fixedPathOk) {
+        fail(`${path}.path`, `${part.k} Part path must contain non-negative child indices`);
+      }
+      return;
+    case 'class':
+    case 'style':
+    case 'html':
+      if (!part.signal) fail(path, `${part.k} Part needs a non-empty signal name`);
+      if (!fixedPathOk) {
+        fail(`${path}.path`, `${part.k} Part path must contain non-negative child indices`);
       }
       return;
     case 'event':
@@ -164,10 +200,7 @@ function validatePart(part: SpikePart, index: number): void {
         fail(`${path}.event`, `unsupported event name ${JSON.stringify(part.event)}`);
       }
       if (!part.handler) fail(path, 'event Part needs a non-empty handler name');
-      if (
-        part.path.length === 0 ||
-        part.path.some((value) => !Number.isInteger(value) || value < 0)
-      ) {
+      if (!fixedPathOk) {
         fail(`${path}.path`, 'event Part path must contain non-negative child indices');
       }
       return;
@@ -178,8 +211,8 @@ function validatePart(part: SpikePart, index: number): void {
       validateStaticNodes(part.off, `${path}.off`, false);
       return;
     case 'each':
-      if (!part.signal || !part.key || !part.field) {
-        fail(path, 'list Region needs signal, key and field names');
+      if (!part.signal || !part.key) {
+        fail(path, 'list Region needs signal and key names');
       }
       validateStaticNodes(part.item, `${path}.item`, true);
       return;
@@ -240,21 +273,49 @@ function validateLocations(program: PartProgramSpike): void {
     }
     const target = resolveTemplateNode(program, part.path, `parts[${part.index}].path`);
     if (target.k !== 'el') fail(`parts[${part.index}].path`, 'sink path must target an element');
-    if (part.k === 'prop') {
-      if (target.attrs.some(([name]) => name.toLowerCase() === part.name.toLowerCase())) {
-        fail(
-          `parts[${part.index}]`,
-          `property Part duplicates static attribute ${JSON.stringify(part.name)}`,
-        );
+    if (part.k === 'html') {
+      if (target.children.length > 0) {
+        fail(`parts[${part.index}]`, 'html sink target must be a childless element');
       }
       const duplicate = program.parts.some((other) =>
-        other !== part && other.k === 'prop' &&
-        other.name.toLowerCase() === part.name.toLowerCase() &&
+        other !== part && other.k === 'html' &&
         other.path.length === part.path.length && other.path.every((value, i) =>
           value === part.path[i]
         )
       );
-      if (duplicate) fail(`parts[${part.index}]`, 'multiple property Parts own one DOM sink');
+      if (duplicate) fail(`parts[${part.index}]`, 'multiple html Parts own one DOM sink');
+      return;
+    }
+    if (part.k === 'prop' || part.k === 'attr' || part.k === 'bool') {
+      if (target.attrs.some(([name]) => name.toLowerCase() === part.name.toLowerCase())) {
+        fail(
+          `parts[${part.index}]`,
+          `${part.k} Part duplicates static attribute ${JSON.stringify(part.name)}`,
+        );
+      }
+      const duplicate = program.parts.some((other) =>
+        other !== part && other.k === part.k &&
+        (other as typeof part).name.toLowerCase() === part.name.toLowerCase() &&
+        other.path.length === part.path.length && other.path.every((value, i) =>
+          value === part.path[i]
+        )
+      );
+      if (duplicate) fail(`parts[${part.index}]`, `multiple ${part.k} Parts own one DOM sink`);
+    } else if (part.k === 'class' || part.k === 'style') {
+      const name = part.k;
+      if (target.attrs.some(([attrName]) => attrName.toLowerCase() === name)) {
+        fail(
+          `parts[${part.index}]`,
+          `${part.k} Part duplicates static attribute ${JSON.stringify(name)}`,
+        );
+      }
+      const duplicate = program.parts.some((other) =>
+        other !== part && other.k === part.k &&
+        other.path.length === part.path.length && other.path.every((value, i) =>
+          value === part.path[i]
+        )
+      );
+      if (duplicate) fail(`parts[${part.index}]`, `multiple ${part.k} Parts own one DOM sink`);
     } else if (part.k === 'event') {
       const duplicate = program.parts.some((other) =>
         other !== part && other.k === 'event' && other.event === part.event &&
@@ -331,6 +392,62 @@ export function handlersOf(host: unknown): Record<string, (event: unknown) => vo
 
 export function isRecordValue(value: unknown): value is Record<string, unknown> {
   return isRecord(value);
+}
+
+/**
+ * Shared sink coercions consumed identically by the server serializer, fresh
+ * DOM creation, and the claim recovery builder. Keeping them here (not in a
+ * mode-local module) is what makes the three modes byte-identical for the
+ * same program + signal state.
+ */
+export function attributeValueOf(value: unknown): string | null {
+  return value === null || value === undefined ? null : String(value);
+}
+
+export function classValueOf(value: unknown): string {
+  if (value === null || value === undefined || value === false) return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return value.map(classValueOf).filter(Boolean).join(' ');
+  if (typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .filter((key) => Boolean((value as Record<string, unknown>)[key]))
+      .join(' ');
+  }
+  throw new CompiledProgramValidationError(
+    'host.signals',
+    'class Part expects a string, array, or record',
+  );
+}
+
+function cssName(name: string): string {
+  if (name.startsWith('--')) return name;
+  const vendor = /^(Webkit|Moz|ms|O)([A-Z].*)$/.exec(name);
+  const kebab = (value: string): string =>
+    value[0].toLowerCase() +
+    value.slice(1).replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  if (vendor) return `-${vendor[1].toLowerCase()}-${kebab(vendor[2])}`;
+  return kebab(name);
+}
+
+export function styleValueOf(value: unknown): string {
+  if (value === null || value === undefined || value === false) return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return value.map(styleValueOf).filter(Boolean).join(';');
+  if (typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .filter((key) => {
+        const item = (value as Record<string, unknown>)[key];
+        return item !== null && item !== undefined && item !== false;
+      })
+      .map((key) => `${cssName(key)}:${String((value as Record<string, unknown>)[key])}`)
+      .join(';');
+  }
+  throw new CompiledProgramValidationError(
+    'host.signals',
+    'style Part expects CSS text or a declaration record',
+  );
 }
 
 export function voidElement(tag: string): boolean {

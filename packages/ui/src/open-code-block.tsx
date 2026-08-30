@@ -1,4 +1,3 @@
-/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-code-block
  *
@@ -10,11 +9,12 @@
  * <script>). Without Prism the block degrades to plain text with the copy
  * button — that is expected, not a bug. See README.md for the script recipe.
  *
- * v0.20.0: Migrated to openElement (Ocean component).
- *   - Self-contained Prism highlighting injected into shadow root
- *   - Copy button uses ElementInternals :state(copied) for CSS feedback
- *   - DSD renders <slot> for SSR (no JS content fallback)
- * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
+ * v0.44: compiled authoring (ADR-0143). The shell (slot + copy button) is the
+ * compiled template; the copy label is a compiled text sink driven by the
+ * `copyLabel` property. Prism highlighting stays imperative in methods; its
+ * per-instance bookkeeping lives in the shared instance-state module. On
+ * disconnect the program's static structure is restored so a reconnect
+ * re-claims cleanly (the injected highlight <pre> is not program content).
  *
  * @csspart copy - The copy button
  *
@@ -25,154 +25,164 @@
  * </open-code-block>
  * ```
  */
-
 import { OpenElement } from '@openelement/element';
-import type { StyleSheetLike } from '@openelement/element';
-import { createLogger } from '@openelement/element';
-import { recipe, type RenderResult } from './component-recipes.ts';
-export const tagName = 'open-code-block';
+import { element, property } from './compile-decorators.ts';
+import { CODE_BLOCK_CONSTANTS, log, recipe } from './component-recipes.ts';
+import { readInstanceState, writeInstanceState } from './instance-state.ts';
 
-const log = createLogger('ui');
-
-const sheet: StyleSheetLike = recipe(`
-  :host {
-    display: block;
-    position: relative;
-  }
-
-  pre {
-    margin: 0;
-    padding: var(--size-5);
-    background: var(--bg-code);
-    border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-2);
-    overflow-x: auto;
-    font-family: var(--font-mono);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-4);
-    color: var(--text-secondary);
-    scrollbar-width: thin;
-    scrollbar-color: var(--brand-subtle) transparent;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  ::slotted(pre) {
-    margin: 0;
-    padding: var(--size-5);
-    background: var(--bg-code);
-    border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-2);
-    overflow-x: auto;
-    font-family: var(--font-mono);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-4);
-    color: var(--text-secondary);
-    scrollbar-width: thin;
-    scrollbar-color: var(--brand-subtle) transparent;
-  }
-
-  .lang-badge {
-    position: absolute;
-    top: var(--size-2);
-    left: var(--size-3);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-7);
-    text-transform: uppercase;
-    letter-spacing: var(--font-letterspacing-5);
-    color: var(--text-muted);
-    pointer-events: none;
-  }
-
-  .copy-btn {
-    position: absolute;
-    top: var(--size-2);
-    right: var(--size-2);
-    background: var(--brand-subtle);
-    color: var(--text-muted);
-    padding: var(--size-1) var(--size-3);
-    font-size: var(--font-size-00);
-    font-family: var(--font-sans);
-    font-weight: var(--font-weight-6);
-    border: 0.5px solid transparent;
-    cursor: pointer;
-    border-radius: var(--radius-1);
-    transition: all var(--ease-2) var(--duration-2);
-    z-index: 1;
-    letter-spacing: var(--font-letterspacing-4);
-  }
-
-  .copy-btn:hover {
-    color: var(--text-primary);
-    background: var(--brand-glow);
-    border-color: var(--brand);
-  }
-
-  :host(:state(copied)) .copy-btn {
-    color: #22c55e;
-    border-color: rgba(34,197,94,0.3);
-    background: rgba(34,197,94,0.08);
-  }
-
-  :host(:state(failed)) .copy-btn {
-    color: var(--error);
-    border-color: var(--error);
-  }
-
-  /* Prism token colors (dark theme) */
-  .token.cdata, .token.comment, .token.doctype, .token.prolog { color: #6a737d; }
-  .token.punctuation { color: #8b949e; }
-  .token.namespace { opacity: 0.7; }
-  .token.boolean, .token.constant, .token.deleted, .token.number, .token.property, .token.symbol, .token.tag { color: #79c0ff; }
-  .token.attr-name, .token.builtin, .token.char, .token.inserted, .token.selector, .token.string { color: #a5d6ff; }
-  .token.entity, .token.operator, .token.url, .language-css .token.string, .style .token.string { color: #d2a8ff; }
-  .token.atrule, .token.attr-value, .token.keyword { color: #ff7b72; }
-  .token.class-name, .token.function { color: #d2a8ff; }
-  .token.important, .token.regex, .token.variable { color: #ffa657; }
-  .token.bold, .token.important { font-weight: 700; }
-  .token.italic { font-style: italic; }
-  .token.entity { cursor: help; }
-`);
-
+@element('open-code-block', { root: 'shadow-open' })
 export class OpenCodeBlock extends OpenElement {
-  static override styles = [sheet];
+  static override styles = [recipe(`
+    :host {
+      display: block;
+      position: relative;
+    }
 
-  private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
-  private _highlightedInShadow = false;
-  private _highlightRetries = 0;
-  private static MAX_HIGHLIGHT_RETRIES = 120;
-  private static COPY_FEEDBACK_MS = 2000;
+    pre {
+      margin: 0;
+      padding: var(--size-5);
+      background: var(--bg-code);
+      border: var(--border-size-1) solid var(--code-border);
+      border-radius: var(--radius-2);
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: var(--font-size-0);
+      line-height: var(--font-lineheight-4);
+      color: var(--text-secondary);
+      scrollbar-width: thin;
+      scrollbar-color: var(--brand-subtle) transparent;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
 
-  override render(): RenderResult {
+    ::slotted(pre) {
+      margin: 0;
+      padding: var(--size-5);
+      background: var(--bg-code);
+      border: var(--border-size-1) solid var(--code-border);
+      border-radius: var(--radius-2);
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: var(--font-size-0);
+      line-height: var(--font-lineheight-4);
+      color: var(--text-secondary);
+      scrollbar-width: thin;
+      scrollbar-color: var(--brand-subtle) transparent;
+    }
+
+    .lang-badge {
+      position: absolute;
+      top: var(--size-2);
+      left: var(--size-3);
+      font-size: var(--font-size-00);
+      font-weight: var(--font-weight-7);
+      text-transform: uppercase;
+      letter-spacing: var(--font-letterspacing-5);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: var(--size-2);
+      right: var(--size-2);
+      background: var(--brand-subtle);
+      color: var(--text-muted);
+      padding: var(--size-1) var(--size-3);
+      font-size: var(--font-size-00);
+      font-family: var(--font-sans);
+      font-weight: var(--font-weight-6);
+      border: 0.5px solid transparent;
+      cursor: pointer;
+      border-radius: var(--radius-1);
+      transition: all var(--ease-2) var(--duration-2);
+      z-index: 1;
+      letter-spacing: var(--font-letterspacing-4);
+    }
+
+    .copy-btn:hover {
+      color: var(--text-primary);
+      background: var(--brand-glow);
+      border-color: var(--brand);
+    }
+
+    :host(:state(copied)) .copy-btn {
+      color: #22c55e;
+      border-color: rgba(34,197,94,0.3);
+      background: rgba(34,197,94,0.08);
+    }
+
+    :host(:state(failed)) .copy-btn {
+      color: var(--error);
+      border-color: var(--error);
+    }
+
+    /* Prism token colors (dark theme) */
+    .token.cdata, .token.comment, .token.doctype, .token.prolog { color: #6a737d; }
+    .token.punctuation { color: #8b949e; }
+    .token.namespace { opacity: 0.7; }
+    .token.boolean, .token.constant, .token.deleted, .token.number, .token.property, .token.symbol, .token.tag { color: #79c0ff; }
+    .token.attr-name, .token.builtin, .token.char, .token.inserted, .token.selector, .token.string { color: #a5d6ff; }
+    .token.entity, .token.operator, .token.url, .language-css .token.string, .style .token.string { color: #d2a8ff; }
+    .token.atrule, .token.attr-value, .token.keyword { color: #ff7b72; }
+    .token.class-name, .token.function { color: #d2a8ff; }
+    .token.important, .token.regex, .token.variable { color: #ffa657; }
+    .token.bold, .token.important { font-weight: 700; }
+    .token.italic { font-style: italic; }
+    .token.entity { cursor: help; }
+  `)];
+
+  /** The copy button label — compiled text sink ('Copy'/'Copied!'/'Failed'). */
+  @property({ reflect: false, attribute: false })
+  copyLabel = 'Copy';
+
+  render() {
     return (
-      <>
+      <div style='display:contents'>
         <slot></slot>
-        <button type='button' className='copy-btn' part='copy' onClick={() => this._copy()}>
-          Copy
+        <button type='button' class='copy-btn' part='copy' onClick={this.copy}>
+          {this.copyLabel}
         </button>
-      </>
+      </div>
     );
   }
 
   override onDsdHydrated(): void {
-    super.onDsdHydrated();
-    this._tryHighlight();
+    this.tryHighlight();
   }
 
   override onCsrRendered(): void {
-    super.onCsrRendered();
-    this._tryHighlight();
+    this.tryHighlight();
   }
 
-  private _prismGlobal(): unknown {
+  override disconnectedCallback(): void {
+    // Compiled-kernel ownership: restore the program's static structure before
+    // teardown so a reconnect re-claims cleanly (the injected highlight <pre>
+    // and the copy-label text are imperative writes, not program content).
+    const slot = this.shadowRoot?.querySelector('slot');
+    if (!slot) {
+      const root = this.shadowRoot;
+      const highlighted = root?.querySelector('pre');
+      if (root && highlighted) {
+        const restored = root.ownerDocument.createElement('slot');
+        highlighted.replaceWith(restored);
+      }
+      const lightPre = this.querySelector('pre');
+      if (lightPre) (lightPre as HTMLElement).style.display = '';
+      writeInstanceState(this, 'highlighted', false);
+    }
+    super.disconnectedCallback();
+  }
+
+  private prismGlobal(): unknown {
     return (globalThis as typeof globalThis & { Prism?: unknown }).Prism;
   }
 
-  private _tryHighlight(): void {
-    const p = this._prismGlobal();
+  private tryHighlight(): void {
+    const p = this.prismGlobal();
     if (typeof p === 'undefined') {
       // Prism not loaded yet: backoff 10, 20, 40, ..., 500ms cap.
-      this._scheduleRetry(10, 500);
+      this.scheduleRetry(10, 500);
       return;
     }
 
@@ -197,30 +207,31 @@ export class OpenCodeBlock extends OpenElement {
       | undefined;
     if (!grammar) {
       // Grammar not registered yet: backoff 20, 40, 80, ..., 1000ms cap.
-      this._scheduleRetry(20, 1000);
+      this.scheduleRetry(20, 1000);
       return;
     }
-    this._highlightRetries = 0;
+    writeInstanceState(this, 'highlightRetries', 0);
     const highlightedHtml =
       (p as { highlight: (code: string, grammar: unknown, lang: string) => string }).highlight(
         raw,
         grammar,
         lang,
       );
-    this._injectHighlighted(highlightedHtml, lang);
+    this.injectHighlighted(highlightedHtml, lang);
   }
 
-  /** Retry _tryHighlight with exponential backoff (base×2ⁿ, 6 steps max, capped). */
-  private _scheduleRetry(base: number, cap: number): void {
-    if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
-      const delay = Math.min(base * Math.pow(2, Math.min(this._highlightRetries, 6)), cap);
-      this._setTimeout(() => this._tryHighlight(), delay);
-    }
+  /** Retry tryHighlight with exponential backoff (base×2ⁿ, 6 steps max, capped). */
+  private scheduleRetry(base: number, cap: number): void {
+    const retries = readInstanceState(this, 'highlightRetries', () => 0);
+    if (retries >= CODE_BLOCK_CONSTANTS.maxHighlightRetries) return;
+    writeInstanceState(this, 'highlightRetries', retries + 1);
+    const delay = Math.min(base * Math.pow(2, Math.min(retries + 1, 6)), cap);
+    this._setTimeout(() => this.tryHighlight(), delay);
   }
 
-  private _injectHighlighted(html: string, lang: string): void {
-    if (!this.shadowRoot || this._highlightedInShadow) return;
-    this._highlightedInShadow = true;
+  private injectHighlighted(html: string, lang: string): void {
+    if (!this.shadowRoot || readInstanceState(this, 'highlighted', () => false)) return;
+    writeInstanceState(this, 'highlighted', true);
 
     const slot = this.shadowRoot.querySelector('slot');
     if (!slot) return;
@@ -236,7 +247,7 @@ export class OpenCodeBlock extends OpenElement {
     if (lightPre) (lightPre as HTMLElement).style.display = 'none';
   }
 
-  private _getCodeText(): string {
+  private getCodeText(): string {
     if (this.shadowRoot) {
       const shadowCode = this.shadowRoot.querySelector('pre code');
       if (shadowCode) return shadowCode.textContent || '';
@@ -244,39 +255,26 @@ export class OpenCodeBlock extends OpenElement {
     return this.textContent || '';
   }
 
-  private async _copy(): Promise<void> {
+  private async copy(): Promise<void> {
     try {
-      const text = this._getCodeText();
+      const text = this.getCodeText();
       await navigator.clipboard.writeText(text);
-      this._copyState = 'copied';
+      this.copyLabel = 'Copied!';
       this._internals?.states.add('copied');
       this._internals?.states.delete('failed');
-      this._updateCopyButtonDOM();
       this._setTimeout(() => {
-        this._copyState = 'idle';
+        this.copyLabel = 'Copy';
         this._internals?.states.delete('copied');
-        this._updateCopyButtonDOM();
-      }, OpenCodeBlock.COPY_FEEDBACK_MS);
+      }, CODE_BLOCK_CONSTANTS.copyFeedbackMs);
     } catch (e) {
       log.warn('Clipboard write failed:', e);
-      this._copyState = 'failed';
+      this.copyLabel = 'Failed';
       this._internals?.states.add('failed');
       this._internals?.states.delete('copied');
-      this._updateCopyButtonDOM();
       this._setTimeout(() => {
-        this._copyState = 'idle';
+        this.copyLabel = 'Copy';
         this._internals?.states.delete('failed');
-        this._updateCopyButtonDOM();
-      }, OpenCodeBlock.COPY_FEEDBACK_MS);
+      }, CODE_BLOCK_CONSTANTS.copyFeedbackMs);
     }
-  }
-
-  private _updateCopyButtonDOM(): void {
-    if (!this.shadowRoot) return;
-    const btn = this.shadowRoot.querySelector('button.copy-btn');
-    if (!btn) return;
-    if (this._copyState === 'copied') btn.textContent = 'Copied!';
-    else if (this._copyState === 'failed') btn.textContent = 'Failed';
-    else btn.textContent = 'Copy';
   }
 }

@@ -1,11 +1,15 @@
-/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-input
  *
  * Minimal input field following Swiss International Style.
  * Clean borders, subtle focus states.
  *
- * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
+ * v0.44: compiled authoring (ADR-0143). Attribute-backed properties drive the
+ * compiled sinks (type/placeholder/label/name/value/disabled/required/error);
+ * the form contract (setFormValue, validity mirroring, custom states) stays
+ * imperative in methods. Per-instance ids are assigned at activation — SSG
+ * renders each page in one process while hydration upgrades in arbitrary
+ * order, so the two realms can never share a counter (component-recipes.ts).
  *
  * Features:
  * - Form-associated: participates in native <form> submission via
@@ -31,217 +35,238 @@
  * </form>
  * ```
  */
+import { computed, OpenElement } from '@openelement/element';
+import { element, property } from './compile-decorators.ts';
+import { controlRecipe, nextInstanceId, recipe, syncDisabledState } from './component-recipes.ts';
 
-import { OpenElement } from '@openelement/element';
-import type { StyleSheetLike } from '@openelement/element';
-import {
-  controlRecipe,
-  nextInstanceId,
-  recipe,
-  type RenderResult,
-  syncDisabledState,
-} from './component-recipes.ts';
-
-export const tagName = 'open-input';
-
-const sheet: StyleSheetLike = recipe(`
-  :host {
-    display: block;
-  }
-
-  .input-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: var(--size-2);
-  }
-
-  label {
-    font-size: var(--font-size-0);
-    font-weight: var(--font-weight-5);
-    color: var(--text-secondary);
-    letter-spacing: var(--font-letterspacing-2);
-  }
-
-  .input {
-    width: 100%;
-    padding: var(--size-2) var(--size-3);
-    font-family: var(--font-sans);
-    font-size: var(--font-size-1);
-    color: var(--ui-control-text);
-    background: var(--ui-control-bg);
-    border: var(--border-size-1) solid var(--ui-control-border);
-    border-radius: var(--ui-control-radius);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    outline: none;
-  }
-
-  .input::placeholder {
-    color: var(--text-muted);
-  }
-
-  .input:hover {
-    border-color: var(--ui-control-border-hover);
-  }
-
-  .input:focus {
-    border-color: var(--brand, var(--indigo-6));
-    box-shadow: 0 0 0 1px var(--brand, var(--indigo-6));
-  }
-
-  .input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--bg-muted);
-  }
-
-  .input--error {
-    border-color: var(--error);
-  }
-
-  :host(:state(disabled)) .input {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--bg-muted);
-  }
-
-  :host(:state(invalid)) .input {
-    border-color: var(--error);
-  }
-
-  .error-message {
-    font-size: var(--font-size-00);
-    color: var(--error);
-  }
-`);
-
+@element('open-input', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })
 export class OpenInput extends OpenElement {
-  static override styles = [controlRecipe, sheet];
-  static override formAssociated = true;
-  static override delegatesFocus = true;
-  static override observedAttributes = [
-    'type',
-    'placeholder',
-    'label',
-    'value',
-    'name',
-    'disabled',
-    'required',
-    'error',
+  static override styles = [
+    controlRecipe,
+    recipe(`
+    :host {
+      display: block;
+    }
+
+    .input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-2);
+    }
+
+    label {
+      font-size: var(--font-size-0);
+      font-weight: var(--font-weight-5);
+      color: var(--text-secondary);
+      letter-spacing: var(--font-letterspacing-2);
+    }
+
+    label[hidden] {
+      display: none;
+    }
+
+    .input {
+      width: 100%;
+      padding: var(--size-2) var(--size-3);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-1);
+      color: var(--ui-control-text);
+      background: var(--ui-control-bg);
+      border: var(--border-size-1) solid var(--ui-control-border);
+      border-radius: var(--ui-control-radius);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      outline: none;
+    }
+
+    .input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input:hover {
+      border-color: var(--ui-control-border-hover);
+    }
+
+    .input:focus {
+      border-color: var(--brand, var(--indigo-6));
+      box-shadow: 0 0 0 1px var(--brand, var(--indigo-6));
+    }
+
+    .input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: var(--bg-muted);
+    }
+
+    .input--error {
+      border-color: var(--error);
+    }
+
+    :host(:state(disabled)) .input {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: var(--bg-muted);
+    }
+
+    :host(:state(invalid)) .input {
+      border-color: var(--error);
+    }
+
+    .error-message {
+      font-size: var(--font-size-00);
+      color: var(--error);
+    }
+
+    .error-message[hidden] {
+      display: none;
+    }
+  `),
   ];
 
-  private _uid = nextInstanceId();
+  @property({ reflect: false })
+  type = 'text';
 
-  override connectedCallback(): void {
-    super.connectedCallback();
-    // Pre-upgrade attributes fire attributeChangedCallback before
-    // connectedCallback, so the initial `value` never reaches the internals
-    // there. Sync form value + validity here or the field submits empty.
-    this._syncFormValue();
-    this._syncValidity();
-  }
+  @property({ reflect: false })
+  placeholder = '';
 
-  override render(): RenderResult {
-    const type = this.getAttribute('type') || 'text';
-    const placeholder = this.getAttribute('placeholder') || '';
-    const label = this.getAttribute('label') || '';
-    const value = this.getAttribute('value') || '';
-    const name = this.getAttribute('name') || '';
-    const d = this.hasAttribute('disabled');
-    const r = this.hasAttribute('required');
-    const error = this.getAttribute('error') || '';
-    const errorClass = error ? ' input--error' : '';
-    const inputId = `input-${this._uid}`;
-    const errorId = `${inputId}-error`;
+  @property({ reflect: false })
+  label = '';
 
+  @property({ reflect: false })
+  name = '';
+
+  @property({ reflect: false })
+  value = '';
+
+  @property({ reflect: false, type: Boolean })
+  disabled = false;
+
+  @property({ reflect: false, type: Boolean })
+  required = false;
+
+  @property({ reflect: false })
+  error = '';
+
+  /** Assigned at activation; SSR leaves the ids unset (see header note). */
+  @property({ reflect: false, attribute: false })
+  inputId = '';
+
+  @property({ reflect: false, attribute: false })
+  noLabel = computed(() => this.label === '') as unknown as boolean;
+
+  @property({ reflect: false, attribute: false })
+  noError = computed(() => this.error === '') as unknown as boolean;
+
+  @property({ reflect: false, attribute: false })
+  inputClass = computed(() =>
+    this.error === '' ? 'control input' : 'control input input--error'
+  ) as unknown as string;
+
+  @property({ reflect: false, attribute: false })
+  idAttr = computed(() => this.inputId === '' ? null : this.inputId) as unknown as string | null;
+
+  @property({ reflect: false, attribute: false })
+  errorIdAttr = computed(() => this.inputId === '' ? null : `${this.inputId}-error`) as unknown as
+    | string
+    | null;
+
+  @property({ reflect: false, attribute: false })
+  ariaInvalidAttr = computed(() => this.error === '' ? null : 'true') as unknown as string | null;
+
+  /** The required-marker text (' *' when required) — a computed string sink. */
+  @property({ reflect: false, attribute: false })
+  requiredMark = computed(() => this.required ? ' *' : '') as unknown as string;
+
+  @property({ reflect: false, attribute: false })
+  describedByAttr = computed(() =>
+    this.error === '' || this.inputId === '' ? null : `${this.inputId}-error`
+  ) as unknown as string | null;
+
+  render() {
     return (
-      <div className='input-wrapper' part='wrapper'>
-        {label && (
-          <label htmlFor={inputId} part='label'>
-            {label}
-            {r ? ' *' : ''}
-          </label>
-        )}
+      <div class='input-wrapper' part='wrapper'>
+        <label part='label' for={this.idAttr} hidden={this.noLabel}>
+          {this.label}
+          <span class='req'>{this.requiredMark}</span>
+        </label>
         <input
-          id={inputId}
-          className={`control input${errorClass}`}
+          id={this.idAttr}
+          class={this.inputClass}
           part='control'
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          name={name}
-          disabled={d}
-          required={r}
-          aria-invalid={error ? 'true' : undefined}
-          aria-describedby={error ? errorId : undefined}
-          aria-errormessage={error ? errorId : undefined}
-          onInput={(e: Event) => this._handleInput(e)}
-          onChange={(e: Event) => this._handleChange(e)}
-          onFocus={() => this._handleFocus()}
-          onBlur={() => this._handleBlur()}
+          type={this.type}
+          placeholder={this.placeholder}
+          value={this.value}
+          name={this.name}
+          disabled={this.disabled}
+          required={this.required}
+          aria-invalid={this.ariaInvalidAttr}
+          aria-describedby={this.describedByAttr}
+          aria-errormessage={this.describedByAttr}
+          onInput={this.handleInput}
+          onChange={this.handleChange}
+          onFocus={this.handleFocus}
+          onBlur={this.handleBlur}
         />
-        {error && (
-          <small id={errorId} role='alert' className='error-message' part='error'>
-            {error}
-          </small>
-        )}
+        <small
+          id={this.errorIdAttr}
+          role='alert'
+          class='error-message'
+          part='error'
+          hidden={this.noError}
+        >
+          {this.error}
+        </small>
       </div>
     );
   }
 
+  override onDsdHydrated(): void {
+    this.activate();
+  }
+
+  override onCsrRendered(): void {
+    this.activate();
+  }
+
+  /** Assign the realm-unique id once, then sync the form contract. */
+  private activate(): void {
+    if (this.inputId === '') this.inputId = `input-${nextInstanceId()}`;
+    // The initial `value` arrives before connect (parser attributes), so the
+    // form value and validity sync here rather than in attributeChangedCallback.
+    this.syncFormValue();
+    this.syncValidity();
+    this.updateStates();
+  }
+
   override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
+    super.attributeChangedCallback(name, old, val);
     if (old === val) return;
     if (name === 'value') {
-      // Sync in place instead of re-rendering: _handleInput writes `value`
-      // back on every keystroke, and a re-render would replace the focused
-      // <input> mid-typing.
-      this._syncDOM();
-      this._syncFormValue();
-      this._syncValidity();
+      // The compiled prop sink writes the live input value in place — no
+      // re-render, so a focused <input> is never replaced mid-typing (#770).
+      this.syncFormValue();
+      this.syncValidity();
       return;
     }
     if (name === 'disabled' || name === 'error') {
-      this._updateStates();
-    }
-    if (name === 'disabled') {
-      // Sync in place so toggling disabled does not drop focus.
-      this._syncDOM();
-    } else {
-      // label/error/type/placeholder/name/required change the rendered tree
-      // (label and error elements appear or disappear), so re-render (#770).
-      this.update();
+      this.updateStates();
     }
     if (name === 'required') {
-      this._syncValidity();
+      this.syncValidity();
     }
   }
 
-  private _syncDOM(): void {
-    const input = this.shadowRoot?.querySelector('input') as
-      | HTMLInputElement
-      | null;
-    if (!input) return;
-    input.disabled = this.hasAttribute('disabled');
-    // A removed `value` attribute means the native default (''): without
-    // clearing here the inner input keeps stale text while the form value
-    // is already reset by _syncFormValue.
-    const val = this.getAttribute('value') || '';
-    if (input.value !== val) {
-      input.value = val;
-    }
-  }
-
-  private _updateStates(): void {
+  private updateStates(): void {
     if (!this._internals?.states) return;
-    syncDisabledState(this._internals, this.hasAttribute('disabled'));
-    if (this.getAttribute('error')) {
+    syncDisabledState(this._internals, this.disabled);
+    if (this.error !== '') {
       this._internals.states.add('invalid');
     } else {
       this._internals.states.delete('invalid');
     }
   }
 
-  private _syncFormValue(): void {
-    this._internals?.setFormValue(this.getAttribute('value') || '');
+  private syncFormValue(): void {
+    this._internals?.setFormValue(this.value);
   }
 
   /**
@@ -251,16 +276,14 @@ export class OpenInput extends OpenElement {
    * internals is what makes the custom element a real form citizen.
    * Full constraint mirroring (type=email, minlength, …) is future work.
    */
-  private _syncValidity(): void {
+  private syncValidity(): void {
     const internals = this._internals;
     // Feature-checked: test stubs and older engines may lack setValidity.
     if (!internals || typeof internals.setValidity !== 'function') return;
-    if (this.hasAttribute('required') && !(this.getAttribute('value') || '')) {
-      // No anchor: bubble placement is UA-dependent, and the inner <input>
-      // gets replaced on re-render. Reuse its localized message when present.
-      const inner = this.shadowRoot?.querySelector('input') as
-        | HTMLInputElement
-        | null;
+    if (this.required && this.value === '') {
+      // No anchor: bubble placement is UA-dependent. Reuse the inner input's
+      // localized message when present.
+      const inner = this.shadowRoot?.querySelector('input') as HTMLInputElement | null;
       internals.setValidity(
         { valueMissing: true },
         inner?.validationMessage || 'Please fill out this field.',
@@ -270,11 +293,13 @@ export class OpenInput extends OpenElement {
     }
   }
 
-  private _handleInput(e: Event): void {
+  private handleInput(e: Event): void {
     const input = e.target as HTMLInputElement;
+    // The value attribute is the authoritative channel (legacy parity):
+    // attribute -> compiled signal -> sinks, and the morph surface stays true.
     this.setAttribute('value', input.value);
-    this._syncFormValue();
-    this._syncValidity();
+    this.syncFormValue();
+    this.syncValidity();
     this.dispatchEvent(
       new CustomEvent('open-input', {
         detail: { value: input.value },
@@ -284,7 +309,7 @@ export class OpenInput extends OpenElement {
     );
   }
 
-  private _handleChange(e: Event): void {
+  private handleChange(e: Event): void {
     const input = e.target as HTMLInputElement;
     this.dispatchEvent(
       new CustomEvent('open-change', {
@@ -295,20 +320,20 @@ export class OpenInput extends OpenElement {
     );
   }
 
-  private _handleFocus(): void {
+  private handleFocus(): void {
     this.dispatchEvent(new CustomEvent('open-focus', { bubbles: true, composed: true }));
   }
 
-  private _handleBlur(): void {
+  private handleBlur(): void {
     this.dispatchEvent(new CustomEvent('open-blur', { bubbles: true, composed: true }));
   }
 
-  formResetCallback(): void {
+  override formResetCallback(): void {
+    super.formResetCallback();
     this.setAttribute('value', '');
     this.removeAttribute('error');
-    this._syncFormValue();
-    this._syncValidity();
-    this._syncDOM();
+    this.syncFormValue();
+    this.syncValidity();
   }
 
   formDisabledCallback(disabled: boolean): void {

@@ -16,13 +16,17 @@ import {
   type SpikeElementNode,
   type SpikeTreeNode,
   type SpikeWhenPart,
+  STATIC_STYLES_MARKER,
 } from '../program.ts';
 import {
   assertCompiledProgram,
+  attributeValueOf,
+  classValueOf,
   CompiledProgramValidationError,
   handlersOf,
   isRecordValue,
   signalOf,
+  styleValueOf,
   voidElement,
 } from '../server/shared.ts';
 
@@ -74,6 +78,13 @@ export interface ClaimOptions {
   onMismatch?: (error: PartProgramClaimError) => void;
   /** Events captured before upgrade and replayed after a successful attach. */
   preUpgradeEvents?: readonly PreUpgradeEvent[] | PreUpgradeEventCapture;
+  /**
+   * True when the claiming class carries static styles: the server serializer
+   * emits them as one marked `<style data-oe-static-styles>` first template
+   * child, which the claim skips. A marked style node on a style-less class
+   * is drift and fails closed.
+   */
+  expectStaticStyle?: boolean;
 }
 
 export interface CompiledClaimInstance {
@@ -236,7 +247,8 @@ interface WhenState {
 interface EachEntry {
   key: string;
   nodes: Node[];
-  texts: Text[];
+  texts: Array<{ text: Text; field?: string }>;
+  attrs: Array<{ element: Element; name: string; field: string }>;
 }
 
 interface EachState {
@@ -260,11 +272,21 @@ interface EventBinding {
   element: Element;
 }
 
+/** attr/bool/class/style/html sinks claimed against an existing element. */
+interface ValueBinding {
+  part: Extract<
+    SpikePartOf<PartProgramSpike>,
+    { k: 'attr' | 'bool' | 'class' | 'style' | 'html' }
+  >;
+  element: Element;
+}
+
 interface ClaimPlan {
   textBindings: TextBinding[];
   regions: RegionState[];
   props: PropBinding[];
   events: EventBinding[];
+  values: ValueBinding[];
   elements: Map<string, Element>;
 }
 
@@ -420,19 +442,51 @@ function regionOwner(
 }
 
 /**
- * Narrow the keyed-Region fields the server/claim grammar requires. Program
- * validation already rejects field-less `each` Regions for these modes; this
- * guard keeps the type-level invariant explicit and fail-closed.
+ * Narrow the keyed-Region key the server/claim grammar requires. Item value
+ * and attribute slots carry their own fields (multi-field templates); the
+ * Region's optional `field` remains the fallback for field-less slots.
  */
-function eachKeyAndField(
+function eachKey(
   part: SpikeEachPart,
   path: string,
   owner: ClaimOwner,
-): { key: string; field: string } {
-  if (part.key === undefined || part.field === undefined) {
-    claimFailure(path, 'each Region needs key and field', owner);
+): string {
+  if (part.key === undefined) {
+    claimFailure(path, 'each Region needs key', owner);
   }
-  return { key: part.key, field: part.field };
+  return part.key;
+}
+
+/** Item fields referenced by an each Region's template (ival + iattr slots). */
+function itemTemplateFields(nodes: readonly SpikeTreeNode[], out = new Set<string>()): Set<string> {
+  for (const node of nodes) {
+    if (node.k === 'ival') {
+      if (node.field !== undefined) out.add(node.field);
+      continue;
+    }
+    if (node.k === 'el') {
+      for (const [, field] of node.iattrs ?? []) out.add(field);
+      itemTemplateFields(node.children, out);
+    }
+  }
+  return out;
+}
+
+/** Per-item slot value for one field (ival text / iattr attribute). */
+function itemFieldValue(
+  part: SpikeEachPart,
+  item: Record<string, unknown>,
+  field: string | undefined,
+): unknown {
+  if (field === undefined) return part.field === undefined ? item : item[part.field];
+  return item[field];
+}
+
+/** Serialize a per-item attribute value: bare when true, omitted when absent. */
+function itemAttrSerialized(value: unknown): string | null {
+  if (value === true) return '';
+  if (value === false || value === null || value === undefined) return null;
+  return String(value);
 }
 
 function itemRecords(
@@ -441,7 +495,8 @@ function itemRecords(
   path: string,
   owner: ClaimOwner,
 ): Array<Record<string, unknown>> {
-  const { key: keyField, field: valueField } = eachKeyAndField(part, path, owner);
+  const keyField = eachKey(part, path, owner);
+  const requiredFields = itemTemplateFields(part.item);
   if (!Array.isArray(value)) {
     claimFailure(path, 'each Region dependency must contain an array', owner);
   }
@@ -449,15 +504,13 @@ function itemRecords(
   const items: Array<Record<string, unknown>> = [];
   value.forEach((item, index) => {
     if (!isRecordValue(item)) claimFailure(`${path}[${index}]`, 'item must be a record', owner);
-    if (
-      !Object.prototype.hasOwnProperty.call(item, keyField) ||
-      !Object.prototype.hasOwnProperty.call(item, valueField)
-    ) {
-      claimFailure(
-        `${path}[${index}]`,
-        `item needs ${JSON.stringify(keyField)} and ${JSON.stringify(valueField)}`,
-        owner,
-      );
+    if (!Object.prototype.hasOwnProperty.call(item, keyField)) {
+      claimFailure(`${path}[${index}]`, `item needs ${JSON.stringify(keyField)}`, owner);
+    }
+    for (const field of requiredFields) {
+      if (!Object.prototype.hasOwnProperty.call(item, field)) {
+        claimFailure(`${path}[${index}]`, `item needs ${JSON.stringify(field)}`, owner);
+      }
     }
     const key = stringValue(item[keyField], `${path}[${index}].${keyField}`, owner);
     if (seen.has(key)) claimFailure(path, `duplicate key ${JSON.stringify(key)}`, owner);
@@ -472,10 +525,12 @@ function dynamicNamesFor(
   path: readonly number[],
 ): string[] {
   return program.parts.flatMap((part) => {
-    if (
-      part.k === 'prop' && part.path.length === path.length &&
-      part.path.every((value, index) => value === path[index])
-    ) return [part.name];
+    const samePath = 'path' in part && part.path.length === path.length &&
+      part.path.every((value, index) => value === path[index]);
+    if (!samePath) return [];
+    if (part.k === 'prop' || part.k === 'attr' || part.k === 'bool') return [part.name];
+    if (part.k === 'class') return ['class'];
+    if (part.k === 'style') return ['style'];
     return [];
   });
 }
@@ -517,21 +572,26 @@ function claimItemNodes(
   item: Record<string, unknown>,
   path: string,
   owner: ClaimOwner,
-): { consumed: number; entryNodes: Node[]; texts: Text[] } {
-  const { field } = eachKeyAndField(part, path, owner);
+): {
+  consumed: number;
+  entryNodes: Node[];
+  texts: Array<{ text: Text; field?: string }>;
+  attrs: Array<{ element: Element; name: string; field: string }>;
+} {
   const entryNodes: Node[] = [];
-  const texts: Text[] = [];
+  const texts: Array<{ text: Text; field?: string }> = [];
+  const attrs: Array<{ element: Element; name: string; field: string }> = [];
   let used = 0;
   for (const node of nodes) {
     const dom = childAt(parent, cursor + used);
     if (!dom) claimFailure(path, 'missing item node', owner);
     if (node.k === 'ival') {
       if (!isText(dom)) claimFailure(path, 'expected item value text', owner);
-      const expected = stringValue(item[field], path, owner);
+      const expected = stringValue(itemFieldValue(part, item, node.field), path, owner);
       if (dom.data !== expected) {
         claimFailure(path, `item text drift: expected ${JSON.stringify(expected)}`, owner);
       }
-      texts.push(dom);
+      texts.push({ text: dom, field: node.field });
       entryNodes.push(dom);
       used++;
       continue;
@@ -544,8 +604,20 @@ function claimItemNodes(
     }
     if (node.k !== 'el') claimFailure(path, 'item templates may not contain Part anchors', owner);
     if (!isElement(dom)) claimFailure(path, `expected item element <${node.tag}>`, owner);
-    verifyStaticElement(dom, node, path, owner);
-    texts.push(...claimItemChildren(part, node, dom, item, path, owner));
+    verifyStaticElement(dom, node, path, owner, (node.iattrs ?? []).map(([name]) => name));
+    for (const [name, field] of node.iattrs ?? []) {
+      const expected = itemAttrSerialized(item[field]);
+      const actual = dom.getAttribute(name);
+      if (expected === null ? actual !== null : actual !== expected) {
+        claimFailure(
+          path,
+          `item attribute drift on "${name}": expected ${JSON.stringify(expected)}`,
+          owner,
+        );
+      }
+      attrs.push({ element: dom, name, field });
+    }
+    texts.push(...claimItemChildren(part, node, dom, item, path, owner, attrs));
     const consumed = node.children.length;
     if (consumed !== childrenLength(dom)) {
       claimFailure(path, 'item element child count drift', owner);
@@ -553,7 +625,7 @@ function claimItemNodes(
     entryNodes.push(dom);
     used++;
   }
-  return { consumed: used, entryNodes, texts };
+  return { consumed: used, entryNodes, texts, attrs };
 }
 
 function claimItemChildren(
@@ -563,19 +635,25 @@ function claimItemChildren(
   item: Record<string, unknown>,
   path: string,
   owner: ClaimOwner,
-): Text[] {
-  const { field } = eachKeyAndField(part, path, owner);
-  const texts: Text[] = [];
+  attrs: Array<{ element: Element; name: string; field: string }>,
+): Array<{ text: Text; field?: string }> {
+  const texts: Array<{ text: Text; field?: string }> = [];
   for (let index = 0; index < node.children.length; index++) {
     const child = node.children[index];
     const dom = childAt(element, index);
     const childPath = `${path}.children[${index}]`;
     if (!dom) claimFailure(childPath, 'missing item child', owner);
     if (child.k === 'ival') {
-      if (!isText(dom) || dom.data !== stringValue(item[field], childPath, owner)) {
+      if (
+        !isText(dom) || dom.data !== stringValue(
+            itemFieldValue(part, item, child.field),
+            childPath,
+            owner,
+          )
+      ) {
         claimFailure(childPath, 'item text drift', owner);
       }
-      texts.push(dom);
+      texts.push({ text: dom, field: child.field });
       continue;
     }
     if (child.k === 'text') {
@@ -588,8 +666,20 @@ function claimItemChildren(
       claimFailure(childPath, 'item templates may not contain Part anchors', owner);
     }
     if (!isElement(dom)) claimFailure(childPath, `expected item element <${child.tag}>`, owner);
-    verifyStaticElement(dom, child, childPath, owner);
-    texts.push(...claimItemChildren(part, child, dom, item, childPath, owner));
+    verifyStaticElement(dom, child, childPath, owner, (child.iattrs ?? []).map(([name]) => name));
+    for (const [name, field] of child.iattrs ?? []) {
+      const expected = itemAttrSerialized(item[field]);
+      const actual = dom.getAttribute(name);
+      if (expected === null ? actual !== null : actual !== expected) {
+        claimFailure(
+          childPath,
+          `item attribute drift on "${name}": expected ${JSON.stringify(expected)}`,
+          owner,
+        );
+      }
+      attrs.push({ element: dom, name, field });
+    }
+    texts.push(...claimItemChildren(part, child, dom, item, childPath, owner, attrs));
     if (child.children.length !== childrenLength(dom)) {
       claimFailure(childPath, 'item child count drift', owner);
     }
@@ -626,7 +716,13 @@ function scanChildren(
       plan.elements.set(nodeProgramPath.join('.'), dom);
       const dynamicNames = dynamicNamesFor(program, nodeProgramPath);
       verifyStaticElement(dom, node, nodePath, owner, dynamicNames);
-      const consumed = scanChildren(
+      // A trusted-HTML sink owns the target's whole content: the subtree is
+      // opaque to the claim (the program declares no structure inside it).
+      const hasHtmlSink = program.parts.some((part) =>
+        part.k === 'html' && part.path.length === nodeProgramPath.length &&
+        part.path.every((value, index) => value === nodeProgramPath[index])
+      );
+      const consumed = hasHtmlSink ? childrenLength(dom) : scanChildren(
         program,
         host,
         dom,
@@ -708,11 +804,16 @@ function scanChildren(
         );
         cursor += claimed.consumed;
         const key = stringValue(
-          item[eachKeyAndField(part, nodePath, scopedOwner).key],
+          item[eachKey(part, nodePath, scopedOwner)],
           nodePath,
           scopedOwner,
         );
-        byKey.set(key, { key, nodes: claimed.entryNodes, texts: claimed.texts });
+        byKey.set(key, {
+          key,
+          nodes: claimed.entryNodes,
+          texts: claimed.texts,
+          attrs: claimed.attrs,
+        });
       }
       const end = expectComment(
         childAt(parent, cursor++),
@@ -732,20 +833,29 @@ function createPlan(
   program: PartProgramSpike,
   host: unknown,
   root: Node,
+  options: ClaimOptions = {},
 ): ClaimPlan {
   const owner: RootClaimOwner = { kind: 'root', root };
+  const firstChild = childAt(root, 0);
+  const hasStaticStyle = !!firstChild && isElement(firstChild) &&
+    firstChild.tagName.toLowerCase() === 'style' &&
+    firstChild.hasAttribute(STATIC_STYLES_MARKER);
+  if (hasStaticStyle && !options.expectStaticStyle) {
+    claimFailure('template', 'unexpected static style element', owner);
+  }
   const plan: ClaimPlan = {
     textBindings: [],
     regions: [],
     props: [],
     events: [],
+    values: [],
     elements: new Map(),
   };
   const consumed = scanChildren(
     program,
     host,
     root,
-    0,
+    hasStaticStyle ? 1 : 0,
     program.template,
     'template',
     [],
@@ -758,7 +868,23 @@ function createPlan(
 
   const handlers = handlersOf(host);
   for (const part of program.parts) {
-    if (part.k === 'prop') {
+    if (
+      part.k === 'attr' || part.k === 'bool' || part.k === 'class' || part.k === 'style' ||
+      part.k === 'html'
+    ) {
+      const element = plan.elements.get(part.path.join('.'));
+      if (!element) {
+        claimFailure(
+          `parts[${part.index}].path`,
+          `path [${part.path.join(',')}] is unresolved`,
+          owner,
+        );
+      }
+      // Read the dependency now so missing signals cannot leave an earlier
+      // subscription attached during the later attach phase.
+      signalOf(host, part.signal);
+      plan.values.push({ part, element });
+    } else if (part.k === 'prop') {
       const element = plan.elements.get(part.path.join('.'));
       if (!element) {
         claimFailure(
@@ -831,20 +957,19 @@ function buildItemNodes(
   part: SpikeEachPart,
   item: Record<string, unknown>,
 ): Node[] {
-  if (part.field === undefined) {
-    throw new CompiledProgramValidationError(
-      `parts[${part.index}].field`,
-      'each Region item value slot needs a field',
-    );
-  }
-  const field = part.field;
   const build = (nodes: SpikeTreeNode[]): Node[] =>
     nodes.map((node) => {
-      if (node.k === 'ival') return doc.createTextNode(String(item[field]));
+      if (node.k === 'ival') {
+        return doc.createTextNode(String(itemFieldValue(part, item, node.field) ?? ''));
+      }
       if (node.k === 'text') return doc.createTextNode(node.value);
       if (node.k === 'el') {
         const element = doc.createElement(node.tag);
         for (const [name, value] of node.attrs) element.setAttribute(name, value);
+        for (const [name, field] of node.iattrs ?? []) {
+          const value = itemAttrSerialized(item[field]);
+          if (value !== null) element.setAttribute(name, value);
+        }
         if (!voidElement(node.tag)) appendAll(element, build(node.children));
         return element;
       }
@@ -887,16 +1012,44 @@ function buildNodes(
       const element = doc.createElement(node.tag);
       for (const [name, value] of node.attrs) element.setAttribute(name, value);
       for (const part of program.parts) {
-        if (
-          part.k === 'prop' && part.path.length === path.length &&
-          part.path.every((value, position) => value === path[position])
-        ) {
+        const ownsPath = 'path' in part && part.path.length === path.length &&
+          part.path.every((value, position) => value === path[position]);
+        if (!ownsPath) continue;
+        if (part.k === 'prop') {
           const value = signalOf(host, part.signal).value;
           element.setAttribute(part.name, String(value));
           propertySink(element)[part.name] = value;
+        } else if (part.k === 'attr') {
+          const value = attributeValueOf(signalOf(host, part.signal).value);
+          if (value === null) element.removeAttribute(part.name);
+          else element.setAttribute(part.name, value);
+        } else if (part.k === 'bool') {
+          if (signalOf(host, part.signal).value) element.setAttribute(part.name, '');
+          else element.removeAttribute(part.name);
+        } else if (part.k === 'class') {
+          const value = classValueOf(signalOf(host, part.signal).value);
+          if (value === '') element.removeAttribute('class');
+          else element.setAttribute('class', value);
+        } else if (part.k === 'style') {
+          const value = styleValueOf(signalOf(host, part.signal).value);
+          if (value === '') element.removeAttribute('style');
+          else element.setAttribute('style', value);
+        } else if (part.k === 'html') {
+          const value = signalOf(host, part.signal).value;
+          if (typeof value !== 'string') {
+            throw new CompiledProgramValidationError(
+              `parts[${part.index}].signal`,
+              'html sink value must be a string',
+            );
+          }
+          (element as Element & { innerHTML: string }).innerHTML = value;
         }
       }
-      if (!voidElement(node.tag)) {
+      const hasHtmlSink = program.parts.some((part) =>
+        part.k === 'html' && part.path.length === path.length &&
+        part.path.every((value, position) => value === path[position])
+      );
+      if (!voidElement(node.tag) && !hasHtmlSink) {
         appendAll(element, buildNodes(program, host, doc, node.children, path));
       }
       output.push(element);
@@ -998,7 +1151,14 @@ function recoverOwner(
   const root = error.owner.root;
   const doc = documentFor(root);
   const replacement = buildNodes(program, host, doc, program.template, []);
+  // The marked static style node is serializer-owned, not program content:
+  // the bounded rebuild preserves it (styles are not part of the drift).
+  const firstChild = childAt(root, 0);
+  const keepStyle = !!firstChild && isElement(firstChild) &&
+    firstChild.tagName.toLowerCase() === 'style' &&
+    firstChild.hasAttribute(STATIC_STYLES_MARKER);
   removeAllChildren(root);
+  if (keepStyle) root.appendChild(firstChild);
   appendAll(root, replacement);
   return true;
 }
@@ -1075,6 +1235,52 @@ function attachPlan(
         propertySink(binding.element)[binding.part.name] = value;
       }, cleanup);
     }
+    for (const binding of plan.values) {
+      const part = binding.part;
+      const element = binding.element;
+      if (part.k === 'attr') {
+        subscribeWrites(host, part.signal, (value) => {
+          const next = attributeValueOf(value);
+          if (next === null) element.removeAttribute(part.name);
+          else element.setAttribute(part.name, next);
+        }, cleanup);
+        continue;
+      }
+      if (part.k === 'bool') {
+        subscribeWrites(host, part.signal, (value) => {
+          propertySink(element)[part.name] = !!value;
+          if (value) element.setAttribute(part.name, '');
+          else element.removeAttribute(part.name);
+        }, cleanup);
+        continue;
+      }
+      if (part.k === 'class') {
+        subscribeWrites(host, part.signal, (value) => {
+          const next = classValueOf(value);
+          if (next === '') element.removeAttribute('class');
+          else element.setAttribute('class', next);
+        }, cleanup);
+        continue;
+      }
+      if (part.k === 'style') {
+        subscribeWrites(host, part.signal, (value) => {
+          const next = styleValueOf(value);
+          if (next === '') element.removeAttribute('style');
+          else element.setAttribute('style', next);
+        }, cleanup);
+        continue;
+      }
+      // html: trusted pre-sanitized content replaces the opaque subtree.
+      subscribeWrites(host, part.signal, (value) => {
+        if (typeof value !== 'string') {
+          throw new CompiledProgramValidationError(
+            `parts[${part.index}].signal`,
+            'html sink value must be a string',
+          );
+        }
+        (element as Element & { innerHTML: string }).innerHTML = value;
+      }, cleanup);
+    }
     const handlers = handlersOf(host);
     for (const binding of plan.events) {
       const handler = binding.part.handler === undefined
@@ -1105,7 +1311,7 @@ function attachPlan(
 function updateEach(state: EachState, value: unknown, root: Node): void {
   const owner: RootClaimOwner = { kind: 'root', root };
   const items = itemRecords(state.part, value, state.path, owner);
-  const { key: keyField, field: valueField } = eachKeyAndField(state.part, state.path, owner);
+  const keyField = eachKey(state.part, state.path, owner);
   const parent = state.end.parentNode;
   if (!parent || state.anchor.parentNode !== parent) return;
   const nextEntries: EachEntry[] = [];
@@ -1114,11 +1320,30 @@ function updateEach(state: EachState, value: unknown, root: Node): void {
     const key = stringValue(item[keyField], state.path, owner);
     let entry = state.byKey.get(key);
     if (!entry) {
-      entry = { key, nodes: buildItemNodes(documentFor(parent), state.part, item), texts: [] };
-      collectItemValueTexts(state.part.item, entry.nodes, entry.texts);
+      entry = {
+        key,
+        nodes: buildItemNodes(documentFor(parent), state.part, item),
+        texts: [],
+        attrs: [],
+      };
+      collectItemValueSlots(state.part.item, entry.nodes, entry.texts, entry.attrs);
     } else {
-      const nextText = stringValue(item[valueField], state.path, owner);
-      for (const text of entry.texts) if (text.data !== nextText) text.data = nextText;
+      for (const slot of entry.texts) {
+        const nextText = stringValue(
+          itemFieldValue(state.part, item, slot.field),
+          state.path,
+          owner,
+        );
+        if (slot.text.data !== nextText) slot.text.data = nextText;
+      }
+      for (const slot of entry.attrs) {
+        const next = itemAttrSerialized(item[slot.field]);
+        if (next === null) {
+          if (slot.element.hasAttribute(slot.name)) slot.element.removeAttribute(slot.name);
+        } else if (slot.element.getAttribute(slot.name) !== next) {
+          slot.element.setAttribute(slot.name, next);
+        }
+      }
     }
     nextEntries.push(entry);
     nextByKey.set(key, entry);
@@ -1138,17 +1363,23 @@ function updateEach(state: EachState, value: unknown, root: Node): void {
   state.byKey = nextByKey;
 }
 
-function collectItemValueTexts(nodes: SpikeTreeNode[], domNodes: Node[], out: Text[]): void {
+function collectItemValueSlots(
+  nodes: SpikeTreeNode[],
+  domNodes: Node[],
+  texts: Array<{ text: Text; field?: string }>,
+  attrs: Array<{ element: Element; name: string; field: string }>,
+): void {
   let domIndex = 0;
   for (const node of nodes) {
     const dom = domNodes[domIndex++];
     if (node.k === 'ival') {
-      if (isText(dom)) out.push(dom);
+      if (isText(dom)) texts.push({ text: dom, field: node.field });
       continue;
     }
     if (node.k === 'el' && isElement(dom)) {
+      for (const [name, field] of node.iattrs ?? []) attrs.push({ element: dom, name, field });
       const descendants = Array.from(dom.childNodes);
-      collectItemValueTexts(node.children, descendants, out);
+      collectItemValueSlots(node.children, descendants, texts, attrs);
     }
   }
 }
@@ -1172,7 +1403,7 @@ export function claimExistingDom(
   let recovered = false;
   for (;;) {
     try {
-      const plan = createPlan(program, host, root);
+      const plan = createPlan(program, host, root, options);
       return attachPlan(plan, host, root, attachOptions);
     } catch (error) {
       if (!(error instanceof PartProgramClaimError)) throw error;

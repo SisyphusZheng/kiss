@@ -3,27 +3,32 @@
  *
  * Minimal tests to verify components can be imported and registered.
  * CI should never use continue-on-error - if tests fail, the build fails.
+ *
+ * v0.44: components are compiled classes (ADR-0143); the tag lives in the
+ * compiled program, not a runtime `tagName` export, and the registration
+ * table is owned by register.ts.
  */
 import { assertEquals, assertExists } from '@std/assert';
 
+const EXPECTED_TAGS = [
+  'open-card',
+  'open-callout',
+  'open-button',
+  'open-input',
+  'open-theme-toggle',
+  'open-code-block',
+  'open-badge',
+  'open-dialog',
+  'open-dropdown',
+  'open-tabs',
+];
+
 Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => {
   const mod = await import('../src/index.ts');
-  const expectedTags = [
-    'open-card',
-    'open-callout',
-    'open-button',
-    'open-input',
-    'open-theme-toggle',
-    'open-code-block',
-    'open-badge',
-    'open-dialog',
-    'open-dropdown',
-    'open-tabs',
-  ];
   assertExists(mod.manifest, 'manifest export should exist');
   assertEquals(typeof mod.manifest, 'object');
   assertEquals(mod.manifest.packageName, '@openelement/ui');
-  assertEquals(mod.manifest.declarations.map((decl) => decl.tagName), expectedTags);
+  assertEquals(mod.manifest.declarations.map((decl) => decl.tagName), EXPECTED_TAGS);
 });
 
 Deno.test('open-ui - explicit registration is complete and idempotent', async () => {
@@ -37,34 +42,29 @@ Deno.test('open-ui - explicit registration is complete and idempotent', async ()
   registerOpenUi(registry);
   registerOpenUi(registry);
   assertEquals(definitions.size, 10);
+  assertEquals([...definitions.keys()], EXPECTED_TAGS);
 });
 
-Deno.test('open-ui - open-theme-toggle exports tagName', async () => {
-  const mod = await import('../src/open-theme-toggle.tsx');
-  assertEquals(mod.tagName, 'open-theme-toggle');
-  assertExists(mod.OpenThemeToggle, 'OpenThemeToggle class should be exported');
+Deno.test('open-ui - every component module exports its class', async () => {
+  const expectedExports: Record<string, string> = {
+    'open-badge': 'OpenBadge',
+    'open-button': 'OpenButton',
+    'open-callout': 'OpenCallout',
+    'open-card': 'OpenCard',
+    'open-code-block': 'OpenCodeBlock',
+    'open-dialog': 'OpenDialog',
+    'open-dropdown': 'OpenDropdown',
+    'open-input': 'OpenInput',
+    'open-tabs': 'OpenTabs',
+    'open-theme-toggle': 'OpenThemeToggle',
+  };
+  for (const [name, exportName] of Object.entries(expectedExports)) {
+    const mod = await import(`../src/${name}.tsx`);
+    assertExists(mod[exportName], `${name} should export ${exportName}`);
+  }
 });
 
 Deno.test('open-ui - open-props-tokens exports openPropsTokenSheet', async () => {
   const mod = await import('../src/open-props-tokens.ts');
   assertExists(mod.openPropsTokenSheet, 'openPropsTokenSheet should be exported');
-});
-
-Deno.test('open-ui - all components export tagName', async () => {
-  const components = [
-    'open-button',
-    'open-callout',
-    'open-card',
-    'open-code-block',
-    'open-dialog',
-    'open-dropdown',
-    'open-badge',
-    'open-input',
-    'open-tabs',
-    'open-theme-toggle',
-  ];
-  for (const name of components) {
-    const mod = await import(`../src/${name}.tsx`);
-    assertExists(mod.tagName, `${name} should export tagName`);
-  }
 });

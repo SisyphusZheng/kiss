@@ -28,6 +28,15 @@ export interface CompiledStatics {
   __partProgram?: PartProgram;
   __compiledProperties?: CompiledPropertyMetadata[];
   __elementMetadata?: CompiledElementMetadata;
+  /**
+   * Derived-signal factories for computed fields (`x = computed(() => ...)`):
+   * each factory builds the field's read-only signal over the instance's
+   * plain property signals. Emitted only when the class declares computeds.
+   */
+  __computedFields?: Record<
+    string,
+    (signals: Record<string, WritableSignal<unknown>>) => WritableSignal<unknown>
+  >;
   styles?: unknown;
   delegatesFocus?: boolean;
   formAssociated?: boolean;
@@ -122,21 +131,42 @@ function ownDataValue(element: object, name: string): { found: boolean; value?: 
  * its compiled default, plus any property values set as own data properties
  * before upgrade (captured and deleted so the prototype accessors take over;
  * applied last at connect — pre-upgrade JS sets win over attributes).
+ *
+ * Two passes: plain property signals first, then computed fields derive their
+ * read-only signals over them (declaration order) via the generated
+ * `__computedFields` factories — #723 semantics: dependencies compile into
+ * Part/Region subscriptions, and a computed field is just another signal the
+ * Parts subscribe to.
  */
 export function createFacadePropertyState(
   element: FacadeElementLike,
   properties: CompiledPropertyMetadata[],
+  computedFactories?: CompiledStatics['__computedFields'],
 ): FacadePropertyState {
   const signals: Record<string, WritableSignal<unknown>> = {};
   const pending = new Map<string, unknown>();
   const record = element as unknown as Record<string, unknown>;
   for (const property of properties) {
+    if (property.computed) continue;
     const own = ownDataValue(element, property.name);
     if (own.found) {
       pending.set(property.name, own.value);
       delete record[property.name];
     }
     signals[property.name] = signal<unknown>(property.default);
+  }
+  for (const property of properties) {
+    if (!property.computed) continue;
+    const factory = computedFactories?.[property.name];
+    if (!factory) {
+      throw new OpenElementError(
+        `[openElement] compiled property "${property.name}" is marked computed but the class ` +
+          'carries no __computedFields factory for it. Rebuild the component through the ' +
+          '0.44 compiler so the generated class and its Part Program agree.',
+        { code: 'OE_COMPUTED_FACTORY_MISSING', phase: 'csr' },
+      );
+    }
+    signals[property.name] = factory(signals);
   }
   return {
     properties,
@@ -165,6 +195,27 @@ export function installAccessors(
   accessorInstalled.add(proto);
   for (const record of properties) {
     if (Object.getOwnPropertyDescriptor(proto, record.name)) continue;
+    if (record.computed) {
+      // Derived fields are read-only: the computed signal owns the value and
+      // there is no attribute channel (the compiler enforces attribute: false
+      // and reflect: false). Writes fail closed instead of silently
+      // desyncing the derived value from its sources.
+      Object.defineProperty(proto, record.name, {
+        configurable: true,
+        enumerable: true,
+        get(this: FacadeElementLike): unknown {
+          return states.get(this)?.signals[record.name]?.value;
+        },
+        set(): void {
+          throw new OpenElementError(
+            `[openElement] computed property "${record.name}" is read-only: it derives from ` +
+              'its source signals. Assign the source properties instead.',
+            { code: 'OE_COMPUTED_READONLY', phase: 'csr' },
+          );
+        },
+      });
+      continue;
+    }
     Object.defineProperty(proto, record.name, {
       configurable: true,
       enumerable: true,
@@ -212,6 +263,7 @@ export function reconcileOwnProperties(
   state.ownPropertiesReconciled = true;
   const record = element as unknown as Record<string, unknown>;
   for (const property of state.properties) {
+    if (property.computed) continue;
     const own = ownDataValue(element, property.name);
     if (!own.found) continue;
     delete record[property.name];
@@ -240,6 +292,7 @@ export function applyPendingOwnValues(state: FacadePropertyState): void {
   state.pendingOwnValues = null;
   for (const [name, value] of pending) {
     const record = state.properties.find((candidate) => candidate.name === name);
+    if (record?.computed) continue;
     const sig = record ? state.signals[record.name] : undefined;
     if (record && sig) sig.value = coercePropertyValue(record, value);
   }

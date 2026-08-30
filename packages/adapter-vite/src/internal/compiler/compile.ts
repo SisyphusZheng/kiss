@@ -59,6 +59,15 @@ interface SpikeField {
   initializerText: string;
   defaultValue: SerializableValue;
   node: ts.PropertyDeclaration;
+  /**
+   * Computed field (alpha.8): the source initializer is
+   * `computed(() => <expr>)` (optionally behind an `as unknown as <T>` cast —
+   * the compiled accessor returns the derived VALUE, so the cast keeps the
+   * source type honest). The compiler records the source-signal dependencies
+   * and emits a `__computedFields` factory over the instance's signal record;
+   * no field initializer runs on the generated class.
+   */
+  computed?: { deps: string[]; factoryText: string };
 }
 
 interface GeneratedHandler {
@@ -75,6 +84,7 @@ type SpikePartInput =
   | { k: 'bool'; signal: string; name: string; path: number[] }
   | { k: 'class'; signal: string; path: number[] }
   | { k: 'style'; signal: string; path: number[] }
+  | { k: 'html'; signal: string; path: number[] }
   | { k: 'ref'; ref: string; path: number[] }
   | {
     k: 'event';
@@ -91,7 +101,7 @@ type SpikePartInput =
     on: SpikeTreeNode[];
     off: SpikeTreeNode[];
   }
-  | { k: 'each'; signal: string; key: string; field: string; item: SpikeTreeNode[] };
+  | { k: 'each'; signal: string; key: string; field?: string; item: SpikeTreeNode[] };
 
 const BOOLEAN_ATTRIBUTES = new Set([
   'allowfullscreen',
@@ -252,6 +262,83 @@ function propertyTypeFromConstructor(
   return { label: name.toLowerCase() as PropertyValueType, constructorName: name };
 }
 
+/**
+ * Parse a computed field initializer (alpha.8, ADR-0143): `computed(() => ...)`
+ * behind optional `as`-casts. The arrow body may read `this.<field>` of any
+ * NON-computed declared field (rewritten to the signal-record read) and use
+ * any module-scope values; `this` in any other position, reads of computed
+ * fields, and nested non-arrow functions fail closed (OEC9024). Returns null
+ * for non-computed initializers.
+ */
+function parseComputedInitializer(
+  initializer: ts.Expression,
+  sf: ts.SourceFile,
+  plainFieldNames: ReadonlySet<string>,
+  computedFieldNames: ReadonlySet<string>,
+  fail: (node: ts.Node, code: string, message: string) => never,
+): { deps: string[]; factoryText: string } | null {
+  const value = unwrapExpression(initializer);
+  if (!ts.isCallExpression(value) || value.expression.getText(sf) !== 'computed') return null;
+  if (value.arguments.length !== 1 || !ts.isArrowFunction(value.arguments[0])) {
+    fail(value, 'OEC9024', 'computed fields take exactly one zero-argument arrow function');
+  }
+  const arrow = value.arguments[0] as ts.ArrowFunction;
+  if (arrow.parameters.length > 0) {
+    fail(arrow, 'OEC9024', 'computed field arrows may not declare parameters');
+  }
+  if (!ts.isBlock(arrow.body)) {
+    // expression body — the supported form
+  } else if (
+    arrow.body.statements.length === 1 && ts.isReturnStatement(arrow.body.statements[0]) &&
+    arrow.body.statements[0].expression
+  ) {
+    fail(
+      arrow.body,
+      'OEC9024',
+      'computed field arrows use an expression body, not a block (keep derived values atomic)',
+    );
+  } else {
+    fail(arrow.body, 'OEC9024', 'computed field arrows use an expression body, not a block');
+  }
+  const body = arrow.body as ts.Expression;
+  const deps: string[] = [];
+  const replacements: Array<{ start: number; end: number; name: string }> = [];
+  const visit = (node: ts.Node): void => {
+    if (node !== body && (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node))) {
+      fail(node, 'OEC9024', 'computed field arrows may not nest non-arrow functions');
+    }
+    if (ts.isPropertyAccessExpression(node) && node.expression.kind === ts.SyntaxKind.ThisKeyword) {
+      const name = node.name.text;
+      if (computedFieldNames.has(name)) {
+        fail(node, 'OEC9024', `computed field may not read computed field "${name}"`);
+      }
+      if (!plainFieldNames.has(name)) {
+        fail(
+          node,
+          'OEC9024',
+          `computed fields may only read this.<declared property> (found this.${name})`,
+        );
+      }
+      if (!deps.includes(name)) deps.push(name);
+      replacements.push({ start: node.getStart(sf), end: node.getEnd(), name });
+      return;
+    }
+    if (node.kind === ts.SyntaxKind.ThisKeyword || node.kind === ts.SyntaxKind.SuperKeyword) {
+      fail(node, 'OEC9024', 'computed field arrows may only reference this.<property>');
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(body);
+  let bodyText = body.getText(sf);
+  for (const replacement of replacements.sort((a, b) => b.start - a.start)) {
+    const offset = body.getStart(sf);
+    bodyText = bodyText.slice(0, replacement.start - offset) +
+      `__s.${replacement.name}.value` +
+      bodyText.slice(replacement.end - offset);
+  }
+  return { deps, factoryText: `(__s) => computed(() => ${bodyText})` };
+}
+
 function inferPropertyType(
   member: ts.PropertyDeclaration,
   defaultValue: SerializableValue,
@@ -320,6 +407,8 @@ class Lowering {
   readonly generatedHandlers: GeneratedHandler[] = [];
   readonly fieldNames: Set<string>;
   readonly methodNames: Set<string>;
+  readonly computedNames: Set<string>;
+  readonly fieldTypes: Map<string, PropertyValueType>;
   private elementSerial = 0;
 
   constructor(
@@ -329,6 +418,10 @@ class Lowering {
   ) {
     this.fieldNames = new Set(fields.map((field) => field.name));
     this.methodNames = new Set(methodNames);
+    this.computedNames = new Set(
+      fields.filter((field) => field.computed).map((field) => field.name),
+    );
+    this.fieldTypes = new Map(fields.map((field) => [field.name, field.type]));
   }
 
   fail(node: ts.Node, code: string, message: string): never {
@@ -352,8 +445,16 @@ class Lowering {
     tag: string,
     attrs: Array<[string, string]>,
     children: SpikeTreeNode[],
+    iattrs?: Array<[string, string]>,
   ): SpikeTreeNode {
-    return { k: 'el', id, tag, attrs, children };
+    return {
+      k: 'el',
+      id,
+      tag,
+      attrs,
+      ...(iattrs && iattrs.length > 0 ? { iattrs } : {}),
+      children,
+    };
   }
 
   private addPart(
@@ -398,7 +499,8 @@ class Lowering {
     }
     if (
       part.k === 'text' || part.k === 'prop' || part.k === 'attr' || part.k === 'bool' ||
-      part.k === 'class' || part.k === 'style' || part.k === 'when' || part.k === 'each'
+      part.k === 'class' || part.k === 'style' || part.k === 'html' || part.k === 'when' ||
+      part.k === 'each'
     ) {
       this.dependencies.push({
         signal: part.signal,
@@ -461,12 +563,14 @@ class Lowering {
     staticOnly = false,
   ): SpikeTreeNode {
     const tag = tagNameNode.getText(this.sf);
-    // alpha.8: custom-element hosts (<x-y>) are admitted as opaque nested
-    // hosts — the page/layout composition renders them as host tags that the
-    // server entry expands per the SSR admission plan. They carry static
-    // literal attributes or this.<property> bindings (lowered as prop Parts so
-    // the server serializer emits them as host attributes); children, event
-    // handlers and refs on hosts fail closed (slots are outside grammar v1).
+    // alpha.8: custom-element hosts (<x-y>) are admitted as nested hosts — the
+    // page/layout composition renders them as host tags that the server entry
+    // expands per the SSR admission plan. They carry static literal attributes
+    // or this.<property> bindings (lowered as prop Parts so the server
+    // serializer emits them as host attributes and the client claim assigns
+    // them as JS properties). Children are the host's light content (slot
+    // projection is platform behavior) and lower with the ordinary grammar;
+    // event handlers and refs on hosts still fail closed.
     const isCustomHost = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(tag);
     if (!/^[a-z][a-z0-9]*$/.test(tag) && !isCustomHost) {
       this.fail(
@@ -542,19 +646,32 @@ class Lowering {
         continue;
       }
       const literal = literalValue(expr, this.sf);
-      const text = literal === undefined ? null : primitiveText(literal);
-      if (text === null && literal !== undefined) {
+      if (literal === undefined) {
+        this.fail(
+          prop,
+          'OEC9011',
+          `attribute "${name}" must be a literal, this.<property>, or a supported expression`,
+        );
+      }
+      const text = primitiveText(literal);
+      if (text === null) {
         this.fail(prop, 'OEC9011', `attribute "${name}" only accepts primitive literal values`);
       }
       if (literal === false || literal === null) continue;
       attrs.push([name, literal === true ? '' : text ?? '']);
     }
 
-    if (isCustomHost && children.some((child) => hasMeaningfulJsxChild(this.sf, child))) {
+    if (
+      !isCustomHost &&
+      this.parts.some((part) =>
+        part.k === 'html' && part.path.length === path.length &&
+        part.path.every((value, index) => value === path[index])
+      ) && children.some((child) => hasMeaningfulJsxChild(this.sf, child))
+    ) {
       this.fail(
         sourceNode,
-        'OEC9017',
-        `custom-element host <${tag}> may not have children in the compiler grammar (slots are unsupported); compose through page layout instead`,
+        'OEC9026',
+        'an innerHTML sink target must be otherwise childless (the sink owns its content)',
       );
     }
 
@@ -660,6 +777,15 @@ class Lowering {
 
   private parseEventMutation(expr: ts.Expression, near: ts.Node): SpikeEventAction {
     const value = unwrapExpression(expr);
+    const assertWritable = (signal: string): void => {
+      if (this.computedNames.has(signal)) {
+        this.fail(
+          near,
+          'OEC9024',
+          `event actions may not write computed field "${signal}" — assign its source properties`,
+        );
+      }
+    };
     if (ts.isPostfixUnaryExpression(value) || ts.isPrefixUnaryExpression(value)) {
       const signal = this.fieldAccess(value.operand);
       if (
@@ -669,6 +795,7 @@ class Lowering {
       ) {
         this.fail(near, 'OEC9016', 'event mutations support only this.<number>++ or --');
       }
+      assertWritable(signal!);
       return {
         kind: value.operator === ts.SyntaxKind.PlusPlusToken ? 'increment' : 'decrement',
         signal: signal!,
@@ -680,6 +807,7 @@ class Lowering {
       if (!signal || literal === undefined) {
         this.fail(near, 'OEC9016', 'event assignment values must be serializable literals');
       }
+      assertWritable(signal!);
       if (value.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
         return { kind: 'assign', signal, value: literal! };
       }
@@ -722,6 +850,19 @@ class Lowering {
     }
     if (name === 'style') {
       this.addPart({ k: 'style', signal, path }, path, sourceNode, elementId);
+      return;
+    }
+    if (name === 'innerHTML') {
+      // Trusted-HTML sink (alpha.8): pre-sanitized build-time content only.
+      // The field must be string-typed; the target must be childless (checked
+      // by the program validator, which also rejects raw-text targets).
+      if (this.fieldTypes.get(signal) !== 'string') {
+        this.fail(sourceNode, 'OEC9026', 'innerHTML sinks require a string-typed property');
+      }
+      if (VOID_TAGS.has(tag)) {
+        this.fail(sourceNode, 'OEC9026', `void element <${tag}> cannot carry an innerHTML sink`);
+      }
+      this.addPart({ k: 'html', signal, path }, path, sourceNode, elementId);
       return;
     }
     if (BOOLEAN_ATTRIBUTES.has(lowerName)) {
@@ -875,11 +1016,11 @@ class Lowering {
     const itemFields: string[] = [];
     const item = this.lowerItemElement(body, param, itemFields, [], true);
     const uniqueFields = [...new Set(itemFields)];
-    if (itemFields.length !== 1 || uniqueFields.length !== 1) {
+    if (uniqueFields.length === 0) {
       this.fail(
         body,
         'OEC9013',
-        'list Region items support exactly one {<item>.<field>} value slot',
+        'list Region items must bind at least one {<item>.<field>} value or attribute slot',
       );
     }
     const index = this.addPart(
@@ -887,7 +1028,9 @@ class Lowering {
         k: 'each',
         signal: signal!,
         key: key!,
-        field: uniqueFields[0],
+        // Single-field templates keep the Region-level field restatement;
+        // multi-field templates omit it — every ival/iattrs slot owns its own.
+        ...(uniqueFields.length === 1 ? { field: uniqueFields[0] } : {}),
         item: [item],
       },
       path,
@@ -918,6 +1061,7 @@ class Lowering {
     }
     const elementId = this.reserveElement(tag, path, element);
     const attrs: Array<[string, string]> = [];
+    const iattrs: Array<[string, string]> = [];
     const attributeNames = new Set<string>();
     for (const prop of attributes.properties) {
       if (!ts.isJsxAttribute(prop)) {
@@ -949,9 +1093,28 @@ class Lowering {
       if (!ts.isJsxExpression(prop.initializer) || !prop.initializer.expression) {
         this.fail(prop, 'OEC9011', 'item template attributes must be static literals');
       }
+      // alpha.8: per-item attribute slots — `name={item.<field>}` resolves from
+      // the current item at mount/claim (true emits a bare attribute, falsy
+      // omits it, anything else serializes with String()).
+      const attrExpr = unwrapExpression(prop.initializer.expression);
+      if (
+        ts.isPropertyAccessExpression(attrExpr) && ts.isIdentifier(attrExpr.expression) &&
+        attrExpr.expression.text === param && isIdentifier(attrExpr.name.text)
+      ) {
+        itemFields.push(attrExpr.name.text);
+        iattrs.push([name, attrExpr.name.text]);
+        continue;
+      }
       const literal = literalValue(prop.initializer.expression, this.sf);
-      const text = literal === undefined ? null : primitiveText(literal);
-      if (text === null && literal !== undefined) {
+      if (literal === undefined) {
+        this.fail(
+          prop,
+          'OEC9011',
+          `item template attribute "${name}" must be a static literal or {${param}.<field>}`,
+        );
+      }
+      const text = primitiveText(literal);
+      if (text === null) {
         this.fail(prop, 'OEC9011', 'item template attributes must use primitive literals');
       }
       if (literal === false || literal === null) continue;
@@ -999,7 +1162,7 @@ class Lowering {
         'item templates support static text, item values and intrinsic elements',
       );
     }
-    return this.addElement(elementId, tag, attrs, children);
+    return this.addElement(elementId, tag, attrs, children, iattrs);
   }
 }
 
@@ -1086,7 +1249,18 @@ function propertyFields(
       if (!member.initializer) {
         fail(member, 'OEC9005', 'compiled fields require a literal initializer');
       }
-      const defaultValue = literalValue(member.initializer, sf);
+      // alpha.8: computed fields derive their signal from other properties.
+      // They never carry attributes, never reflect, and hold no serialized
+      // default (metadata default is null; the value comes from the factory).
+      const computedFieldNames = new Set(fields.filter((f) => f.computed).map((f) => f.name));
+      const computedInit = parseComputedInitializer(
+        member.initializer,
+        sf,
+        new Set(fields.filter((f) => !f.computed).map((f) => f.name)),
+        computedFieldNames,
+        fail,
+      );
+      const defaultValue = computedInit ? null : literalValue(member.initializer, sf);
       if (defaultValue === undefined) {
         fail(member.initializer, 'OEC9020', 'property defaults must be serializable literals');
       }
@@ -1144,6 +1318,16 @@ function propertyFields(
       const inferred = explicitType ?? inferPropertyType(member, defaultValue, sf);
       const converter = explicitConverter ?? inferred.label;
       if (attribute === undefined) attribute = camelToKebab(member.name.text);
+      if (computedInit) {
+        if (attribute !== null || reflect) {
+          fail(
+            member,
+            'OEC9025',
+            'computed fields require @property({ reflect: false, attribute: false }) — ' +
+              'derived signals have no attribute channel',
+          );
+        }
+      }
       if (attribute !== null) {
         const attributeKey = attribute.toLowerCase();
         if (propertyAttributeNames.has(attributeKey)) {
@@ -1172,6 +1356,7 @@ function propertyFields(
         initializerText: member.initializer.getText(sf),
         defaultValue,
         node: member,
+        ...(computedInit ? { computed: computedInit } : {}),
       });
       continue;
     }
@@ -1182,7 +1367,6 @@ function propertyFields(
           modifier.kind === ts.SyntaxKind.StaticKeyword ||
           modifier.kind === ts.SyntaxKind.AbstractKeyword ||
           modifier.kind === ts.SyntaxKind.DeclareKeyword ||
-          modifier.kind === ts.SyntaxKind.OverrideKeyword ||
           modifier.kind === ts.SyntaxKind.AccessorKeyword
         ) || !member.body
       ) {
@@ -1284,6 +1468,16 @@ function hasRuntimeOpenElementImport(sf: ts.SourceFile): boolean {
   });
 }
 
+/** True when the module has a runtime (non-type-only) named import of `name`. */
+function hasRuntimeNamedImport(sf: ts.SourceFile, name: string): boolean {
+  return sf.statements.some((statement) => {
+    if (!ts.isImportDeclaration(statement) || statement.importClause?.isTypeOnly) return false;
+    const bindings = statement.importClause?.namedBindings;
+    if (!bindings || !ts.isNamedImports(bindings)) return false;
+    return bindings.elements.some((element) => element.name.text === name);
+  });
+}
+
 /**
  * Path-addressed fixed Parts can use DOM child indexes only before any dynamic
  * anchor. An anchor expands to multiple DOM nodes, so accepting a fixed sink
@@ -1329,6 +1523,12 @@ function encodeBase64(value: string): string {
 function runtimePropsText(fields: SpikeField[]): string[] {
   const lines = ['const __compiledProps = {'];
   for (const field of fields) {
+    if (field.computed) {
+      lines.push(
+        `  ${field.name}: { type: Object, default: undefined, reflect: false, attribute: false },`,
+      );
+      continue;
+    }
     const attribute = field.attribute === null ? 'false' : JSON.stringify(field.attribute);
     lines.push(
       `  ${field.name}: { type: ${field.typeConstructor}, default: ${field.initializerText}, ` +
@@ -1451,28 +1651,59 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
   // alpha.8: `@element(tag, { root: 'light' | 'shadow-open' | 'shadow-closed' })`
   // selects the program root ownership mode (light content vs DSD). Pages and
   // DSD islands compile with a shadow root; the default stays light.
+  // `delegatesFocus`/`formAssociated` boolean literals emit the matching class
+  // statics the facade kernel consumes (shadow attach options and
+  // ElementInternals association).
   let rootKind: 'light' | 'shadow-open' | 'shadow-closed' = 'light';
+  let delegatesFocus = false;
+  let formAssociated = false;
   if (expr.arguments.length === 2) {
     const options = expr.arguments[1];
     if (!ts.isObjectLiteralExpression(options)) {
       fail(decorator, 'OEC9002', '@element options must be an object literal');
     }
+    const seenOptions = new Set<string>();
     for (const entry of options.properties) {
-      if (
-        !ts.isPropertyAssignment(entry) || entry.name.getText(sf) !== 'root' ||
-        !ts.isStringLiteral(entry.initializer)
-      ) {
-        fail(entry, 'OEC9002', '@element options support only root: "<mode>" string literals');
+      if (!ts.isPropertyAssignment(entry)) {
+        fail(entry, 'OEC9002', '@element options must be named literal assignments');
       }
-      const mode = entry.initializer.text;
-      if (mode !== 'light' && mode !== 'shadow-open' && mode !== 'shadow-closed') {
-        fail(
-          entry,
-          'OEC9002',
-          `@element root "${mode}" is unsupported; use "light", "shadow-open" or "shadow-closed"`,
-        );
+      const optionName = entry.name.getText(sf);
+      if (seenOptions.has(optionName)) {
+        fail(entry, 'OEC9002', `@element option "${optionName}" may appear only once`);
       }
-      rootKind = mode;
+      seenOptions.add(optionName);
+      if (optionName === 'root') {
+        if (!ts.isStringLiteral(entry.initializer)) {
+          fail(entry, 'OEC9002', '@element root must be a string literal');
+        }
+        const mode = entry.initializer.text;
+        if (mode !== 'light' && mode !== 'shadow-open' && mode !== 'shadow-closed') {
+          fail(
+            entry,
+            'OEC9002',
+            `@element root "${mode}" is unsupported; use "light", "shadow-open" or "shadow-closed"`,
+          );
+        }
+        rootKind = mode;
+        continue;
+      }
+      if (optionName === 'delegatesFocus' || optionName === 'formAssociated') {
+        if (
+          entry.initializer.kind !== ts.SyntaxKind.TrueKeyword &&
+          entry.initializer.kind !== ts.SyntaxKind.FalseKeyword
+        ) {
+          fail(entry, 'OEC9002', `@element ${optionName} must be a boolean literal`);
+        }
+        const value = entry.initializer.kind === ts.SyntaxKind.TrueKeyword;
+        if (optionName === 'delegatesFocus') delegatesFocus = value;
+        else formAssociated = value;
+        continue;
+      }
+      fail(
+        entry,
+        'OEC9002',
+        '@element options support only root, delegatesFocus and formAssociated',
+      );
     }
   }
   const heritage = classNode.heritageClauses?.find((clause) =>
@@ -1491,6 +1722,16 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
   const className = classNode.name.text;
   const { fields, methods, render, stylesText } = propertyFields(sf, classNode, fail);
   const methodNames = methods.map((method) => (method.name as ts.Identifier).text);
+  if (
+    fields.some((field) => field.computed) && !hasRuntimeNamedImport(sf, 'computed')
+  ) {
+    fail(
+      classNode,
+      'OEC9025',
+      'computed fields require a runtime import of `computed` (e.g. ' +
+        "import { computed } from '@openelement/element')",
+    );
+  }
   const lowering = new Lowering(sf, fields, methodNames);
   const renderStatements = render.body?.statements ?? [];
   if (
@@ -1514,6 +1755,7 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
       converter: field.converter,
       reflect: field.reflect,
       default: field.defaultValue,
+      ...(field.computed ? { computed: true as const, deps: field.computed.deps } : {}),
     })),
     observedAttributes: fields.flatMap((field) =>
       field.attribute === null ? [] : [field.attribute]
@@ -1574,13 +1816,30 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     '  static props = __compiledProps;',
     '  static observedAttributes = __observedAttributes;',
   ];
+  if (delegatesFocus) memberLines.push('  static delegatesFocus = true;');
+  if (formAssociated) memberLines.push('  static formAssociated = true;');
+  const computedFields = fields.filter((field) => field.computed);
+  if (computedFields.length > 0) {
+    // Derived-signal factories: each builds the field's read-only computed
+    // over the instance's plain property signals (facade + renderDsd run the
+    // same factories, so server output and client claim read one value set).
+    memberLines.push('  static __computedFields = {');
+    for (const field of computedFields) {
+      memberLines.push(`    ${field.name}: ${field.computed!.factoryText},`);
+    }
+    memberLines.push('  };');
+  }
   if (stylesText !== undefined) {
     // Copied verbatim: the facade reads static styles into the compiled style
     // scope (adoptedStyleSheets on shadow roots, a document-head sink on light
-    // roots). The serializer never inlines raw-text elements.
+    // roots); the serializer inlines them as the marked DSD <style> element.
     memberLines.push(`  static styles = ${stylesText};`);
   }
   for (const field of fields) {
+    // Computed fields carry no initializer on the generated class: the
+    // prototype accessor reads the derived signal, and an own data property
+    // would shadow it.
+    if (field.computed) continue;
     const accessibility = field.accessibility ? `${field.accessibility} ` : '';
     memberLines.push(
       `  ${accessibility}${field.name}${field.typeText} = ${field.initializerText};`,

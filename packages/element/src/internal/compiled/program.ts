@@ -86,6 +86,13 @@ export interface SpikeElementNode {
   id: string;
   tag: string;
   attrs: Array<[string, string]>;
+  /**
+   * Per-item attribute slots ([name, itemField]) — valid only inside an
+   * `each` item template. At mount/claim time the value resolves from the
+   * current item: `true` emits a bare attribute, `false`/`null`/`undefined`
+   * omit it, anything else serializes with String().
+   */
+  iattrs?: Array<[string, string]>;
   children: SpikeTreeNode[];
 }
 
@@ -104,9 +111,10 @@ export interface SpikePartAnchorNode {
 
 /**
  * Item-value text slot; valid only inside an `each` item template. `field`
- * restates the owning Region's item field when the compiler emits it; runtime-
- * owned programs may omit it and render the Region's `field` (or the item
- * itself for field-less unkeyed Regions).
+ * names the item field rendered by this slot. The compiler always emits it
+ * (multi-field item templates carry one slot per field); runtime-owned
+ * programs may omit it and render the Region's `field` (or the item itself
+ * for field-less unkeyed Regions).
  */
 export interface SpikeItemValueNode {
   k: 'ival';
@@ -168,6 +176,22 @@ export interface SpikeClassPart {
 /** Exact `style` attribute sink. Values may be CSS text or a declaration map. */
 export interface SpikeStylePart {
   k: 'style';
+  index: number;
+  signal: string;
+  path: number[];
+  location: ProgramLocation;
+}
+
+/**
+ * Trusted-HTML content sink (ADR-0143 alpha.8). The signal value must be a
+ * string of pre-sanitized, build-time-trusted HTML; it replaces the target
+ * element's content. The target's subtree is opaque to the claim path (the
+ * program declares no structure inside it). The compiler emits this only for
+ * an explicit `innerHTML={this.<field>}` sink on an otherwise childless
+ * element — there is no implicit or discovery path to raw HTML.
+ */
+export interface SpikeHtmlPart {
+  k: 'html';
   index: number;
   signal: string;
   path: number[];
@@ -274,6 +298,7 @@ export type SpikeFixedPart =
   | SpikeBoolPart
   | SpikeClassPart
   | SpikeStylePart
+  | SpikeHtmlPart
   | SpikeRefPart
   | SpikeEventPart;
 
@@ -287,6 +312,7 @@ export type SpikePart =
   | SpikeBoolPart
   | SpikeClassPart
   | SpikeStylePart
+  | SpikeHtmlPart
   | SpikeRefPart
   | SpikeEventPart
   | SpikeWhenPart
@@ -317,6 +343,15 @@ export interface CompiledPropertyMetadata {
   converter: PropertyValueType;
   reflect: boolean;
   default: SerializableValue;
+  /**
+   * True for computed fields (`= computed(() => ...)` in the source): their
+   * signal is derived from other property signals by the generated
+   * `__computedFields` factory, never seeded from attributes/props. Always
+   * paired with `attribute: null` and `reflect: false`.
+   */
+  computed?: boolean;
+  /** Source signal names a computed field reads (declaration order). */
+  deps?: string[];
 }
 
 export interface CemPropertyMetadata {
@@ -368,6 +403,15 @@ export function partAnchorMarker(index: number): string {
 export function partAnchorEndMarker(index: number): string {
   return `oe:/p${index}`;
 }
+
+/**
+ * The one `<style>` element the server serializer emits as the first DSD
+ * template child when the class carries static styles (legacy renderDsd
+ * parity — pages never upgrade, so their styles must ship in the payload).
+ * The claim path skips exactly this marked node; a marked node on a
+ * style-less class is claim drift and fails closed.
+ */
+export const STATIC_STYLES_MARKER = 'data-oe-static-styles';
 
 function fail(reason: string): never {
   throw new Error(`[compiled-program] invalid Part Program v1: ${reason}`);
@@ -509,7 +553,11 @@ function validateTreeNodes(
     const plainPath = [...plainPrefix, position];
     switch (rawNode.k) {
       case 'el': {
-        assertKeys(rawNode, ['k', 'id', 'tag', 'attrs', 'children'], `${where}[${position}]`);
+        assertKeys(
+          rawNode,
+          ['k', 'id', 'tag', 'attrs', 'iattrs', 'children'],
+          `${where}[${position}]`,
+        );
         if (typeof rawNode.id !== 'string' || !/^e\d+$/.test(rawNode.id)) {
           fail(`${where}[${position}] element needs a stable eN id`);
         }
@@ -538,6 +586,39 @@ function validateTreeNodes(
             fail(`${where}[${position}].attrs[${attrPosition}] duplicates attribute ${attr[0]}`);
           }
           attributeNames.add(attr[0].toLowerCase());
+        }
+        if (rawNode.iattrs !== undefined) {
+          if (!allowItemValues) {
+            fail(`${where}[${position}].iattrs item attribute slots need an each item template`);
+          }
+          if (!Array.isArray(rawNode.iattrs)) {
+            fail(`${where}[${position}].iattrs must be an array`);
+          }
+          for (const [slotPosition, slot] of rawNode.iattrs.entries()) {
+            if (
+              !Array.isArray(slot) || slot.length !== 2 || typeof slot[0] !== 'string' ||
+              typeof slot[1] !== 'string'
+            ) {
+              fail(`${where}[${position}].iattrs[${slotPosition}] must be a [name, field] pair`);
+            }
+            if (!isAttributeName(slot[0])) {
+              fail(`${where}[${position}].iattrs[${slotPosition}] has an unsafe name`);
+            }
+            if (slot[0].toLowerCase() === 'key') {
+              fail(`${where}[${position}].iattrs[${slotPosition}] may not bind the item key`);
+            }
+            if (!isIdentifier(slot[1])) {
+              fail(`${where}[${position}].iattrs[${slotPosition}] field must be an identifier`);
+            }
+            if (attributeNames.has(slot[0].toLowerCase())) {
+              fail(
+                `${where}[${position}].iattrs[${slotPosition}] duplicates static attribute ${
+                  slot[0]
+                }`,
+              );
+            }
+            attributeNames.add(slot[0].toLowerCase());
+          }
         }
         if (!Array.isArray(rawNode.children)) {
           fail(`${where}[${position}].children must be an array`);
@@ -620,8 +701,10 @@ function validateCondition(value: unknown, where: string): asserts value is Spik
 }
 
 /**
- * Item value slots render the owning Region's `field`. A compiler-emitted slot
- * restates that field; a runtime-owned slot may omit it. Anything else fails.
+ * Item value slots render their own `field` (multi-field templates) or — for
+ * single-field templates — restate the owning Region's `field`. A slot that
+ * contradicts a present Region `field` fails; field-less slots render the
+ * Region's `field` (or the item itself for field-less unkeyed Regions).
  */
 function validateItemValueFields(
   nodes: SpikeTreeNode[],
@@ -630,7 +713,7 @@ function validateItemValueFields(
 ): void {
   nodes.forEach((node, position) => {
     if (node.k === 'ival') {
-      if (node.field !== undefined && node.field !== field) {
+      if (node.field !== undefined && field !== undefined && node.field !== field) {
         fail(`${where}[${position}] must use item field ${field}`);
       }
       return;
@@ -685,6 +768,7 @@ function hasSignal(part: SpikePart): boolean {
     case 'bool':
     case 'class':
     case 'style':
+    case 'html':
     case 'when':
     case 'each':
     case 'child':
@@ -763,6 +847,7 @@ const PART_KEYS: Record<SpikePart['k'], readonly string[]> = {
   bool: ['k', 'index', 'signal', 'name', 'path', 'location'],
   class: ['k', 'index', 'signal', 'path', 'location'],
   style: ['k', 'index', 'signal', 'path', 'location'],
+  html: ['k', 'index', 'signal', 'path', 'location'],
   ref: ['k', 'index', 'ref', 'handler', 'signal', 'path', 'location'],
   event: ['k', 'index', 'event', 'handler', 'signal', 'action', 'options', 'path', 'location'],
   when: ['k', 'index', 'signal', 'gt', 'test', 'on', 'off', 'location'],
@@ -886,6 +971,35 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
           fail(`parts[${position}] location path does not match path`);
         }
         break;
+      case 'html': {
+        if (!isIdentifier(part.signal) || part.location.kind !== 'sink') {
+          fail(`parts[${position}] html is invalid`);
+        }
+        const htmlTargetId = validatePartPath(
+          template,
+          part.path,
+          `parts[${position}]`,
+          elementIds,
+        );
+        if (htmlTargetId !== part.location.node) {
+          fail(`parts[${position}] location node does not match path`);
+        }
+        if (!samePath(part.location.path, part.path)) {
+          fail(`parts[${position}] location path does not match path`);
+        }
+        // The HTML sink owns its target's whole content: the target must not
+        // also carry program children (the serializer would overwrite them).
+        let htmlTarget: SpikeTreeNode | undefined;
+        let htmlNodes = template;
+        for (const pathIndex of part.path) {
+          htmlTarget = htmlNodes[pathIndex];
+          htmlNodes = htmlTarget?.k === 'el' ? htmlTarget.children : [];
+        }
+        if (htmlTarget?.k !== 'el' || htmlTarget.children.length > 0) {
+          fail(`parts[${position}] html sink target must be a childless element`);
+        }
+        break;
+      }
       case 'ref':
         requireOneSelector(
           [part.ref, part.handler, part.signal],
@@ -1254,6 +1368,8 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     const converter = property && isRecord(property) ? property.converter : undefined;
     const reflect = property && isRecord(property) ? property.reflect : undefined;
     const defaultValue = property && isRecord(property) ? property.default : undefined;
+    const computed = property && isRecord(property) ? property.computed : undefined;
+    const deps = property && isRecord(property) ? property.deps : undefined;
     if (
       !isRecord(property) || !isIdentifier(name) || metadataNames.has(name) ||
       (attribute !== null && !isAttributeName(attribute)) ||
@@ -1266,9 +1382,22 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     }
     assertKeys(
       property,
-      ['name', 'attribute', 'type', 'converter', 'reflect', 'default'],
+      ['name', 'attribute', 'type', 'converter', 'reflect', 'default', 'computed', 'deps'],
       `metadata.properties[${position}]`,
     );
+    if (computed !== undefined) {
+      // Computed fields derive their signal from other properties, so they can
+      // never be attribute-backed, reflect, or carry no source list.
+      if (
+        computed !== true || attribute !== null || reflect !== false ||
+        !Array.isArray(deps) || deps.length === 0 ||
+        deps.some((dep) => !isIdentifier(dep))
+      ) {
+        fail(`metadata.properties[${position}].computed is invalid`);
+      }
+    } else if (deps !== undefined) {
+      fail(`metadata.properties[${position}].deps requires computed: true`);
+    }
     metadataNames.add(name);
     metadataProperties.push({
       name,

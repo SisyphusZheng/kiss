@@ -1,11 +1,14 @@
-/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-theme-toggle
  *
  * Theme toggle Reactive DSD component for Dark/Light mode switching.
  * Swiss International Style: minimal, violet brand accent.
  *
- * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
+ * v0.44: compiled authoring (ADR-0143). The `theme` property drives the
+ * compiled `data-theme` attribute sink on the toggle button; CSS selectors
+ * ([data-theme='light']) own icon visibility. The initialization priority
+ * chain and persistence stay imperative in methods; the one-time init guard
+ * lives in the shared instance-state module.
  *
  * @csspart toggle -The button element
  * @csspart icon-sun -The sun SVG icon
@@ -16,181 +19,80 @@
  * <open-theme-toggle theme="light"></open-theme-toggle>
  * ```
  */
-
 import { OpenElement } from '@openelement/element';
-import type { StyleSheetLike } from '@openelement/element';
-import { createLogger } from '@openelement/element';
-import { signal } from '@openelement/element';
-import { recipe, type RenderResult } from './component-recipes.ts';
-export const tagName = 'open-theme-toggle';
+import { element, property } from './compile-decorators.ts';
+import { log, recipe } from './component-recipes.ts';
+import { readInstanceState, writeInstanceState } from './instance-state.ts';
 
-const log = createLogger('ui');
-
-const sheet: StyleSheetLike = recipe(`
-  :host {
-    display: inline-block;
-  }
-
-  .theme-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px; height: 38px; padding: 0;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
-    color: var(--text-muted);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
-    cursor: pointer;
-    transition: all var(--ease-2) var(--duration-2);
-  }
-  .theme-toggle:hover {
-    color: var(--text-primary);
-    border-color: var(--brand-light);
-    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
-  }
-
-  .theme-toggle svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .theme-toggle .icon-sun {
-    display: block;
-  }
-
-  .theme-toggle .icon-moon {
-    display: none;
-  }
-
-  .theme-toggle[data-theme="light"] .icon-sun {
-    display: none;
-  }
-
-  .theme-toggle[data-theme="light"] .icon-moon {
-    display: block;
-  }
-`);
-
+@element('open-theme-toggle', { root: 'shadow-open', delegatesFocus: true })
 export class OpenThemeToggle extends OpenElement {
   // Safari does not recompute adoptedStyleSheets when
   // :host([data-theme]) changes. The token sheets (openPropsTokenSheet,
   // semantic token sheets are already injected as page-level <style> by
   // vite.config.ts — CSS custom properties cascade from :root naturally.
   // Only adopt the component-specific sheet.
-  static override styles = [sheet];
-  static override delegatesFocus = true;
-  static override observedAttributes = ['theme'];
-
-  private _theme = signal<'dark' | 'light'>('dark');
-  private _initDone = false;
-  private _lastPropagatedTheme: 'dark' | 'light' | undefined;
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-    this._requestAnimationFrame(() => this._initTheme());
-  }
-
-  /**
-   * v0.23.0: Theme initialization lives in _initTheme(), called from
-   * connectedCallback (rAF) and onDsdHydrated() so that the priority
-   * chain works regardless of hydration path.
-   *
-   * Priority: theme attribute > document.documentElement.dataset.theme
-   * > localStorage > prefers-color-scheme > default 'dark'.
-   */
-  private _initTheme(): void {
-    if (this._initDone) return;
-    this._initDone = true;
-    const themeAttr = this.getAttribute('theme');
-    if (themeAttr === 'light') {
-      this._theme.value = 'light';
-    } else if (themeAttr === 'dark') {
-      this._theme.value = 'dark';
-    } else {
-      const docTheme = document.documentElement?.dataset?.theme;
-      if (docTheme === 'light') {
-        this._theme.value = 'light';
-      } else if (docTheme === 'dark') {
-        this._theme.value = 'dark';
-      } else {
-        let resolved = false;
-        try {
-          const saved = localStorage.getItem('open-theme');
-          if (saved === 'light') {
-            this._theme.value = 'light';
-            resolved = true;
-          } else if (saved === 'dark') {
-            this._theme.value = 'dark';
-            resolved = true;
-          }
-        } catch (e) {
-          log.debug('localStorage read unavailable:', e);
-        }
-        if (!resolved && globalThis.matchMedia) {
-          this._theme.value = globalThis.matchMedia('(prefers-color-scheme: light)').matches
-            ? 'light'
-            : 'dark';
-        }
-      }
+  static override styles = [recipe(`
+    :host {
+      display: inline-block;
     }
 
-    this._applyTheme(this._theme.value);
-  }
-
-  private _applyTheme(theme: 'dark' | 'light'): void {
-    const changed = this._lastPropagatedTheme !== theme;
-    this._theme.value = theme;
-    this.setAttribute('data-theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    if (document.documentElement.style) document.documentElement.style.colorScheme = theme;
-
-    try {
-      const root = this.getRootNode();
-      if (typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot && root.host) {
-        root.host.setAttribute('data-theme', theme);
-      }
-    } catch (e) {
-      log.debug('root theme propagation unavailable:', e);
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px; height: 38px; padding: 0;
+      border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+      border-radius: var(--radius-round);
+      background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
+      color: var(--text-muted);
+      box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
+      cursor: pointer;
+      transition: all var(--ease-2) var(--duration-2);
+    }
+    .theme-toggle:hover {
+      color: var(--text-primary);
+      border-color: var(--brand-light);
+      background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
     }
 
-    // Apply + dispatch only. Persistence to localStorage happens exclusively
-    // in _handleToggle (#804): writing on the init path would lock the
-    // resolved theme on first visit and override future OS-level switches.
-    if (changed) {
-      this._lastPropagatedTheme = theme;
-      this._dispatchThemeChange(theme);
+    .theme-toggle svg {
+      width: 16px;
+      height: 16px;
     }
-  }
 
-  private _persistTheme(theme: 'dark' | 'light'): void {
-    try {
-      localStorage.setItem('open-theme', theme);
-    } catch (e) {
-      log.debug('theme persistence unavailable:', e);
+    .theme-toggle .icon-sun {
+      display: block;
     }
-  }
 
-  protected override onDsdHydrated(): void {
-    super.onDsdHydrated();
-    this._requestAnimationFrame(() => this._initTheme());
-  }
+    .theme-toggle .icon-moon {
+      display: none;
+    }
 
-  override render(): RenderResult {
-    // Zero signal.value reads in render (ADR-0062).
-    // effect binding that updates the attribute when theme changes.
-    // CSS selectors ([data-theme="light"]) handle icon visibility.
+    .theme-toggle[data-theme='light'] .icon-sun {
+      display: none;
+    }
+
+    .theme-toggle[data-theme='light'] .icon-moon {
+      display: block;
+    }
+  `)];
+
+  /** The resolved theme — drives the compiled data-theme sink on the button. */
+  @property({ reflect: false })
+  theme: 'dark' | 'light' = 'dark';
+
+  render() {
     return (
       <button
         type='button'
-        className='theme-toggle'
+        class='theme-toggle'
         part='toggle'
-        data-theme={this._theme}
+        data-theme={this.theme}
         aria-label='Toggle theme'
-        onClick={() => this._handleToggle()}
+        onClick={this.handleToggle}
       >
         <svg
-          className='icon-sun'
+          class='icon-sun'
           part='icon-sun'
           viewBox='0 0 16 16'
           fill='none'
@@ -209,7 +111,7 @@ export class OpenThemeToggle extends OpenElement {
           <line x1='11.54' y1='4.46' x2='12.95' y2='3.05' />
         </svg>
         <svg
-          className='icon-moon'
+          class='icon-moon'
           part='icon-moon'
           viewBox='0 0 16 16'
           fill='none'
@@ -223,14 +125,103 @@ export class OpenThemeToggle extends OpenElement {
     );
   }
 
-  private _handleToggle(): void {
-    const theme = this._theme.value === 'light' ? 'dark' : 'light';
-    this._applyTheme(theme);
-    // Only an explicit user toggle persists the choice (#804).
-    this._persistTheme(theme);
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this._requestAnimationFrame(() => this.initTheme());
   }
 
-  private _dispatchThemeChange(theme: 'dark' | 'light'): void {
+  /**
+   * Theme initialization lives in initTheme(), called from connectedCallback
+   * (rAF) and onDsdHydrated() so that the priority chain works regardless of
+   * hydration path.
+   *
+   * Priority: theme attribute > document.documentElement.dataset.theme
+   * > localStorage > prefers-color-scheme > default 'dark'.
+   */
+  override onDsdHydrated(): void {
+    this._requestAnimationFrame(() => this.initTheme());
+  }
+
+  private initTheme(): void {
+    if (readInstanceState(this, 'initDone', () => false)) return;
+    writeInstanceState(this, 'initDone', true);
+    const themeAttr = this.getAttribute('theme');
+    if (themeAttr === 'light') {
+      this.theme = 'light';
+    } else if (themeAttr === 'dark') {
+      this.theme = 'dark';
+    } else {
+      const docTheme = document.documentElement?.dataset?.theme;
+      if (docTheme === 'light') {
+        this.theme = 'light';
+      } else if (docTheme === 'dark') {
+        this.theme = 'dark';
+      } else {
+        let resolved = false;
+        try {
+          const saved = localStorage.getItem('open-theme');
+          if (saved === 'light') {
+            this.theme = 'light';
+            resolved = true;
+          } else if (saved === 'dark') {
+            this.theme = 'dark';
+            resolved = true;
+          }
+        } catch (e) {
+          log.debug('localStorage read unavailable:', e);
+        }
+        if (!resolved && globalThis.matchMedia) {
+          this.theme = globalThis.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark';
+        }
+      }
+    }
+
+    this.applyTheme(this.theme);
+  }
+
+  private applyTheme(theme: 'dark' | 'light'): void {
+    const changed = readInstanceState(this, 'lastPropagated', () => undefined) !== theme;
+    this.theme = theme;
+    this.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    if (document.documentElement.style) document.documentElement.style.colorScheme = theme;
+
+    try {
+      const root = this.getRootNode();
+      if (typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot && root.host) {
+        root.host.setAttribute('data-theme', theme);
+      }
+    } catch (e) {
+      log.debug('root theme propagation unavailable:', e);
+    }
+
+    // Apply + dispatch only. Persistence to localStorage happens exclusively
+    // in handleToggle (#804): writing on the init path would lock the
+    // resolved theme on first visit and override future OS-level switches.
+    if (changed) {
+      writeInstanceState(this, 'lastPropagated', theme);
+      this.dispatchThemeChange(theme);
+    }
+  }
+
+  private persistTheme(theme: 'dark' | 'light'): void {
+    try {
+      localStorage.setItem('open-theme', theme);
+    } catch (e) {
+      log.debug('theme persistence unavailable:', e);
+    }
+  }
+
+  private handleToggle(): void {
+    const theme = this.theme === 'light' ? 'dark' : 'light';
+    this.applyTheme(theme);
+    // Only an explicit user toggle persists the choice (#804).
+    this.persistTheme(theme);
+  }
+
+  private dispatchThemeChange(theme: 'dark' | 'light'): void {
     try {
       if (typeof CustomEvent !== 'undefined' && typeof globalThis.dispatchEvent === 'function') {
         globalThis.dispatchEvent(new CustomEvent('open:theme-change', { detail: { theme } }));
@@ -241,9 +232,10 @@ export class OpenThemeToggle extends OpenElement {
   }
 
   override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
+    super.attributeChangedCallback(name, old, val);
     if (old === val) return;
     if (name === 'theme' && val) {
-      this._applyTheme(val === 'light' ? 'light' : 'dark');
+      this.applyTheme(val === 'light' ? 'light' : 'dark');
     }
   }
 }

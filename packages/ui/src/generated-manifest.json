@@ -79,15 +79,15 @@
       "cssParts": [
         {
           "name": "container",
-          "description": "The 'container' part"
+          "description": "The callout wrapper"
         },
         {
           "name": "icon",
-          "description": "The 'icon' part"
+          "description": "The type icon span"
         },
         {
           "name": "content",
-          "description": "The 'content' part"
+          "description": "The content area"
         }
       ],
       "openElement": {
@@ -153,7 +153,7 @@
       "cssParts": [
         {
           "name": "control",
-          "description": "The button or anchor element"
+          "description": "The visible button or anchor element"
         }
       ],
       "openElement": {
@@ -187,14 +187,14 @@
           "description": "label attribute"
         },
         {
-          "name": "value",
-          "type": "string",
-          "description": "value attribute"
-        },
-        {
           "name": "name",
           "type": "string",
           "description": "name attribute"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "description": "value attribute"
         },
         {
           "name": "disabled",
@@ -357,7 +357,7 @@
       "cssParts": [
         {
           "name": "badge",
-          "description": "The 'badge' part"
+          "description": "The badge span"
         }
       ],
       "openElement": {
@@ -380,6 +380,11 @@
           "type": "boolean",
           "description": "open attribute",
           "default": "false"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "description": "label attribute"
         }
       ],
       "events": [

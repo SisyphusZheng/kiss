@@ -1,25 +1,28 @@
-import { OpenBadge, tagName as badge } from './open-badge.tsx';
-import { OpenButton, tagName as button } from './open-button.tsx';
-import { OpenCallout, tagName as callout } from './open-callout.tsx';
-import { OpenCard, tagName as card } from './open-card.tsx';
-import { OpenCodeBlock, tagName as codeBlock } from './open-code-block.tsx';
-import { OpenDialog, tagName as dialog } from './open-dialog.tsx';
-import { OpenDropdown, tagName as dropdown } from './open-dropdown.tsx';
-import { OpenInput, tagName as input } from './open-input.tsx';
-import { OpenTabs, tagName as tabs } from './open-tabs.tsx';
-import { OpenThemeToggle, tagName as themeToggle } from './open-theme-toggle.tsx';
+import { OpenBadge } from './open-badge.tsx';
+import { OpenButton } from './open-button.tsx';
+import { OpenCallout } from './open-callout.tsx';
+import { OpenCard } from './open-card.tsx';
+import { OpenCodeBlock } from './open-code-block.tsx';
+import { OpenDialog } from './open-dialog.tsx';
+import { OpenDropdown } from './open-dropdown.tsx';
+import { OpenInput } from './open-input.tsx';
+import { OpenTabs } from './open-tabs.tsx';
+import { OpenThemeToggle } from './open-theme-toggle.tsx';
 
+// v0.44: compiled modules carry no runtime tagName export (the compiled
+// program owns the tag), so the registration table lives here, beside the
+// class imports. Keep aligned with manifest.declarations order.
 const COMPONENTS: ReadonlyArray<readonly [string, CustomElementConstructor]> = [
-  [badge, OpenBadge],
-  [button, OpenButton],
-  [callout, OpenCallout],
-  [card, OpenCard],
-  [codeBlock, OpenCodeBlock],
-  [dialog, OpenDialog],
-  [dropdown, OpenDropdown],
-  [input, OpenInput],
-  [tabs, OpenTabs],
-  [themeToggle, OpenThemeToggle],
+  ['open-card', OpenCard],
+  ['open-callout', OpenCallout],
+  ['open-button', OpenButton],
+  ['open-input', OpenInput],
+  ['open-theme-toggle', OpenThemeToggle],
+  ['open-code-block', OpenCodeBlock],
+  ['open-badge', OpenBadge],
+  ['open-dialog', OpenDialog],
+  ['open-dropdown', OpenDropdown],
+  ['open-tabs', OpenTabs],
 ];
 
 /** Explicitly register every first-party UI element. Safe to call repeatedly. */

@@ -51,6 +51,34 @@ interface CompiledComponentConstructor extends CustomElementConstructor {
   __partProgram?: PartProgram;
   __compiledProperties?: CompiledPropertyMetadata[];
   __elementMetadata?: CompiledElementMetadata;
+  __computedFields?: Record<
+    string,
+    (signals: Record<string, ReturnType<typeof signal>>) => ReturnType<typeof signal>
+  >;
+  styles?: unknown;
+}
+
+/**
+ * Collect a compiled class's static styles as CSS text for the DSD template
+ * (legacy collectStyleCss parity): the serializer inlines the result as one
+ * marked <style> element so never-upgrading hosts (pages) still ship their
+ * component styles in the SSR payload.
+ */
+function collectStaticStyleCss(ctor: CompiledComponentConstructor): string | undefined {
+  const styles = ctor.styles;
+  if (!styles) return undefined;
+  const sheets = Array.isArray(styles) ? styles : [styles];
+  let css = '';
+  for (const sheet of sheets) {
+    const rules = (sheet as { cssRules?: ArrayLike<{ cssText: string }> } | undefined)?.cssRules;
+    if (!rules) continue;
+    try {
+      for (const rule of Array.from(rules)) css += rule.cssText + '\n';
+    } catch {
+      // Cross-origin or otherwise unreadable sheets are skipped (legacy parity).
+    }
+  }
+  return css === '' ? undefined : css;
 }
 
 export interface RenderDsdOptions {
@@ -160,6 +188,7 @@ export function renderDsd(
   const signals: Record<string, ReturnType<typeof signal>> = {};
   const hostAttrs: Array<readonly [string, unknown]> = [];
   for (const record of properties) {
+    if (record.computed) continue;
     const value = record.name in props
       ? coerceServerProp(record, props[record.name])
       : record.default;
@@ -171,6 +200,21 @@ export function renderDsd(
       }
     }
   }
+  // Computed fields derive from the seeded plain signals — same factories the
+  // client facade runs, so server output and client claim read one value set.
+  const computedFactories = (resolvedClass as CompiledComponentConstructor).__computedFields;
+  for (const record of properties) {
+    if (!record.computed) continue;
+    const factory = computedFactories?.[record.name];
+    if (!factory) {
+      throw new OpenElementError(
+        `[openElement] <${tag}> computed property "${record.name}" has no generated factory. ` +
+          'Rebuild the component through the 0.44 compiler.',
+        { code: 'OE_COMPUTED_FACTORY_MISSING', phase: 'ssr' },
+      );
+    }
+    signals[record.name] = factory(signals);
+  }
 
   const mode = program.root.kind === 'light'
     ? 'light'
@@ -178,7 +222,11 @@ export function renderDsd(
     ? 'open'
     : 'closed';
   const host: CompiledProgramHost = { signals, handlers: {} };
-  const html = serializeCompiledProgram(program, host, { mode, hostAttrs });
+  const html = serializeCompiledProgram(program, host, {
+    mode,
+    hostAttrs,
+    styleCss: collectStaticStyleCss(resolvedClass),
+  });
 
   return {
     html,
