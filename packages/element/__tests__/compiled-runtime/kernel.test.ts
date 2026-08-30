@@ -2,6 +2,7 @@ import { assert, assertEquals, assertFalse, assertStrictEquals, assertThrows } f
 import { CompiledErrorBoundary } from '../../src/error-boundary.ts';
 import { ElementFormController } from '../../src/open-element-form.ts';
 import { CompiledElementKernel } from '../../src/internal/compiled/runtime/kernel.ts';
+import { createFreshDom } from '../../src/internal/compiled/runtime.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { TestDocument, type TestElement, type TestShadowRoot, toHtml } from './test-dom.ts';
 import { testProgram } from './test-program.ts';
@@ -132,6 +133,62 @@ Deno.test('compiled kernel applies styles into open and closed shadow roots', ()
     kernel.dispose();
     assertEquals(root.adoptedStyleSheets, [preExisting], `${mode} dispose cleans up`);
   }
+});
+
+Deno.test('compiled kernel claims fixed Parts after the serialized static style node', () => {
+  const document = new TestDocument();
+  const element = document.createElement('oe-kernel-test');
+  const root = element.attachShadow({ mode: 'open' });
+  const message = signal('before');
+  let clicks = 0;
+  const program = testProgram({
+    tag: 'oe-kernel-test',
+    template: [{
+      k: 'el',
+      tag: 'div',
+      attrs: [],
+      children: [
+        { k: 'el', tag: 'button', attrs: [], children: [{ k: 'text', value: '+' }] },
+        { k: 'part', index: 0 },
+      ],
+    }],
+    parts: [
+      { k: 'text', index: 0, signal: 'message' },
+      {
+        k: 'event',
+        index: 1,
+        event: 'click',
+        handler: 'increment',
+        action: { kind: 'method', name: 'increment' },
+        path: [0, 0],
+      },
+    ],
+  });
+  createFreshDom(program, {
+    signals: { message },
+    handlers: { increment: () => clicks++ },
+  }, root as unknown as Node).dispose();
+  const style = document.createElement('style');
+  style.setAttribute('data-oe-static-styles', '');
+  root.insertBefore(style, root.childNodes[0]);
+  const sheet = {
+    replaceSync(_text: string): void {},
+    cssRules: [{ cssText: ':host { display: block; }' }],
+  };
+  const kernel = new CompiledElementKernel(element as unknown as HTMLElement, program, {
+    signals: { message },
+    handlers: { increment: () => clicks++ },
+    rootMode: 'open',
+    styles: sheet,
+  });
+
+  kernel.connect();
+  const button = (root.childNodes[1] as TestElement).childNodes[0] as TestElement;
+  button.dispatch('click');
+  assertEquals(clicks, 1);
+  message.value = 'after';
+  assertEquals(toHtml(root.childNodes[1]), '<div><button>+</button><!--oe:p0-->after</div>');
+  kernel.dispose();
 });
 
 Deno.test('compiled kernel retains a closed root without aliasing light DOM', () => {

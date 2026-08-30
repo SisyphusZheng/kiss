@@ -1,15 +1,12 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-
-const { createCheckoutAction, createCheckoutLoader } = await import('../routes/checkout.tsx');
-type CheckoutSupabaseClient = import('../routes/checkout.tsx').CheckoutSupabaseClient;
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
+const { createCheckoutAction, createCheckoutLoader } = await import(
+  '../route-logic/checkout.ts'
+);
+type CheckoutSupabaseClient = import('../route-logic/checkout.ts').CheckoutSupabaseClient;
 
 const ATTEMPT = '147f2ee7-289a-4da4-8a2b-6f930d1d5c47';
 const ORDER = '0a32b472-7252-4b02-a86a-7b459c639a71';
@@ -63,8 +60,13 @@ function form(attempt = ATTEMPT): FormData {
 }
 
 Deno.test('Checkout loader is owner-scoped and success return grants no new state', async () => {
-  const denied = await createCheckoutLoader(client({ user: false }))(context());
-  assertEquals(denied, { denied: true });
+  // v0.44: anonymous GETs redirect to sign-in (the 0.43 denied branch paired
+  // with a dynamic authenticated variant is outside the compiler grammar).
+  const denied = await assertRejects(() =>
+    createCheckoutLoader(client({ user: false }))(context())
+  );
+  assert(isOpenElementRedirect(denied));
+  assertEquals((denied as { location?: string }).location, '/login');
   const returned = await createCheckoutLoader(client())(
     context('https://app.test/checkout?result=success'),
   );

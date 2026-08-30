@@ -1,15 +1,10 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementNotFound, isOpenElementRedirect } from '@openelement/app';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
 const { createAdminLoader, createPaymentReplayAction, createReplayAction } = await import(
-  '../routes/admin.tsx'
+  '../route-logic/admin.ts'
 );
 
 const ADMIN = { id: 'admin-1', email: 'admin@example.com', app_metadata: { role: 'admin' } };

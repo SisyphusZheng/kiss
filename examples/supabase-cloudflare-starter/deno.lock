@@ -21,6 +21,7 @@
     "npm:pdf-parse@^1.1.1": "1.1.4",
     "npm:pdfjs-dist@4.8.69": "4.8.69",
     "npm:preact@^10.28.0": "10.29.8_preact-render-to-string@6.7.0",
+    "npm:typescript@^5.9.0": "5.9.3",
     "npm:valibot@^1.1.0": "1.4.2_typescript@5.9.3",
     "npm:vite@8.0.16": "8.0.16_esbuild@0.25.12_jiti@2.7.0_yaml@2.9.0",
     "npm:wrangler@latest": "4.123.0",

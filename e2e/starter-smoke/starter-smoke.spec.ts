@@ -20,6 +20,13 @@ test('computed body background is the design-token paper, not the UA default', a
 
 test('header nav links are spaced apart (not jammed)', async ({ page }) => {
   await page.goto('/');
+  // The compiled shell applies its `static styles` when it hydrates (the
+  // serializer never inlines styles into DSD) — wait for the flex layout
+  // before measuring link geometry.
+  await page.waitForFunction(() => {
+    const nav = document.querySelector('app-shell')?.shadowRoot?.querySelector('nav');
+    return !!nav && getComputedStyle(nav).display === 'flex';
+  });
   const links = page.locator('app-shell header nav a');
   await expect(links).toHaveCount(2);
   const [home, blog] = await links.evaluateAll((els) =>
@@ -35,13 +42,14 @@ test('counter island hydrates and responds to clicks', async ({ page }) => {
   await page.goto('/');
   const counter = page.locator('my-counter');
   await expect(counter).toBeVisible();
+  await page.evaluate(() => customElements.whenDefined('my-counter'));
   const plus = counter.getByRole('button', { name: '+' });
   await plus.click();
-  await expect(counter.locator('[data-signal="count"]')).toHaveText('1');
+  await expect(counter.locator('#count')).toHaveText('1');
   await plus.click();
-  await expect(counter.locator('[data-signal="count"]')).toHaveText('2');
+  await expect(counter.locator('#count')).toHaveText('2');
   await counter.getByRole('button', { name: '-' }).click();
-  await expect(counter.locator('[data-signal="count"]')).toHaveText('1');
+  await expect(counter.locator('#count')).toHaveText('1');
 });
 
 test('blog post page renders exactly one H1', async ({ page }) => {

@@ -1,78 +1,125 @@
-/** @jsxImportSource @openelement/element */
-import { defineElement, defineIsland, defineIslandConfig } from '@openelement/app';
-import { StyleSheet } from '@openelement/element';
+/**
+ * alpha3-wc-fixture — third-party Web Components interop island (v0.44
+ * compiled, ADR-0143).
+ *
+ * The compiler grammar v1 admits custom-element hosts as opaque static shells
+ * (literal attributes only — no children, no event handlers, no slots), so the
+ * foreign widgets render into SSR HTML as empty static hosts with their
+ * literal attributes, and the imperative seam (onDsdHydrated/onCsrRendered)
+ * appends the slotted labels/text and attaches the event listeners against
+ * the island's own compiled DOM. The interop evidence (slot projection,
+ * attribute→property reflection, composed events) is asserted at the browser
+ * level by tools/third-party-wc-smoke.ts.
+ */
+import { defineIslandConfig } from '@openelement/app';
+import { OpenElement } from '@openelement/element';
+import { alpha3WcFixtureStyles } from './alpha3-wc-styles.ts';
 
-export const tagName = 'alpha3-wc-fixture';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 
-if (typeof window !== 'undefined') {
-  import('../client/alpha3-wc-client.ts');
-}
+@element('alpha3-wc-fixture', { root: 'shadow-open' })
+export default class Alpha3WcFixture extends OpenElement {
+  static styles = alpha3WcFixtureStyles;
 
-defineElement('alpha3-open-child', {
-  render() {
-    return <span id='open-child-ready'>openElement child inside Lit</span>;
-  },
-});
+  @property({ reflect: false, attribute: false })
+  eventCount = 0;
 
-const styles = new StyleSheet();
-styles.replaceSync(`
-  :host { display: grid; gap: 1rem; }
-  section { display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid #d0d7de; border-radius: 8px; }
-  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
-`);
+  /** Shared event sink: bump the compiled counter and log the source. */
+  bump(source: string): void {
+    this.eventCount++;
+    const log = globalThis as unknown as { __alpha3EventLog?: string[] };
+    (log.__alpha3EventLog ??= []).push(source);
+  }
 
-let eventCount = 0;
-if (typeof window !== 'undefined') {
-  (window as unknown as Record<string, string[]>).__alpha3EventLog = [];
-}
+  onDsdHydrated(): void {
+    this.activateForeignWidgets();
+  }
 
-const bump = (source: string) => {
-  eventCount++;
-  (window as unknown as Record<string, string[]>).__alpha3EventLog.push(source);
-  // #960: the definePage route registers under the path-derived fallback tag
-  // (third-party-wc); alpha3-wc-page is the content element in its shadow.
-  const fixture = document
-    .querySelector('third-party-wc')
-    ?.shadowRoot?.querySelector('alpha3-wc-page')
-    ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
-  const countEl = fixture?.shadowRoot?.querySelector('#event-count');
-  if (countEl) countEl.textContent = `events:${eventCount}`;
-};
+  onCsrRendered(): void {
+    this.activateForeignWidgets();
+  }
 
-export default defineIsland(tagName, {
-  styles,
+  /**
+   * Imperative seam: register the third-party element definitions (client
+   * bundle side effect), then stamp the slotted content and event listeners
+   * the compiler grammar cannot express declaratively. Host-level listeners
+   * catch the composed events after each foreign element upgrades, so
+   * stamping does not wait on registration.
+   */
+  activateForeignWidgets(): void {
+    if (typeof window !== 'undefined') {
+      void import('../client/alpha3-wc-client.ts');
+    }
+    const root = this.shadowRoot;
+    if (!root) return;
+
+    const text = (selector: string, value: string): void => {
+      const host = root.querySelector(selector);
+      if (host && host.textContent !== value) host.textContent = value;
+    };
+    const slotLabel = (selector: string, value: string): void => {
+      const host = root.querySelector(selector);
+      if (!host || host.querySelector("span[slot='label']")) return;
+      const label = document.createElement('span');
+      label.setAttribute('slot', 'label');
+      label.textContent = value;
+      host.appendChild(label);
+    };
+    const on = (selector: string, event: string, source: string): void => {
+      const host = root.querySelector(selector);
+      host?.addEventListener(event, () => this.bump(source));
+    };
+
+    slotLabel('alpha3-lit-counter', 'Lit slot label');
+    slotLabel('alpha3-fast-counter', 'FAST slot label');
+    text('sl-button', 'Shoelace Button');
+    text('sl-switch', 'Shoelace Switch');
+    text('sl-dialog', 'Dialog content');
+    text('md-filled-button', 'Material Button');
+    text('ion-button', 'Ionic Stencil Button');
+    text('alpha3-native-badge', 'Native badge light child');
+
+    on('alpha3-lit-counter', 'lit-count', 'lit-count');
+    on('sl-button', 'click', 'sl-button');
+    on('sl-switch', 'sl-change', 'sl-switch');
+    on('md-filled-button', 'click', 'md-button');
+    on('md-switch', 'change', 'md-switch');
+    on('alpha3-fast-counter', 'fast-count', 'fast-count');
+    on('ion-button', 'click', 'ionic-button');
+    on('alpha3-native-badge', 'click', 'native-badge');
+  }
+
   render() {
     return (
-      <>
-        <p id='event-count'>events:0</p>
+      <div class='fixture-root'>
+        <p id='event-count'>events: {this.eventCount}</p>
         <section id='lit-section'>
           <h2>Lit</h2>
-          <alpha3-lit-counter label='Lit counter' on-lit-count={() => bump('lit-count')}>
-            <span slot='label'>Lit slot label</span>
-          </alpha3-lit-counter>
+          <alpha3-lit-counter id='lit-counter' label='Lit counter'></alpha3-lit-counter>
         </section>
         <section id='shoelace-section'>
           <h2>Shoelace</h2>
           <div class='row'>
-            <sl-button id='sl-button' variant='primary' onClick={() => bump('sl-button')}>
-              Shoelace Button
-            </sl-button>
-            <sl-switch id='sl-switch' on-sl-change={() => bump('sl-switch')}>
-              Shoelace Switch
-            </sl-switch>
+            <sl-button id='sl-button' variant='primary'></sl-button>
+            <sl-switch id='sl-switch'></sl-switch>
           </div>
-          <sl-dialog id='sl-dialog' label='Shoelace Dialog'>Dialog content</sl-dialog>
+          <sl-dialog id='sl-dialog' label='Shoelace Dialog'></sl-dialog>
         </section>
         <section id='material-section'>
           <h2>Material Web</h2>
           <div class='row'>
-            <md-filled-button id='md-button' onClick={() => bump('md-button')}>
-              Material Button
-            </md-filled-button>
+            <md-filled-button id='md-button'></md-filled-button>
             <md-outlined-text-field id='md-field' label='Material Field' value='alpha3'>
             </md-outlined-text-field>
-            <md-switch id='md-switch' on-change={() => bump('md-switch')}></md-switch>
+            <md-switch id='md-switch'></md-switch>
           </div>
         </section>
         <section id='interop-section'>
@@ -81,23 +128,17 @@ export default defineIsland(tagName, {
         </section>
         <section id='fast-section'>
           <h2>FAST</h2>
-          <alpha3-fast-counter id='fast-counter' on-fast-count={() => bump('fast-count')}>
-            <span slot='label'>FAST slot label</span>
-          </alpha3-fast-counter>
+          <alpha3-fast-counter id='fast-counter'></alpha3-fast-counter>
         </section>
         <section id='stencil-section'>
           <h2>Stencil compiled output (Ionic)</h2>
-          <ion-button id='ionic-button' onClick={() => bump('ionic-button')}>
-            Ionic Stencil Button
-          </ion-button>
+          <ion-button id='ionic-button'></ion-button>
         </section>
         <section id='native-section'>
           <h2>Bare native</h2>
-          <alpha3-native-badge id='native-badge' onClick={() => bump('native-badge')}>
-            Native badge light child
-          </alpha3-native-badge>
+          <alpha3-native-badge id='native-badge'></alpha3-native-badge>
         </section>
-      </>
+      </div>
     );
-  },
-}, openElement);
+  }
+}

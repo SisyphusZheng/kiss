@@ -20,7 +20,11 @@
 import { expect, test } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 
-const ROUTE_FILE = new URL('./work/my-blog/app/routes/index.tsx', import.meta.url).pathname;
+// v0.44: the route module is a thin definePage wrapper; the page markup lives
+// in the compiled page element it imports, so the edit target is the page
+// component (the #952 invalidation chain is the same: watcher → module
+// re-evaluation → next request renders the edited module).
+const PAGE_FILE = new URL('./work/my-blog/app/components/page-home.tsx', import.meta.url).pathname;
 const H1_ORIGINAL = 'Static pages, alive where it counts';
 const H1_EDITED = 'Static pages, edited in dev mode';
 
@@ -39,21 +43,21 @@ test('dev island hydrates and handles clicks (#951)', async ({ page }) => {
   // my-counter hydrates on idle, so wait for the definition first.
   await page.waitForFunction(() => Boolean(globalThis.customElements.get('my-counter')));
   const counter = page.locator('my-counter');
-  await expect(counter.locator('[data-signal="count"]')).toHaveText('0');
+  await expect(counter.locator('#count')).toHaveText('0');
   await counter.getByRole('button', { name: '+' }).click();
-  await expect(counter.locator('[data-signal="count"]')).toHaveText('1');
+  await expect(counter.locator('#count')).toHaveText('1');
 });
 
 test('route edit invalidates dev SSR output (#952)', async ({ request }) => {
-  const original = await readFile(ROUTE_FILE, 'utf-8');
+  const original = await readFile(PAGE_FILE, 'utf-8');
   if (!original.includes(H1_ORIGINAL)) {
     throw new Error(
-      `fixture route does not contain the expected H1 — was setup.ts changed? ` +
+      `fixture page component does not contain the expected H1 — was setup.ts changed? ` +
         `Looking for: ${H1_ORIGINAL}`,
     );
   }
   try {
-    await writeFile(ROUTE_FILE, original.replace(H1_ORIGINAL, H1_EDITED));
+    await writeFile(PAGE_FILE, original.replace(H1_ORIGINAL, H1_EDITED));
     // Vite's watcher + SSR module re-evaluation is asynchronous; poll until
     // the edited text renders (well beyond the 3s target from the issue).
     await expect
@@ -66,6 +70,6 @@ test('route edit invalidates dev SSR output (#952)', async ({ request }) => {
       )
       .toBe(true);
   } finally {
-    await writeFile(ROUTE_FILE, original);
+    await writeFile(PAGE_FILE, original);
   }
 });

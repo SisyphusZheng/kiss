@@ -947,7 +947,12 @@ function mountPart(
 }
 
 /** Resolve a compiler-owned static path without any selector/discovery walk. */
-function resolvePath(root: Node, path: number[], where: string): Element {
+function resolvePath(
+  root: Node,
+  path: number[],
+  where: string,
+  rootOffset = 0,
+): Element {
   // Program paths are relative to the template node list: the first index
   // selects a child of the mount root (the sole template root element lives at
   // path [0]). The validator rejects empty paths, so every path walks at least
@@ -956,7 +961,8 @@ function resolvePath(root: Node, path: number[], where: string): Element {
     throw new Error(`[compiled-runtime] ${where}: path [] unresolved`);
   }
   let node: Node = root;
-  for (const index of path) {
+  for (let depth = 0; depth < path.length; depth++) {
+    const index = path[depth] + (depth === 0 ? rootOffset : 0);
     const child = node.childNodes[index];
     if (!child) throw new Error(`[compiled-runtime] ${where}: path [${path.join(',')}] unresolved`);
     node = child;
@@ -1007,8 +1013,9 @@ function installValuePart(
     | SpikeStylePart
     | SpikeHtmlPart,
   mode: 'fresh' | 'claim',
+  rootOffset = 0,
 ): void {
-  const element = resolvePath(root, part.path, `${part.k} Part`);
+  const element = resolvePath(root, part.path, `${part.k} Part`, rootOffset);
   const scope = ctx.rootScope.child();
   const initial = signalOf(ctx, part.signal).value;
 
@@ -1103,8 +1110,13 @@ function eventHandler(
   return handler as CompiledEventHandler;
 }
 
-function installEventPart(ctx: MountContext, root: Node, part: SpikeEventPart): void {
-  const element = resolvePath(root, part.path, 'event Part');
+function installEventPart(
+  ctx: MountContext,
+  root: Node,
+  part: SpikeEventPart,
+  rootOffset = 0,
+): void {
+  const element = resolvePath(root, part.path, 'event Part', rootOffset);
   const scope = ctx.rootScope.child();
   const options = part.options;
   let listener: EventListener | undefined;
@@ -1153,8 +1165,13 @@ function refHandler(ctx: MountContext, part: SpikeRefPart, value?: unknown): Com
   return ref as CompiledRefHandler;
 }
 
-function installRefPart(ctx: MountContext, root: Node, part: SpikeRefPart): void {
-  const element = resolvePath(root, part.path, 'ref Part');
+function installRefPart(
+  ctx: MountContext,
+  root: Node,
+  part: SpikeRefPart,
+  rootOffset = 0,
+): void {
+  const element = resolvePath(root, part.path, 'ref Part', rootOffset);
   const scope = ctx.rootScope.child();
   let current = refHandler(ctx, part);
   let cleanup = current(element);
@@ -1179,17 +1196,22 @@ function installRefPart(ctx: MountContext, root: Node, part: SpikeRefPart): void
   }
 }
 
-function attachFixedParts(ctx: MountContext, root: Node, mode: 'fresh' | 'claim'): void {
+function attachFixedParts(
+  ctx: MountContext,
+  root: Node,
+  mode: 'fresh' | 'claim',
+  rootOffset = 0,
+): void {
   for (const part of ctx.program.parts) {
     if (
       part.k === 'attr' || part.k === 'prop' || part.k === 'bool' || part.k === 'class' ||
       part.k === 'style' || part.k === 'html'
     ) {
-      installValuePart(ctx, root, part, mode);
+      installValuePart(ctx, root, part, mode, rootOffset);
     } else if (part.k === 'event') {
-      installEventPart(ctx, root, part);
+      installEventPart(ctx, root, part, rootOffset);
     } else if (part.k === 'ref') {
-      installRefPart(ctx, root, part);
+      installRefPart(ctx, root, part, rootOffset);
     }
   }
 }
@@ -1785,7 +1807,7 @@ export function claimExistingDom(
       ctx.rootScope,
     );
     if (consumed !== root.childNodes.length) claimFailure('template', 'unexpected trailing nodes');
-    attachFixedParts(ctx, root, 'claim');
+    attachFixedParts(ctx, root, 'claim', cursorStart);
     return instance(ctx);
   } catch (error) {
     try {

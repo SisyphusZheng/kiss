@@ -3,21 +3,37 @@ import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
 import { renderDsd } from '@openelement/element';
 import { NOTES_HTML_BUDGET_BYTES, NOTES_PAGE_SIZE } from '../../lib/notes-pagination.ts';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// authoring module's compile-time-only decorators; SSR assertions compile the
+// real page class through the adapter compiler first.
+import { compileComponentClass } from './compile-page.ts';
 
 const {
-  default: NotesPage,
   createNoteAction,
   createNotesLoader,
   MAX_NOTE_BODY_LENGTH,
   MAX_NOTE_TITLE_LENGTH,
-} = await import('../routes/notes.tsx');
-type NotesSupabaseClient = import('../routes/notes.tsx').NotesSupabaseClient;
+  notesPageProps,
+} = await import('../route-logic/notes.ts');
+type NotesSupabaseClient = import('../route-logic/notes.ts').NotesSupabaseClient;
+
+/** Compile the real notes page class once per process (the compiler is pure). */
+const NotesPage = await compileComponentClass('../components/page-notes.tsx');
+
+/** Project loader data through the route's props projector, then serialize. */
+async function renderNotesPage(data: Record<string, unknown>) {
+  return await renderDsd('notes-page', {
+    componentClass: NotesPage,
+    props: notesPageProps({
+      data: data as never,
+      actionData: undefined,
+      params: {},
+      request: undefined,
+      route: { path: '/notes' },
+      meta: {},
+    }),
+  });
+}
 
 const USER = { id: 'user-123', email: 'tester@example.com' };
 
@@ -98,8 +114,12 @@ function form(title = 'First note', body = 'Hello'): FormData {
   return data;
 }
 
-Deno.test('notes loader denies anonymous requests', async () => {
-  assertEquals(await createNotesLoader(stubClient({ user: null }))(ctx()), { denied: true });
+Deno.test('notes loader redirects anonymous requests to sign-in (v0.44)', async () => {
+  // 0.43 rendered a denied branch; grammar v1 cannot pair a static denied
+  // variant with a dynamic authenticated one, so the loader redirects.
+  const error = await assertRejects(() => createNotesLoader(stubClient({ user: null }))(ctx()));
+  assert(isOpenElementRedirect(error));
+  assertEquals((error as { location?: string }).location, '/login');
 });
 
 Deno.test('notes loader returns the signed-in owner rows', async () => {
@@ -147,10 +167,7 @@ Deno.test('bounded Notes page stays under its SSR budget at database maxima', as
     body: '&<>"'.repeat(MAX_NOTE_BODY_LENGTH / 4),
     created_at: new Date(Date.UTC(2026, 7, 23, 0, 0, 20 - index)).toISOString(),
   }));
-  const out = await renderDsd('bounded-notes-page', {
-    componentClass: NotesPage,
-    props: { __openElementData: { denied: false, notes } },
-  });
+  const out = await renderNotesPage({ denied: false, notes });
   assertEquals(out.errors, []);
   const bytes = new TextEncoder().encode(out.html).byteLength;
   assert(bytes <= NOTES_HTML_BUDGET_BYTES, `${bytes} > ${NOTES_HTML_BUDGET_BYTES}`);
@@ -159,24 +176,19 @@ Deno.test('bounded Notes page stays under its SSR budget at database maxima', as
 Deno.test('authenticated SSR places the user JWT only on the one-shot Realtime handoff', async () => {
   const token =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsInJvbGUiOiJhdXRoZW50aWNhdGVkIn0.signature';
-  const out = await renderDsd('authenticated-notes-page', {
-    componentClass: NotesPage,
-    props: {
-      __openElementData: {
-        denied: false,
-        notes: [],
-        live: {
-          url: 'https://example.supabase.co',
-          anonKey: 'public-anon-key',
-          userId: USER.id,
-          accessToken: token,
-        },
-      },
+  const out = await renderNotesPage({
+    denied: false,
+    notes: [],
+    live: {
+      url: 'https://example.supabase.co',
+      anonKey: 'public-anon-key',
+      userId: USER.id,
+      accessToken: token,
     },
   });
   assertEquals(out.errors, []);
   assertEquals(out.html.split(token).length - 1, 1);
-  assert(out.html.includes(`data-access-token="${token}"`));
+  assert(out.html.includes(`livetoken="${token}"`), out.html);
   assertEquals(out.html.includes(`data-ssr-props="${token}`), false);
 });
 

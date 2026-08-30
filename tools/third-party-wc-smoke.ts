@@ -93,15 +93,12 @@ async function patchViteConfig(appDir: string): Promise<void> {
 
 async function readEventCount(page: Page): Promise<number> {
   return await page.evaluate(() => {
-    // #960: the definePage route registers under the path-derived fallback
-    // tag (third-party-wc); alpha3-wc-page is the content element inside
-    // its DSD shadow root.
-    const routePage = document
+    // v0.44: the definePage route renders the compiled page class directly
+    // under the path-derived tag (third-party-wc); the fixture island lives
+    // in its shadow root.
+    const fixture = document
       .querySelector('third-party-wc')
-      ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
-    const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
-      | HTMLElement
-      | null;
+      ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
     const root = fixture?.shadowRoot;
     const eventText = root?.querySelector('#event-count')?.textContent ?? '';
     return Number(eventText.replace(/\D+/g, ''));
@@ -111,15 +108,11 @@ async function readEventCount(page: Page): Promise<number> {
 async function interactAndVerifyEventCount(page: Page, startCount: number): Promise<void> {
   const expectCount = async (expected: number, label: string): Promise<void> => {
     await page.waitForFunction((target) => {
-      // #960: the definePage route registers under the path-derived fallback
-      // tag (third-party-wc); alpha3-wc-page is the content element inside
-      // its DSD shadow root.
-      const routePage = document
+      // v0.44: the compiled page class renders under the path-derived tag;
+      // the fixture island lives in its shadow root.
+      const fixture = document
         .querySelector('third-party-wc')
-        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
-      const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
-        | HTMLElement
-        | null;
+        ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
       const root = fixture?.shadowRoot;
       const eventText = root?.querySelector('#event-count')?.textContent ?? '';
       return Number(eventText.replace(/\D+/g, '')) >= target;
@@ -219,15 +212,11 @@ export async function verifyBrowser(
     }
 
     await page.waitForFunction(() => {
-      // #960: the definePage route registers under the path-derived fallback
-      // tag (third-party-wc); alpha3-wc-page is the content element inside
-      // its DSD shadow root.
-      const routePage = document
+      // v0.44: the compiled page class renders under the path-derived tag;
+      // the fixture island lives in its shadow root.
+      const fixture = document
         .querySelector('third-party-wc')
-        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
-      const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
-        | HTMLElement
-        | null;
+        ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
       const lit = fixture?.shadowRoot?.querySelector('alpha3-lit-counter') as HTMLElement & {
         shadowRoot?: ShadowRoot;
       };
@@ -241,15 +230,11 @@ export async function verifyBrowser(
     });
 
     const summary = await page.evaluate(() => {
-      // #960: the definePage route registers under the path-derived fallback
-      // tag (third-party-wc); alpha3-wc-page is the content element inside
-      // its DSD shadow root.
-      const routePage = document
+      // v0.44: the compiled page class renders under the path-derived tag;
+      // the fixture island lives in its shadow root.
+      const fixture = document
         .querySelector('third-party-wc')
-        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
-      const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
-        | HTMLElement
-        | null;
+        ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
       const root = fixture?.shadowRoot;
       if (!fixture || !root) throw new Error('alpha3-wc-fixture shadow root missing');
       const lit = root.querySelector('alpha3-lit-counter') as HTMLElement & {
@@ -295,10 +280,9 @@ export async function verifyBrowser(
     // Interaction event propagation checks for #221.
     await interactAndVerifyEventCount(page, summary.eventCount);
     const evidence = await page.evaluate(() => {
-      const routePage = document
+      const root = document
         .querySelector('third-party-wc')
-        ?.shadowRoot?.querySelector('alpha3-wc-page') as HTMLElement | null;
-      const root = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture')?.shadowRoot;
+        ?.shadowRoot?.querySelector('alpha3-wc-fixture')?.shadowRoot;
       if (!root) throw new Error('fixture root unavailable for capability evidence');
       const eventLog = (window as Window & { __alpha3EventLog?: string[] }).__alpha3EventLog ?? [];
       const probe = (
@@ -405,6 +389,11 @@ export async function verifyBrowser(
 
 async function verifySsrHtml(appDir: string): Promise<void> {
   const html = await Deno.readTextFile(join(appDir, 'dist', 'third-party-wc', 'index.html'));
+  // v0.44 SSR form: foreign tags serialize as empty static hosts carrying
+  // their authored literal attributes (the compiler grammar v1 admits no host
+  // children, so the slotted labels/text are stamped client-side by the
+  // fixture island's activation seam; the legacy data-eid event-binding
+  // marker is gone — the compiled claim attaches method handlers directly).
   for (
     const expected of [
       '<alpha3-wc-fixture',
@@ -418,11 +407,10 @@ async function verifySsrHtml(appDir: string): Promise<void> {
       '<alpha3-native-badge',
       '<alpha3-fast-counter',
       '<ion-button',
-      'FAST slot label',
-      'Ionic Stencil Button',
-      'Native badge light child',
-      'slot="label"',
-      'data-eid=',
+      'label="Lit counter"',
+      'variant="primary"',
+      'label="Shoelace Dialog"',
+      'value="alpha3"',
     ]
   ) {
     if (!html.includes(expected)) {
@@ -449,7 +437,10 @@ export async function prepareFixtureApp(tmpRoot: string): Promise<string> {
   for (
     const src of [
       'app/routes/third-party-wc.tsx',
+      'app/components/page-third-party-wc.tsx',
       'app/islands/alpha3-wc-fixture.tsx',
+      'app/islands/alpha3-wc-styles.ts',
+      'app/islands/alpha3-open-child.tsx',
       'app/client/alpha3-wc-client.ts',
     ]
   ) {

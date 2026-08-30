@@ -1,39 +1,46 @@
-/** @jsxImportSource @openelement/element */
+/**
+ * my-counter — minimal counter island (v0.44 compiled, ADR-0143).
+ *
+ * Hydrates on idle; the buttons increment/decrement through the compiled
+ * event Parts and the count renders through the compiled text Part. The
+ * shadow root keeps the island a DSD citizen.
+ */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement, signal, StyleSheet } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
+import { counterStyles } from '../components/page-styles.ts';
 
-export const tagName = 'my-counter';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 
-const sheet = new StyleSheet();
-sheet.replaceSync(`
-  :host { display: inline-flex; gap: 0.75rem; align-items: center; }
-  button {
-    width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: 6px;
-    background: #fff; color: var(--ink); font-size: 1rem; line-height: 1; cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
-  button:hover { border-color: var(--brand); color: var(--brand); }
-  span { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
-`);
-
+@element('my-counter', { root: 'shadow-open' })
 export default class MyCounter extends OpenElement {
-  static override styles = [sheet];
+  static styles = counterStyles;
 
-  #count = signal(0);
+  @property({ reflect: false, attribute: false })
+  count = 0;
 
-  constructor() {
-    super();
-    this.registerSignal('count', this.#count);
+  decrement(): void {
+    this.count--;
   }
 
-  override render() {
+  increment(): void {
+    this.count++;
+  }
+
+  render() {
     return (
-      <>
-        <button type='button' onClick={() => this.#count.value--}>-</button>
-        <span>{this.#count}</span>
-        <button type='button' onClick={() => this.#count.value++}>+</button>
-      </>
+      <div class='counter-row'>
+        <button type='button' onClick={this.decrement}>-</button>
+        <span id='count'>{this.count}</span>
+        <button type='button' onClick={this.increment}>+</button>
+      </div>
     );
   }
 }

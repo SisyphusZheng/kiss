@@ -1,36 +1,38 @@
 /**
- * Smoke tests for the notes-live realtime island (#983): module shape, SSR
- * render, and the injected-fetch units — including the Data API reconcile
- * pipeline (401 refresh/retry, #1153). The realtime subscription wiring
- * itself is browser-only and verified with Playwright against the real
- * project — see the issue evidence.
+ * Smoke tests for the notes-live realtime island (#983): compiled SSR render
+ * (through the real adapter compiler) and the injected-fetch units —
+ * including the Data API reconcile pipeline (401 refresh/retry, #1153). The
+ * realtime subscription wiring itself is browser-only and verified with
+ * Playwright against the real project — see the issue evidence.
+ *
+ * v0.44: the island module's decorators are compile-time-only input, so the
+ * pure logic lives in app/components/notes-live-shared.ts and the class is
+ * compiled here through the real compiler before renderDsd.
  */
-import { assertEquals, assertExists, assertRejects } from '@std/assert';
-import NotesLive, {
+import { assert, assertEquals, assertRejects } from '@std/assert';
+import { renderDsd } from '@openelement/element';
+import { compileComponentClass } from './compile-page.ts';
+import {
   fetchNotesSnapshot,
   handoffRealtimeAuth,
   MAX_LIVE_EVENTS,
   MAX_RECONNECT_DELAY_MS,
   mergeLiveEvent,
   mergeReconciledEvents,
-  openElement,
   reconnectDelayMs,
   requestNotesAccessToken,
   resolveRealtimeAuthToken,
   shouldRefreshAccessToken,
-  tagName,
-} from '../islands/notes-live.tsx';
+} from '../components/notes-live-shared.ts';
 
-Deno.test('notes-live exports the island contract', () => {
-  assertEquals(tagName, 'notes-live');
-  assertExists(NotesLive);
-  assertExists(openElement);
-});
-
-Deno.test('notes-live SSR render includes the status and event mount points', () => {
-  const element = new NotesLive();
-  const html = element.render();
-  assertExists(html);
+Deno.test('notes-live SSR render includes the status and event mount points', async () => {
+  const NotesLive = await compileComponentClass('../islands/notes-live.tsx');
+  const out = renderDsd('notes-live', { componentClass: NotesLive });
+  assertEquals(out.errors, []);
+  assert(out.html.includes("id='live-status'") || out.html.includes('id="live-status"'), out.html);
+  assert(out.html.includes('realtime:'), out.html);
+  assert(out.html.includes('live-events'), out.html);
+  assert(out.html.includes('Reconnect'), out.html);
 });
 
 Deno.test('notes-live deduplicates INSERT delivery by stable row id', () => {
@@ -88,10 +90,10 @@ Deno.test('notes-live erases the SSR token only after handing it to Realtime', (
 
   assertEquals(handoffRealtimeAuth(client, host, 'signed-user-jwt'), true);
   assertEquals(calls, ['signed-user-jwt']);
-  assertEquals(removed, ['data-access-token']);
+  assertEquals(removed, ['livetoken']);
 
   assertEquals(handoffRealtimeAuth(null, host, 'not-yet-consumed'), false);
-  assertEquals(removed, ['data-access-token']);
+  assertEquals(removed, ['livetoken']);
 });
 
 Deno.test('notes-live retains the user JWT for clients created after reconnect', () => {

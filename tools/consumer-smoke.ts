@@ -34,32 +34,55 @@ async function run(
 }
 
 const denoSource = `
-import { isVNode, type VNode } from '@openelement/element';
+import {
+  computed,
+  escapeAttr,
+  escapeHtml,
+  HYDRATION_STRATEGIES,
+  isValidTagName,
+  OpenElement,
+  signal,
+} from '@openelement/element';
 
-const node: VNode = {
-  tag: 'div',
-  props: { class: 'test' },
-  children: ['Hello openElement'],
-};
+// The 0.44 public surface: signal reactivity, HTML escaping, tag-name
+// predicates, the hydration strategy list, and the compiled OpenElement base
+// class (class reference only — instantiating it needs a DOM).
+const count = signal(0);
+const doubled = computed(() => count.value * 2);
+count.value = 21;
 
-console.log('isVNode:', isVNode(node));
-console.log('tag:', node.tag);
-console.log('children:', node.children);
+console.log('doubled:', doubled.value);
+console.log('escapeHtml:', escapeHtml('<b>&"\\'"/></b>'));
+console.log('escapeAttr:', escapeAttr('a"b'));
+console.log('isValidTagName:', isValidTagName('my-counter'), isValidTagName('invalid'));
+console.log('hydration strategies:', HYDRATION_STRATEGIES.join(','));
+console.log('OpenElement is a class:', typeof OpenElement === 'function');
+if (doubled.value !== 42) throw new Error('signal reactivity broken');
 console.log('Smoke test passed!');
 `.trim();
 
 const nodeSource = `
-import { isVNode } from '@openelement/element';
+import {
+  computed,
+  escapeAttr,
+  escapeHtml,
+  HYDRATION_STRATEGIES,
+  isValidTagName,
+  OpenElement,
+  signal,
+} from '@openelement/element';
 
-const node = {
-  tag: 'div',
-  props: { class: 'test' },
-  children: ['Hello openElement'],
-};
+const count = signal(0);
+const doubled = computed(() => count.value * 2);
+count.value = 21;
 
-console.log('isVNode:', isVNode(node));
-console.log('tag:', node.tag);
-console.log('children:', node.children);
+console.log('doubled:', doubled.value);
+console.log('escapeHtml:', escapeHtml('<b>&"\\'"/></b>'));
+console.log('escapeAttr:', escapeAttr('a"b'));
+console.log('isValidTagName:', isValidTagName('my-counter'), isValidTagName('invalid'));
+console.log('hydration strategies:', HYDRATION_STRATEGIES.join(','));
+console.log('OpenElement is a class:', typeof OpenElement === 'function');
+if (doubled.value !== 42) throw new Error('signal reactivity broken');
 console.log('Smoke test passed!');
 `.trim();
 

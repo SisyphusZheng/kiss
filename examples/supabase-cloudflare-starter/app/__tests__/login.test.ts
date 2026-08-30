@@ -1,22 +1,20 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
+import { renderDsd } from '@openelement/element';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// authoring module's compile-time-only decorators; SSR assertions compile the
+// real page class through the adapter compiler first.
+import { compileComponentClass } from './compile-page.ts';
 const {
   configuredOAuthProviders,
   createLoginAction,
   createLoginLoader,
   createOAuthAction,
-  default: LoginPage,
-  renderOAuthProviders,
-} = await import('../routes/login.tsx');
-type LoginAuthClient = import('../routes/login.tsx').LoginAuthClient;
-type LoginOAuthClient = import('../routes/login.tsx').LoginOAuthClient;
+  loginPageProps,
+} = await import('../route-logic/login.ts');
+type LoginAuthClient = import('../route-logic/login.ts').LoginAuthClient;
+type LoginOAuthClient = import('../route-logic/login.ts').LoginOAuthClient;
 
 function client(error: { message: string } | null = null): () => LoginAuthClient {
   return () => ({ auth: { signInWithPassword: () => Promise.resolve({ error }) } });
@@ -71,9 +69,21 @@ Deno.test('login success redirects with PRG', async () => {
   assert(isOpenElementRedirect(error));
 });
 
-Deno.test('login SSR includes the action error mount point contract', () => {
-  const html = new LoginPage().render();
-  assert(html);
+Deno.test('login SSR includes the action error mount point contract', async () => {
+  const LoginPage = await compileComponentClass('../components/page-login.tsx');
+  const out = renderDsd('login-page', {
+    componentClass: LoginPage,
+    props: loginPageProps({
+      data: { oauthProviders: [] },
+      actionData: { error: 'x', email: 'e' },
+      params: {},
+      route: { path: '/login' },
+      meta: {},
+    }),
+  });
+  assertEquals(out.errors, []);
+  assert(out.html.includes("id='error'") || out.html.includes('id="error"'), out.html);
+  assert(out.html.includes('>x<'), out.html);
 });
 
 function oauthClient(
@@ -91,14 +101,6 @@ function oauthClient(
       },
     },
   });
-}
-
-function vnodeText(node: unknown): string {
-  if (node === null || node === undefined || typeof node === 'boolean') return '';
-  if (typeof node === 'string' || typeof node === 'number') return String(node);
-  if (Array.isArray(node)) return node.map(vnodeText).join('');
-  const children = (node as { children?: unknown }).children;
-  return Array.isArray(children) ? children.map(vnodeText).join('') : '';
 }
 
 Deno.test('oauth providers are configured only by an explicit true flag', () => {
@@ -124,20 +126,55 @@ Deno.test('login loader exposes only the configured oauth providers', async () =
   );
 });
 
-Deno.test('login renders the not-configured placeholder without any provider flag', () => {
-  const text = vnodeText(renderOAuthProviders([]));
-  assert(text.includes('OAuth providers: not configured'));
-  assert(!text.includes('Continue with'));
+Deno.test('login projects the not-configured placeholder without any provider flag', () => {
+  const props = loginPageProps({
+    data: { oauthProviders: [] },
+    actionData: undefined,
+    params: {},
+    route: { path: '/login' },
+    meta: {},
+  });
+  assertEquals(props.oauthNone, 1);
+  assertEquals(props.oauthGoogle, 0);
+  assertEquals(props.oauthGithub, 0);
 });
 
-Deno.test('login renders a button per configured provider instead of the placeholder', () => {
-  const text = vnodeText(renderOAuthProviders([
-    { id: 'google', label: 'Google' },
-    { id: 'github', label: 'GitHub' },
-  ]));
-  assert(text.includes('Continue with Google'));
-  assert(text.includes('Continue with GitHub'));
-  assert(!text.includes('not configured'));
+Deno.test('login projects one flag per configured provider instead of the placeholder', () => {
+  const props = loginPageProps({
+    data: {
+      oauthProviders: [{ id: 'google', label: 'Google' }, { id: 'github', label: 'GitHub' }],
+    },
+    actionData: undefined,
+    params: {},
+    route: { path: '/login' },
+    meta: {},
+  });
+  assertEquals(props.oauthGoogle, 1);
+  assertEquals(props.oauthGithub, 1);
+  assertEquals(props.oauthNone, 0);
+});
+
+Deno.test('login SSR renders the provider branches and placeholder from the projection', async () => {
+  const LoginPage = await compileComponentClass('../components/page-login.tsx');
+  const base = { actionData: undefined, params: {}, route: { path: '/login' }, meta: {} };
+  const none = renderDsd('login-page', {
+    componentClass: LoginPage,
+    props: loginPageProps({ ...base, data: { oauthProviders: [] } }),
+  });
+  assert(none.html.includes('OAuth providers: not configured'), none.html);
+  assert(!none.html.includes('Continue with'), none.html);
+  const both = renderDsd('login-page', {
+    componentClass: LoginPage,
+    props: loginPageProps({
+      ...base,
+      data: {
+        oauthProviders: [{ id: 'google', label: 'Google' }, { id: 'github', label: 'GitHub' }],
+      },
+    }),
+  });
+  assert(both.html.includes('Continue with Google'), both.html);
+  assert(both.html.includes('Continue with GitHub'), both.html);
+  assert(!both.html.includes('not configured'), both.html);
 });
 
 Deno.test('oauth action fails closed without 500 when the provider is not configured', async () => {

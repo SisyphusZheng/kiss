@@ -1,14 +1,10 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-const { createRecoverAction, loader } = await import('../routes/recover.tsx');
-type RecoverAuthClient = import('../routes/recover.tsx').RecoverAuthClient;
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
+const { createRecoverAction, recoverLoader } = await import('../route-logic/recover.ts');
+type RecoverAuthClient = import('../route-logic/recover.ts').RecoverAuthClient;
 
 function client(error: { message: string } | null = null): () => RecoverAuthClient {
   return () => ({ auth: { resetPasswordForEmail: () => Promise.resolve({ error }) } });
@@ -67,6 +63,10 @@ Deno.test('recover success redirects to the sent confirmation with PRG (#1060)',
 });
 
 Deno.test('recover loader exposes the sent confirmation state from the query', () => {
-  assertEquals(loader({ request: new Request('https://app.test/recover?sent=1') }), { sent: true });
-  assertEquals(loader({ request: new Request('https://app.test/recover') }), { sent: false });
+  assertEquals(recoverLoader({ request: new Request('https://app.test/recover?sent=1') }), {
+    sent: true,
+  });
+  assertEquals(recoverLoader({ request: new Request('https://app.test/recover') }), {
+    sent: false,
+  });
 });

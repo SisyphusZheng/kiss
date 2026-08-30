@@ -6,15 +6,8 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
 
-// Route modules register their page element at module scope; Deno has no
-// custom element registry, so shim one before importing the route.
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
 const {
   ALLOWED_CONTENT_TYPES,
   BUCKET,
@@ -25,8 +18,8 @@ const {
   objectKeyFor,
   ownsObjectKey,
   sanitizeFilename,
-} = await import('../routes/upload.tsx');
-type UploadSupabaseClient = import('../routes/upload.tsx').UploadSupabaseClient;
+} = await import('../route-logic/upload.ts');
+type UploadSupabaseClient = import('../route-logic/upload.ts').UploadSupabaseClient;
 
 const USER = { id: 'user-123', email: 'tester@example.com' };
 
@@ -110,9 +103,13 @@ Deno.test('objectKeyFor scopes the object to the owner folder', () => {
   assert(!ownsObjectKey('user-123', 'user-123/nested/a.txt'));
 });
 
-Deno.test('loader renders the denied branch for anonymous requests', async () => {
+Deno.test('loader redirects anonymous requests to sign-in (v0.44)', async () => {
+  // 0.43 rendered a denied branch; grammar v1 cannot pair a static denied
+  // variant with a dynamic authenticated one, so the loader redirects.
   const loader = createUploadLoader(stubClient({ user: null }));
-  assertEquals(await loader(ctx()), { denied: true });
+  const error = await assertRejects(() => loader(ctx()));
+  assert(isOpenElementRedirect(error));
+  assertEquals((error as { location?: string }).location, '/login');
 });
 
 Deno.test('loader lists the owner folder for signed-in requests', async () => {

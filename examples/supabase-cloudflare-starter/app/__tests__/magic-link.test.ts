@@ -1,14 +1,12 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-const { createMagicLinkAction, loader } = await import('../routes/magic-link.tsx');
-type MagicLinkAuthClient = import('../routes/magic-link.tsx').MagicLinkAuthClient;
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
+const { createMagicLinkAction, magicLinkLoader } = await import(
+  '../route-logic/magic-link.ts'
+);
+type MagicLinkAuthClient = import('../route-logic/magic-link.ts').MagicLinkAuthClient;
 
 function client(error: { message: string } | null = null): () => MagicLinkAuthClient {
   return () => ({ auth: { signInWithOtp: () => Promise.resolve({ error }) } });
@@ -67,8 +65,10 @@ Deno.test('magic-link success redirects to the sent confirmation with PRG (#1060
 });
 
 Deno.test('magic-link loader exposes the sent confirmation state from the query', () => {
-  assertEquals(loader({ request: new Request('https://app.test/magic-link?sent=1') }), {
+  assertEquals(magicLinkLoader({ request: new Request('https://app.test/magic-link?sent=1') }), {
     sent: true,
   });
-  assertEquals(loader({ request: new Request('https://app.test/magic-link') }), { sent: false });
+  assertEquals(magicLinkLoader({ request: new Request('https://app.test/magic-link') }), {
+    sent: false,
+  });
 });

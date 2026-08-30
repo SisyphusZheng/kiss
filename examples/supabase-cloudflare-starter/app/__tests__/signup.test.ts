@@ -1,14 +1,10 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import { isActionFailure, isOpenElementRedirect } from '@openelement/app';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-const { createSignupAction, loader } = await import('../routes/signup.tsx');
-type SignupAuthClient = import('../routes/signup.tsx').SignupAuthClient;
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
+const { createSignupAction, signupLoader } = await import('../route-logic/signup.ts');
+type SignupAuthClient = import('../route-logic/signup.ts').SignupAuthClient;
 
 function client(
   result: { session?: unknown; error?: { message: string } | null } = {},
@@ -89,6 +85,8 @@ Deno.test('signup success redirects to the sent confirmation with PRG (#1060)', 
 });
 
 Deno.test('signup loader exposes the sent confirmation state from the query', () => {
-  assertEquals(loader({ request: new Request('https://app.test/signup?sent=1') }), { sent: true });
-  assertEquals(loader({ request: new Request('https://app.test/signup') }), { sent: false });
+  assertEquals(signupLoader({ request: new Request('https://app.test/signup?sent=1') }), {
+    sent: true,
+  });
+  assertEquals(signupLoader({ request: new Request('https://app.test/signup') }), { sent: false });
 });

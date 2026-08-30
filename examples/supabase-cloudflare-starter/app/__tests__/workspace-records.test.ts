@@ -6,15 +6,10 @@ import {
   WORKSPACE_PAGE_SIZE,
 } from '../../../../lib/workspace-pagination.ts';
 
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-
-const { createWorkspaceRecordsLoader } = await import('../routes/workspace-records.tsx');
-type WorkspaceRecordsClient = import('../routes/workspace-records.tsx').WorkspaceRecordsClient;
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
+const { createWorkspaceRecordsLoader } = await import('../route-logic/workspace-records.ts');
+type WorkspaceRecordsClient = import('../route-logic/workspace-records.ts').WorkspaceRecordsClient;
 
 const WORKSPACE = '11111111-1111-4111-8111-111111111111';
 const CREATED_AT = '2026-08-23T00:00:00.000Z';

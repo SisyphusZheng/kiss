@@ -1,40 +1,42 @@
-/** @jsxImportSource @openelement/element */
+/**
+ * only-ticker — client-only island (v0.44 compiled, ADR-0143).
+ *
+ * hydrate: 'only' with ssr: false renders nothing on the server; the client
+ * entry creates the DOM fresh from the compiled Part Program and binds the
+ * tick event Part. Each hydrated island gets its own compiled property state,
+ * so multiple tickers on one page never share state.
+ */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement, signal, StyleSheet } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
+import { tickerStyles } from '../components/page-styles.ts';
 
-export const tagName = 'only-ticker';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
 export const openElement = defineIslandConfig({ hydrate: 'only', ssr: false, dsd: false });
 
-const sheet = new StyleSheet();
-sheet.replaceSync(`
-  :host { display: inline-flex; gap: 0.75rem; align-items: center; }
-  button {
-    height: 2rem; padding: 0 0.9rem; border: 1px solid var(--line); border-radius: 6px;
-    background: #fff; color: var(--ink); font-size: 0.9rem; cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
-  button:hover { border-color: var(--brand); color: var(--brand); }
-  span { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
-`);
-
+@element('only-ticker', { root: 'shadow-open' })
 export default class OnlyTicker extends OpenElement {
-  static override styles = [sheet];
+  static styles = tickerStyles;
 
-  // Instance field (not module scope): every hydrated island gets its own
-  // signal, so multiple tickers on one page never share state.
-  #tick = signal(0);
+  @property({ reflect: false, attribute: false })
+  tick = 0;
 
-  constructor() {
-    super();
-    this.registerSignal('tick', this.#tick);
+  bump(): void {
+    this.tick++;
   }
 
-  override render() {
+  render() {
     return (
-      <>
-        <span>{this.#tick}</span>
-        <button type='button' onClick={() => this.#tick.value++}>tick</button>
-      </>
+      <div class='ticker-row'>
+        <span id='tick'>{this.tick}</span>
+        <button type='button' onClick={this.bump}>tick</button>
+      </div>
     );
   }
 }

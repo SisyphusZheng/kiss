@@ -1,14 +1,19 @@
-/** @jsxImportSource @openelement/element */
 /**
  * ref-layout — minimal application shell rendered around every route
- * (appShell: { tagName, import } in vite.config.ts).
+ * (appShell: { tagName, import } in vite.config.ts). v0.44 compiled: the
+ * server entry registers and renders the class; the static <slot> projects
+ * the page host. No `static styles` — the shell never hydrates client-side.
  */
-import { defineCustomElement, OpenElement } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
 
-export const tagName = 'ref-layout';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
 
-export class RefLayout extends OpenElement {
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+@element('ref-layout', { root: 'shadow-open' })
+export default class RefLayout extends OpenElement {
+  render() {
     return (
       <div>
         <header>
@@ -20,5 +25,3 @@ export class RefLayout extends OpenElement {
     );
   }
 }
-
-defineCustomElement(tagName, RefLayout);

@@ -1,14 +1,19 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys
 /**
- * Third-party WC SSR corpus (0.43 'Universal WC SSR', alpha.1 foundation):
+ * Third-party WC SSR corpus (v0.44 compiled authoring):
  * pin the SSR output FORM and SSR admission classification of each consumed
  * third-party Web Component kind as a known, machine-readable record.
  *
  * For every corpus entry this asserts:
  * - tag presence in the SSG HTML,
- * - authored light-DOM children surviving verbatim,
+ * - authored light-DOM children surviving verbatim (v0.44: none — the
+ *   compiler grammar admits foreign hosts as empty static shells with literal
+ *   attributes only; slotted content is stamped at island activation and is
+ *   pinned by the browser probes instead),
  * - presence/absence of a DSD `<template shadowrootmode>` per component kind,
- * - the data-eid event-binding attribute (present for handler-bearing tags),
+ * - the data-eid event-binding attribute (v0.44: never — the legacy
+ *   marker-based event binding was replaced by compiled event Parts claimed
+ *   in place, and foreign hosts are opaque to the compiler),
  * - the admission decision the build's ssrAdmissionPlan assigned
  *   ('unscanned' when the tag never enters the scan; #979/0.43.0-alpha.2
  *   records consumed foreign tags as explicit source:'foreign' client-only
@@ -46,11 +51,11 @@ interface SsrAdmissionPlan {
 }
 
 interface CorpusExpectation {
-  /** Authored light-DOM children that must survive SSR verbatim. */
+  /** Authored light-DOM children surviving SSR (v0.44: always empty — stamped at activation). */
   lightDomChildren: string[];
   /** Whether SSR emits a DSD shadow template directly inside the tag. */
   dsdTemplate: boolean;
-  /** Whether the tag carries a data-eid event-binding attribute. */
+  /** Whether the tag carries a data-eid event-binding attribute (v0.44: never). */
   dataEid: boolean;
   /** Expected admission renderPath, or 'unscanned' when not in the plan. */
   admission: string;
@@ -82,9 +87,9 @@ const CORPUS: CorpusEntry[] = [
     library: 'lit',
     metadata: 'none',
     expect: {
-      lightDomChildren: ['Lit slot label'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -104,9 +109,9 @@ const CORPUS: CorpusEntry[] = [
     library: '@shoelace-style/shoelace',
     metadata: 'cem',
     expect: {
-      lightDomChildren: ['Shoelace Button'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -115,9 +120,9 @@ const CORPUS: CorpusEntry[] = [
     library: '@shoelace-style/shoelace',
     metadata: 'cem',
     expect: {
-      lightDomChildren: ['Shoelace Switch'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -126,7 +131,7 @@ const CORPUS: CorpusEntry[] = [
     library: '@shoelace-style/shoelace',
     metadata: 'cem',
     expect: {
-      lightDomChildren: ['Dialog content'],
+      lightDomChildren: [],
       dsdTemplate: false,
       dataEid: false,
       admission: 'client-only',
@@ -137,9 +142,9 @@ const CORPUS: CorpusEntry[] = [
     library: '@material/web',
     metadata: 'none',
     expect: {
-      lightDomChildren: ['Material Button'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -161,7 +166,7 @@ const CORPUS: CorpusEntry[] = [
     expect: {
       lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -170,9 +175,9 @@ const CORPUS: CorpusEntry[] = [
     library: 'bare-native',
     metadata: 'none',
     expect: {
-      lightDomChildren: ['Native badge light child'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -181,9 +186,9 @@ const CORPUS: CorpusEntry[] = [
     library: '@microsoft/fast-element@3.0.2',
     metadata: 'none',
     expect: {
-      lightDomChildren: ['FAST slot label'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },
@@ -192,9 +197,9 @@ const CORPUS: CorpusEntry[] = [
     library: '@ionic/core@8.8.18 (Stencil compiled output)',
     metadata: 'stencil-collection',
     expect: {
-      lightDomChildren: ['Ionic Stencil Button'],
+      lightDomChildren: [],
       dsdTemplate: false,
-      dataEid: true,
+      dataEid: false,
       admission: 'client-only',
     },
   },

@@ -147,57 +147,72 @@ Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks ap
   const devTask = String(denoJson.tasks.dev || '');
   const pinnedVite = String(denoJson.imports.vite).match(/@([^@]+)$/)?.[1] ?? '';
   assert(devTask.includes(`npm:vite@${pinnedVite}`), devTask);
-  // #679: the check task must cover the app-shell component template.
+  // #679: the check task must cover the app-shell layout island template.
   const checkTask = String(denoJson.tasks.check || '');
-  assert(checkTask.includes('app/components/app-shell.tsx'), checkTask);
-  // The check task must cover every shipped route (including the dynamic blog
-  // route and the API route) plus vite.config.ts, so template regressions
-  // surface in the generated app's own `deno task check`.
+  assert(checkTask.includes('app/islands/app-shell.tsx'), checkTask);
+  // The check task must cover every shipped TypeScript route/component (the
+  // markdown post route is compiled at build time and is not a check entry)
+  // plus vite.config.ts, so template regressions surface in the generated
+  // app's own `deno task check`.
   assert(checkTask.includes('app/routes/404.tsx'), checkTask);
   assert(checkTask.includes('app/routes/blog/index.tsx'), checkTask);
-  assert(checkTask.includes('app/routes/blog/[slug].tsx'), checkTask);
   assert(checkTask.includes('app/routes/api/health.ts'), checkTask);
+  assert(checkTask.includes('app/components/page-contact.tsx'), checkTask);
+  assert(checkTask.includes('app/components/page-styles.ts'), checkTask);
   assert(checkTask.includes('app/islands/my-counter.tsx'), checkTask);
   assert(checkTask.includes('app/islands/only-ticker.tsx'), checkTask);
   assert(checkTask.includes('vite.config.ts'), checkTask);
 });
 
-Deno.test('starter templates use the supported Element JSX entrypoint', () => {
+Deno.test('starter templates use the compiled element authoring surface (v0.44)', () => {
   for (
     const path of [
-      'app/routes/index.tsx',
-      'app/routes/freshness.tsx',
-      'app/routes/contact.tsx',
-      'app/routes/blog/index.tsx',
-      'app/routes/blog/[slug].tsx',
-      'app/components/app-shell.tsx',
+      'app/components/page-home.tsx',
+      'app/components/page-freshness.tsx',
+      'app/components/page-404.tsx',
+      'app/components/page-contact.tsx',
+      'app/components/page-blog-index.tsx',
+      'app/components/page-blog-welcome.tsx',
+      'app/islands/app-shell.tsx',
       'app/islands/my-counter.tsx',
       'app/islands/only-ticker.tsx',
     ]
   ) {
     const source = readTemplate(path);
-    assert(source.includes('@jsxImportSource @openelement/element'), path);
+    // Compiled modules: @element decorator on an OpenElement subclass, with
+    // the ambient compile-time decorator declarations (erased by the
+    // adapter's open:compiled-element transform).
+    assert(source.includes("@element('"), path);
+    assert(source.includes("from '@openelement/element'"), path);
+    assert(source.includes('declare function element('), path);
     assertFalse(source.includes('@openelement/core'), path);
+    // Legacy authoring APIs were removed in v0.44 (ADR-0143).
+    assertFalse(source.includes('defineElement'), path);
+    assertFalse(source.includes('defineCustomElement'), path);
+    assertFalse(source.includes('customElements.define'), path);
+    assertFalse(source.includes('registerSignal'), path);
   }
   assert(readTemplate('gitignore.tmpl').includes('dist/'));
 });
 
-Deno.test('starter island uses the registered signal child contract (#1092)', () => {
-  const island = readTemplate('app/islands/my-counter.tsx');
-  // Registered Signal children are serialized with the hydration marker by
-  // the renderer; starter code should not hand-author protocol attributes.
-  assert(island.includes("registerSignal('count'"), island);
-  assert(island.includes('<span>{this.#count}</span>'), island);
-  assertFalse(island.includes("data-signal='count'"), island);
-});
+Deno.test('starter islands are single-module compiled classes (#1092, #939)', () => {
+  const counter = readTemplate('app/islands/my-counter.tsx');
+  // The delivery policy stays in the statically scanned defineIslandConfig
+  // export; state is a compiled @property and events are method Parts.
+  assert(counter.includes("hydrate: 'idle'"), counter);
+  assert(counter.includes('defineIslandConfig'), counter);
+  assert(counter.includes('count = 0'), counter);
+  assert(counter.includes('onClick={this.increment}'), counter);
+  // Compiled text Parts replace the renderer-owned hydration markers; starter
+  // code never hand-authors protocol attributes.
+  assertFalse(counter.includes('data-signal'), counter);
 
-Deno.test('client-only starter island uses the registered signal child contract (#939)', () => {
-  const island = readTemplate('app/islands/only-ticker.tsx');
-  // hydrate:'only' uses the same renderer-owned marker contract as DSD.
-  assert(island.includes("hydrate: 'only'"), island);
-  assert(island.includes("registerSignal('tick'"), island);
-  assert(island.includes('<span>{this.#tick}</span>'), island);
-  assertFalse(island.includes("data-signal='tick'"), island);
+  const ticker = readTemplate('app/islands/only-ticker.tsx');
+  assert(ticker.includes("hydrate: 'only'"), ticker);
+  assert(ticker.includes('ssr: false'), ticker);
+  assert(ticker.includes('tick = 0'), ticker);
+  assert(ticker.includes('onClick={this.bump}'), ticker);
+  assertFalse(ticker.includes('data-signal'), ticker);
 });
 
 Deno.test('starter global style block scopes tokens under :root', () => {
@@ -208,18 +223,30 @@ Deno.test('starter global style block scopes tokens under :root', () => {
   assert(config.includes('--gray-0:#f8f9fa'), config);
 });
 
-Deno.test('starter blog routes consume the generated blog-data module', () => {
+Deno.test('starter blog is a pair of compiled page routes', () => {
   const index = readTemplate('app/routes/blog/index.tsx');
-  const slug = readTemplate('app/routes/blog/[slug].tsx');
-  assert(index.includes('@openelement/generated/blog-data'), index);
-  assert(slug.includes('@openelement/generated/blog-data'), slug);
-  // Dynamic post page: prerender one page per post and render trusted
-  // markdown HTML (pattern mirrors the www site blog routes).
-  assert(slug.includes('getStaticPaths'), slug);
-  assert(slug.includes('getPostBySlug'), slug);
-  assert(slug.includes('trustedHtml'), slug);
-  // #922: unknown slugs signal 404 through notFound(), not a 200 page.
-  assert(slug.includes('notFound'), slug);
+  // The route module is a thin definePage wrapper around the compiled page
+  // element; the page class lives in app/components/.
+  assert(index.includes('definePage'), index);
+  assert(index.includes('page-blog-index.tsx'), index);
+  const post = readTemplate('app/routes/blog/welcome.tsx');
+  assert(post.includes('definePage'), post);
+  assert(post.includes('page-blog-welcome.tsx'), post);
+  const page = readTemplate('app/components/page-blog-welcome.tsx');
+  assert(page.includes("@element('blog-welcome'"), page);
+  // The post body renders exactly one H1 (the markdown-body duplicate-H1
+  // regression class from the legacy starter stays impossible by authoring).
+  const h1Count = page.split('<h1>').length - 1;
+  assertEquals(h1Count, 1, page);
+  // #922: an unknown slug is a 404 — there is no [slug] fallback route, so
+  // unmatched paths render the styled 404 page with a 404 status.
+  let slugRouteExists = true;
+  try {
+    readTemplate('app/routes/blog/[slug].tsx');
+  } catch {
+    slugRouteExists = false;
+  }
+  assertFalse(slugRouteExists, 'the legacy dynamic [slug] route must not ship');
 });
 
 Deno.test('starter --brand token stays aligned with the ui package --violet-6 (#804)', () => {
@@ -241,11 +268,11 @@ Deno.test('source CLI generates a complete, token-free starter', async () => {
     assert(existsSync(join(appDir, '.gitignore')));
     assertFalse(existsSync(join(appDir, 'gitignore.tmpl')));
     assertFalse(Deno.readTextFileSync(join(appDir, 'deno.json')).includes('${v.'));
-    // Starter ships the blog routes wired to content/blog, the blog-data type
-    // stub, and a README explaining tasks/conventions.
+    // Starter ships the blog markdown route, the compiled index page, the
+    // blog-data type stub, and a README explaining tasks/conventions.
     assert(existsSync(join(appDir, 'README.md')));
     assert(existsSync(join(appDir, 'app', 'routes', 'blog', 'index.tsx')));
-    assert(existsSync(join(appDir, 'app', 'routes', 'blog', '[slug].tsx')));
+    assert(existsSync(join(appDir, 'app', 'routes', 'blog', 'welcome.tsx')));
     assert(existsSync(join(appDir, 'app', 'data', '_generated-blog-data.d.ts')));
     // Success output points at the README for the full task list.
     assert(stdout.includes('README.md'), stdout);
@@ -273,9 +300,9 @@ Deno.test('packed CLI retains every starter template, including dotfiles', async
     assertEquals(unpack.code, 0, new TextDecoder().decode(unpack.stderr));
     await runCreate(join(tmpRoot, 'package', 'src', 'cli.js'), tmpRoot, 'sample-app');
     assert(existsSync(join(tmpRoot, 'sample-app', '.gitignore')));
-    assert(existsSync(join(tmpRoot, 'sample-app', 'content', 'blog', 'welcome.md')));
+    assert(existsSync(join(tmpRoot, 'sample-app', 'app', 'routes', 'blog', 'welcome.tsx')));
     assert(existsSync(join(tmpRoot, 'sample-app', 'README.md')));
-    assert(existsSync(join(tmpRoot, 'sample-app', 'app', 'routes', 'blog', '[slug].tsx')));
+    assert(existsSync(join(tmpRoot, 'sample-app', 'app', 'components', 'page-home.tsx')));
     assert(existsSync(join(tmpRoot, 'sample-app', 'app', 'data', '_generated-blog-data.d.ts')));
   } finally {
     Deno.removeSync(tmpRoot, { recursive: true });

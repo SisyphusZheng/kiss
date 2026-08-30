@@ -1,13 +1,9 @@
 import { assertEquals, assertRejects } from '@std/assert';
 import { isOpenElementRedirect } from '@openelement/app';
-if (!('customElements' in globalThis)) {
-  (globalThis as { customElements?: unknown }).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-const { createCallbackLoader } = await import('../routes/auth/callback.tsx');
-type CallbackAuthClient = import('../routes/auth/callback.tsx').CallbackAuthClient;
+// v0.44: route logic lives in app/route-logic/ so tests never evaluate the
+// compiled page class (decorators are compile-time-only input).
+const { createCallbackLoader } = await import('../route-logic/auth-callback.ts');
+type CallbackAuthClient = import('../route-logic/auth-callback.ts').CallbackAuthClient;
 function client(error: { message: string } | null = null): () => CallbackAuthClient {
   return () => ({ auth: { exchangeCodeForSession: () => Promise.resolve({ error }) } });
 }
