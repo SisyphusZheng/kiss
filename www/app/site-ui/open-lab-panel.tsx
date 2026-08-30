@@ -5,14 +5,17 @@
  * Standards-lab panel for specs, artifact frames, and reference desks.
  */
 
-import { defineCustomElement, OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { getStr } from './get-str.ts';
+declare function element(tag: string): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-export const tagName = 'open-lab-panel';
+import { computed, OpenElement } from '@openelement/element';
+import { compiledStyle } from './compiled-style.ts';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+@element('open-lab-panel')
+export default class OpenLabPanel extends OpenElement {
+  static override styles = [compiledStyle(`
   :host {
     display: block;
   }
@@ -113,28 +116,33 @@ sheet.replaceSync(`
   ::slotted(*) {
     margin-block-start: 0;
   }
-`);
+`)];
 
-export class OpenLabPanel extends OpenElement {
-  static override styles = [sheet];
-  static override observedAttributes = ['variant', 'label', 'meta', 'compact'];
+  @property({ reflect: true })
+  variant = 'surface';
+  @property({ reflect: true })
+  label = '';
+  @property({ reflect: true })
+  meta = '';
+  @property({ reflect: true })
+  compact = false;
+  @property({ reflect: false, attribute: false })
+  panelClass = computed(() => `panel panel--${this.variant}`);
+  @property({ reflect: false, attribute: false })
+  hideHeader = computed(() => !this.label && !this.meta);
+  @property({ reflect: false, attribute: false })
+  hideMeta = computed(() => !this.meta);
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
-    const variant = getStr(this, 'variant', 'surface');
-    const label = getStr(this, 'label', '');
-    const meta = getStr(this, 'meta', '');
-
+  render() {
     return (
-      <section className={`panel panel--${variant}`} part='container'>
-        {(label || meta) && (
-          <header className='panel__bar' part='header'>
-            <span className='panel__label'>
-              <span className='panel__dot' aria-hidden='true'></span>
-              {label}
-            </span>
-            {meta && <span className='panel__meta'>{meta}</span>}
-          </header>
-        )}
+      <section className={this.panelClass} part='container'>
+        <header className='panel__bar' part='header' hidden={this.hideHeader}>
+          <span className='panel__label'>
+            <span className='panel__dot' aria-hidden='true'></span>
+            {this.label}
+          </span>
+          <span className='panel__meta' hidden={this.hideMeta}>{this.meta}</span>
+        </header>
         <div className='panel__body' part='body'>
           <slot></slot>
         </div>
@@ -142,7 +150,3 @@ export class OpenLabPanel extends OpenElement {
     );
   }
 }
-
-export default OpenLabPanel;
-
-defineCustomElement(tagName, OpenLabPanel);

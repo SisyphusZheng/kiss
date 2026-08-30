@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from '@std/assert';
+import { assertEquals, assertStringIncludes } from '@std/assert';
+import { compileElementSpike } from '../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 
 const siteModules = [
   ['open-lab-panel', '../app/site-ui/open-lab-panel.tsx'],
@@ -7,16 +8,20 @@ const siteModules = [
 ] as const;
 
 for (const [tagName, path] of siteModules) {
-  Deno.test(`site UI owns ${tagName}`, async () => {
-    const mod = await import(path);
-    assertEquals(mod.tagName, tagName);
-    assertExists(mod.default ?? Object.values(mod).find((value) => typeof value === 'function'));
+  Deno.test(`site UI owns compiled ${tagName}`, async () => {
+    const url = new URL(path, import.meta.url);
+    const result = compileElementSpike(await Deno.readTextFile(url), url.pathname);
+    assertEquals(result.program.tag, tagName);
   });
 }
 
-Deno.test('open-layout is an explicitly hydrated app-shell island', async () => {
-  const mod = await import('../app/islands/open-layout.tsx');
-  assertEquals(mod.tagName, 'open-layout');
-  assertEquals(mod.openElement, { hydrate: 'load', ssr: true, dsd: true });
-  assertExists(mod.default);
+Deno.test('open-layout declares the compiler-owned hydrated app-shell contract', async () => {
+  const url = new URL('../app/islands/open-layout.tsx', import.meta.url);
+  const source = await Deno.readTextFile(url);
+  assertStringIncludes(
+    source,
+    "defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true })",
+  );
+  assertStringIncludes(source, "@element('open-layout')");
+  assertStringIncludes(source, 'export default class OpenLayout extends OpenElement');
 });

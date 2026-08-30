@@ -5,15 +5,17 @@
  * Kinetic standards-lab hero primitive for product-art landing pages.
  */
 
-import { defineCustomElement, OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { OPENELEMENT_VERSION } from '../data/version.ts';
-import { getStr } from './get-str.ts';
+declare function element(tag: string): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-export const tagName = 'open-lab-stage';
+import { computed, OpenElement } from '@openelement/element';
+import { compiledStyle } from './compiled-style.ts';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+@element('open-lab-stage')
+export default class OpenLabStage extends OpenElement {
+  static override styles = [compiledStyle(`
   :host {
     display: block;
   }
@@ -504,18 +506,24 @@ sheet.replaceSync(`
       display: none;
     }
   }
-`);
+`)];
 
-export class OpenLabStage extends OpenElement {
-  static override styles = [sheet];
-  static override observedAttributes = ['motion', 'emphasis'];
+  @property({ reflect: true })
+  motion = 'auto';
+  @property({ reflect: true })
+  emphasis = 'high';
+  @property({ reflect: true })
+  version = '';
+  @property({ reflect: false, attribute: false })
+  stageClass = computed(() =>
+    `stage stage--${this.emphasis === 'normal' ? 'normal' : 'high'} stage--${
+      this.motion === 'off' ? 'still' : 'motion'
+    }`
+  );
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
-    const motion = getStr(this, 'motion', 'auto') === 'off' ? 'still' : 'motion';
-    const emphasis = getStr(this, 'emphasis', 'high') === 'normal' ? 'normal' : 'high';
-
+  render() {
     return (
-      <section className={`stage stage--${emphasis} stage--${motion}`} part='stage'>
+      <section className={this.stageClass} part='stage'>
         <div className='stage__grid' aria-hidden='true'></div>
         <div className='stage__beams' aria-hidden='true'></div>
         <div className='stage__scan' aria-hidden='true'></div>
@@ -582,7 +590,7 @@ export class OpenLabStage extends OpenElement {
           <aside className='stage__side' aria-label='Specification sheet'>
             <div className='stage__panel-head'>
               <strong>Spec sheet</strong>
-              <span>{OPENELEMENT_VERSION}</span>
+              <span>{this.version}</span>
             </div>
             <pre className='stage__code'><code>
               <span className='stage__code-line'>export default app({'{'}</span>
@@ -616,7 +624,3 @@ export class OpenLabStage extends OpenElement {
     );
   }
 }
-
-export default OpenLabStage;
-
-defineCustomElement(tagName, OpenLabStage);
