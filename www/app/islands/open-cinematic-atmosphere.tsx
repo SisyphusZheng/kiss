@@ -5,48 +5,65 @@
  * when the browser and motion preference allow it, and otherwise leaves the
  * CSS backdrop intact.
  */
-import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
+declare function element(tag: string): ClassDecorator;
+
+import { OpenElement, StyleSheet } from '@openelement/element';
+import { compiledStyle } from '../site-ui/compiled-style.ts';
+import { readIslandState } from '../site-ui/island-state.ts';
 import { defineIslandConfig } from '@openelement/app';
 
-export const tagName = 'open-cinematic-atmosphere';
+interface AtmosphereState {
+  frame: number;
+  contextLost: boolean;
+  observer: ResizeObserver | null;
+  canvas: HTMLCanvasElement | null;
+  onContextLost: ((event: Event) => void) | null;
+}
+
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 
-const sheet = new StyleSheet();
-sheet.replaceSync(`
+@element('open-cinematic-atmosphere')
+export default class CinematicAtmosphere extends OpenElement {
+  static override styles = [compiledStyle(`
   :host { position: absolute; inset: 0; display: block; overflow: hidden; pointer-events: none; }
   canvas { width: 100%; height: 100%; display: block; opacity: .82; }
   @media (prefers-reduced-motion: reduce) { canvas { display: none; } }
-`);
-
-export default class CinematicAtmosphere extends OpenElement {
-  static override styles = [sheet];
-  #frame = 0;
-  #contextLost = false;
-  #observer: ResizeObserver | null = null;
-  #canvas: HTMLCanvasElement | null = null;
-  #onContextLost: ((event: Event) => void) | null = null;
-
+`)];
   override connectedCallback(): void {
     super.connectedCallback();
     if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    requestAnimationFrame(() => this.#start());
+    requestAnimationFrame(() => this.startAtmosphere());
   }
 
   override disconnectedCallback(): void {
-    cancelAnimationFrame(this.#frame);
-    this.#observer?.disconnect();
-    this.#observer = null;
-    if (this.#canvas && this.#onContextLost) {
-      this.#canvas.removeEventListener('webglcontextlost', this.#onContextLost);
+    const state = readIslandState<AtmosphereState>(this, 'atmosphere', () => ({
+      frame: 0,
+      contextLost: false,
+      observer: null,
+      canvas: null,
+      onContextLost: null,
+    }));
+    cancelAnimationFrame(state.frame);
+    state.observer?.disconnect();
+    state.observer = null;
+    if (state.canvas && state.onContextLost) {
+      state.canvas.removeEventListener('webglcontextlost', state.onContextLost);
     }
-    this.#canvas = null;
-    this.#onContextLost = null;
+    state.canvas = null;
+    state.onContextLost = null;
     super.disconnectedCallback();
   }
 
-  #start(): void {
+  startAtmosphere(): void {
+    const state = readIslandState<AtmosphereState>(this, 'atmosphere', () => ({
+      frame: 0,
+      contextLost: false,
+      observer: null,
+      canvas: null,
+      onContextLost: null,
+    }));
     const canvas = this.shadowRoot?.querySelector('canvas');
-    if (!(canvas instanceof HTMLCanvasElement) || this.#contextLost) return;
+    if (!(canvas instanceof HTMLCanvasElement) || state.contextLost) return;
     const gl = canvas.getContext('webgl', {
       alpha: true,
       antialias: false,
@@ -104,19 +121,19 @@ export default class CinematicAtmosphere extends OpenElement {
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
-    this.#observer = observer;
-    this.#canvas = canvas;
-    this.#onContextLost = (event: Event) => {
+    state.observer = observer;
+    state.canvas = canvas;
+    state.onContextLost = (event: Event) => {
       event.preventDefault();
-      this.#contextLost = true;
-      cancelAnimationFrame(this.#frame);
+      state.contextLost = true;
+      cancelAnimationFrame(state.frame);
       observer.disconnect();
     };
-    canvas.addEventListener('webglcontextlost', this.#onContextLost, { once: true });
+    canvas.addEventListener('webglcontextlost', state.onContextLost, { once: true });
 
     const started = performance.now();
     const render = (now: number) => {
-      if (this.#contextLost || !this.isConnected) return;
+      if (state.contextLost || !this.isConnected) return;
       const t = (now - started) / 1000;
       const style = getComputedStyle(this);
       gl.uniform2f(resolution, canvas.width, canvas.height);
@@ -127,14 +144,12 @@ export default class CinematicAtmosphere extends OpenElement {
       );
       gl.uniform1f(time, t);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      this.#frame = requestAnimationFrame(render);
+      state.frame = requestAnimationFrame(render);
     };
-    this.#frame = requestAnimationFrame(render);
+    state.frame = requestAnimationFrame(render);
   }
 
-  override render() {
+  render() {
     return <canvas aria-hidden='true'></canvas>;
   }
 }
-
-defineCustomElement(tagName, CinematicAtmosphere);

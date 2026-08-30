@@ -16,32 +16,20 @@
  * Reduced motion → the layer stays inert. Coarse pointers → no cursor, no
  * magnetism (scroll-out still runs; it is scroll-driven, not animation).
  */
-import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import { defineIslandConfig } from '@openelement/app';
+declare function element(tag: string): ClassDecorator;
 
-export const tagName = 'open-hero-polish';
+import { OpenElement, StyleSheet } from '@openelement/element';
+import { defineIslandConfig } from '@openelement/app';
+import { compiledStyle, HERO_CURSOR_CSS } from '../site-ui/compiled-style.ts';
+import { readIslandState, writeIslandState } from '../site-ui/island-state.ts';
+
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 
-const sheet = new StyleSheet();
-sheet.replaceSync(
-  `:host{position:absolute;width:1px;height:1px;overflow:hidden;pointer-events:none}`,
-);
-
-const CURSOR_CSS = `
-  .hero-main, .hero-main * { cursor: none !important; }
-  .hero-cursor { position: fixed; inset: 0 auto auto 0; z-index: 60; pointer-events: none; opacity: 0; transition: opacity .25s ease; }
-  .hero-cursor.on { opacity: 1; }
-  .hero-cursor i { position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
-  .hero-cursor .dot { width: 6px; height: 6px; background: var(--hero-gold); transform: translate3d(var(--dx, -100px), var(--dy, -100px), 0) translate(-50%, -50%); }
-  .hero-cursor .ring { width: 34px; height: 34px; border: 1px solid rgba(227, 207, 159, .55); transform: translate3d(var(--rx, -100px), var(--ry, -100px), 0) translate(-50%, -50%) scale(var(--ring, 1)); transition: border-color .3s ease; }
-  .hero-cursor.hover .ring { --ring: 1.7; border-color: rgba(227, 207, 159, .95); }
-`;
-
+@element('open-hero-polish')
 export default class HeroPolish extends OpenElement {
-  static override styles = [sheet];
-  #raf = 0;
-  #cleanup: (() => void) | undefined;
-
+  static override styles = [compiledStyle(
+    `:host{position:absolute;width:1px;height:1px;overflow:hidden;pointer-events:none}`,
+  )];
   override connectedCallback(): void {
     super.connectedCallback();
     const root = this.getRootNode();
@@ -65,7 +53,7 @@ export default class HeroPolish extends OpenElement {
       const schedule = (): void => {
         if (!scheduled) {
           scheduled = true;
-          this.#raf = requestAnimationFrame(update);
+          writeIslandState(this, 'frame', requestAnimationFrame(update));
         }
       };
       globalThis.addEventListener('scroll', schedule, { passive: true });
@@ -80,7 +68,7 @@ export default class HeroPolish extends OpenElement {
     // ── cursor + magnetism: fine pointers, full motion only ──
     if (!reduced && fine) {
       const styleEl = document.createElement('style');
-      styleEl.textContent = CURSOR_CSS;
+      styleEl.textContent = HERO_CURSOR_CSS;
       root.appendChild(styleEl);
       const cursor = document.createElement('div');
       cursor.className = 'hero-cursor';
@@ -182,20 +170,19 @@ export default class HeroPolish extends OpenElement {
       });
     }
 
-    this.#cleanup = () => {
+    writeIslandState(this, 'cleanup', () => {
       for (const fn of cleanups) fn();
-      cancelAnimationFrame(this.#raf);
-    };
+      cancelAnimationFrame(readIslandState(this, 'frame', () => 0));
+    });
   }
 
   override disconnectedCallback(): void {
-    this.#cleanup?.();
-    this.#cleanup = undefined;
+    readIslandState<(() => void) | undefined>(this, 'cleanup', () => undefined)?.();
+    writeIslandState(this, 'cleanup', undefined);
     super.disconnectedCallback();
   }
 
-  override render() {
+  render() {
     return <span aria-hidden='true'></span>;
   }
 }
-defineCustomElement(tagName, HeroPolish);

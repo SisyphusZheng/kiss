@@ -18,25 +18,26 @@
  * the spec delay the upgrade by holding that chunk's response.
  */
 
-import { defineCustomElement } from '@openelement/element';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
+declare function property(
+  options: { reflect: boolean; attribute?: false },
+): (target: undefined, context: ClassFieldDecoratorContext) => void;
+
+import '@openelement/element';
 import { OpenElement } from '@openelement/element';
-import { signal } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 
-export const tagName = 'open-light-probe';
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true });
 
+@element('open-light-probe', { root: 'light' })
 export default class OpenLightProbe extends OpenElement {
-  static override renderMode = 'light' as const;
+  @property({ reflect: false })
+  count = 0;
 
-  #count = signal(0);
-
-  constructor() {
-    super();
-    this.registerSignal('count', this.#count);
-  }
-
-  override render() {
+  render() {
     // The input is a static control: no markers, no bindings. Its typed
     // value, selection, and focus must survive in-place activation.
     // The span is signal-bound text: SSR renders
@@ -49,15 +50,13 @@ export default class OpenLightProbe extends OpenElement {
           type='button'
           class='probe-button'
           onClick={() => {
-            this.#count.value += 1;
+            this.count += 1;
           }}
         >
           increment
         </button>
-        <span class='probe-count' data-signal='count'>{this.#count.value}</span>
+        <span class='probe-count'>{this.count}</span>
       </div>
     );
   }
 }
-
-defineCustomElement(tagName, OpenLightProbe);

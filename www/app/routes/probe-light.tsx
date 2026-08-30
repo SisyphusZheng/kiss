@@ -1,4 +1,7 @@
-export const tagName = 'page-probe-light';
+declare function element(
+  tag: string,
+  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
+): ClassDecorator;
 
 // E2E probe route for #1148 / ADR-0142 (light-mode in-place activation).
 //
@@ -18,12 +21,11 @@ export const tagName = 'page-probe-light';
 //   wraps the route — the light page element is slotted into open-layout
 //   like any other page.
 
-import { defineCustomElement, OpenElement } from '@openelement/element';
+import { OpenElement } from '@openelement/element';
 
-export class ProbeLightPage extends OpenElement {
-  static override renderMode = 'light' as const;
-
-  override render() {
+@element('page-probe-light', { root: 'light' })
+export default class ProbeLightPage extends OpenElement {
+  render() {
     return (
       <main class='probe-light-page'>
         <h1>Light-mode activation probe</h1>
@@ -32,7 +34,3 @@ export class ProbeLightPage extends OpenElement {
     );
   }
 }
-
-defineCustomElement(tagName, ProbeLightPage);
-
-export default ProbeLightPage;
