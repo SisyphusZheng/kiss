@@ -2,7 +2,7 @@
 /** Private WWW long-form reading shell. */
 declare function element(tag: string): ClassDecorator;
 declare function property(
-  options: { reflect: boolean; attribute?: false },
+  options: { reflect: boolean; attribute?: false; type?: ArrayConstructor },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 import { computed, OpenElement } from '@openelement/element';
@@ -12,6 +12,7 @@ import type { ReadingMetadata, ReadingNavigation } from './page-contract.ts';
 /** Optional v4 editorial accent rendered in Instrument Serif after the title. */
 type ReadingMetadataV4 = ReadingMetadata & { accent?: string };
 type ReadingTag = { key: string; label: string };
+type CompiledComputed<T> = ReturnType<typeof computed<T>> & T;
 
 @element('open-reading-shell')
 export default class OpenReadingShell extends OpenElement {
@@ -79,10 +80,10 @@ export default class OpenReadingShell extends OpenElement {
   lede = computed(() => this.metadata?.lede ?? '');
   @property({ reflect: false, attribute: false })
   date = computed(() => this.metadata?.date ?? '');
-  @property({ reflect: false, attribute: false })
-  tags: ReadingTag[] = computed(() =>
+  @property({ reflect: false, attribute: false, type: Array })
+  tags = computed(() =>
     (this.metadata?.tags ?? []).map((tag) => ({ key: tag, label: tag }))
-  ) as unknown as ReadingTag[];
+  ) as CompiledComputed<ReadingTag[]>;
   @property({ reflect: false, attribute: false })
   previousHref = computed(() => this.navigation?.previous?.href ?? this.previous);
   @property({ reflect: false, attribute: false })

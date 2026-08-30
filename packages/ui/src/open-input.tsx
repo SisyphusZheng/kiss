@@ -150,36 +150,32 @@ export class OpenInput extends OpenElement {
   @property({ reflect: false, attribute: false })
   inputId = '';
 
-  @property({ reflect: false, attribute: false })
-  noLabel = computed(() => this.label === '') as unknown as boolean;
+  @property({ reflect: false, attribute: false, type: Boolean })
+  noLabel = computed(() => this.label === '');
 
-  @property({ reflect: false, attribute: false })
-  noError = computed(() => this.error === '') as unknown as boolean;
+  @property({ reflect: false, attribute: false, type: Boolean })
+  noError = computed(() => this.error === '');
 
-  @property({ reflect: false, attribute: false })
-  inputClass = computed(() =>
-    this.error === '' ? 'control input' : 'control input input--error'
-  ) as unknown as string;
+  @property({ reflect: false, attribute: false, type: String })
+  inputClass = computed(() => this.error === '' ? 'control input' : 'control input input--error');
 
-  @property({ reflect: false, attribute: false })
-  idAttr = computed(() => this.inputId === '' ? null : this.inputId) as unknown as string | null;
+  @property({ reflect: false, attribute: false, type: String })
+  idAttr = computed(() => this.inputId === '' ? null : this.inputId);
 
-  @property({ reflect: false, attribute: false })
-  errorIdAttr = computed(() => this.inputId === '' ? null : `${this.inputId}-error`) as unknown as
-    | string
-    | null;
+  @property({ reflect: false, attribute: false, type: String })
+  errorIdAttr = computed(() => this.inputId === '' ? null : `${this.inputId}-error`);
 
-  @property({ reflect: false, attribute: false })
-  ariaInvalidAttr = computed(() => this.error === '' ? null : 'true') as unknown as string | null;
+  @property({ reflect: false, attribute: false, type: String })
+  ariaInvalidAttr = computed(() => this.error === '' ? null : 'true');
 
   /** The required-marker text (' *' when required) — a computed string sink. */
-  @property({ reflect: false, attribute: false })
-  requiredMark = computed(() => this.required ? ' *' : '') as unknown as string;
+  @property({ reflect: false, attribute: false, type: String })
+  requiredMark = computed(() => this.required ? ' *' : '');
 
-  @property({ reflect: false, attribute: false })
+  @property({ reflect: false, attribute: false, type: String })
   describedByAttr = computed(() =>
     this.error === '' || this.inputId === '' ? null : `${this.inputId}-error`
-  ) as unknown as string | null;
+  );
 
   render() {
     return (

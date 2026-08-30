@@ -63,14 +63,12 @@ export class OpenCallout extends OpenElement {
   label = '';
 
   /** Type icon text — derived from the `type` attribute via the shared map. */
-  @property({ reflect: false, attribute: false })
-  icon = computed(() =>
-    CALLOUT_TYPE_ICONS[this.type] ?? CALLOUT_TYPE_ICONS.info
-  ) as unknown as string;
+  @property({ reflect: false, attribute: false, type: String })
+  icon = computed(() => CALLOUT_TYPE_ICONS[this.type] ?? CALLOUT_TYPE_ICONS.info);
 
   /** True when no label is set: the header row collapses out of the layout. */
-  @property({ reflect: false, attribute: false })
-  headerHidden = computed(() => this.label === '') as unknown as boolean;
+  @property({ reflect: false, attribute: false, type: Boolean })
+  headerHidden = computed(() => this.label === '');
 
   render() {
     return (

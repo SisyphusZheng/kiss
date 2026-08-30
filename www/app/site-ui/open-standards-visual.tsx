@@ -7,11 +7,14 @@
 
 declare function element(tag: string): ClassDecorator;
 declare function property(
-  options: { reflect: boolean; attribute?: false },
+  options: { reflect: boolean; attribute?: false; type?: NumberConstructor },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 import { computed, OpenElement } from '@openelement/element';
 import { openStandardsVisualStyles } from './open-standards-visual-styles.ts';
+
+/** Compiled computed fields expose their derived value through the class facade. */
+type CompiledComputed<T> = ReturnType<typeof computed<T>> & T;
 
 @element('open-standards-visual')
 export default class OpenStandardsVisual extends OpenElement {
@@ -22,14 +25,14 @@ export default class OpenStandardsVisual extends OpenElement {
   motion = 'auto';
   @property({ reflect: true })
   emphasis = 'normal';
-  @property({ reflect: false, attribute: false })
-  showHero: number = computed(() => this.variant === 'hero' ? 1 : 0) as unknown as number;
-  @property({ reflect: false, attribute: false })
-  showRoutes: number = computed(() => this.variant === 'routes' ? 1 : 0) as unknown as number;
-  @property({ reflect: false, attribute: false })
-  showPackages: number = computed(() => this.variant === 'packages' ? 1 : 0) as unknown as number;
-  @property({ reflect: false, attribute: false })
-  showTokens: number = computed(() => this.variant === 'tokens' ? 1 : 0) as unknown as number;
+  @property({ reflect: false, attribute: false, type: Number })
+  showHero = computed(() => this.variant === 'hero' ? 1 : 0) as CompiledComputed<number>;
+  @property({ reflect: false, attribute: false, type: Number })
+  showRoutes = computed(() => this.variant === 'routes' ? 1 : 0) as CompiledComputed<number>;
+  @property({ reflect: false, attribute: false, type: Number })
+  showPackages = computed(() => this.variant === 'packages' ? 1 : 0) as CompiledComputed<number>;
+  @property({ reflect: false, attribute: false, type: Number })
+  showTokens = computed(() => this.variant === 'tokens' ? 1 : 0) as CompiledComputed<number>;
   @property({ reflect: false, attribute: false })
   visualClass = computed(() =>
     `visual visual--${this.emphasis === 'high' ? 'high' : 'normal'} visual--${

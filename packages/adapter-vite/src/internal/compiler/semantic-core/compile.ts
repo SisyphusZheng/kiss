@@ -61,11 +61,10 @@ interface SpikeField {
   node: ts.PropertyDeclaration;
   /**
    * Computed field (alpha.8): the source initializer is
-   * `computed(() => <expr>)` (optionally behind an `as unknown as <T>` cast —
-   * the compiled accessor returns the derived VALUE, so the cast keeps the
-   * source type honest). The compiler records the source-signal dependencies
-   * and emits a `__computedFields` factory over the instance's signal record;
-   * no field initializer runs on the generated class.
+   * `computed(() => <expr>)` (optionally behind a type assertion). The
+   * compiled accessor returns the derived value. The compiler records the
+   * source-signal dependencies and emits a `__computedFields` factory over the
+   * instance's signal record; no field initializer runs on the generated class.
    */
   computed?: { deps: string[]; factoryText: string };
 }

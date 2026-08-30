@@ -55,10 +55,8 @@ export class OpenDropdown extends OpenElement {
   anchorName = '';
 
   /** The content half of the anchor pair, applied via the style sink. */
-  @property({ reflect: false, attribute: false })
-  anchorStyle = computed(() =>
-    this.anchorName === '' ? '' : `position-anchor: ${this.anchorName}`
-  ) as unknown as string;
+  @property({ reflect: false, attribute: false, type: String })
+  anchorStyle = computed(() => this.anchorName === '' ? '' : `position-anchor: ${this.anchorName}`);
 
   render() {
     return (

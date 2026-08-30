@@ -166,29 +166,25 @@ export class OpenButton extends OpenElement {
   type = 'button';
 
   /** True when the anchor branch is the visible control. */
-  @property({ reflect: false, attribute: false })
-  linkMode = computed(() => this.href !== '') as unknown as boolean;
+  @property({ reflect: false, attribute: false, type: Boolean })
+  linkMode = computed(() => this.href !== '');
 
   /** True when the button branch is the visible control. */
-  @property({ reflect: false, attribute: false })
-  buttonMode = computed(() => this.href === '') as unknown as boolean;
+  @property({ reflect: false, attribute: false, type: Boolean })
+  buttonMode = computed(() => this.href === '');
 
   /** Disabled anchors lose their href entirely (#757/#1061). */
-  @property({ reflect: false, attribute: false })
-  linkHref = computed(() => this.disabled || this.href === '' ? null : this.href) as unknown as
-    | string
-    | null;
+  @property({ reflect: false, attribute: false, type: String })
+  linkHref = computed(() => this.disabled || this.href === '' ? null : this.href);
 
-  @property({ reflect: false, attribute: false })
-  linkTarget = computed(() => this.target === '' ? null : this.target) as unknown as string | null;
+  @property({ reflect: false, attribute: false, type: String })
+  linkTarget = computed(() => this.target === '' ? null : this.target);
 
-  @property({ reflect: false, attribute: false })
-  linkRel = computed(() => this.target === '_blank' ? 'noopener noreferrer' : null) as unknown as
-    | string
-    | null;
+  @property({ reflect: false, attribute: false, type: String })
+  linkRel = computed(() => this.target === '_blank' ? 'noopener noreferrer' : null);
 
-  @property({ reflect: false, attribute: false })
-  linkAriaDisabled = computed(() => this.disabled ? 'true' : null) as unknown as string | null;
+  @property({ reflect: false, attribute: false, type: String })
+  linkAriaDisabled = computed(() => this.disabled ? 'true' : null);
 
   render() {
     return (
