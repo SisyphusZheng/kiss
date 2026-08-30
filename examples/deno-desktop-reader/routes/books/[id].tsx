@@ -3,6 +3,7 @@ import { OpenElement } from '@openelement/element';
 import type { LibraryBook, ReaderNote, ReaderProgress } from '../../app/types.ts';
 import { getBookDetails, listBooks, saveNote } from '../../app/api.ts';
 import { navigate } from '../../router.ts';
+import { element, property } from '../../compile-decorators.ts';
 
 export interface ReadingData {
   book: LibraryBook | null;
@@ -68,16 +69,24 @@ export function loader(
 // cross the shadow root — submissions are handled by #submitNoteForm below.
 export const tagName = 'reader-reading';
 
+@element('reader-reading', { root: 'shadow-open' })
 export default class ReadingPage extends OpenElement {
-  #currentPage = 1;
-  #noteTab: 'write' | 'saved' = 'write';
-  #pendingQuote = '';
-  #noteFeedback: ReadingActionData | undefined;
+  @property({ reflect: false, attribute: false, type: Number })
+  currentPage = 1;
+
+  @property({ reflect: false, attribute: false })
+  noteTab: 'write' | 'saved' = 'write';
+
+  @property({ reflect: false, attribute: false })
+  pendingQuote = '';
+
+  @property({ reflect: false, attribute: false, type: Object })
+  noteFeedback: ReadingActionData | undefined;
   #progressHandler = (event: Event) => {
     const detail = (event as CustomEvent<{ bookId?: string; page?: number }>).detail;
     const bookId = (this as unknown as ReadingPage & ReadingData).book?.id;
     if (!bookId || detail?.bookId !== bookId || !detail.page) return;
-    this.#currentPage = detail.page;
+    this.currentPage = detail.page;
     const input = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="note-page"]');
     if (input) input.value = String(detail.page);
   };
@@ -86,10 +95,9 @@ export default class ReadingPage extends OpenElement {
       (event as CustomEvent<{ bookId?: string; page?: number; quote?: string }>).detail;
     const data = (this as unknown) as ReadingPage & ReadingData;
     if (!data.book || detail?.bookId !== data.book.id) return;
-    this.#currentPage = detail.page || this.#currentPage || data.page || 1;
-    this.#pendingQuote = detail.quote?.trim() || `第 ${this.#currentPage} 页`;
-    this.#noteTab = 'write';
-    this.update();
+    this.currentPage = detail.page || this.currentPage || data.page || 1;
+    this.pendingQuote = detail.quote?.trim() || `第 ${this.currentPage} 页`;
+    this.noteTab = 'write';
     requestAnimationFrame(() => {
       const quote = this.shadowRoot?.querySelector<HTMLTextAreaElement>(
         'textarea[name="note-quote"]',
@@ -98,15 +106,15 @@ export default class ReadingPage extends OpenElement {
         'textarea[name="note-text"]',
       );
       const input = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="note-page"]');
-      if (input) input.value = String(this.#currentPage);
-      if (quote && !quote.value.trim()) quote.value = this.#pendingQuote;
+      if (input) input.value = String(this.currentPage);
+      if (quote && !quote.value.trim()) quote.value = this.pendingQuote;
       note?.focus();
     });
   };
 
   override connectedCallback(): void {
     const data = (this as unknown) as ReadingPage & ReadingData;
-    this.#currentPage = data.page || 1;
+    this.currentPage = data.page || 1;
     super.connectedCallback();
     globalThis.addEventListener('reader-progress-change', this.#progressHandler);
     globalThis.addEventListener('reader-note-request', this.#noteRequestHandler);
@@ -119,8 +127,7 @@ export default class ReadingPage extends OpenElement {
   }
 
   #selectNoteTab(tab: 'write' | 'saved'): void {
-    this.#noteTab = tab;
-    this.update();
+    this.noteTab = tab;
   }
 
   async #submitNoteForm(event: Event): Promise<void> {
@@ -132,36 +139,33 @@ export default class ReadingPage extends OpenElement {
     const quote = String(formData.get('note-quote') ?? '').trim();
     if (!data.book) return;
     if (!noteText) {
-      this.#noteFeedback = { error: '请先写下你的想法。' };
-      this.update();
+      this.noteFeedback = { error: '请先写下你的想法。' };
       return;
     }
 
     try {
       await saveNote({
         bookId: data.book.id,
-        page: readFormPage(formData, { page: String(this.#currentPage || data.page || 1) }),
+        page: readFormPage(formData, { page: String(this.currentPage || data.page || 1) }),
         quote,
         text: noteText,
       });
       const details = await getBookDetails(data.book.id);
       data.notes = details?.notes ?? data.notes ?? [];
-      this.#pendingQuote = '';
-      this.#noteFeedback = { saved: true };
-      this.#noteTab = 'saved';
+      this.pendingQuote = '';
+      this.noteFeedback = { saved: true };
+      this.noteTab = 'saved';
       form.reset();
-      this.update();
     } catch (err) {
-      this.#noteFeedback = {
+      this.noteFeedback = {
         error: err instanceof Error ? err.message : String(err),
       };
-      this.update();
     }
   }
 
-  override render() {
+  render() {
     const data = (this as unknown) as ReadingPage & ReadingData;
-    const actionData = this.#noteFeedback;
+    const actionData = this.noteFeedback;
     const book = data.book;
     const page = data.page;
     const zoom = data.zoom;
@@ -486,14 +490,14 @@ export default class ReadingPage extends OpenElement {
           <section class='note-panel'>
             <div class='note-panel-tabs'>
               <button
-                class={`note-panel-tab ${this.#noteTab === 'write' ? 'active' : ''}`}
+                class={`note-panel-tab ${this.noteTab === 'write' ? 'active' : ''}`}
                 type='button'
                 onClick={() => this.#selectNoteTab('write')}
               >
                 写笔记
               </button>
               <button
-                class={`note-panel-tab ${this.#noteTab === 'saved' ? 'active' : ''}`}
+                class={`note-panel-tab ${this.noteTab === 'saved' ? 'active' : ''}`}
                 type='button'
                 onClick={() => this.#selectNoteTab('saved')}
               >
@@ -501,19 +505,19 @@ export default class ReadingPage extends OpenElement {
               </button>
             </div>
             <div class='note-panel-body'>
-              {this.#noteTab === 'write'
+              {this.noteTab === 'write'
                 ? (
                   <form onSubmit={(event: Event) => void this.#submitNoteForm(event)}>
                     <input
                       type='hidden'
                       name='note-page'
-                      value={String(this.#currentPage || page)}
+                      value={String(this.currentPage || page)}
                     />
                     <label>引用段落</label>
                     <textarea
                       name='note-quote'
                       rows={3}
-                      value={this.#pendingQuote}
+                      value={this.pendingQuote}
                       placeholder='粘贴你想标注的段落……'
                     />
 
@@ -580,4 +584,3 @@ export default class ReadingPage extends OpenElement {
     );
   }
 }
-customElements.define(tagName, ReadingPage);

@@ -256,7 +256,7 @@ function FallbackCover({ title, author }: { title: string; author?: string }) {
   );
 }
 
-const COVERS: Record<string, (p: { title: string; author?: string }) => JSX.Element> = {
+const COVERS: Record<string, typeof FallbackCover> = {
   'metamorphosis': MetamorphosisCover,
   'heart-of-darkness': HeartOfDarknessCover,
   'frankenstein': FrankensteinCover,

@@ -3,6 +3,7 @@ import { OpenElement } from '@openelement/element';
 import type { ReaderSearchResult } from '../app/types.ts';
 import { searchLibrary } from '../app/api.ts';
 import { navigate } from '../router.ts';
+import { element } from '../compile-decorators.ts';
 
 export interface SearchData {
   query: string;
@@ -33,8 +34,9 @@ const SOURCE_LABEL: Record<string, string> = {
   pdf: 'PDF 全文',
 };
 
+@element('reader-search', { root: 'shadow-open' })
 export default class SearchPage extends OpenElement {
-  override render() {
+  render() {
     const data = (this as unknown) as SearchPage & SearchData;
     const query = data.query || '';
     const results = data.results || [];
@@ -122,4 +124,3 @@ export default class SearchPage extends OpenElement {
     );
   }
 }
-customElements.define(tagName, SearchPage);

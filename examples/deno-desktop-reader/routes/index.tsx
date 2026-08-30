@@ -5,6 +5,7 @@ import { getBookDetails, listBooks, listSources, syncSource } from '../app/api.t
 import { navigate } from '../router.ts';
 import BookCard from '../components/BookCard.tsx';
 import type { LibraryBook } from '../app/types.ts';
+import { element, property } from '../compile-decorators.ts';
 
 export interface BookshelfData {
   books: LibraryBook[];
@@ -36,15 +37,16 @@ export async function action(
 
 export const tagName = 'reader-bookshelf';
 
+@element('reader-bookshelf', { root: 'shadow-open' })
 export default class BookshelfPage extends OpenElement {
-  #sourceModalOpen = false;
+  @property({ reflect: false, attribute: false })
+  sourceModalOpen = false;
 
-  #setSourceModal(open: boolean): void {
-    this.#sourceModalOpen = open;
-    this.update();
+  setSourceModal(open: boolean): void {
+    this.sourceModalOpen = open;
   }
 
-  override render() {
+  render() {
     const data = (this as unknown) as BookshelfPage & BookshelfData;
     const actionData = (this as unknown as { actionData?: { synced?: string; error?: string } })
       .actionData;
@@ -261,7 +263,7 @@ export default class BookshelfPage extends OpenElement {
             <open-button
               class='source-manage-button'
               type='button'
-              onClick={() => this.#setSourceModal(true)}
+              onClick={() => this.setSourceModal(true)}
             >
               管理书源
             </open-button>
@@ -318,7 +320,7 @@ export default class BookshelfPage extends OpenElement {
                 <open-button
                   class='source-manage-button'
                   type='button'
-                  onClick={() => this.#setSourceModal(true)}
+                  onClick={() => this.setSourceModal(true)}
                 >
                   + 添加
                 </open-button>
@@ -379,10 +381,10 @@ export default class BookshelfPage extends OpenElement {
             <p class='empty-state-hint'>同步示例数据源或添加本地文件夹，开始阅读。</p>
           </div>
         )}
-        {this.#sourceModalOpen && (
+        {this.sourceModalOpen && (
           <div
             class='sources-overlay'
-            onClick={() => this.#setSourceModal(false)}
+            onClick={() => this.setSourceModal(false)}
           >
             <section class='sources-dialog' onClick={(event: Event) => event.stopPropagation()}>
               <div class='sources-head'>
@@ -391,7 +393,7 @@ export default class BookshelfPage extends OpenElement {
                   class='sources-close'
                   type='button'
                   variant='ghost'
-                  onClick={() => this.#setSourceModal(false)}
+                  onClick={() => this.setSourceModal(false)}
                 >
                   ×
                 </open-button>
@@ -454,4 +456,3 @@ export default class BookshelfPage extends OpenElement {
     );
   }
 }
-customElements.define(tagName, BookshelfPage);

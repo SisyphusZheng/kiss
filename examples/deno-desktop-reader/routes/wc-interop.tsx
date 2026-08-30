@@ -1,22 +1,24 @@
 /** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
+import { element, property } from '../compile-decorators.ts';
 
 // Validates @openelement/ui CE coexistence: open-button / open-card / open-input
 // + Preact island all render in shadow DOM.
 
 export const tagName = 'reader-wc-interop';
 
+@element('reader-wc-interop', { root: 'shadow-open' })
 export default class WcInteropPage extends OpenElement {
-  #feedback: { kind: 'success' | 'info'; text: string } | null = null;
+  @property({ reflect: false, attribute: false, type: Object })
+  feedback: { kind: 'success' | 'info'; text: string } | null = null;
 
-  #handleClick() {
-    this.#feedback = { kind: 'success', text: 'open-button 触发了 open-click 事件。' };
-    this.requestUpdate?.();
+  handleClick(): void {
+    this.feedback = { kind: 'success', text: 'open-button 触发了 open-click 事件。' };
   }
 
-  override render() {
-    const feedback = this.#feedback;
+  render() {
+    const feedback = this.feedback;
     return (
       <main class='reader-main'>
         <div class='page-header'>
@@ -43,7 +45,7 @@ export default class WcInteropPage extends OpenElement {
 
           <div class='wc-interop-cell'>
             <h3>open-button</h3>
-            <open-button variant='primary' onClick={() => this.#handleClick()}>
+            <open-button variant='primary' onClick={this.handleClick}>
               点击触发事件
             </open-button>
             <p class='wc-interop-demo'>按钮组件，支持 variant / size / type 属性。</p>
@@ -74,4 +76,3 @@ export default class WcInteropPage extends OpenElement {
     );
   }
 }
-customElements.define(tagName, WcInteropPage);

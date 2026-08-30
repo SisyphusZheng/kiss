@@ -3,6 +3,7 @@ import { OpenElement } from '@openelement/element';
 import type { MastodonStatus } from '../app/types.ts';
 import { getStatus, getStatusContext } from '../app/api-client.ts';
 import StatusCard from '../components/StatusCard.tsx';
+import { element } from '../compile-decorators.ts';
 
 export interface StatusData {
   status?: MastodonStatus;
@@ -37,8 +38,9 @@ export async function loader(ctx: { params?: Record<string, string> }): Promise<
 
 export const tagName = 'mastodon-status-detail';
 
+@element('mastodon-status-detail', { root: 'shadow-open' })
 export default class StatusPage extends OpenElement {
-  override render() {
+  render() {
     const data = (this as unknown) as StatusPage & StatusData;
     const status = data.status;
 
@@ -85,5 +87,3 @@ export default class StatusPage extends OpenElement {
     );
   }
 }
-
-customElements.define(tagName, StatusPage);

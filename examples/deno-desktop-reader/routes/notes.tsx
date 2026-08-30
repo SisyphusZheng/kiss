@@ -3,6 +3,7 @@ import { OpenElement } from '@openelement/element';
 import type { LibraryBook, ReaderNote } from '../app/types.ts';
 import { deleteNote, listBooks, listNotes } from '../app/api.ts';
 import { navigate } from '../router.ts';
+import { element } from '../compile-decorators.ts';
 
 export interface NotesData {
   allNotes: ReaderNote[];
@@ -25,8 +26,9 @@ export async function action(
 
 export const tagName = 'reader-notes';
 
+@element('reader-notes', { root: 'shadow-open' })
 export default class NotesPage extends OpenElement {
-  override render() {
+  render() {
     const data = (this as unknown) as NotesPage & NotesData;
     const actionData = (this as unknown as { actionData?: { deleted?: string; error?: string } })
       .actionData;
@@ -143,4 +145,3 @@ export default class NotesPage extends OpenElement {
     );
   }
 }
-customElements.define(tagName, NotesPage);

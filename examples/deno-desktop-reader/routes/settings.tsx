@@ -4,6 +4,7 @@ import { addSource, listSources, syncSource } from '../app/api.ts';
 import { loadSettings, saveSettings } from '../app/storage.ts';
 import { pdfMaxWidth } from '../app/pdf-measure.ts';
 import type { ReaderSettings, ReaderSource } from '../app/types.ts';
+import { element, property } from '../compile-decorators.ts';
 
 function applyTheme(theme: string): void {
   if (theme === 'dark' || theme === 'sepia') {
@@ -71,17 +72,18 @@ export async function action(
 
 export const tagName = 'reader-settings';
 
+@element('reader-settings', { root: 'shadow-open' })
 export default class SettingsPage extends OpenElement {
-  #folderPickerError = '';
+  @property({ reflect: false, attribute: false })
+  folderPickerError = '';
 
-  async #pickLocalFolder(): Promise<void> {
-    this.#folderPickerError = '';
+  async pickLocalFolder(): Promise<void> {
+    this.folderPickerError = '';
     try {
       const res = await fetch('/api/dialog/directory', { method: 'POST' });
       const body = await res.json() as { path?: string; error?: string };
       if (!res.ok || !body.path) {
-        this.#folderPickerError = body.error || '没有选择文件夹。';
-        this.update();
+        this.folderPickerError = body.error || '没有选择文件夹。';
         return;
       }
       const rootInput = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="root"]');
@@ -93,12 +95,11 @@ export default class SettingsPage extends OpenElement {
         labelInput.value = body.path.split('/').filter(Boolean).at(-1) || '本地书源';
       }
     } catch (err) {
-      this.#folderPickerError = err instanceof Error ? err.message : String(err);
-      this.update();
+      this.folderPickerError = err instanceof Error ? err.message : String(err);
     }
   }
 
-  override render() {
+  render() {
     const current = (this as unknown) as SettingsPage & SettingsData;
     const actionData = (this as unknown as {
       actionData?: { added?: string; synced?: number; error?: string };
@@ -126,7 +127,7 @@ export default class SettingsPage extends OpenElement {
           </p>
         )}
         {actionData?.error && <p class='form-error'>{actionData.error}</p>}
-        {this.#folderPickerError && <p class='form-error'>{this.#folderPickerError}</p>}
+        {this.folderPickerError && <p class='form-error'>{this.folderPickerError}</p>}
 
         <section class='settings-section'>
           <h3>书源管理</h3>
@@ -168,7 +169,7 @@ export default class SettingsPage extends OpenElement {
                 type='button'
                 class='source-pick-button'
                 variant='ghost'
-                onClick={() => this.#pickLocalFolder()}
+                onClick={this.pickLocalFolder}
               >
                 选择文件夹
               </open-button>
@@ -286,4 +287,3 @@ export default class SettingsPage extends OpenElement {
     );
   }
 }
-customElements.define(tagName, SettingsPage);

@@ -3,6 +3,7 @@ import { OpenElement } from '@openelement/element';
 import type { MastodonStatus } from '../app/types.ts';
 import { getTimeline } from '../app/api-client.ts';
 import StatusCard, { StatusCardSkeleton } from '../components/StatusCard.tsx';
+import { element } from '../compile-decorators.ts';
 
 export interface TimelineData {
   statuses: MastodonStatus[];
@@ -20,8 +21,9 @@ export async function loader(): Promise<TimelineData> {
 
 export const tagName = 'mastodon-timeline';
 
+@element('mastodon-timeline', { root: 'shadow-open' })
 export default class TimelinePage extends OpenElement {
-  override render() {
+  render() {
     const data = (this as unknown) as TimelinePage & TimelineData;
     const statuses = data.statuses ?? [];
 
@@ -66,5 +68,3 @@ export default class TimelinePage extends OpenElement {
     );
   }
 }
-
-customElements.define(tagName, TimelinePage);

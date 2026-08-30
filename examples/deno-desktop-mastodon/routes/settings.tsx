@@ -1,10 +1,12 @@
 /** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
+import { element } from '../compile-decorators.ts';
 
 export const tagName = 'mastodon-settings';
 
+@element('mastodon-settings', { root: 'shadow-open' })
 export default class SettingsPage extends OpenElement {
-  override render() {
+  render() {
     return (
       <main class='mastodon-main'>
         <div class='mastodon-page-header'>
@@ -27,5 +29,3 @@ export default class SettingsPage extends OpenElement {
     );
   }
 }
-
-customElements.define(tagName, SettingsPage);

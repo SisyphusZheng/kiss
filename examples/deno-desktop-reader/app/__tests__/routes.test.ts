@@ -1,21 +1,16 @@
 /**
  * Smoke tests for route components.
- * Tests verify route exports, VNode tag structure, and custom element
- * registration.
+ * Tests verify route exports and compile-time authoring contracts without
+ * executing the removed runtime JSX factory.
  */
 
-import { assert, assertEquals } from '@std/assert';
-import type { VNode } from '@openelement/element';
+import { assertEquals, assertFalse, assertStringIncludes } from '@std/assert';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
 // Covers only the DOM APIs the route components actually touch:
 // an HTMLElement base class for the OpenElement page classes, and an
-// in-memory customElements registry for the module-level
-// `customElements.define(tag, Page)` side effects (including Shoelace's
-// sl-button in wc-interop). Rendering is asserted on pure VNode output,
-// so no document/location/localStorage doubles are needed — lit-html
-// (Shoelace's renderer) uses its own SSR stub when `document` is
-// undefined.
+// in-memory customElements registry for Shoelace and the retained autonomous
+// Preact islands. Compiled pages are registered by the adapter delivery entry.
 
 class MockElement {
   tagName: string;
@@ -105,38 +100,12 @@ Deno.test('Settings action adds and immediately syncs a source', async () => {
 });
 
 Deno.test('Settings source form submits only through the route action (#1064)', async () => {
-  const mod = await import('../../routes/settings.tsx');
-  const page = new mod.default();
-  (page as unknown as Record<string, unknown>).sources = [];
-  const sourceForm = findVNode(
-    page.render(),
-    (node) => node.tag === 'form' && node.props.class === 'source-form',
-  );
-  assert(sourceForm, 'source form should render');
+  const source = await Deno.readTextFile(new URL('../../routes/settings.tsx', import.meta.url));
+  assertStringIncludes(source, "<form class='source-form'>");
   // A JSX onSubmit would re-run addSource/syncSource on top of the route
   // action dispatched by the open-button submit (#1064).
-  assertEquals('onSubmit' in sourceForm.props, false);
+  assertFalse(source.includes('onSubmit='));
 });
-
-function findVNode(node: unknown, match: (node: VNode) => boolean): VNode | null {
-  if (node === null || node === undefined || typeof node === 'string') return null;
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      const found = findVNode(child, match);
-      if (found) return found;
-    }
-    return null;
-  }
-  if (typeof node !== 'object') return null;
-  const vnode = node as VNode;
-  if (match(vnode)) return vnode;
-  for (const child of vnode.children) {
-    if (typeof child === 'function') continue;
-    const found = findVNode(child, match);
-    if (found) return found;
-  }
-  return null;
-}
 
 Deno.test('WC Interop route exports a function', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
@@ -144,11 +113,7 @@ Deno.test('WC Interop route exports a function', async () => {
 });
 
 Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags', async () => {
-  const mod = await import('../../routes/wc-interop.tsx');
-  // Inspect pure VNode output; this test does not need DOM rendering.
-  const page = new mod.default();
-  const tags = collectElementTags(page.render());
-
+  const source = await Deno.readTextFile(new URL('../../routes/wc-interop.tsx', import.meta.url));
   const expectedTags = [
     'sl-button',
     'open-button',
@@ -156,8 +121,7 @@ Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags
     'open-input',
     'sync-status-island',
   ];
-  const missingTags = expectedTags.filter((tag) => !tags.has(tag));
-  assertEquals(missingTags, []);
+  for (const tag of expectedTags) assertStringIncludes(source, `<${tag}`);
 });
 
 Deno.test('Shoelace sl-button registers via route side-effect import', async () => {
@@ -190,45 +154,9 @@ Deno.test('Bookshelf action surfaces sync errors instead of throwing', async () 
   }
 });
 
-Deno.test('Bookshelf renders a large library without hanging', async () => {
-  const mod = await import('../../routes/index.tsx');
-  const page = new mod.default();
-  const books = Array.from({ length: 500 }, (_, i) => ({
-    id: `book-${i}`,
-    title: `Book ${i}`,
-    author: 'Author',
-    coverUrl: '',
-    sourceId: 'fixtures',
-  }));
-  (page as unknown as Record<string, unknown>).books = books;
-  (page as unknown as Record<string, unknown>).progressByBook = {};
-  (page as unknown as Record<string, unknown>).sources = [];
-
-  const start = performance.now();
-  const vnode = page.render();
-  const elapsed = performance.now() - start;
-
-  assert(vnode !== null && typeof vnode === 'object', 'render should return a non-null VNode');
-  assert(
-    (vnode as VNode).children.length > 1,
-    'large library render should produce multiple children',
-  );
-  assertEquals(elapsed < 1000, true, `Large bookshelf render took ${elapsed}ms`);
+Deno.test('Bookshelf uses compiled registration and no legacy rerender hook', async () => {
+  const source = await Deno.readTextFile(new URL('../../routes/index.tsx', import.meta.url));
+  assertStringIncludes(source, "@element('reader-bookshelf'");
+  assertFalse(source.includes('customElements.define'));
+  assertFalse(source.includes('this.update()'));
 });
-
-function collectElementTags(node: unknown, tags = new Set<string>()): Set<string> {
-  if (node === null || node === undefined || typeof node === 'string') return tags;
-  if (Array.isArray(node)) {
-    for (const child of node) collectElementTags(child, tags);
-    return tags;
-  }
-  if (typeof node !== 'object') return tags;
-
-  const vnode = node as VNode;
-  if (typeof vnode.tag === 'string') tags.add(vnode.tag);
-  for (const child of vnode.children) {
-    if (typeof child === 'function') continue;
-    collectElementTags(child, tags);
-  }
-  return tags;
-}

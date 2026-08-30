@@ -4,6 +4,7 @@ import type { MastodonAccount, MastodonStatus } from '../app/types.ts';
 import { getProfile, getProfileStatuses } from '../app/api-client.ts';
 import { formatCount, stripHtml } from '../app/format.ts';
 import StatusCard from '../components/StatusCard.tsx';
+import { element } from '../compile-decorators.ts';
 
 export interface ProfileData {
   account?: MastodonAccount;
@@ -32,8 +33,9 @@ export async function loader(ctx: { params?: Record<string, string> }): Promise<
 
 export const tagName = 'mastodon-profile';
 
+@element('mastodon-profile', { root: 'shadow-open' })
 export default class ProfilePage extends OpenElement {
-  override render() {
+  render() {
     const data = (this as unknown) as ProfilePage & ProfileData;
     const account = data.account;
 
@@ -113,5 +115,3 @@ export default class ProfilePage extends OpenElement {
     );
   }
 }
-
-customElements.define(tagName, ProfilePage);
