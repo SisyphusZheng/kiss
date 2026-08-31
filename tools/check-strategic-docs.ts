@@ -1,5 +1,5 @@
 import {
-  ACTIVE_EXECUTION_VERSION,
+  ACTIVE_INTERNAL_CHECKPOINT,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
 } from './project-constants.ts';
@@ -119,9 +119,9 @@ export function strategicChecks(): Check[] {
             text.includes('PUBLISHED_PACKAGE_VERSION'))),
     },
     {
-      name: `${ACTIVE_EXECUTION_VERSION} is the active execution version`,
+      name: `${ACTIVE_INTERNAL_CHECKPOINT} is the active internal checkpoint`,
       files: ['docs/current/VERSION_PLAN.md'],
-      required: [ACTIVE_EXECUTION_VERSION],
+      required: [ACTIVE_INTERNAL_CHECKPOINT],
     },
     {
       name: 'v1.0 is the stable product target',

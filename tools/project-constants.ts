@@ -9,6 +9,11 @@ export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
 export const LATEST_LANDED_TRAIN = 'v0.43.3';
 export const ACTIVE_EXECUTION_VERSION = 'v0.44.0-alpha.0';
 export const NEXT_EXECUTION_VERSION = 'v0.44.0-alpha.1';
+// Internal v0.44 admission checkpoints are not package versions. Keep them
+// separate from release-bump constants so Alpha.9 cannot be interpreted as a
+// publishable npm/tag target.
+export const ACTIVE_INTERNAL_CHECKPOINT = 'Alpha.8 + Alpha.9 in PR #1199';
+export const NEXT_PUBLIC_PRERELEASE = 'v0.44.0-beta.1';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',

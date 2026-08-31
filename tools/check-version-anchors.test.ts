@@ -9,8 +9,10 @@ import {
 } from './check-version-anchors.ts';
 import {
   ACTIVE_EXECUTION_VERSION,
+  ACTIVE_INTERNAL_CHECKPOINT,
   LATEST_LANDED_TRAIN,
   NEXT_EXECUTION_VERSION,
+  NEXT_PUBLIC_PRERELEASE,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -38,7 +40,7 @@ function goodFiles(): Record<string, string> {
     'docs/governance/PROJECT_WORKFLOW.md':
       `package line \`${PACKAGE_VERSION_TAG}\`, npm registry line \`${PACKAGE_VERSION_TAG}\`, done`,
     'docs/current/VERSION_PLAN.md':
-      `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\`\nLatest landed train: \`${LATEST_LANDED_TRAIN}\`\nActive release target: \`${ACTIVE_EXECUTION_VERSION}\`\nNext planned train: \`${NEXT_EXECUTION_VERSION}\``,
+      `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\`\nLatest landed train: \`${LATEST_LANDED_TRAIN}\`\nActive internal target: ${ACTIVE_INTERNAL_CHECKPOINT}\nNext planned public train: \`${NEXT_PUBLIC_PRERELEASE}\``,
     'examples/open-element-in-fresh/README.md':
       `Maintained against the current framework source line (\`${PACKAGE_VERSION}\`).`,
   };

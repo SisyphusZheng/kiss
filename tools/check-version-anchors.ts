@@ -27,8 +27,10 @@
 
 import {
   ACTIVE_EXECUTION_VERSION,
+  ACTIVE_INTERNAL_CHECKPOINT,
   LATEST_LANDED_TRAIN,
   NEXT_EXECUTION_VERSION,
+  NEXT_PUBLIC_PRERELEASE,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -145,11 +147,11 @@ export function versionAnchors(): VersionAnchor[] {
     },
     {
       path: 'docs/current/VERSION_PLAN.md',
-      snippet: `Active release target: \`${ACTIVE_EXECUTION_VERSION}\``,
+      snippet: `Active internal target: ${ACTIVE_INTERNAL_CHECKPOINT}`,
     },
     {
       path: 'docs/current/VERSION_PLAN.md',
-      snippet: `Next planned train: \`${NEXT_EXECUTION_VERSION}\``,
+      snippet: `Next planned public train: \`${NEXT_PUBLIC_PRERELEASE}\``,
     },
     {
       path: 'examples/open-element-in-fresh/README.md',
