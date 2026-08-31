@@ -464,6 +464,7 @@ const wwwCheck: DocsTruthCheck = {
     }
 
     for (const root of sourceRoots) {
+      if (!await exists(root)) continue;
       for await (
         const { path: file } of walk(root, {
           includeDirs: false,

@@ -166,9 +166,8 @@ Deno.test('nested light hosts claim in their own scopes', () => {
   const outerTag = uniqueTag('outer');
   const innerTag = uniqueTag('inner');
 
-  // The inner host is static (no dynamic parts): the compiled claim grammar
-  // is fully static inside a nested host declared by the parent template —
-  // dynamic nested content is a compiler/adapter concern beyond alpha.8.
+  // The inner host is static (no dynamic parts). The parent declares only the
+  // custom-element host; SSG expands its independently-owned light subtree.
   const innerProgram = testProgram({
     tag: innerTag,
     rootMode: 'light',
@@ -190,18 +189,11 @@ Deno.test('nested light hosts claim in their own scopes', () => {
       k: 'el',
       tag: 'section',
       attrs: [],
-      // The outer program declares the nested host exactly as the server
-      // pipeline serializes it (provenance marker and static content).
       children: [{
         k: 'el',
         tag: innerTag,
-        attrs: [['data-oe-light', '']],
-        children: [{
-          k: 'el',
-          tag: 'em',
-          attrs: [],
-          children: [{ k: 'text', value: 'inner' }],
-        }],
+        attrs: [],
+        children: [],
       }],
     }],
     parts: [],

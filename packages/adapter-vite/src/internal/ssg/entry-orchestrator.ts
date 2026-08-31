@@ -137,6 +137,17 @@ export function renderEntry(desc: EntryDescriptor): string {
       };`,
     );
   }
+  const staticComponentModules = desc.staticComponents.map((component, index) => ({
+    ...component,
+    varName: `__static_component_${index}`,
+  }));
+  for (const component of staticComponentModules) {
+    lines.push(
+      `import * as ${component.varName} from ${
+        quoteGeneratedJavaScriptValue(component.modulePath)
+      };`,
+    );
+  }
   lines.push(`const log = createLogger('server-entry');`);
   lines.push('');
 
@@ -218,6 +229,13 @@ export function renderEntry(desc: EntryDescriptor): string {
       }:', err); throw err; }`,
     );
   }
+  for (const component of staticComponentModules) {
+    lines.push(
+      `try { __registerSsrComponent(${
+        quoteGeneratedJavaScriptValue(component.tagName)
+      }, ${component.varName}.default); } catch (err) { console.error('[ssg] Failed to register static component <${component.tagName}>:', err); throw err; }`,
+    );
+  }
   lines.push('');
 
   // --- Register island components in SSR customElements registry ---
@@ -267,7 +285,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
 
   // --- Runtime helpers ---
-  lines.push(renderRuntimeHelpers(desc.appShell, desc.ssrAdmissionPlan.renderableTags));
+  lines.push(renderRuntimeHelpers(desc.appShell, [
+    ...desc.ssrAdmissionPlan.renderableTags,
+    ...desc.staticComponents.map((component) => component.tagName),
+  ]));
   lines.push('');
   if (desc.pageRoutes.length > 0) {
     lines.push(renderActionRuntime());

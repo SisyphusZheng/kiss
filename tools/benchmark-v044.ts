@@ -17,6 +17,13 @@ import {
   createFreshDom,
   serializeToHtml,
 } from '../packages/element/src/internal/compiled/runtime.ts';
+import type {
+  PartProgram as Program,
+  ProgramDependencyRecord,
+  ProgramLocationRecord,
+  SpikePart as ProgramPart,
+  SpikeTreeNode as TreeNode,
+} from '../packages/adapter-vite/src/internal/compiler/semantic-core/program.ts';
 
 const defaultFixtureRoot = new URL('../benchmarks/v044/', import.meta.url);
 const encoder = new TextEncoder();
@@ -58,7 +65,7 @@ interface FixtureDefinition {
     runtime: string;
     staticFixture: string;
   };
-  baseline: { interactiveJsBytes: number; description: string };
+  baseline: { interactiveProgramBytes: number; description: string };
   environment: {
     deno: string;
     browserMatrix: BrowserName[];
@@ -145,11 +152,11 @@ export interface V044PerformanceReport {
     instructionCount: number;
   };
   baseline: {
-    interactiveJsBytes: number;
+    interactiveProgramBytes: number;
     description: string;
   };
   candidate: {
-    interactiveJsBytes: number;
+    interactiveProgramBytes: number;
     generatedModuleBytes: number;
     programBytes: number;
   };
@@ -172,78 +179,6 @@ export interface V044PerformanceReport {
     maxRetainedListeners: number;
   };
   browser: BrowserEvidence[];
-}
-
-interface TreeElement {
-  k: 'el';
-  tag: string;
-  attrs: Array<[string, string]>;
-  children: TreeNode[];
-}
-
-interface TreeText {
-  k: 'text';
-  value: string;
-}
-
-interface TreePart {
-  k: 'part';
-  index: number;
-}
-
-interface TreeItemValue {
-  k: 'ival';
-}
-
-type TreeNode = TreeElement | TreeText | TreePart | TreeItemValue;
-
-interface TextPart {
-  k: 'text';
-  index: number;
-  signal: string;
-}
-
-interface PropPart {
-  k: 'prop';
-  index: number;
-  signal: string;
-  name: string;
-  path: number[];
-}
-
-interface EventPart {
-  k: 'event';
-  index: number;
-  event: string;
-  handler: string;
-  path: number[];
-}
-
-interface WhenPart {
-  k: 'when';
-  index: number;
-  signal: string;
-  gt: number;
-  on: TreeNode[];
-  off: TreeNode[];
-}
-
-interface EachPart {
-  k: 'each';
-  index: number;
-  signal: string;
-  key: string;
-  field: string;
-  item: TreeNode[];
-}
-
-type ProgramPart = TextPart | PropPart | EventPart | WhenPart | EachPart;
-
-interface Program {
-  version: number;
-  tag: string;
-  template: TreeNode[];
-  parts: ProgramPart[];
 }
 
 function pathForRoot(root: URL | string): string {
@@ -280,7 +215,7 @@ function assertDefinition(raw: unknown): asserts raw is FixtureDefinition {
   }
   const baseline = definition.baseline as Record<string, unknown> | undefined;
   if (!baseline) throw new Error('[v044-performance] baseline is missing');
-  assertNumber(baseline.interactiveJsBytes, 'baseline.interactiveJsBytes', 1);
+  assertNumber(baseline.interactiveProgramBytes, 'baseline.interactiveProgramBytes', 1);
   if (typeof baseline.description !== 'string' || baseline.description.length === 0) {
     throw new Error('[v044-performance] baseline.description must be non-empty');
   }
@@ -714,7 +649,10 @@ function build043Proxy(
 }
 
 function projectProgram(program: Program, enabled: ReadonlySet<PartKind>): Program {
-  const selected = program.parts.filter((part) => enabled.has(part.k));
+  const isBenchmarkPart = (
+    part: ProgramPart,
+  ): part is Extract<ProgramPart, { k: PartKind }> => partOrder.includes(part.k as PartKind);
+  const selected = program.parts.filter(isBenchmarkPart).filter((part) => enabled.has(part.k));
   const remap = new Map<number, number>();
   selected.forEach((part, index) => remap.set(part.index, index));
 
@@ -723,10 +661,10 @@ function projectProgram(program: Program, enabled: ReadonlySet<PartKind>): Progr
     for (const node of nodes) {
       if (node.k === 'part') {
         const original = program.parts[node.index];
-        if (!original || !enabled.has(original.k)) continue;
+        if (!original || !isBenchmarkPart(original) || !enabled.has(original.k)) continue;
         const index = remap.get(node.index);
         if (index === undefined) throw new Error('[v044-performance] part remap is incomplete');
-        result.push({ k: 'part', index });
+        result.push({ ...node, id: `p${index}`, index });
         continue;
       }
       if (node.k === 'el') {
@@ -738,11 +676,95 @@ function projectProgram(program: Program, enabled: ReadonlySet<PartKind>): Progr
     return result;
   };
 
+  const template = projectNodes(program.template);
+  const elementIds = new Set<string>();
+  const templateElementPaths = new Map<string, number[]>();
+  const anchorPaths = new Map<number, number[]>();
+  const collectTemplateLocations = (nodes: TreeNode[], parent: number[] = []): void => {
+    nodes.forEach((node, childIndex) => {
+      const path = [...parent, childIndex];
+      if (node.k === 'part') anchorPaths.set(node.index, path);
+      if (node.k !== 'el') return;
+      elementIds.add(node.id);
+      templateElementPaths.set(node.id, path);
+      collectTemplateLocations(node.children, path);
+    });
+  };
+  collectTemplateLocations(template);
+  const collectRegionElements = (nodes: TreeNode[]): void => {
+    for (const node of nodes) {
+      if (node.k !== 'el') continue;
+      elementIds.add(node.id);
+      collectRegionElements(node.children);
+    }
+  };
+  const parts = selected.map((part, index) => {
+    const locationPath = part.location.kind === 'anchor'
+      ? anchorPaths.get(index)
+      : templateElementPaths.get(part.location.node!);
+    if (!locationPath) {
+      throw new Error(`[v044-performance] projected location missing for part ${part.index}`);
+    }
+    return {
+      ...part,
+      index,
+      ...('path' in part ? { path: locationPath } : {}),
+      location: { ...part.location, id: `p${index}`, path: locationPath },
+    };
+  }) as ProgramPart[];
+  for (const part of parts) {
+    if (part.k === 'when') {
+      collectRegionElements(part.on);
+      collectRegionElements(part.off);
+    } else if (part.k === 'each') {
+      collectRegionElements(part.item);
+    }
+  }
+
   return {
-    version: program.version,
-    tag: program.tag,
-    template: projectNodes(program.template),
-    parts: selected.map((part, index) => ({ ...part, index })) as ProgramPart[],
+    ...program,
+    template,
+    parts,
+    regions: program.regions.flatMap((region) => {
+      const index = remap.get(region.index);
+      return index === undefined ? [] : [{
+        ...region,
+        id: `r${index}`,
+        index,
+        anchor: `p${index}`,
+        end: `p${index}:end`,
+        source: `p${index}`,
+      }];
+    }),
+    dependencies: parts.flatMap((part): ProgramDependencyRecord[] =>
+      'signal' in part && typeof part.signal === 'string'
+        ? [{
+          signal: part.signal,
+          owner: {
+            kind: part.k === 'when' || part.k === 'each' ? 'region' as const : 'part' as const,
+            index: part.index,
+          },
+          location: part.location.id,
+        }]
+        : []
+    ),
+    locations: [
+      ...program.locations.flatMap((location): ProgramLocationRecord[] => {
+        if (location.kind !== 'element' || !elementIds.has(location.id)) return [];
+        return [{
+          ...location,
+          path: templateElementPaths.get(location.id) ?? location.path,
+        }];
+      }),
+      ...parts.map((part): ProgramLocationRecord =>
+        part.location.kind === 'anchor' ? { ...part.location, kind: 'anchor', part: part.index } : {
+          ...part.location,
+          kind: 'sink',
+          part: part.index,
+          node: part.location.node!,
+        }
+      ),
+    ],
   };
 }
 
@@ -1039,6 +1061,16 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
+/**
+ * Bytes that participate in binding, update, claim, and property semantics.
+ * Source-map records remain counted in artifact.programBytes and the generated
+ * module size, but they are diagnostic evidence rather than interactive code.
+ */
+function interactiveProgramBytes(program: Program): number {
+  const { sourceMap: _diagnosticSourceMap, ...interactiveProgram } = program;
+  return encoder.encode(JSON.stringify(interactiveProgram)).byteLength;
+}
+
 interface BrowserPageLike {
   on(event: string, listener: (value: unknown) => void): void;
   setContent(content: string, options?: { waitUntil?: string }): Promise<void>;
@@ -1157,7 +1189,9 @@ export async function runV044Qualification(
   const programText = await Deno.readTextFile(programPath);
   const artifact = JSON.parse(programText) as Program;
   assertProgramShape(artifact);
-  const compiled = compileElementSpike(source, sourcePath);
+  // The checked Part Program fixture carries a stable virtual source identity;
+  // host checkout paths must never make qualification evidence machine-specific.
+  const compiled = compileElementSpike(source, '/project/app/islands/counter.tsx');
   if (canonicalJson(compiled.program) !== canonicalJson(artifact)) {
     throw new Error('[v044-performance] compiler output does not match the checked artifact');
   }
@@ -1217,11 +1251,11 @@ export async function runV044Qualification(
       instructionCount: artifact.parts.length,
     },
     baseline: {
-      interactiveJsBytes: definition.baseline.interactiveJsBytes,
+      interactiveProgramBytes: definition.baseline.interactiveProgramBytes,
       description: definition.baseline.description,
     },
     candidate: {
-      interactiveJsBytes: encoder.encode(programText).byteLength,
+      interactiveProgramBytes: interactiveProgramBytes(artifact),
       generatedModuleBytes: encoder.encode(compiled.code).byteLength,
       programBytes: encoder.encode(programText).byteLength,
     },

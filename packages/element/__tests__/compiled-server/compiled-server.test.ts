@@ -78,6 +78,13 @@ Deno.test('alpha.3 server serialization is one deterministic program across root
     '<oe-alpha3-card data-oe-light><input class="card" value="server &amp; safe"></oe-alpha3-card>',
   );
   assertEquals(
+    serializeCompiledProgram(PROGRAM, HOST, {
+      mode: 'light',
+      styleCss: '.card { color: rebeccapurple; }',
+    }),
+    '<oe-alpha3-card data-oe-light><style data-oe-static-styles>.card { color: rebeccapurple; }</style><input class="card" value="server &amp; safe"></oe-alpha3-card>',
+  );
+  assertEquals(
     serializeCompiledProgram(PROGRAM, HOST, { mode: 'open' }),
     '<oe-alpha3-card><template shadowrootmode="open"><input class="card" value="server &amp; safe"></template></oe-alpha3-card>',
   );
@@ -229,4 +236,34 @@ Deno.test('alpha.3 static-only server fixture needs no client signal artifact', 
   const program = JSON.parse(await Deno.readTextFile(STATIC_ONLY_PROGRAM_URL));
   const expected = (await Deno.readTextFile(STATIC_ONLY_EXPECTED_URL)).trimEnd();
   assertEquals(serializeProgramContent(program, {}), expected);
+});
+
+Deno.test('compiled server preserves structured custom-element property values for nested SSR', async () => {
+  const { serializeProgramContent } = await import(
+    '../../src/internal/compiled/server/index.ts'
+  );
+  const program = testProgram({
+    tag: 'oe-parent',
+    template: [{
+      k: 'el',
+      tag: 'oe-child',
+      attrs: [],
+      children: [],
+    }],
+    parts: [
+      { k: 'prop', index: 0, signal: 'model', name: 'model', path: [0] },
+      { k: 'prop', index: 1, signal: 'enabled', name: 'enabled', path: [0] },
+    ],
+  });
+  const signal = <T>(value: T) => ({ value, subscribe: () => () => {} });
+
+  assertEquals(
+    serializeProgramContent(program, {
+      signals: {
+        model: signal({ title: 'safe & exact', items: [1, 2] }),
+        enabled: signal(false),
+      },
+    }),
+    '<oe-child model="{&quot;title&quot;:&quot;safe &amp; exact&quot;,&quot;items&quot;:[1,2]}" enabled="false"></oe-child>',
+  );
 });

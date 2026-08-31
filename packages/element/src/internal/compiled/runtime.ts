@@ -1459,6 +1459,10 @@ function claimElementAttributes(
     const expected = new Set(node.attrs.map(([name]) => name));
     for (const name of dynamic) expected.add(name);
     for (const name of getNames.call(element)) {
+      if (
+        name.toLowerCase() === 'data-oe-light' && node.children.length === 0 &&
+        node.tag.includes('-') && element.getAttribute('data-oe-light') !== null
+      ) continue;
       if (!expected.has(name)) claimFailure(path, `unexpected attribute "${name}"`);
     }
   }
@@ -1600,19 +1604,25 @@ function claimNodes(
       // opaque to the claim (the program declares no structure inside it).
       const hasHtmlSink = fixedPartsAtPath(ctx, nodeProgramPath)
         .some((part) => part.k === 'html');
-      const consumed = hasHtmlSink ? dom.childNodes.length : claimNodes(
-        ctx,
-        dom,
-        0,
-        node.children,
-        `${nodePath}.children`,
-        nodeProgramPath,
-        scope,
-        item,
-        itemPart,
-        itemValueSlots,
-        itemAttrSlots,
-      );
+      const ownsExpandedSubtree = node.children.length === 0 && node.tag.includes('-') &&
+        dom.getAttribute('data-oe-light') !== null;
+      const ownsProjection = node.tag === 'slot' && node.children.length === 0 &&
+        dom.childNodes.length > 0;
+      const consumed = hasHtmlSink || ownsExpandedSubtree || ownsProjection
+        ? dom.childNodes.length
+        : claimNodes(
+          ctx,
+          dom,
+          0,
+          node.children,
+          `${nodePath}.children`,
+          nodeProgramPath,
+          scope,
+          item,
+          itemPart,
+          itemValueSlots,
+          itemAttrSlots,
+        );
       if (consumed !== dom.childNodes.length) {
         claimFailure(`${nodePath}.children`, 'unexpected trailing nodes');
       }

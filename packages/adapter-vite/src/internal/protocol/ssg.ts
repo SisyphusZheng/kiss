@@ -170,6 +170,16 @@ export interface IslandDecl {
   reason?: string;
 }
 
+/**
+ * Build-host-only compiled component reached through a route's local import
+ * graph. These components participate in recursive SSR/SSG expansion but are
+ * not client islands and therefore add no hydration or browser entry.
+ */
+export interface StaticComponentDecl {
+  tagName: string;
+  modulePath: string;
+}
+
 export interface SsrAdmissionPlan {
   renderableTags: string[];
   clientOnlyTags: string[];
@@ -234,6 +244,7 @@ export interface EntryDescriptor {
   fetchMiddleware?: string[];
   apiRoutes: ApiRouteDecl[];
   pageRoutes: PageRouteDecl[];
+  staticComponents: StaticComponentDecl[];
   islands: IslandDecl[];
   /**
    * True when any page route carries data-open-enhance forms (#569). Drives

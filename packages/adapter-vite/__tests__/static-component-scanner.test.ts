@@ -1,0 +1,86 @@
+import { assertEquals, assertRejects } from '@std/assert';
+import type { RouteEntry } from '../src/internal/protocol/framework.ts';
+import { scanStaticComponents } from '../src/internal/ssg/static-component-scanner.ts';
+
+async function write(root: string, path: string, source: string): Promise<void> {
+  const url = new URL(path, `file://${root}/`);
+  await Deno.mkdir(new URL('.', url), { recursive: true });
+  await Deno.writeTextFile(url, source);
+}
+
+const ROUTES: RouteEntry[] = [
+  { path: '/', filePath: 'index.tsx', type: 'page', varName: 'pageIndex' },
+];
+
+Deno.test('scanStaticComponents follows the local route graph deterministically', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'oe-static-components-' });
+  try {
+    await write(
+      root,
+      'app/routes/index.tsx',
+      `import '../components/article.tsx';\nimport '../islands/counter.tsx';\nexport default class Route extends OpenElement {}`,
+    );
+    await write(
+      root,
+      'app/components/article.tsx',
+      `import './reading-shell.tsx';\n@element('open-article-view')\nexport default class Article extends OpenElement {}`,
+    );
+    await write(
+      root,
+      'app/components/reading-shell.tsx',
+      `@element('open-reading-shell')\nexport default class ReadingShell extends OpenElement {}`,
+    );
+    await write(
+      root,
+      'app/islands/counter.tsx',
+      `@element('open-counter')\nexport default class Counter extends OpenElement {}`,
+    );
+
+    assertEquals(
+      await scanStaticComponents({
+        root,
+        routesDir: 'app/routes',
+        islandsDir: 'app/islands',
+        routes: ROUTES,
+      }),
+      [
+        { tagName: 'open-article-view', modulePath: '/app/components/article.tsx' },
+        { tagName: 'open-reading-shell', modulePath: '/app/components/reading-shell.tsx' },
+      ],
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('scanStaticComponents fails closed on duplicate reachable tags', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'oe-static-components-duplicate-' });
+  try {
+    await write(
+      root,
+      'app/routes/index.tsx',
+      `export * from '../components/first.tsx';\nexport * from '../components/second.tsx';`,
+    );
+    for (const file of ['first', 'second']) {
+      await write(
+        root,
+        `app/components/${file}.tsx`,
+        `@element('open-duplicate')\nexport default class Duplicate extends OpenElement {}`,
+      );
+    }
+
+    await assertRejects(
+      () =>
+        scanStaticComponents({
+          root,
+          routesDir: 'app/routes',
+          islandsDir: 'app/islands',
+          routes: ROUTES,
+        }),
+      Error,
+      'declared by both',
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});

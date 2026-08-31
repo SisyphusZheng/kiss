@@ -26,7 +26,7 @@ import type {
   OpenElementPackageManifest,
   RouteEntry,
 } from '../internal/protocol/framework.ts';
-import type { EntryDescriptor, IslandDecl } from '../internal/protocol/ssg.ts';
+import type { EntryDescriptor, IslandDecl, StaticComponentDecl } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import {
   buildEntryDescriptor,
@@ -35,6 +35,7 @@ import {
   scanIslandMeta,
   scanIslands,
   scanRoutes,
+  scanStaticComponents,
   ssgRender,
 } from '../internal/ssg/index.ts';
 import { normalizeSeparators, SsrRenderError } from '@openelement/element/build-utils';
@@ -78,6 +79,7 @@ interface BuildSSGOptions {
   routes?: RouteEntry[];
   islandFiles?: string[];
   islandMeta?: Record<string, Partial<import('../internal/protocol/ssg.ts').IslandDecl>>;
+  staticComponents?: StaticComponentDecl[];
   packageManifests?: OpenElementPackageManifest[];
   /** CEM-derived compatibility classifications from Phase 1 auto-detection. */
   cemClassifications?: CompatibilityClassification[];
@@ -127,6 +129,7 @@ interface SsgEntryDescriptorInputs {
   islandTagNames: string[];
   islandFiles: string[];
   islandMeta: Record<string, Partial<IslandDecl>>;
+  staticComponents: StaticComponentDecl[];
   packageManifests: OpenElementPackageManifest[];
   cemClassifications: CompatibilityClassification[];
   /** #979: foreign WC tags from the Phase 1 scan (defaults to none). */
@@ -166,6 +169,7 @@ export function buildSsgEntryDescriptor(
     islandTagNames: inputs.islandTagNames,
     islandFiles: inputs.islandFiles,
     islandMeta: inputs.islandMeta,
+    staticComponents: inputs.staticComponents,
     packageManifests: inputs.packageManifests,
     cemClassifications: inputs.cemClassifications,
     foreignTags: inputs.foreignTags || [],
@@ -232,6 +236,12 @@ async function buildSSG(
   // Generate SSG entry code (all statically imported — no cycle with the
   // internal/ssg barrel, #847).
   const routes = options.routes ?? await scanRoutes(routesDir);
+  const staticComponents = options.staticComponents ?? await scanStaticComponents({
+    root,
+    routesDir,
+    islandsDir,
+    routes,
+  });
 
   const islandsRoot = join(root, islandsDir);
   const ssgIslandFiles = options.islandFiles ?? await scanIslands(islandsRoot);
@@ -255,6 +265,7 @@ async function buildSSG(
     islandTagNames: ssgIslandTagNames,
     islandFiles: ssgIslandFiles,
     islandMeta: ssgIslandMeta,
+    staticComponents,
     packageManifests,
     cemClassifications: options.cemClassifications || ctx.phase1.cemClassifications || [],
     // #979: foreign tags come from the same Phase 1 scan so the SSG plan

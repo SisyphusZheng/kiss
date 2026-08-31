@@ -686,3 +686,58 @@ Deno.test('alpha.3 claim preserves nested custom-element node identity without e
   claimed.dispose();
   assert(true);
 });
+
+Deno.test('claim leaves an independently SSG-expanded empty custom host to its own program', () => {
+  const program = testProgram({
+    tag: 'oe-parent',
+    template: [{
+      k: 'el',
+      tag: 'x-child',
+      attrs: [['model', '{"title":"Nested"}']],
+      children: [],
+    }],
+    parts: [],
+  });
+  const doc = new TestDocument();
+  const root = element(doc, 'host');
+  const child = element(doc, 'x-child', [
+    ['model', '{"title":"Nested"}'],
+    ['data-oe-light', ''],
+  ]);
+  child.appendChild(element(doc, 'style', [['data-oe-static-styles', '']]));
+  const heading = element(doc, 'h1');
+  heading.appendChild(doc.createTextNode('Nested'));
+  child.appendChild(heading);
+  root.appendChild(child);
+
+  const claimed = claimExistingDom(program, { signals: {}, handlers: {} }, root as unknown as Node);
+  assertStrictEquals(root.childNodes[0], child);
+  assertStrictEquals(child.childNodes[1], heading);
+  claimed.dispose();
+});
+
+Deno.test('claim preserves externally projected route content inside an empty slot', () => {
+  const program = testProgram({
+    tag: 'oe-shell',
+    template: [{
+      k: 'el',
+      tag: 'main',
+      attrs: [],
+      children: [{ k: 'el', tag: 'slot', attrs: [], children: [] }],
+    }],
+    parts: [],
+  });
+  const doc = new TestDocument();
+  const root = element(doc, 'host');
+  const main = element(doc, 'main');
+  const slot = element(doc, 'slot');
+  const route = element(doc, 'page-home', [['data-oe-light', '']]);
+  route.appendChild(element(doc, 'article'));
+  slot.appendChild(route);
+  main.appendChild(slot);
+  root.appendChild(main);
+
+  const claimed = claimExistingDom(program, { signals: {}, handlers: {} }, root as unknown as Node);
+  assertStrictEquals((main.childNodes[0] as TestElement).childNodes[0], route);
+  claimed.dispose();
+});

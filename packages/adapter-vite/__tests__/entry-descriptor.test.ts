@@ -118,6 +118,35 @@ Deno.test('buildEntryDescriptor: route import paths include routesDir', () => {
   assertEquals(desc.pageRoutes[0].importPath, '/app/routes/index.ts');
 });
 
+Deno.test('buildEntryDescriptor: static components are explicit and rendered into the SSR entry', () => {
+  const desc = buildEntryDescriptor(sampleRoutes, {
+    staticComponents: [
+      { tagName: 'open-article-view', modulePath: '/app/components/article.tsx' },
+    ],
+  });
+  const code = renderEntry(desc);
+
+  assertEquals(desc.staticComponents, [
+    { tagName: 'open-article-view', modulePath: '/app/components/article.tsx' },
+  ]);
+  assertStringIncludes(code, 'import * as __static_component_0 from "/app/components/article.tsx"');
+  assertStringIncludes(
+    code,
+    '__registerSsrComponent("open-article-view", __static_component_0.default)',
+  );
+  assertStringIncludes(
+    code,
+    '!candidate.computed && (candidate.name === match[1] || candidate.attribute === match[1])',
+  );
+  assertStringIncludes(code, 'return __expandNestedHosts(out.html, sourceInfo, __depth, tag)');
+  assertStringIncludes(code, 'out.replace(__nestedShellPattern(tag)');
+  assertStringIncludes(code, '([\\\\s\\\\S]*?)');
+  assertStringIncludes(code, 'data-oe-light');
+  assertStringIncludes(code, 'inner.trimStart().startsWith("<template shadowrootmode=")');
+  assertEquals(code.includes('const __nestedShells ='), false);
+  assertStringIncludes(code, '"open-article-view"');
+});
+
 // renderEntry tests
 
 Deno.test('renderEntry: produces valid module code', () => {

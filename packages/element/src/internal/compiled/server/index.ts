@@ -386,7 +386,25 @@ function serializeElement(
     if (serialized !== '') attrs.push(serializeAttribute('style', serialized));
   }
   for (const part of ctx.propPartsByPath.get(key) ?? []) {
-    attrs.push(serializeAttribute(part.name, String(signalOf(ctx.host, part.signal).value)));
+    const value = signalOf(ctx.host, part.signal).value;
+    let serialized: string;
+    if (node.tag.includes('-') && typeof value !== 'string') {
+      try {
+        const encoded = JSON.stringify(value);
+        if (encoded === undefined) {
+          throw new TypeError('value has no JSON representation');
+        }
+        serialized = encoded;
+      } catch (error) {
+        throw new CompiledProgramValidationError(
+          `template[${programPath.join('][')}].${part.name}`,
+          `custom-element property value must be JSON-serializable (${String(error)})`,
+        );
+      }
+    } else {
+      serialized = String(value);
+    }
+    attrs.push(serializeAttribute(part.name, serialized));
   }
   const open = `<${node.tag}${attrs.join('')}`;
   if (voidElement(node.tag)) return `${open}>`;
@@ -482,8 +500,6 @@ export function serializeCompiledProgram(
   }
   const content = serializeNodes(ctx, program.template, []);
   const hostAttrs = serializeHostAttributes(options.hostAttrs, mode);
-  if (mode === 'light') return `<${program.tag}${hostAttrs}>${content}</${program.tag}>`;
-  const dsdAttrs = serializeDsdAttributes(options.dsd);
   const styleCss = options.styleCss ?? '';
   if (/<\/style/i.test(styleCss)) {
     throw new CompiledProgramValidationError(
@@ -492,6 +508,10 @@ export function serializeCompiledProgram(
     );
   }
   const styleElement = styleCss ? `<style ${STATIC_STYLES_MARKER}>${styleCss}</style>` : '';
+  if (mode === 'light') {
+    return `<${program.tag}${hostAttrs}>${styleElement}${content}</${program.tag}>`;
+  }
+  const dsdAttrs = serializeDsdAttributes(options.dsd);
   return `<${program.tag}${hostAttrs}><template shadowrootmode="${mode}"${dsdAttrs}>${styleElement}${content}</template></${program.tag}>`;
 }
 

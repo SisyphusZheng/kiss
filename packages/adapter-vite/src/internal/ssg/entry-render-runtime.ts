@@ -69,7 +69,16 @@ export function renderRuntimeHelpers(
   );
   lines.push('  }');
   lines.push('  const out = renderDsd(tag, { componentClass: Cls, props, sourceInfo })');
-  lines.push('  return __expandNestedHosts(out.html, sourceInfo, __depth)');
+  lines.push('  return __expandNestedHosts(out.html, sourceInfo, __depth, tag)');
+  lines.push('}');
+  lines.push('');
+
+  lines.push('function __localizeShellHref(href, locale, defaultLocale) {');
+  lines.push(
+    '  if (typeof href !== "string" || locale === defaultLocale || !href.startsWith("/") || href.startsWith("//")) return href',
+  );
+  lines.push('  if (href === "/" + locale || href.startsWith("/" + locale + "/")) return href');
+  lines.push('  return "/" + locale + (href === "/" ? "" : href)');
   lines.push('}');
   lines.push('');
 
@@ -87,11 +96,11 @@ export function renderRuntimeHelpers(
   lines.push(
     `const __ssrRenderableTags = ${quoteGeneratedJavaScriptValue([...ssrRenderableTags])};`,
   );
-  lines.push('const __nestedShells = __ssrRenderableTags.map((tag) => [tag, new RegExp(');
+  lines.push('function __nestedShellPattern(tag) { return new RegExp(');
   lines.push(
-    '  "<" + tag + "((?: [A-Za-z_:][-A-Za-z0-9_.:]*(?:=\\"[^\\"]*\\")?)*)>([\\s\\S]*?)</" + tag + ">", "g"',
+    '  "<" + tag + "((?: [A-Za-z_:][-A-Za-z0-9_.:]*(?:=\\"[^\\"]*\\")?)*)>([\\\\s\\\\S]*?)</" + tag + ">", "g"',
   );
-  lines.push(')]);');
+  lines.push(')}');
   lines.push('function __unescapeAttr(value) {');
   lines.push('  return value');
   lines.push('    .replaceAll("&#39;", "\'")');
@@ -100,9 +109,24 @@ export function renderRuntimeHelpers(
   lines.push('    .replaceAll("&gt;", ">")');
   lines.push('    .replaceAll("&amp;", "&");');
   lines.push('}');
-  lines.push("// Map a serialized shell's attributes onto the island's compiled");
+  lines.push('function __coerceNestedProp(tag, record, raw) {');
+  lines.push('  if (record.converter === "boolean") return raw === "" || raw === "true"');
+  lines.push('  if (record.converter === "number") {');
+  lines.push('    const value = Number(raw);');
+  lines.push('    return Number.isNaN(value) ? 0 : value;');
+  lines.push('  }');
+  lines.push('  if (record.converter === "array" || record.converter === "object") {');
+  lines.push('    try { return JSON.parse(raw); } catch {');
+  lines.push(
+    '      throw new Error("[openElement] <" + tag + "> property \\"" + record.name + "\\" is not valid JSON");',
+  );
+  lines.push('    }');
+  lines.push('  }');
+  lines.push('  return raw');
+  lines.push('}');
+  lines.push("// Map a serialized shell's attributes onto the component's compiled");
   lines.push('// properties (attribute name -> property record). An attribute that');
-  lines.push('// is not a compiled property of the island fails closed: dropping it');
+  lines.push('// is not a compiled property of the component fails closed: dropping it');
   lines.push('// silently would desync the client claim from the server render.');
   lines.push('function __propsFromAttrs(tag, attrText) {');
   lines.push('  const Cls = customElements.get(tag)');
@@ -111,36 +135,142 @@ export function renderRuntimeHelpers(
   lines.push('  const attrRe = /([A-Za-z_:][-A-Za-z0-9_.:]*)(?:="([^"]*)")?/g');
   lines.push('  let match');
   lines.push('  while ((match = attrRe.exec(attrText)) !== null) {');
-  lines.push('    const record = records.find((candidate) => candidate.attribute === match[1])');
+  lines.push(
+    '    const record = records.find((candidate) => !candidate.computed && (candidate.name === match[1] || candidate.attribute === match[1]))',
+  );
   lines.push('    if (!record) {');
   lines.push(
-    '      throw new Error("[openElement] <" + tag + "> SSR expansion received attribute \\"" + match[1] + "\\" that is not a compiled property of the island. Move per-instance data into @property fields or mark the island client-only.")',
+    '      throw new Error("[openElement] <" + tag + "> SSR expansion received attribute \\"" + match[1] + "\\" that is not a compiled property of the component. Move per-instance data into @property fields or mark the component client-only.")',
   );
   lines.push('    }');
-  lines.push('    props[record.name] = match[2] === undefined');
-  lines.push('      ? (record.converter === "boolean" ? true : "")');
-  lines.push('      : __unescapeAttr(match[2])');
+  lines.push('    const raw = match[2] === undefined ? "" : __unescapeAttr(match[2])');
+  lines.push('    props[record.name] = __coerceNestedProp(tag, record, raw)');
   lines.push('  }');
   lines.push('  return props');
   lines.push('}');
-  lines.push('function __expandNestedHosts(html, sourceInfo, __depth) {');
-  lines.push('  let out = html');
-  lines.push('  for (const entry of __nestedShells) {');
-  lines.push('    out = out.replace(entry[1], (_match, attrText, inner) => {');
+  // A compiled light-root component uses <slot> as its explicit projection
+  // boundary, but native slot assignment only exists in shadow roots. Split
+  // the serialized direct children and place them inside the matching slot
+  // elements so static nested components preserve the same visible tree and
+  // claim boundary as the top-level app shell.
+  lines.push('function __lightChildNodes(html) {');
+  lines.push('  const nodes = []');
+  lines.push('  let start = 0');
+  lines.push('  let index = 0');
+  lines.push('  let depth = 0');
+  lines.push('  while (index < html.length) {');
+  lines.push('    const open = html.indexOf("<", index)');
+  lines.push('    if (open === -1) break');
   lines.push(
-    '      const rendered = __ssr(entry[0], __propsFromAttrs(entry[0], attrText || ""), sourceInfo, __depth + 1);',
+    '    if (depth === 0 && open > start) { nodes.push(html.slice(start, open)); start = open; }',
   );
-  lines.push('      const closing = "</" + entry[0] + ">";');
+  lines.push('    if (html.startsWith("<!--", open)) {');
+  lines.push('      const end = html.indexOf("-->", open + 4)');
+  lines.push(
+    '      if (end === -1) throw new Error("[openElement] unterminated comment in nested light content")',
+  );
+  lines.push('      index = end + 3');
+  lines.push('      if (depth === 0) { nodes.push(html.slice(start, index)); start = index; }');
+  lines.push('      continue');
+  lines.push('    }');
+  lines.push('    let end = open + 1');
+  lines.push('    let quote = ""');
+  lines.push('    for (; end < html.length; end++) {');
+  lines.push('      const char = html[end]');
+  lines.push('      if (quote) { if (char === quote) quote = ""; continue; }');
+  lines.push('      if (char === "\\"" || char === "\u0027") { quote = char; continue; }');
+  lines.push('      if (char === ">") break');
+  lines.push('    }');
+  lines.push(
+    '    if (end >= html.length) throw new Error("[openElement] unterminated tag in nested light content")',
+  );
+  lines.push('    const token = html.slice(open, end + 1)');
+  lines.push('    const closing = /^<\\//.test(token)');
+  lines.push('    const declaration = /^<!|^<\\?/.test(token)');
+  lines.push(
+    '    const voidTag = /^<(?:area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)(?: |\\/?>)/i.test(token)',
+  );
+  lines.push('    const selfClosing = /\\/>$/.test(token)');
+  lines.push('    if (closing) depth = Math.max(0, depth - 1)');
+  lines.push('    else if (!declaration && !voidTag && !selfClosing) depth++');
+  lines.push('    index = end + 1');
+  lines.push('    if (depth === 0) { nodes.push(html.slice(start, index)); start = index; }');
+  lines.push('  }');
+  lines.push('  if (start < html.length) nodes.push(html.slice(start))');
+  lines.push('  return nodes');
+  lines.push('}');
+  lines.push('function __lightChildSlot(node) {');
+  lines.push('  if (!node.startsWith("<") || node.startsWith("<!--")) return ""');
+  lines.push('  const end = node.indexOf(">")');
+  lines.push('  if (end === -1) return ""');
+  lines.push('  const match = /(?:^|\\s)slot="([^"]*)"/.exec(node.slice(0, end + 1))');
+  lines.push('  return match ? __unescapeAttr(match[1]) : ""');
+  lines.push('}');
+  lines.push('function __projectLightChildren(rendered, closing, inner) {');
+  lines.push('  const assigned = new Map()');
+  lines.push('  for (const node of __lightChildNodes(inner)) {');
+  lines.push('    const name = __lightChildSlot(node)');
+  lines.push('    assigned.set(name, (assigned.get(name) || "") + node)');
+  lines.push('  }');
+  lines.push('  const consumed = new Set()');
+  lines.push('  const body = rendered.slice(0, -closing.length).replace(');
+  lines.push('    /<slot((?: [A-Za-z_:][-A-Za-z0-9_.:]*(?:="[^"]*")?)*)>([\\s\\S]*?)<\\/slot>/g,');
+  lines.push('    (_slot, attrs, fallback) => {');
+  lines.push('      const match = /(?:^|\\s)name="([^"]*)"/.exec(attrs || "")');
+  lines.push('      const name = match ? __unescapeAttr(match[1]) : ""');
+  lines.push('      const projected = consumed.has(name) ? "" : assigned.get(name)');
+  lines.push('      consumed.add(name)');
+  lines.push(
+    '      return "<slot" + attrs + ">" + (projected === undefined ? fallback : projected) + "</slot>"',
+  );
+  lines.push('    },');
+  lines.push('  )');
+  lines.push('  for (const [name, value] of assigned) {');
+  lines.push('    if (!consumed.has(name) && (name || value.trim())) {');
+  lines.push(
+    '      throw new Error("[openElement] nested light content targets missing slot " + JSON.stringify(name || "default"))',
+  );
+  lines.push('    }');
+  lines.push('  }');
+  lines.push('  return body + closing');
+  lines.push('}');
+  lines.push('function __expandNestedContent(html, sourceInfo, __depth) {');
+  lines.push('  let out = html');
+  lines.push('  for (const tag of __ssrRenderableTags) {');
+  lines.push('    out = out.replace(__nestedShellPattern(tag), (_match, attrText, inner) => {');
+  lines.push(
+    '      if (/(?:^| )data-oe-light(?:=| |$)/.test(attrText || "") || inner.trimStart().startsWith("<template shadowrootmode=")) return _match',
+  );
+  lines.push(
+    '      const rendered = __ssr(tag, __propsFromAttrs(tag, attrText || ""), sourceInfo, __depth + 1);',
+  );
+  lines.push('      const closing = "</" + tag + ">";');
   lines.push('      if (!rendered.endsWith(closing)) {');
   lines.push(
-    '        throw new Error("[openElement] nested expansion of <" + entry[0] + "> did not produce a host document; the island must render its own host tag.")',
+    '        throw new Error("[openElement] nested expansion of <" + tag + "> did not produce a host document; the component must render its own host tag.")',
   );
   lines.push('      }');
   lines.push('      if (!inner) return rendered;');
+  lines.push(
+    '      if (/(?:^| )data-oe-light(?:=| |>|$)/.test(rendered.slice(0, rendered.indexOf(">") + 1))) return __projectLightChildren(rendered, closing, inner);',
+  );
   lines.push('      return rendered.slice(0, -closing.length) + inner + closing;');
   lines.push('    });');
   lines.push('  }');
   lines.push('  return out');
+  lines.push('}');
+  lines.push('function __expandNestedHosts(html, sourceInfo, __depth, rootTag) {');
+  lines.push('  const closing = "</" + rootTag + ">"');
+  lines.push('  const openEnd = html.indexOf(">")');
+  lines.push('  if (!html.startsWith("<" + rootTag) || openEnd < 0 || !html.endsWith(closing)) {');
+  lines.push(
+    '    throw new Error("[openElement] SSR output for <" + rootTag + "> is not a complete host document")',
+  );
+  lines.push('  }');
+  lines.push('  const inner = html.slice(openEnd + 1, -closing.length)');
+  lines.push(
+    '  return html.slice(0, openEnd + 1) + __expandNestedContent(inner, sourceInfo, __depth) + closing',
+  );
   lines.push('}');
   lines.push('');
 
@@ -335,11 +465,11 @@ export function renderRuntimeHelpers(
   lines.push('');
 
   // The app-shell composition renders nested custom-element hosts per the
-  // layout contract: the page renders as its own host element and the shell
-  // renders around it (<shell-tag><page-tag/></shell-tag> composition) — the
-  // page HTML is injected before the shell's closing tag. Both sides render
-  // through __ssr, so nested admitted islands inside either expand
-  // deterministically.
+  // layout contract: the page renders as its own host element and is projected
+  // into the shell's first empty <slot>. This keeps light-root shells honest:
+  // route content remains inside the declared layout-main boundary, while the
+  // slot is the explicit external-content claim boundary. Both sides render
+  // through __ssr, so nested admitted islands expand deterministically.
   lines.push('function __renderAppShell(pageHtml, routePath, options = {}) {');
   lines.push('  const defaultLocale = __getDefaultLocale();');
   lines.push('  const locale = options.locale || __localeFromPath(routePath, defaultLocale);');
@@ -353,16 +483,25 @@ export function renderRuntimeHelpers(
   lines.push('    locale,');
   lines.push('    locales: __locales,');
   lines.push('    navItems: __navSections,');
-  lines.push('    headerNav: __headerNav,');
+  lines.push(
+    '    headerNav: __headerNav.map((link) => ({ ...link, href: __localizeShellHref(link.href, locale, defaultLocale) })),',
+  );
+  lines.push('    homeHref: __localizeShellHref("/", locale, defaultLocale),');
   lines.push('    home: isHome || undefined,');
   lines.push('    routeMeta,');
   lines.push('    ...(shell.props || {}),');
   lines.push('  };');
   lines.push('  const layoutHtml = __ssr(shell.tagName, layoutProps, { route: routePath });');
-  lines.push('  const closingTag = "</" + shell.tagName + ">";');
-  lines.push('  const index = layoutHtml.lastIndexOf(closingTag);');
-  lines.push('  if (index === -1) return layoutHtml + content;');
-  lines.push('  return layoutHtml.slice(0, index) + content + layoutHtml.slice(index);');
+  lines.push('  const slot = "<slot></slot>";');
+  lines.push('  const index = layoutHtml.indexOf(slot);');
+  lines.push('  if (index === -1) {');
+  lines.push(
+    '    throw new Error("[adapter-vite:ssg] app shell <" + shell.tagName + "> must render an empty <slot></slot>");',
+  );
+  lines.push('  }');
+  lines.push(
+    '  return layoutHtml.slice(0, index) + "<slot>" + content + "</slot>" + layoutHtml.slice(index + slot.length);',
+  );
   lines.push('}');
 
   return lines.join('\n');

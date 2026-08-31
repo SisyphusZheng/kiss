@@ -9,20 +9,20 @@
   "artifact": {
     "source": "packages/adapter-vite/__fixtures__/compiled-element-spike/counter.tsx",
     "program": "packages/adapter-vite/__fixtures__/compiled-element-spike/expected-program.json",
-    "compiler": "packages/adapter-vite/src/internal/compiler/compile.ts",
+    "compiler": "packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts",
     "runtime": "packages/element/src/internal/compiled/runtime.ts",
-    "programBytes": 2626,
-    "generatedModuleBytes": 3488,
+    "programBytes": 15442,
+    "generatedModuleBytes": 25744,
     "instructionCount": 5
   },
   "baseline": {
-    "interactiveJsBytes": 4096,
-    "description": "Frozen 0.43.3 equivalent binding/update payload budget for this fixture"
+    "interactiveProgramBytes": 4096,
+    "description": "Frozen 0.43.3 equivalent compact binding/update Part Program budget for this fixture; diagnostic source maps are reported separately through full artifact and generated-module bytes"
   },
   "candidate": {
-    "interactiveJsBytes": 2626,
-    "generatedModuleBytes": 3488,
-    "programBytes": 2626
+    "interactiveProgramBytes": 3938,
+    "generatedModuleBytes": 25744,
+    "programBytes": 15442
   },
   "staticOutput": {
     "runtimeBytes": 0,

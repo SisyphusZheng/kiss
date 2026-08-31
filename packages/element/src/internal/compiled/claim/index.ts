@@ -370,6 +370,15 @@ function attributeNames(element: Element): string[] | null {
   return names;
 }
 
+function isExpandedNestedLightHost(element: Element, node: SpikeElementNode): boolean {
+  return node.children.length === 0 && node.tag.includes('-') &&
+    element.getAttribute('data-oe-light') !== null;
+}
+
+function isExternalProjectionBoundary(element: Element, node: SpikeElementNode): boolean {
+  return node.tag === 'slot' && node.children.length === 0 && childrenLength(element) > 0;
+}
+
 function verifyAttributes(
   element: Element,
   node: SpikeElementNode,
@@ -388,6 +397,9 @@ function verifyAttributes(
   const actualNames = attributeNames(element);
   if (!actualNames) return;
   for (const actual of actualNames) {
+    if (actual.toLowerCase() === 'data-oe-light' && isExpandedNestedLightHost(element, node)) {
+      continue;
+    }
     if (!expectedNames.has(actual.toLowerCase())) {
       claimFailure(path, `unexpected attribute "${actual}"`, owner);
     }
@@ -722,7 +734,13 @@ function scanChildren(
         part.k === 'html' && part.path.length === nodeProgramPath.length &&
         part.path.every((value, index) => value === nodeProgramPath[index])
       );
-      const consumed = hasHtmlSink ? childrenLength(dom) : scanChildren(
+      // A nested light-root component expanded by SSG owns the subtree that
+      // its own Part Program will claim. The parent still verifies the host
+      // tag and every attribute it authored, but an originally-empty custom
+      // host is opaque once the server marks it as independently rendered.
+      const ownsExpandedSubtree = isExpandedNestedLightHost(dom, node) ||
+        isExternalProjectionBoundary(dom, node);
+      const consumed = hasHtmlSink || ownsExpandedSubtree ? childrenLength(dom) : scanChildren(
         program,
         host,
         dom,

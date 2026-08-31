@@ -109,10 +109,12 @@ export function evaluateV044Performance(
   if (report.staticOutput.scriptTags !== 0) {
     failures.push(`static output contains ${report.staticOutput.scriptTags} script tag(s)`);
   }
-  if (report.candidate.interactiveJsBytes >= report.baseline.interactiveJsBytes) {
+  if (
+    report.candidate.interactiveProgramBytes >= report.baseline.interactiveProgramBytes
+  ) {
     failures.push(
-      `interactive JS payload did not improve: candidate=${report.candidate.interactiveJsBytes}B ` +
-        `baseline=${report.baseline.interactiveJsBytes}B`,
+      `interactive Part Program payload did not improve: candidate=${report.candidate.interactiveProgramBytes}B ` +
+        `baseline=${report.baseline.interactiveProgramBytes}B`,
     );
   }
   if (report.resources.maxHeapGrowthBytes > budgets.maxHeapGrowthBytes) {

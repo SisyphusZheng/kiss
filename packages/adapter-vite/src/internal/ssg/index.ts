@@ -45,6 +45,7 @@ export type {
   SsgRenderSummary,
   SsrAdmissionPlan,
   SsrBundle,
+  StaticComponentDecl,
 } from '../protocol/ssg.ts';
 export { ssgRender } from './ssg-render.ts';
 
@@ -84,6 +85,9 @@ export {
   scanForeignTags,
 } from './foreign-tag-scanner.ts';
 export type { ScanForeignTagsOptions } from './foreign-tag-scanner.ts';
+
+export { scanStaticComponents } from './static-component-scanner.ts';
+export type { ScanStaticComponentsOptions } from './static-component-scanner.ts';
 
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-descriptor.ts';
 

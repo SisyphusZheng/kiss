@@ -10,7 +10,7 @@
  * Packages can export an `islands` array in their main entry.
  *
  * Convention (minimal augmentation):
- * - _renderer.ts: exports a renderer that wraps route VNodes
+ * - _renderer.ts: exports a server wrapper around rendered route HTML
  * - _middleware.ts: exports a Hono middleware function applied before the route
  * - Files starting with _ are not route handlers but are loaded by the framework
  *
@@ -34,9 +34,10 @@
  *      node_modules packages WITHOUT importing package code
  *    - Results fed into the compatibility classifier (parseCem + classifyCemManifest)
  *
- * 4. Nested custom elements (from the VNode tree):
+ * 4. Nested compiled custom elements:
  *    - NOT handled in this file
- *    - See: `packages/element/src/internal/core/render-ir.ts` and `renderDsdTree()`
+ *    - Static component discovery is owned by `static-component-scanner.ts`;
+ *      recursive expansion is owned by the generated SSG render runtime.
  *
  * ─── v0.41.0-alpha.1: AST removed ────────────────────────────
  *

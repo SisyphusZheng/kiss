@@ -56,6 +56,7 @@ import {
   scanIslands,
   scanPackageManifests,
   scanRoutes,
+  scanStaticComponents,
 } from './internal/ssg/index.ts';
 import { buildPackageIslandDecls } from './internal/ssg/island-scanner.ts';
 import { resolveIslandDeliveryTags } from './internal/ssg/delivery.ts';
@@ -213,6 +214,7 @@ export function createOpenPlugin(
       islandTagNames,
       islandFiles,
       islandMeta: ctx.phase1.islandMeta,
+      staticComponents: ctx.phase1.staticComponents,
       packageManifests,
       cemClassifications: ctx.phase1.cemClassifications,
       foreignTags: ctx.phase1.foreignTags,
@@ -252,6 +254,12 @@ export function createOpenPlugin(
   async function rescanRoutes(): Promise<void> {
     const routes = await scanRoutes(resolvedOptions.routesDir!);
     ctx.phase1.cachedRoutes = routes;
+    ctx.phase1.staticComponents = await scanStaticComponents({
+      root: process.cwd(),
+      routesDir: resolvedOptions.routesDir!,
+      islandsDir: resolvedOptions.islandsDir || DEFAULT_ISLANDS_DIR,
+      routes,
+    });
     if (resolvedOptions.mode === 'spa') return;
     generateEntry(
       routes,
@@ -406,6 +414,12 @@ export function createOpenPlugin(
 
       try {
         const routes = await scanRoutes(resolvedOptions.routesDir!);
+        ctx.phase1.staticComponents = await scanStaticComponents({
+          root: process.cwd(),
+          routesDir: resolvedOptions.routesDir!,
+          islandsDir: resolvedOptions.islandsDir || DEFAULT_ISLANDS_DIR,
+          routes,
+        });
 
         const islandsRoot = join(
           process.cwd(),

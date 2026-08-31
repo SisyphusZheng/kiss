@@ -81,7 +81,7 @@ Deno.test('compiled kernel keeps light-DOM styles outside the claimed template',
   assertEquals(document.head.childNodes.length, 1);
   assertEquals(
     (document.head.childNodes[0] as unknown as { textContent: string }).textContent,
-    'oe-light-test { color: red; }',
+    '@scope (oe-kernel-test) {\noe-light-test { color: red; }\n}',
   );
   assertEquals(element.childNodes.length, 1);
   kernel.disconnect();

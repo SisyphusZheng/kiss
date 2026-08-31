@@ -34,6 +34,7 @@ import type {
   BuildPlan,
   IslandDecl,
   SsrAdmissionPlan,
+  StaticComponentDecl,
 } from './internal/protocol/ssg.ts';
 import {
   DEFAULT_COMPONENTS_DIR,
@@ -47,6 +48,9 @@ export type Phase = 1 | 2 | 3;
 class Phase1Meta {
   /** Cached routes from buildStart() for virtual entry regeneration */
   cachedRoutes: RouteEntry[] = [];
+
+  /** Compiled non-island components reachable from local page imports. */
+  staticComponents: StaticComponentDecl[] = [];
 
   /** Island tag names discovered during route scanning (local islands) */
   islandTagNames: string[] = [];

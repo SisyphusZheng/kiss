@@ -346,7 +346,12 @@ Deno.test('renderEntry: app shell composes the page host through the compiled se
   assertStringIncludes(code, '"tagName": "open-layout"');
   assertStringIncludes(code, 'import * as __shell_0 from "@openelement/ui/open-layout";');
   assertStringIncludes(code, '__ssr(shell.tagName, layoutProps, { route: routePath })');
-  assertStringIncludes(code, 'layoutHtml.slice(0, index) + content + layoutHtml.slice(index)');
+  assertStringIncludes(code, 'const slot = "<slot></slot>"');
+  assertStringIncludes(code, 'must render an empty <slot></slot>');
+  assertStringIncludes(
+    code,
+    'layoutHtml.slice(0, index) + "<slot>" + content + "</slot>"',
+  );
 });
 
 Deno.test('renderEntry: unconfigured appShell defaults to false (no import)', () => {

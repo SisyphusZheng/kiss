@@ -1,4 +1,5 @@
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
+import { scopeCompiledLightCss } from './internal/compiled/style.ts';
 import { OpenElementThemeManager } from './open-element-theme.ts';
 
 /**
@@ -75,7 +76,14 @@ export class CompiledStyleScope {
     }
     const style = this.#lightStyle ?? document.createElement('style');
     style.setAttribute('data-open-element-compiled-style', '');
-    style.textContent = styleText(styles);
+    const globalStyles = themeManager.getStyles();
+    const componentStyles = styles.filter((sheet) => !globalStyles.includes(sheet));
+    const globalCss = styleText(globalStyles);
+    const componentCss = styleText(componentStyles);
+    style.textContent = [
+      globalCss,
+      componentCss ? scopeCompiledLightCss(root.tagName.toLowerCase(), componentCss) : '',
+    ].filter(Boolean).join('\n');
     if (style.parentNode !== parent) parent.appendChild(style);
     this.#lightStyle = style;
   }

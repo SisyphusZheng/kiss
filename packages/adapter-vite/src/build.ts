@@ -206,6 +206,7 @@ export function buildPlugin(
           islandFiles: ctx.phase1.islandFiles,
           islandTagNames: ctx.phase1.islandTagNames,
           islandMeta: ctx.phase1.islandMeta,
+          staticComponents: ctx.phase1.staticComponents,
           packageManifests: ctx.phase1.packageManifests,
           cemClassifications: ctx.phase1.cemClassifications,
           foreignTags: ctx.phase1.foreignTags,

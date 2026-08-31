@@ -9,6 +9,7 @@
  * compiled claim capture/replay seam.
  */
 import { serializeCompiledProgram } from './internal/compiled/server/index.ts';
+import { scopeCompiledLightCss } from './internal/compiled/style.ts';
 import type {
   CompiledElementMetadata,
   CompiledPropertyMetadata,
@@ -222,10 +223,13 @@ export function renderDsd(
     ? 'open'
     : 'closed';
   const host: CompiledProgramHost = { signals, handlers: {} };
+  const staticStyleCss = collectStaticStyleCss(resolvedClass);
   const html = serializeCompiledProgram(program, host, {
     mode,
     hostAttrs,
-    styleCss: collectStaticStyleCss(resolvedClass),
+    styleCss: mode === 'light' && staticStyleCss
+      ? scopeCompiledLightCss(tag, staticStyleCss)
+      : staticStyleCss,
   });
 
   return {

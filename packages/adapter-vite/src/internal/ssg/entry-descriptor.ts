@@ -12,6 +12,7 @@ import type {
   RendererDecl,
   ResolvedAppShell,
   SsrAdmissionPlan,
+  StaticComponentDecl,
 } from '../protocol/ssg.ts';
 import type {
   AppShellConfig,
@@ -78,6 +79,8 @@ export function buildEntryDescriptor(
     islandFiles?: string[];
     /** Local island metadata indexed by tag name. */
     islandMeta?: Record<string, Partial<IslandDecl>>;
+    /** Compiled non-island components reachable from local page imports. */
+    staticComponents?: StaticComponentDecl[];
     /** Package manifests discovered from npm/JSR packages */
     packageManifests?: OpenElementPackageManifest[];
     /** CEM-derived compatibility classifications (from compatibility classifier) */
@@ -331,6 +334,15 @@ export function buildEntryDescriptor(
     appShell: options.appShell,
     layouts: options.layouts,
   });
+  const reservedTags = new Set([
+    ...pageRoutes.map((route) => route.tagName),
+    ...islands.map((island) => island.tagName),
+    ...(appShell.default ? [appShell.default.tagName] : []),
+    ...Object.values(appShell.layouts).flatMap((shell) => shell ? [shell.tagName] : []),
+  ]);
+  const staticComponents = (options.staticComponents ?? []).filter((component) =>
+    !reservedTags.has(component.tagName)
+  );
 
   return {
     isSSG,
@@ -339,6 +351,7 @@ export function buildEntryDescriptor(
     ...(fetchMiddleware.length > 0 ? { fetchMiddleware } : {}),
     apiRoutes,
     pageRoutes,
+    staticComponents,
     islands,
     // #569: data-open-enhance forms need the client entry even with zero
     // islands; #951: the dev script injection keys on the same condition.

@@ -23,7 +23,9 @@ Deno.test('alpha.7 qualification covers the frozen v0.44 performance matrix', as
     'nested-real-app',
   ]);
   assertEquals(report.staticOutput.runtimeBytes, 0);
-  assert(report.candidate.interactiveJsBytes < report.baseline.interactiveJsBytes);
+  assert(
+    report.candidate.interactiveProgramBytes < report.baseline.interactiveProgramBytes,
+  );
   assert(report.resources.maxRetainedSubscriptions === 0);
   assert(report.resources.maxRetainedListeners === 0);
 });
