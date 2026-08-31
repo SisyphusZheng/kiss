@@ -9,8 +9,8 @@ import {
   openSearch,
   searchFromInput,
   uninstallSearch,
-} from './open-search-controller.ts';
-import { openSearchStyles } from './open-search-styles.ts';
+} from '../site-ui/open-search-controller.ts';
+import { openSearchStyles } from '../site-ui/open-search-styles.ts';
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 

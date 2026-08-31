@@ -2,8 +2,8 @@ import { assert, assertEquals, assertExists, assertStringIncludes } from '@std/a
 import { loadCollectionData } from '@openelement/adapter-vite';
 import { fileURLToPath } from 'node:url';
 import { articleCollections } from '../content-collections.ts';
+import { projectArticlePage } from '../app/site-ui/article-page-model.ts';
 
-const { ArticlePage } = await import('../app/site-ui/article-page.tsx');
 type ArticleCollection = keyof typeof articleCollections;
 type ArticleContentPage = {
   slug: string;
@@ -49,37 +49,31 @@ const articleRoutes = [
   ['architecture', 'standards-registry', 'StandardsRegistryPage', 80],
 ] as const;
 
-type ArticleRouteModule = {
-  default: typeof ArticlePage;
-  meta: { section: string; label: string; order: number };
-};
-
 for (const [collection, route, className, order] of articleRoutes) {
   Deno.test(`${collection}/${route} is a thin article shell`, async () => {
-    const mod =
-      (await import(`../app/routes/${collection}/${route}.tsx`)) as unknown as ArticleRouteModule;
-    const pageClass = mod.default;
-    assertExists(pageClass, `${collection}/${route} must default-export its page class`);
-    assertEquals(pageClass.name, className);
-    assert(
-      pageClass.prototype instanceof ArticlePage,
-      `${className} must extend the shared ArticlePage shell`,
+    const routeSource = await Deno.readTextFile(
+      new URL(`../app/routes/${collection}/${route}.tsx`, import.meta.url),
     );
-    assertExists(mod.meta?.label, `${collection}/${route} must keep its route meta`);
-    assertEquals(
-      mod.meta?.order,
-      order,
-      `${collection}/${route} nav order must match the frontmatter order`,
+    const adapterSource = await Deno.readTextFile(
+      new URL(`../app/components/article-routes/${collection}-${route}.tsx`, import.meta.url),
     );
-    assertEquals(
-      pageClass.article.collection,
-      collection,
-      `${className} must bind the ${collection} collection`,
+    assertStringIncludes(routeSource, 'export default definePage(');
+    assertStringIncludes(
+      routeSource,
+      `projectArticlePage('${collection}', '${route}', locale)`,
     );
-    assertEquals(
-      pageClass.article.slug,
-      route,
-      `${className} must bind the ${route} content slug`,
+    assertStringIncludes(routeSource, `order: ${order}`);
+    assertStringIncludes(adapterSource, `@element('${collection}-${route}')`);
+    assertStringIncludes(adapterSource, `class ${className} extends OpenElement`);
+    assertStringIncludes(adapterSource, '<open-article-view model={this.model}>');
+
+    const model = projectArticlePage(collection, route, 'en');
+    assertEquals(model.slug, route);
+    assert(model.metadata.title.length > 0, `${collection}/${route} must project article data`);
+    assertStringIncludes(
+      model.articleHtml,
+      '<h2',
+      `${collection}/${route} must project compiled article HTML`,
     );
   });
 }

@@ -20,7 +20,7 @@ test.describe('Search', () => {
     await page.waitForFunction(() => customElements.get('open-search'));
     await page.keyboard.press('Control+K');
     await page.locator('open-search').evaluate((el) => {
-      const input = el.shadowRoot?.querySelector('input') as HTMLInputElement | null;
+      const input = el.querySelector('input') as HTMLInputElement | null;
       input?.focus();
     });
     await page.keyboard.type('routing');
@@ -30,7 +30,7 @@ test.describe('Search', () => {
     });
 
     const href = await page.locator('open-search').evaluate((el) => {
-      const link = el.shadowRoot?.querySelector('.result') as HTMLAnchorElement | null;
+      const link = el.querySelector('.result') as HTMLAnchorElement | null;
       return link?.getAttribute('href') ?? null;
     });
     expect(href).toBeTruthy();
@@ -67,12 +67,12 @@ test.describe('Search', () => {
     await page.waitForFunction(() => customElements.get('open-search'));
 
     await page.locator('open-search').evaluate((el) => {
-      const button = el.shadowRoot?.querySelector('button');
+      const button = el.querySelector('button');
       button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
     });
 
     const overlay = await page.locator('open-search').evaluate((el) => {
-      const node = el.shadowRoot?.querySelector('.overlay');
+      const node = el.querySelector('.overlay');
       if (!node) return null;
       const rect = node.getBoundingClientRect();
       const style = getComputedStyle(node);
@@ -98,7 +98,7 @@ test.describe('Search', () => {
     await page.waitForFunction(() => customElements.get('open-search'));
 
     const text = await page.locator('open-search').evaluate((el) =>
-      el.shadowRoot?.querySelector('.results')?.textContent ?? ''
+      el.querySelector('.results')?.textContent ?? ''
     );
     expect(text).not.toContain('[object Object]');
     expect(text).toContain('Type at least 2 characters to search');
@@ -111,15 +111,15 @@ test.describe('Search', () => {
 
     const readPanelBackground = async () =>
       await page.locator('open-search').evaluate((el) => {
-        const button = el.shadowRoot?.querySelector('button');
+        const button = el.querySelector('button');
         button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-        const panel = el.shadowRoot?.querySelector('.panel');
+        const panel = el.querySelector('.panel');
         return panel ? getComputedStyle(panel).backgroundColor : '';
       });
 
     const darkBackground = await readPanelBackground();
     await page.locator('open-search').evaluate((el) => {
-      const overlay = el.shadowRoot?.querySelector('.overlay');
+      const overlay = el.querySelector('.overlay');
       overlay?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
     });
 
@@ -150,24 +150,24 @@ test.describe('Search', () => {
     await page.waitForFunction(() => customElements.get('open-search'));
 
     await page.locator('open-search').evaluate((el) => {
-      const button = el.shadowRoot?.querySelector('button');
+      const button = el.querySelector('button');
       button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
     });
 
     let overlay = await page.locator('open-search').evaluate((el) => {
-      const node = el.shadowRoot?.querySelector('.overlay');
-      return node?.classList.contains('open') ?? false;
+      const node = el.querySelector<HTMLElement>('.overlay');
+      return node ? !node.hidden : false;
     });
     expect(overlay).toBe(true);
 
     await page.locator('open-search').evaluate((el) => {
-      const node = el.shadowRoot?.querySelector('.overlay');
+      const node = el.querySelector('.overlay');
       node?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
     });
 
     overlay = await page.locator('open-search').evaluate((el) => {
-      const node = el.shadowRoot?.querySelector('.overlay');
-      return node?.classList.contains('open') ?? false;
+      const node = el.querySelector<HTMLElement>('.overlay');
+      return node ? !node.hidden : false;
     });
     expect(overlay).toBe(false);
   });

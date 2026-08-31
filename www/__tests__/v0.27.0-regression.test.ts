@@ -33,16 +33,20 @@ function readPage(path: string): string {
 
 // ─── Bug 1: Sidebar not missing ─────────────────────────────────────
 
-Deno.test('v0.27.0 regression: docs-sidebar is present in guide pages', () => {
+Deno.test('v0.44 regression: compiled reading shell and page rail are present in guide pages', () => {
   const html = readPage(DOCS_PAGE);
-  assertStringIncludes(html, 'docs-sidebar', 'Sidebar must be present in docs pages');
+  assertStringIncludes(html, '<open-reading-shell', 'Reading shell must be present');
+  assertStringIncludes(html, '<open-page-rail', 'Page rail must be present');
 });
 
 Deno.test('v0.27.0 regression: open-layout has DSD template', () => {
   const html = readPage(DOCS_PAGE);
-  // Count shadowrootmode attributes — layout should contribute at least 1
+  // The light-root app shell and static article chain must be expanded, while
+  // admitted shadow-root islands retain native DSD.
   const count = (html.match(/shadowrootmode="open"/g) || []).length;
-  assert(count >= 5, `Expected >= 5 DSD templates in docs page, got ${count}`);
+  assert(count >= 2, `Expected >= 2 DSD templates in docs page, got ${count}`);
+  assertStringIncludes(html, '<open-layout', 'App shell host must be present');
+  assertStringIncludes(html, 'data-oe-light', 'Compiled light roots must be expanded');
 });
 
 Deno.test('v0.27.0 regression: open-search is present in output', () => {
@@ -86,8 +90,8 @@ Deno.test('v0.27.0 regression: no <dialog> in rendered HTML', () => {
 
 // ─── API Surface: jsx NOT in root export ────────────────────────────
 
-Deno.test('alpha.10 surface: JSX is exported from @openelement/element root', () => {
-  const indexPath = join(
+Deno.test('v0.44 surface: JSX factories live only in the supported jsx-runtime subpath', () => {
+  const elementRoot = join(
     import.meta.dirname ?? '.',
     '..',
     '..',
@@ -96,10 +100,35 @@ Deno.test('alpha.10 surface: JSX is exported from @openelement/element root', ()
     'src',
     'index.ts',
   );
-  const src = Deno.readTextFileSync(indexPath);
-  for (const name of ['Fragment', 'jsx', 'jsxDEV', 'jsxs']) {
-    assert(src.includes(name), `${name} should be exported from Element root`);
+  const runtimePath = join(
+    import.meta.dirname ?? '.',
+    '..',
+    '..',
+    'packages',
+    'element',
+    'src',
+    'jsx-runtime.ts',
+  );
+  const devRuntimePath = join(
+    import.meta.dirname ?? '.',
+    '..',
+    '..',
+    'packages',
+    'element',
+    'src',
+    'jsx-dev-runtime.ts',
+  );
+  const rootSource = Deno.readTextFileSync(elementRoot);
+  const src = Deno.readTextFileSync(runtimePath);
+  const devSource = Deno.readTextFileSync(devRuntimePath);
+  for (const name of ['Fragment', 'jsx', 'jsxs']) {
+    assert(src.includes(name), `${name} should be exported from jsx-runtime`);
   }
+  assert(devSource.includes('jsxDEV'), 'jsxDEV should be exported from jsx-dev-runtime');
+  assertFalse(
+    rootSource.includes("from './jsx-runtime.ts'"),
+    'Element root must not re-export JSX',
+  );
 });
 
 // ─── parse5 not a dependency ─────────────────────────────────────────

@@ -17,8 +17,10 @@ export default class CinematicScroll extends OpenElement {
   override connectedCallback(): void {
     super.connectedCallback();
     const root = this.getRootNode();
-    if (!(root instanceof ShadowRoot)) return;
-    const film = root.querySelector<HTMLElement>('.cinematic-v2');
+    const scope: ShadowRoot | HTMLElement = root instanceof ShadowRoot
+      ? root
+      : this.parentElement ?? document.body;
+    const film = scope.querySelector<HTMLElement>('.cinematic-v2');
     if (!film) return;
     const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const update = () => {

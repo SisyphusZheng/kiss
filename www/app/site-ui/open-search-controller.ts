@@ -1,3 +1,4 @@
+/** Browser-only behavior used by the open-search island. */
 import { stripLocalePrefix } from '@openelement/site-ui/link.ts';
 
 interface PagefindResultData {
@@ -22,20 +23,20 @@ interface SearchState {
   keydown: (event: KeyboardEvent) => void;
 }
 
-type SearchHost = HTMLElement & { shadowRoot: ShadowRoot | null };
+type SearchHost = HTMLElement;
 
 const states = new WeakMap<SearchHost, SearchState>();
 
 function overlay(host: SearchHost): HTMLElement | null {
-  return host.shadowRoot?.querySelector<HTMLElement>('.overlay') ?? null;
+  return host.querySelector<HTMLElement>('.overlay');
 }
 
 function input(host: SearchHost): HTMLInputElement | null {
-  return host.shadowRoot?.querySelector<HTMLInputElement>('.search-input') ?? null;
+  return host.querySelector<HTMLInputElement>('.search-input');
 }
 
 function results(host: SearchHost): HTMLElement | null {
-  return host.shadowRoot?.querySelector<HTMLElement>('.results') ?? null;
+  return host.querySelector<HTMLElement>('.results');
 }
 
 function emptyResult(message: string): HTMLElement {

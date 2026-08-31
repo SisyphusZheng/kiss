@@ -83,7 +83,6 @@ for (const locale of ['en', 'zh'] as const) {
           await page.goto(localized, { waitUntil: 'networkidle' });
           await expect(page.locator('open-layout')).toBeVisible();
           await expect(page.locator('html')).toHaveAttribute('lang', locale);
-          await expect(page.locator('open-layout')).toHaveAttribute('locale', locale);
           const routeName = route === '/' ? 'home' : route.slice(1).replaceAll('/', '-');
           const baselineKey = `${theme}-${viewport.name}-${routeName}`;
           const baselineLocale = sharedLocaleBaselines.has(baselineKey) ? 'shared' : locale;

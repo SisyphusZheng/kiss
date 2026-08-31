@@ -57,6 +57,15 @@ async function runSpaActionProbe(page: Page): Promise<SpaProbeOutcome> {
     class ProbePage extends HTMLElement {
       data?: unknown;
       __openElementActionData?: unknown;
+      // v0.44 pages receive loader/action state through their descriptor
+      // projector, just like a real compiled page. Keep this probe's DOM
+      // contract explicit instead of relying on the removed legacy data bag.
+      static openElementPage = {
+        props: ({ data, actionData }: { data: unknown; actionData: unknown }) => ({
+          data,
+          __openElementActionData: actionData,
+        }),
+      };
       connectedCallback(): void {
         const root = this.attachShadow({ mode: 'open' });
         root.innerHTML = '<output id="loader-data"></output><output id="action-data"></output>' +

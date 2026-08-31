@@ -34,6 +34,10 @@ test.describe('Nested Custom Elements', () => {
       const textNodes: string[] = [];
       let node: Node | null;
       while ((node = walker.nextNode())) {
+        const parent = node.parentElement;
+        if (!parent || parent.closest('code, pre, style, script, template')) {
+          continue;
+        }
         const text = node.textContent?.trim() ?? '';
         // Look for text that looks like raw HTML tags (sign of failed DSD)
         if (/<[a-z]+-[a-z]+/i.test(text)) {

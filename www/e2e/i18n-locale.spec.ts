@@ -5,7 +5,7 @@
  *   - Default locale (en) pages are accessible at root
  *   - The default English locale uses canonical unprefixed routes
  *   - Chinese locale pages are accessible at /zh/
- *   - Locale switcher works
+ *   - The app shell projects locale-aware home and navigation links
  *   - Pages have correct lang attribute per locale
  */
 
@@ -15,18 +15,17 @@ import { deepQuery, deepQueryAll } from './helpers.js';
 async function readDeepLayoutState(page: Page) {
   const layout = await deepQuery(page, 'open-layout');
   const layoutState = await layout?.evaluate((el) => {
-    const switchLink = el.shadowRoot?.querySelector('.lang-switch');
+    const logo = el.querySelector<HTMLAnchorElement>('.logo');
+    const navLinks = Array.from(el.querySelectorAll<HTMLAnchorElement>('.header-nav a'));
     return {
-      layoutLocale: el.getAttribute('locale'),
-      switchHref: switchLink?.getAttribute('href'),
-      switchText: switchLink?.textContent?.trim(),
+      homeHref: logo?.getAttribute('href'),
+      navHrefs: navLinks.map((link) => link.getAttribute('href')),
     };
   });
   return {
     htmlLang: await page.evaluate(() => document.documentElement.lang),
-    layoutLocale: layoutState?.layoutLocale,
-    switchHref: layoutState?.switchHref,
-    switchText: layoutState?.switchText,
+    homeHref: layoutState?.homeHref,
+    navHrefs: layoutState?.navHrefs,
     title: await page.title(),
   };
 }
@@ -76,26 +75,30 @@ test.describe('Locale Routes', () => {
     // The guide tsx routes are the single source of truth for both locales;
     // the zh render must contain real Chinese copy, not the English fallback.
     await expect(page.locator('open-reading-shell').locator('h1')).toContainText('快速开始');
-    await expect(page.locator('guide-getting-started-page')).toContainText('安装');
+    await expect(page.locator('guide-getting-started')).toContainText('安装');
   });
 });
 
-test.describe('Locale Switcher', () => {
-  test('open-layout has locale attribute', async ({ page }) => {
+test.describe('Localized app shell', () => {
+  test('default shell uses canonical unprefixed links', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     const state = await readDeepLayoutState(page);
-    expect(state.layoutLocale).toMatch(/^(en|zh)$/);
+    expect(state.htmlLang).toBe('en');
+    expect(state.homeHref).toBe('/');
+    expect(state.navHrefs).toContain('/docs');
+    expect(state.navHrefs?.some((href) => href?.startsWith('/zh/'))).toBe(false);
   });
 
-  test('open-layout supports locale switching via locales attribute', async ({ page }) => {
-    await page.goto('/');
+  test('Chinese shell projects locale-prefixed navigation', async ({ page }) => {
+    await page.goto('/zh/');
     await page.waitForLoadState('networkidle');
 
     const state = await readDeepLayoutState(page);
-    expect(state.layoutLocale).toMatch(/^(en|zh)$/);
-    expect(state.switchHref).toBeTruthy();
+    expect(state.htmlLang).toBe('zh');
+    expect(state.homeHref).toBe('/zh');
+    expect(state.navHrefs).toContain('/zh/docs');
   });
 
   test('switching locale via URL changes page language', async ({ page }) => {
@@ -112,28 +115,16 @@ test.describe('Locale Switcher', () => {
     expect(enLang).toBe('en');
   });
 
-  test('native locale switch updates document and layout state', async ({ page }) => {
-    await page.goto('/');
+  test('localized logo returns to the current locale home', async ({ page }) => {
+    await page.goto('/zh/guide/getting-started');
     await page.waitForLoadState('networkidle');
-    const before = await readDeepLayoutState(page);
 
-    const layout = await deepQuery(page, 'open-layout');
-    await layout?.evaluate((el) => {
-      const link = el.shadowRoot?.querySelector('.lang-switch') as HTMLAnchorElement | null;
-      link?.click();
-    });
+    await page.locator('open-layout .logo').click();
     await page.waitForURL(/\/zh\/?$/);
-    await expect.poll(async () => {
-      const lang = await page.evaluate(() => document.documentElement.lang);
-      const current = await deepQuery(page, 'open-layout');
-      const locale = await current?.evaluate((el) => el.getAttribute('locale'));
-      return lang === 'zh' && locale === 'zh';
-    }).toBe(true);
     const after = await readDeepLayoutState(page);
 
     expect(after.htmlLang).toBe('zh');
-    expect(after.layoutLocale).toBe('zh');
-    expect(before.switchHref).toMatch(/\/zh\/?$/);
+    expect(after.homeHref).toBe('/zh');
     expect(after.title).toBeTruthy();
   });
 });

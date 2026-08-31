@@ -3,6 +3,10 @@
 import { defineIslandConfig } from '@openelement/app';
 import { OpenElement } from '@openelement/element';
 import { compiledStyle } from '../site-ui/compiled-style.ts';
+import {
+  installDragonLiveGaze,
+  uninstallDragonLiveGaze,
+} from '../site-ui/open-dragon-live-gaze-controller.ts';
 
 declare function element(tag: string): ClassDecorator;
 
@@ -67,23 +71,33 @@ export default class DragonLiveGaze extends OpenElement {
   @media (prefers-reduced-motion: reduce) { .stage { animation: none; } .mote { animation: none; opacity: 0; } }
 `)];
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    installDragonLiveGaze(this);
+  }
+
+  override disconnectedCallback(): void {
+    uninstallDragonLiveGaze(this);
+    super.disconnectedCallback();
+  }
+
   render() {
     return (
       <figure class='stage'>
         <img
           class='poster'
           src='/assets/dragon-frames/f27.webp'
-          alt='The OpenElement dragon.'
+          alt='The OpenElement dragon — it turns its head to watch your cursor.'
           draggable={false}
         />
+        <canvas class='view' aria-hidden='true'></canvas>
         <video
           class='idle-view'
           src='/assets/dragon-idle.mp4'
           muted
           loop
-          autoplay
           playsinline
-          preload='metadata'
+          preload='none'
           aria-hidden='true'
         >
         </video>

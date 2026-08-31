@@ -40,7 +40,7 @@ test.describe('Unified page structure', () => {
     test(`${route} uses the WWW reading shell`, async ({ page }) => {
       await page.goto(route);
       await expect(page.locator('open-reading-shell')).toHaveCount(1);
-      await expect(page.locator('h1')).toBeVisible();
+      await expect(page.locator('open-reading-shell h1')).toBeVisible();
     });
   }
 
@@ -60,7 +60,7 @@ test.describe('Unified page structure', () => {
     await page.goto('/changelog');
     await expect(page.locator('open-page-hero')).toHaveCount(0);
     await expect(page.locator('open-reading-shell[rail]')).toHaveCount(1);
-    await expect(page.locator('open-reading-shell h1')).toBeVisible();
+    await expect(page.locator('open-reading-shell h1:visible')).toHaveCount(1);
   });
 
   test('404 remains a compact recovery scene without WebGL', async ({ page }) => {
@@ -109,7 +109,7 @@ test.describe('Unified page structure', () => {
     ) {
       await page.goto(route);
       await expect(page.locator('open-page-hero')).toHaveCount(0);
-      await expect(page.locator('h1')).toBeVisible();
+      await expect(page.locator('h1:visible')).toHaveCount(1);
     }
   });
 
@@ -125,12 +125,21 @@ test.describe('Unified page structure', () => {
     }
   });
 
-  test('roadmap standards visual renders a non-empty shadow root', async ({ page }) => {
-    await page.goto('/roadmap');
-    const rendered = await page.locator('open-standards-visual').evaluateAll(
-      (els) => els.filter((el) => (el.shadowRoot?.childElementCount ?? 0) > 0).length,
+  test('compiled light section frames project named and default content in place', async ({ page }) => {
+    await page.goto('/apilist');
+    const frames = page.locator('apilist-page open-section-frame[data-oe-light]');
+    await expect(frames).toHaveCount(2);
+    await expect(frames.first().locator('.frame .title')).toContainText(
+      'Authoring starts at product packages.',
     );
-    expect(rendered).toBeGreaterThan(0);
+    await expect(frames.nth(1).locator('.frame .body .registry')).toBeVisible();
+  });
+
+  test('roadmap standards visual renders through the compiled light root', async ({ page }) => {
+    await page.goto('/roadmap');
+    const visual = page.locator('open-standards-visual');
+    await expect(visual).toHaveAttribute('data-oe-light', '');
+    expect(await visual.locator(':scope > *').count()).toBeGreaterThan(0);
   });
 
   test('blog articles SSR their outline and deterministic navigation without mojibake', async ({ page }) => {
@@ -195,7 +204,9 @@ test.describe('Unified page structure', () => {
     });
     await page.goto('/guide/core-concepts');
     await expect(page.locator('open-reading-shell').locator('h1')).toContainText('Core Concepts');
-    expect(await page.locator('open-page-rail a').count()).toBe(3);
+    const outlineLinks = page.locator('open-page-rail .desktop-outline a[href^="#"]');
+    await expect(outlineLinks).toHaveCount(4);
+    await expect(outlineLinks.first()).toHaveAttribute('href', '#start');
   });
 
   test('non-home routes never load the WebGL atmosphere layer', async ({ page }) => {

@@ -10,6 +10,7 @@
 import { build } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { compileElementSpike } from '../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 
 // The SPA/router sources import '@openelement/element' at runtime (`createLogger`,
 // and JSX via jsx-runtime). The e2e bare bundle runs with `configFile: false`, so it
@@ -48,9 +49,24 @@ export function bundleModuleForBrowser(entry: URL): Promise<string> {
   let cached = bundleCache.get(key);
   if (!cached) {
     cached = (async () => {
+      const entryPath = resolve(fileURLToPath(entry));
       const result = await build({
         logLevel: 'silent',
         configFile: false,
+        plugins: [{
+          name: 'e2e-compiled-element',
+          enforce: 'pre',
+          transform(code, id) {
+            // The browser probe intentionally bundles the real package source,
+            // but Vite's bare esbuild pass does not lower the compile-time
+            // decorator syntax. Run the same compiled-element boundary used by
+            // the product pipeline for a decorated entry before bundling it.
+            if (resolve(id.split('?')[0]) !== entryPath || !code.includes('@element(')) {
+              return null;
+            }
+            return compileElementSpike(code, entryPath).code;
+          },
+        }],
         resolve: {
           // Array form with an exact-match regex for the bare specifier:
           // the object form prefix-matches, so '@openelement/element' would

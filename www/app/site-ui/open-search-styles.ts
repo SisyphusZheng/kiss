@@ -1,4 +1,4 @@
-import { compiledStyle } from '../site-ui/compiled-style.ts';
+import { compiledStyle } from './compiled-style.ts';
 
 export const openSearchStyles = [compiledStyle(`
   :host {

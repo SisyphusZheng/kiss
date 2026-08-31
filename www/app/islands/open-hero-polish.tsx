@@ -33,8 +33,10 @@ export default class HeroPolish extends OpenElement {
   override connectedCallback(): void {
     super.connectedCallback();
     const root = this.getRootNode();
-    if (!(root instanceof ShadowRoot)) return;
-    const hero = root.querySelector<HTMLElement>('.hero-main');
+    const scope: ShadowRoot | HTMLElement = root instanceof ShadowRoot
+      ? root
+      : this.parentElement ?? document.body;
+    const hero = scope.querySelector<HTMLElement>('.hero-main');
     if (!hero) return;
     const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const fine = globalThis.matchMedia?.('(pointer: fine)').matches ?? false;
@@ -69,12 +71,12 @@ export default class HeroPolish extends OpenElement {
     if (!reduced && fine) {
       const styleEl = document.createElement('style');
       styleEl.textContent = HERO_CURSOR_CSS;
-      root.appendChild(styleEl);
+      scope.appendChild(styleEl);
       const cursor = document.createElement('div');
       cursor.className = 'hero-cursor';
       cursor.setAttribute('aria-hidden', 'true');
       cursor.innerHTML = '<i class="dot"></i><i class="ring"></i>';
-      root.appendChild(cursor);
+      scope.appendChild(cursor);
 
       let tx = -100;
       let ty = -100;

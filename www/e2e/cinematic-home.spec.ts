@@ -16,7 +16,7 @@ test.describe('Cinematic homepage', () => {
     await page.goto('/zh/guide/getting-started');
     const logo = page.locator('open-layout').locator('a.logo');
     await expect(logo).toBeVisible();
-    await expect(logo).toHaveAttribute('href', '/zh/');
+    await expect(logo).toHaveAttribute('href', '/zh');
     await expect.poll(() => logo.evaluate((element) => getComputedStyle(element).backgroundImage))
       .toBe('none');
     const mark = logo.locator('.logo-glyph');
@@ -46,7 +46,7 @@ test.describe('Cinematic homepage', () => {
     await expect(idleView).toHaveAttribute('playsinline', '');
     await expect(idleView).toHaveAttribute('loop', '');
     await expect(idleView).toHaveAttribute('preload', 'none');
-    await expect(idleView).not.toHaveAttribute('autoplay', /.*/);
+    await expect(idleView).not.toHaveAttribute('autoplay', '');
     const poster = dragon.locator('img.poster');
     await expect(poster).toHaveCount(1);
     await expect(poster).toHaveAttribute('src', /\/assets\/dragon-frames\/f27\.webp$/);
@@ -104,8 +104,7 @@ test.describe('Cinematic homepage', () => {
     const video = dragon.locator('video.idle-view');
     await expect
       .poll(
-        () =>
-          dragon.evaluate((element) => Boolean(element.shadowRoot?.querySelector('.stage.idling'))),
+        () => dragon.evaluate((element) => Boolean(element.querySelector('.stage.idling'))),
         { timeout: 20000 },
       )
       .toBe(true);
@@ -123,10 +122,38 @@ test.describe('Cinematic homepage', () => {
     await expect.poll(readFrame, { timeout: 15000 }).toBeGreaterThanOrEqual(54);
     await expect
       .poll(
-        () =>
-          dragon.evaluate((element) => Boolean(element.shadowRoot?.querySelector('.stage.idling'))),
+        () => dragon.evaluate((element) => Boolean(element.querySelector('.stage.idling'))),
         { timeout: 15000 },
       )
       .toBe(false);
+  });
+
+  test('the dragon releases async media work and reconnects cleanly', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/');
+    const dragon = page.locator('open-dragon-live-gaze');
+    const readFrame = () =>
+      dragon.evaluate((element) => Number(element.getAttribute('data-frame') ?? -1));
+    await expect.poll(readFrame, { timeout: 20000 }).toBeGreaterThanOrEqual(0);
+
+    const detached = await dragon.evaluate(async (element) => {
+      const parent = element.parentNode;
+      const video = element.querySelector('video');
+      const stage = element.querySelector('.stage');
+      if (!parent || !(video instanceof HTMLVideoElement)) {
+        throw new Error('dragon reconnect fixture is incomplete');
+      }
+      element.remove();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const result = { paused: video.paused, idling: stage?.classList.contains('idling') ?? false };
+      element.removeAttribute('data-frame');
+      parent.appendChild(element);
+      return result;
+    });
+
+    expect(detached).toEqual({ paused: true, idling: false });
+    await expect.poll(readFrame, { timeout: 20000 }).toBeGreaterThanOrEqual(0);
+    expect(errors).toEqual([]);
   });
 });

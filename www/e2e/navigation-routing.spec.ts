@@ -3,13 +3,12 @@
  *
  * Verifies that navigation between pages works correctly:
  *   - Direct URL access loads correct page
- *   - Link navigation works (including inside Shadow DOM)
+ *   - Link navigation works across light and shadow roots
  *   - Layout custom elements are present
  *   - Page titles are correct per route
  *
- * NOTE: openElement uses Shadow DOM encapsulation. Navigation links and
- * layout elements are inside shadow roots. Tests use `page.evaluate`
- * with shadow root traversal, or Playwright's piercing locator syntax.
+ * NOTE: compiled page and layout components use light roots while some UI
+ * package components retain Shadow DOM. Shared deep queries cover both.
  */
 
 import { expect, test } from '@playwright/test';
@@ -81,38 +80,27 @@ test.describe('Link Navigation', () => {
     expect(url).toContain('/guide/');
   });
 
-  test('SPA navigation from home to guide swaps app shell and keeps sidebar', async ({ page }) => {
+  test('home-to-guide navigation loads the compiled route inside the app shell', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    await page.evaluate(() => {
-      const layout = document.querySelector('open-layout');
-      const guide = layout?.shadowRoot?.querySelector<HTMLAnchorElement>(
-        'a[data-nav*="/guide/getting-started"]',
-      );
-      guide?.click();
-    });
+    await page.locator('a[href="/guide/getting-started"]').first().click();
 
     await page.waitForURL(/\/guide\/getting-started\/?$/);
     await page.waitForFunction(() => {
       const layout = document.querySelector('open-layout');
-      return !!layout?.shadowRoot?.querySelector('.docs-sidebar');
+      return !!layout?.querySelector('slot > guide-getting-started');
     });
 
     const state = await page.evaluate(() => {
       const layout = document.querySelector('open-layout')!;
-      const sidebar = layout.shadowRoot!.querySelector('.docs-sidebar')!;
-      const rect = sidebar.getBoundingClientRect();
-      const style = getComputedStyle(sidebar);
       return {
-        hasHome: layout.hasAttribute('home'),
-        sidebarWidth: rect.width,
-        display: style.display,
+        light: layout.hasAttribute('data-oe-light'),
+        routeCount: layout.querySelectorAll('slot > guide-getting-started').length,
+        routeHasArticle: !!layout.querySelector('guide-getting-started open-article-view'),
       };
     });
-    expect(state.hasHome).toBe(false);
-    expect(state.display).not.toBe('none');
-    expect(state.sidebarWidth).toBeGreaterThan(180);
+    expect(state).toEqual({ light: true, routeCount: 1, routeHasArticle: true });
   });
 
   test('navigating between guide pages preserves layout', async ({ page }) => {

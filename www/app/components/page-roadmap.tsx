@@ -7,7 +7,7 @@
 import { OpenElement } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
-import '@openelement/site-ui/open-standards-visual.tsx';
+import '../site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '@openelement/site-ui/open-section-frame.tsx';
 import '@openelement/site-ui/open-reading-shell.tsx';

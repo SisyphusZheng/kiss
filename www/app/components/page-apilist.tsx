@@ -8,7 +8,7 @@
  */
 import { OpenElement } from '@openelement/element';
 import '@openelement/site-ui/open-reading-shell.tsx';
-import '@openelement/site-ui/open-section-frame.tsx';
+import '../site-ui/open-section-frame.tsx';
 import '../islands/open-page-rail.tsx';
 import { pageApiListStyles } from './page-apilist-styles.ts';
 

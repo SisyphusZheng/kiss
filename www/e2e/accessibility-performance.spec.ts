@@ -60,7 +60,13 @@ test.describe('Accessibility', () => {
   test('layout footer labels do not create skipped heading levels', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('open-layout footer h4')).toHaveCount(0);
-    await expect(page.locator('open-layout footer .footer-heading')).toHaveCount(4);
+    const footer = page.locator('open-layout footer.app-footer');
+    await expect(footer).toHaveCount(1);
+    await expect(footer.locator('h1, h2, h3, h4, h5, h6')).toHaveCount(0);
+    await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/open-element/openelement',
+    );
   });
 
   test('homepage has no auto-detected a11y issues', async ({ page }) => {
@@ -158,14 +164,17 @@ test.describe('Performance', () => {
         errors.push({ text: msg.text(), url: msg.location().url });
       }
     });
+    page.on('pageerror', (error) => {
+      errors.push({ text: error.message, url: '' });
+    });
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const layout = document.querySelector('open-layout');
-      // Native Declarative Shadow DOM is the static-first readiness signal.
-      // The layout does not need to upgrade before the page is usable.
-      return !!layout?.shadowRoot;
+      // The compiled app shell is a light-root static artifact. It is usable
+      // before upgrade when its provenance marker and rendered body exist.
+      return layout?.hasAttribute('data-oe-light') && !!layout.querySelector('.app-layout');
     });
 
     // Filter out known non-critical errors (e.g., analytics, CDN, external CDN integrity mismatch)

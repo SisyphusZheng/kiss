@@ -63,10 +63,31 @@ test.describe('DSD Layers', () => {
   });
 
   test('DSD content is not exposed as raw text', async ({ page }) => {
-    // DSD templates should not appear as visible text content.
-    // If DSD rendering failed, raw HTML tags would be visible as text.
-    const bodyText = await page.textContent('body');
-    expect(bodyText).not.toContain('shadowrootmode');
+    // Intentional code examples may mention DSD syntax. Only fail when raw DSD
+    // markup leaks into ordinary page text outside code and inert containers.
+    const leakedDsdText = await page.evaluate(() => {
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+      );
+      const leaked: string[] = [];
+
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const parent = node.parentElement;
+        if (!parent || parent.closest('code, pre, style, script, template')) {
+          continue;
+        }
+
+        const text = node.textContent ?? '';
+        if (/<template\s+shadowrootmode/i.test(text)) {
+          leaked.push(text.trim());
+        }
+      }
+
+      return leaked;
+    });
+
+    expect(leakedDsdText).toEqual([]);
   });
 
   test('custom elements are discovered in the page', async ({ page }) => {

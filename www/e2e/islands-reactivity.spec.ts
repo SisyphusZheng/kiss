@@ -4,8 +4,8 @@
  * Verifies that currently rendered island components are available without
  * fixed sleeps. The homepage no longer renders the historical home-console island, so
  * this suite follows the current layout shell instead:
- *   - open-layout owns a native Declarative Shadow DOM root
- *   - layout header islands are present inside the shell
+ *   - open-layout owns a compiled light-root shell
+ *   - layout header islands are present inside that shell
  *   - island client script is present
  */
 
@@ -14,7 +14,7 @@ import { expect, type Page, test } from '@playwright/test';
 async function waitForLayoutReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const layout = document.querySelector('open-layout');
-    return !!layout?.shadowRoot;
+    return !!layout?.querySelector('.app-layout');
   });
 }
 
@@ -28,25 +28,27 @@ test.describe('Layout Island Shell', () => {
     await expect(page.locator('open-layout')).toHaveCount(1);
   });
 
-  test('layout has a native shadow root', async ({ page }) => {
+  test('layout retains its compiled light-root marker and SSR shell', async ({ page }) => {
     await waitForLayoutReady(page);
 
-    const hasShadowRoot = await page.evaluate(() => {
+    const state = await page.evaluate(() => {
       const layout = document.querySelector('open-layout');
-      return layout?.shadowRoot !== null;
+      return {
+        light: layout?.hasAttribute('data-oe-light') ?? false,
+        shell: !!layout?.querySelector('.app-layout'),
+      };
     });
-    expect(hasShadowRoot).toBe(true);
+    expect(state).toEqual({ light: true, shell: true });
   });
 
   test('layout header islands are rendered inside the static shell', async ({ page }) => {
     await waitForLayoutReady(page);
 
     const headerIslands = await page.locator('open-layout').evaluate((layout) => {
-      const root = layout.shadowRoot;
       return {
-        search: !!root?.querySelector('open-search'),
-        themeToggle: !!root?.querySelector('open-theme-toggle'),
-        brand: !!root?.querySelector('.logo-glyph'),
+        search: !!layout.querySelector('open-search'),
+        themeToggle: !!layout.querySelector('open-theme-toggle'),
+        brand: !!layout.querySelector('.logo-glyph'),
       };
     });
 
