@@ -28,7 +28,7 @@ export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd:
 
 @element('app-shell', { root: 'shadow-open' })
 export default class AppShell extends OpenElement {
-  static styles = shellStyles;
+  static override styles = shellStyles;
 
   /**
    * Filled from appShell.props in vite.config.ts at render time.

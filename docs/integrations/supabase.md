@@ -114,7 +114,7 @@ then PRG-redirect. Failures re-render with a 422 and a stable public error;
 provider diagnostics and session material are never echoed.
 
 ```ts
-// app/routes/login.tsx
+// app/route-logic/login.ts
 export function createLoginAction(createClient: LoginClientFactory = createServerSupabase) {
   return async function action(ctx: {
     formData: FormData;
@@ -142,23 +142,20 @@ Sign-out is a named action on the protected route itself, reached by a
 plain form post to `/notes?/logout`:
 
 ```ts
-// app/routes/notes.tsx
-export const actions = {
-  create: createNoteAction(),
-  async logout(ctx: {
-    env: Record<string, string>;
-    request: Request;
-    responseHeaders: Headers;
-  }): Promise<never> {
-    const supabase = createServerSupabase(
-      ctx.env,
-      ctx.request,
-      ctx.responseHeaders,
-    );
-    await supabase.auth.signOut();
-    throw redirect('/login');
-  },
-};
+// app/route-logic/notes.ts
+export async function logoutAction(ctx: {
+  env: Record<string, string>;
+  request: Request;
+  responseHeaders: Headers;
+}): Promise<never> {
+  const supabase = createServerSupabase(
+    ctx.env,
+    ctx.request,
+    ctx.responseHeaders,
+  );
+  await supabase.auth.signOut();
+  throw redirect('/login');
+}
 ```
 
 There is no separate callback endpoint to mount: the action **is** the
@@ -169,20 +166,21 @@ channel, same PRG 303.
 ## Protected route: re-check authorization in the loader
 
 The `/notes` loader re-checks authorization on every request with
-`supabase.auth.getUser()` — never trust edge middleware alone. An edge
+`supabase.auth.getUser()` and redirects an anonymous request to `/login` —
+never trust edge middleware alone. An edge
 guard (see the [auth-guard middleware template](./better-auth-guard.md))
 is at most a UX redirect over this server-side check; and beneath the
 loader, RLS is the database-level floor: the same anonymous select would
 be rejected by Postgres, so the denied branch is a UX path, not the only
-protection.
+protection. The redirect is only the page-level UX path.
 
 ```tsx
-// app/routes/notes.tsx
+// app/route-logic/notes.ts
 export function createNotesLoader(createClient: NotesClientFactory = createServerSupabase) {
   return async function loader(ctx: LoaderContext<Record<string, string>>): Promise<NotesData> {
     const supabase = createClient(ctx.env, ctx.request, ctx.responseHeaders);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { denied: true };
+    if (!user) throw redirect('/login');
     const cursor = decodeNotesCursor(new URL(ctx.request.url).searchParams.get('cursor'));
     let query = supabase.from('notes').select('id, title, body, created_at');
     if (cursor) {
@@ -223,35 +221,20 @@ export function createNotesLoader(createClient: NotesClientFactory = createServe
 ```
 
 The query is capped at 11 rows and renders 10, using `(created_at,id)` keyset
-pagination instead of an unbounded owner read. The page is a DSD/SSR
-`renderIntent: { mode: 'dynamic' }` route, so both
-branches render fully before any client JavaScript. The denial branch is
-source-backed below; signed-in users additionally receive the create form,
-their rows, the live island, and working no-JS sign-out:
+pagination instead of an unbounded owner read. The route is a thin
+`definePage` descriptor over a compiled page component and remains
+`renderIntent: { mode: 'dynamic' }`, so the authenticated page renders fully
+before client JavaScript. Request data and action failures cross the explicit
+`notesPageProps` projector into compiled properties; signed-in users receive
+the create form, their rows, the live island, and working no-JS sign-out:
 
 ```tsx
 // app/routes/notes.tsx
-const NotesPage = definePage<NotesData>({
+export default definePage(NotesPage, {
   renderIntent: { mode: 'dynamic' },
   head: { title: 'Notes — reference starter' },
-  render() {
-    const data = useLoaderData() as NotesData;
-    const actionData = useActionData() as CreateNoteData | undefined;
-    if (data.denied) {
-      return (
-        <main>
-          <h1>Notes</h1>
-          <section id='denied'>
-            <p>
-              Sign-in is required to read notes. RLS rejects anonymous access server-side.
-            </p>
-            <p>
-              <a href='/login'>Go to sign-in</a>
-            </p>
-          </section>
-        </main>
-      );
-    }
+  props: notesPageProps,
+});
 ```
 
 ## RLS-first migrations
@@ -349,7 +332,7 @@ exercise them against a stub while the composition boundary keeps the
 official client behind `lib/supabase-server.ts`.
 
 ```ts
-// app/routes/upload.tsx
+// app/route-logic/upload.ts
 /** Basename-only, storage-safe file name segment (no path traversal). */
 export function sanitizeFilename(name: string): string {
   const base = name.split(/[\\/]/).pop() ?? '';
@@ -367,7 +350,7 @@ export function ownsObjectKey(userId: string, key: string): boolean {
 ```
 
 ```ts
-// app/routes/upload.tsx
+// app/route-logic/upload.ts
 export function createUploadAction(
   createClient: UploadClientFactory = createServerSupabase,
 ) {
@@ -480,7 +463,6 @@ succeeds, repeats that stable-ordered read every 10 seconds, hard-caps it at
 
 ```tsx
 // app/islands/notes-live.tsx
-export const tagName = 'notes-live';
 export const openElement = defineIslandConfig({
   hydrate: 'load',
   ssr: true,
@@ -489,7 +471,7 @@ export const openElement = defineIslandConfig({
 ```
 
 ```tsx
-// app/islands/notes-live.tsx
+// app/components/notes-live-shared.ts
 export const MAX_LIVE_EVENTS = 100;
 export const MAX_RECONNECT_DELAY_MS = 30_000;
 export const RECONCILE_INTERVAL_MS = 10_000;

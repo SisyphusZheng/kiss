@@ -90,18 +90,3 @@ export {
   ensureDeepFragmentNavigation,
   isDeepFragmentNavigationInstalled,
 } from './deep-fragment.ts';
-// static props runtime
-export {
-  disposeStaticProps,
-  handleStaticPropAttributeChange,
-  initializeStaticProps,
-  syncStaticPropsFromAttributes,
-} from './prop.ts';
-export type {
-  NormalizedPropDecl,
-  PropDecl,
-  PropDeclFull,
-  PropDeclShorthand,
-  PropsFrom,
-  PropType,
-} from '../protocol/prop.ts';

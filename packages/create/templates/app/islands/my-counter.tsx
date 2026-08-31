@@ -21,7 +21,7 @@ export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd:
 
 @element('my-counter', { root: 'shadow-open' })
 export default class MyCounter extends OpenElement {
-  static styles = counterStyles;
+  static override styles = counterStyles;
 
   @property({ reflect: false, attribute: false })
   count = 0;

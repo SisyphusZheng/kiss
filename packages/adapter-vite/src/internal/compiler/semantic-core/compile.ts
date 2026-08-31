@@ -303,7 +303,7 @@ function parseComputedInitializer(
   const deps: string[] = [];
   const replacements: Array<{ start: number; end: number; name: string }> = [];
   const visit = (node: ts.Node): void => {
-    if (node !== body && (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node))) {
+    if (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node)) {
       fail(node, 'OEC9024', 'computed field arrows may not nest non-arrow functions');
     }
     if (ts.isPropertyAccessExpression(node) && node.expression.kind === ts.SyntaxKind.ThisKeyword) {

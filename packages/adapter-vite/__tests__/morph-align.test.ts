@@ -105,7 +105,10 @@ function isDsdTemplate(node: FakeNode): boolean {
     node.hasAttribute('shadowrootmode');
 }
 
-function makeHarness() {
+function makeHarness(options: {
+  tags?: string[];
+  islandIntact?: () => boolean;
+} = {}) {
   const incomingQueue: { title: string; body: FakeElement }[] = [];
   const instantiated: FakeNode[] = [];
   const doc = { title: '', body: el('body') };
@@ -123,19 +126,60 @@ function makeHarness() {
     log: { warn: () => {} },
     win: win as unknown as Win,
     doc: doc as unknown as Document,
-    tags: [],
+    tags: options.tags ?? [],
     webkit: {
       instantiateDsd: (node: unknown) => {
         instantiated.push(node as FakeNode);
       },
       repairShadowUpgrades: () => {},
     },
-    islands: { islandIntact: () => false, observeVisible: () => {} },
+    islands: {
+      islandIntact: options.islandIntact ?? (() => false),
+      observeVisible: () => {},
+    },
     focus: { captureFocus: () => null, restoreFocus: () => {} },
     scroll: { captureScroll: () => ({ x: 0, y: 0 }), restoreScroll: () => {} },
   });
   return { align, doc, incomingQueue, instantiated };
 }
+
+Deno.test('morph: a preserved slot-fallback app shell receives the new route document', () => {
+  const { align, doc, incomingQueue } = makeHarness({
+    tags: ['app-shell'],
+    // The legacy light-surface comparison sees both hosts as empty and would
+    // preserve the stale shell wholesale without the slot-fallback path.
+    islandIntact: () => true,
+  });
+
+  const host = el('app-shell');
+  const liveShadow = new FakeNode();
+  liveShadow.appendChild(
+    el('main', el('slot', el('contact-page', el('p', text('before'))))),
+  );
+  host.shadowRoot = liveShadow;
+  doc.body.appendChild(host);
+
+  incomingQueue.push({
+    title: '',
+    body: el(
+      'body',
+      el(
+        'app-shell',
+        shadowTemplate(
+          el('main', el('slot', el('contact-page', el('p', text('after'))))),
+        ),
+      ),
+    ),
+  });
+
+  assertEquals(align.morphDocument('<html></html>', null, null), true);
+  const main = liveShadow.childNodes[0] as FakeElement;
+  const slot = main.childNodes[0] as FakeElement;
+  const page = slot.childNodes[0] as FakeElement;
+  const paragraph = page.childNodes[0] as FakeElement;
+  assertEquals((paragraph.childNodes[0] as FakeText).data, 'after');
+  assertEquals(doc.body.childNodes[0], host, 'the activated shell host survives');
+});
 
 Deno.test('morph: the light-DOM pass never inserts an inert DSD template into a live host', () => {
   const { align, doc, incomingQueue, instantiated } = makeHarness();

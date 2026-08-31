@@ -339,16 +339,18 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^README/, /^docs\//, /^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
   },
   {
-    name: 'test:coverage:check',
-    command: ['deno', 'task', 'test:coverage:check'],
-    tiers: ['ci', 'release'],
-    triggers: [/^(packages|tools)\//, /^deno\.json$/],
-  },
-  {
     name: 'build',
     command: ['deno', 'task', 'build'],
     tiers: ['ci', 'release'],
     triggers: [/^(packages|www)\//, /^deno\.json$/],
+  },
+  {
+    // Runs after build when both gates are selected. check-coverage keeps a
+    // fresh-checkout fallback for tools-only changes where build is absent.
+    name: 'test:coverage:check',
+    command: ['deno', 'task', 'test:coverage:check'],
+    tiers: ['ci', 'release'],
+    triggers: [/^(packages|tools)\//, /^deno\.json$/],
   },
   {
     // Runs after build: the e2e critical-path suites serve www/dist, which a

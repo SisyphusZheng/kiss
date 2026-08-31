@@ -9,9 +9,9 @@
  * each page's host tag) because the compiled serializer never inlines styles
  * into SSR output and page classes are not registered client-side.
  */
-import { StyleSheet } from '@openelement/element';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 
-function sheet(css: string): StyleSheet {
+function sheet(css: string): StyleSheetLike {
   const instance = new StyleSheet();
   instance.replaceSync(css);
   return instance;

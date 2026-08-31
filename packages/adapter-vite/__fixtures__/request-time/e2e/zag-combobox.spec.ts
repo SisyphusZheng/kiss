@@ -84,7 +84,7 @@ test.describe('zag combobox spike (#1149)', () => {
     expect(html).toContain('data-part="label">Shadow fruit</label>');
     expect(html).toContain('data-part="label">Fruit</label>');
     for (const label of ['Apple', 'Banana', 'Cherry', 'Mango', 'Orange']) {
-      expect(html).toContain(`>${label}</li>`);
+      expect(html).toMatch(new RegExp(`data-part="item"[^>]*>${label}\\s*</li>`));
     }
   });
 

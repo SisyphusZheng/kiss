@@ -133,13 +133,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/internal/core/prop.ts',
-    fragment: 'instance as unknown as {',
-    reason: 'Static prop runtime writes element attributes and properties.',
-
-    revisitBy: '0.44.0',
-  },
-  {
     file: 'packages/element/src/open-element-base.ts',
     fragment: '} as unknown as typeof HTMLElement)',
     reason: 'SSR HTMLElement stub for environments without DOM.',

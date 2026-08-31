@@ -1,35 +1,12 @@
 /**
- * blog-data.ts - Blog data loader
+ * blog-data.ts - Generated blog data module writer
  *
- * Pure function for loading blog data from the file system.
- * Zero module-level state. Zero side effects beyond reading files.
- *
- * ADR 0018: Replaces the old stateful initBlogData() + getPosts() pattern.
- * Route components import data from @openelement/generated/blog-data instead.
- * This module is only called by the virtual module plugin's load() hook.
+ * Collection scanning and markdown parsing are owned by the generic content
+ * collection pipeline. This module only serializes its normalized BlogPost
+ * records for application routes.
  */
 
-import type { BlogPost, OpenElementBlogOptions } from './types.ts';
-import { generateBlogRoutes } from './routes.ts';
-
-/**
- * Pure function: load blog data from file system.
- * No module-level state. No side effects beyond reading files.
- * Can be called from any runtime context.
- *
- * This replaces the stateful initBlogData() + getPosts() pattern.
- * For virtual module consumers, use @openelement/generated/blog-data instead.
- */
-export async function loadBlogData(options?: OpenElementBlogOptions): Promise<{
-  posts: BlogPost[];
-  basePath: string;
-}> {
-  const routes = await generateBlogRoutes(options);
-  return {
-    posts: routes.posts,
-    basePath: routes.basePath,
-  };
-}
+import type { BlogPost } from './types.ts';
 
 /**
  * Generate TypeScript module source code for blog data.

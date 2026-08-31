@@ -106,6 +106,25 @@ export function createMorphAlign(deps: MorphAlignDeps): MorphAlign {
     return null;
   }
 
+  function containsSlot(node: Node): boolean {
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const child = node.childNodes[i];
+      if (child.nodeType === 1 && (child as Element).tagName === 'SLOT') return true;
+      if (containsSlot(child)) return true;
+    }
+    return false;
+  }
+
+  function hasProjectedLightContent(el: Element): boolean {
+    for (let i = 0; i < el.childNodes.length; i++) {
+      const child = el.childNodes[i];
+      if (isShadowRootTemplate(child)) continue;
+      if (child.nodeType === 3 && (child as Text).data.trim() === '') continue;
+      return true;
+    }
+    return false;
+  }
+
   function compatible(a: Node, b: Node): boolean {
     return a.nodeType === b.nodeType &&
       (a.nodeType !== 1 || (a as Element).tagName === (b as Element).tagName);
@@ -210,6 +229,25 @@ export function createMorphAlign(deps: MorphAlignDeps): MorphAlign {
     if (oldElement.hasAttribute('data-open-preserve')) return;
     const isIsland = tags.indexOf(oldElement.tagName.toLowerCase()) !== -1;
     if (isIsland) {
+      const newTemplate = shadowTemplate(newElement);
+      if (
+        (oldElement as HTMLElement).shadowRoot && newTemplate &&
+        !hasProjectedLightContent(oldElement) && !hasProjectedLightContent(newElement) &&
+        containsSlot((oldElement as HTMLElement).shadowRoot as ShadowRoot)
+      ) {
+        // A compiled app shell currently carries its route as <slot>
+        // fallback inside the shell DSD. Once the browser consumes the DSD,
+        // both hosts have empty light DOM, so the normal island-preservation
+        // check cannot see a route/action response change. Morph the live
+        // shadow tree from the incoming template while preserving the shell
+        // host and its activation state.
+        syncAttrs(oldElement, newElement);
+        morphChildren(
+          (oldElement as HTMLElement).shadowRoot as ShadowRoot,
+          newTemplate.content,
+        );
+        return;
+      }
       if (islandIntact(oldElement, newElement)) return;
       if ((oldElement as HTMLElement).shadowRoot) {
         // Hydrated island whose surface changed: replace (state resets by

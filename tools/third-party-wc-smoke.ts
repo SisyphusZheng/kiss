@@ -97,7 +97,8 @@ async function readEventCount(page: Page): Promise<number> {
     // under the path-derived tag (third-party-wc); the fixture island lives
     // in its shadow root.
     const fixture = document
-      .querySelector('third-party-wc')
+      .querySelector('app-shell')
+      ?.shadowRoot?.querySelector('third-party-wc')
       ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
     const root = fixture?.shadowRoot;
     const eventText = root?.querySelector('#event-count')?.textContent ?? '';
@@ -111,7 +112,8 @@ async function interactAndVerifyEventCount(page: Page, startCount: number): Prom
       // v0.44: the compiled page class renders under the path-derived tag;
       // the fixture island lives in its shadow root.
       const fixture = document
-        .querySelector('third-party-wc')
+        .querySelector('app-shell')
+        ?.shadowRoot?.querySelector('third-party-wc')
         ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
       const root = fixture?.shadowRoot;
       const eventText = root?.querySelector('#event-count')?.textContent ?? '';
@@ -211,11 +213,12 @@ export async function verifyBrowser(
       );
     }
 
-    await page.waitForFunction(() => {
+    const thirdPartyReady = (diagnostic = false) => {
       // v0.44: the compiled page class renders under the path-derived tag;
       // the fixture island lives in its shadow root.
       const fixture = document
-        .querySelector('third-party-wc')
+        .querySelector('app-shell')
+        ?.shadowRoot?.querySelector('third-party-wc')
         ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
       const lit = fixture?.shadowRoot?.querySelector('alpha3-lit-counter') as HTMLElement & {
         shadowRoot?: ShadowRoot;
@@ -223,17 +226,32 @@ export async function verifyBrowser(
       const litHost = fixture?.shadowRoot?.querySelector('alpha3-lit-host') as HTMLElement & {
         shadowRoot?: ShadowRoot;
       };
-      return !!lit?.shadowRoot?.querySelector('#lit-button') &&
-        !!litHost?.shadowRoot?.querySelector('alpha3-open-child') &&
-        !!fixture?.shadowRoot?.querySelector('alpha3-fast-counter')?.shadowRoot &&
-        !!fixture?.shadowRoot?.querySelector('ion-button')?.shadowRoot;
-    });
+      const readiness = {
+        fixture: !!fixture,
+        fixtureShadow: !!fixture?.shadowRoot,
+        litButton: !!lit?.shadowRoot?.querySelector('#lit-button'),
+        litOpenChild: !!litHost?.shadowRoot?.querySelector('alpha3-open-child'),
+        fastShadow: !!fixture?.shadowRoot?.querySelector('alpha3-fast-counter')?.shadowRoot,
+        ionicShadow: !!fixture?.shadowRoot?.querySelector('ion-button')?.shadowRoot,
+      };
+      return diagnostic ? readiness : Object.values(readiness).every(Boolean);
+    };
+    try {
+      await page.waitForFunction(thirdPartyReady, false, { timeout: 30_000 });
+    } catch {
+      const readiness = await page.evaluate(thirdPartyReady, true);
+      throw new Error(
+        `third-party upgrade readiness timed out: ${JSON.stringify(readiness)}; ` +
+          `browserErrors=${browserErrors.join(' | ')}`,
+      );
+    }
 
     const summary = await page.evaluate(() => {
       // v0.44: the compiled page class renders under the path-derived tag;
       // the fixture island lives in its shadow root.
       const fixture = document
-        .querySelector('third-party-wc')
+        .querySelector('app-shell')
+        ?.shadowRoot?.querySelector('third-party-wc')
         ?.shadowRoot?.querySelector('alpha3-wc-fixture') as HTMLElement | null;
       const root = fixture?.shadowRoot;
       if (!fixture || !root) throw new Error('alpha3-wc-fixture shadow root missing');
@@ -281,7 +299,8 @@ export async function verifyBrowser(
     await interactAndVerifyEventCount(page, summary.eventCount);
     const evidence = await page.evaluate(() => {
       const root = document
-        .querySelector('third-party-wc')
+        .querySelector('app-shell')
+        ?.shadowRoot?.querySelector('third-party-wc')
         ?.shadowRoot?.querySelector('alpha3-wc-fixture')?.shadowRoot;
       if (!root) throw new Error('fixture root unavailable for capability evidence');
       const eventLog = (window as Window & { __alpha3EventLog?: string[] }).__alpha3EventLog ?? [];

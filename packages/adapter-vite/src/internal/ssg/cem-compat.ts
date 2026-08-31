@@ -3,15 +3,11 @@ import type {
   CompatibilityTier,
   HydrationStrategy,
 } from '../protocol/framework.ts';
-import { isValidTagName } from '@openelement/element';
-import { formatError } from '@openelement/element';
+import { formatError, isValidTagName } from '@openelement/element';
 
 export interface OpenElementExtensions {
   ssr?: boolean;
   dsd?: boolean;
-  // Intentionally wider than the canonical ComponentLayer in
-  // @openelement/element: this shapes unvalidated third-party CEM JSON,
-  // where `layer` may be any string.
   layer?: string;
   hydrate?: HydrationStrategy;
   module?: string;
@@ -23,21 +19,18 @@ interface CemBase {
   name?: string;
   [key: string]: unknown;
 }
-
 interface CemCustomElement extends CemBase {
   kind: 'custom-element';
   tagName?: string;
   superClass?: { name?: string };
   openElement?: OpenElementExtensions;
 }
-
 interface CemModule {
   kind?: string;
   path: string;
   declarations?: CemBase[];
   exports?: { declaration?: unknown }[];
 }
-
 interface CustomElementsManifest {
   schemaVersion?: string;
   packageName?: string;
@@ -45,26 +38,22 @@ interface CustomElementsManifest {
   modules: CemModule[];
   [key: string]: unknown;
 }
-
 interface CemParseError {
   code: string;
   message: string;
   path?: string;
 }
-
 interface CemParseWarning {
   code: string;
   message: string;
   path?: string;
 }
-
 interface CemParseResult {
   success: boolean;
   manifest?: CustomElementsManifest;
   errors: CemParseError[];
   warnings: CemParseWarning[];
 }
-
 interface CemClassificationResult {
   classifications: CompatibilityClassification[];
   rejectedTags: string[];
@@ -83,21 +72,17 @@ interface CemClassificationResult {
 function isCemCustomElement(declaration: CemBase): declaration is CemCustomElement {
   return declaration.kind === 'custom-element';
 }
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
-
 function toCemBaseArray(value: unknown): CemBase[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  return value.filter(isRecord);
+  return Array.isArray(value) ? value.filter(isRecord) : undefined;
 }
-
 function toCemExports(value: unknown): { declaration?: unknown }[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  return value.filter(isRecord).map((entry) => ({ declaration: entry.declaration }));
+  return Array.isArray(value)
+    ? value.filter(isRecord).map((entry) => ({ declaration: entry.declaration }))
+    : undefined;
 }
-
 function toCemModule(value: unknown): CemModule | undefined {
   if (!isRecord(value)) return undefined;
   return {
@@ -111,23 +96,17 @@ function toCemModule(value: unknown): CemModule | undefined {
 export function parseCem(json: string): CemParseResult {
   const errors: CemParseError[] = [];
   const warnings: CemParseWarning[] = [];
-
   let parsed: unknown;
   try {
     parsed = JSON.parse(json);
   } catch (error) {
-    errors.push({
-      code: 'CEM_PARSE_ERROR',
-      message: `Invalid JSON: ${formatError(error)}`,
-    });
+    errors.push({ code: 'CEM_PARSE_ERROR', message: `Invalid JSON: ${formatError(error)}` });
     return { success: false, errors, warnings };
   }
-
   if (!isRecord(parsed)) {
     errors.push({ code: 'CEM_INVALID_ROOT', message: 'Manifest root must be an object' });
     return { success: false, errors, warnings };
   }
-
   const root = parsed;
   if (!root.schemaVersion) {
     warnings.push({
@@ -139,24 +118,17 @@ export function parseCem(json: string): CemParseResult {
     errors.push({ code: 'CEM_NO_MODULES', message: 'Manifest must have a modules array' });
     return { success: false, errors, warnings };
   }
-
   const manifest: CustomElementsManifest = {
     ...root,
     schemaVersion: typeof root.schemaVersion === 'string' ? root.schemaVersion : undefined,
     packageName: typeof root.packageName === 'string' ? root.packageName : undefined,
     version: typeof root.version === 'string' ? root.version : undefined,
-    modules: root.modules.map((module) =>
-      toCemModule(module) ?? {
-        path: '',
-      }
-    ),
+    modules: root.modules.map((module) => toCemModule(module) ?? { path: '' }),
   };
   const seenTagNames = new Set<string>();
-
   for (let i = 0; i < manifest.modules.length; i++) {
     const module = manifest.modules[i];
     const modulePath = `modules[${i}]`;
-
     if (!module.kind) {
       warnings.push({
         code: 'CEM_MODULE_NO_KIND',
@@ -171,7 +143,6 @@ export function parseCem(json: string): CemParseResult {
         path: modulePath,
       });
     }
-
     for (const [j, declaration] of (module.declarations ?? []).entries()) {
       if (!isCemCustomElement(declaration)) continue;
       const declarationPath = `${modulePath}.declarations[${j}]`;
@@ -198,8 +169,7 @@ export function parseCem(json: string): CemParseResult {
         seenTagNames.add(tagName);
       }
     }
-
-    for (const [j, exported] of (module['exports'] ?? []).entries()) {
+    for (const [j, exported] of (module.exports ?? []).entries()) {
       if (!exported.declaration) {
         errors.push({
           code: 'CEM_EXPORT_NO_DECLARATION',
@@ -209,7 +179,6 @@ export function parseCem(json: string): CemParseResult {
       }
     }
   }
-
   return {
     success: errors.length === 0,
     manifest: errors.length === 0 ? manifest : undefined,
@@ -221,11 +190,9 @@ export function parseCem(json: string): CemParseResult {
 export function classifyCemManifest(manifest: CustomElementsManifest): CemClassificationResult {
   const classifications: CompatibilityClassification[] = [];
   const seenTags = new Map<string, CompatibilityClassification>();
-
   for (const module of manifest.modules) {
     for (const declaration of module.declarations ?? []) {
       if (!isCemCustomElement(declaration) || !declaration.tagName) continue;
-
       if (seenTags.has(declaration.tagName)) {
         classifications.push({
           tagName: declaration.tagName,
@@ -239,30 +206,24 @@ export function classifyCemManifest(manifest: CustomElementsManifest): CemClassi
         });
         continue;
       }
-
       const classification = classifyCemDeclaration(manifest, module, declaration);
       classifications.push(classification);
       seenTags.set(declaration.tagName, classification);
     }
   }
-
   const rejectedTags: string[] = [];
   const ssrCapableTags: string[] = [];
   const clientOnlyTags: string[] = [];
   const experimentalDomTags: string[] = [];
-
-  // bucket lookup replaces 4-case switch
   const buckets: Record<string, string[]> = {
     rejected: rejectedTags,
     'ssr-capable': ssrCapableTags,
     'client-only': clientOnlyTags,
     'experimental-dom': experimentalDomTags,
   };
-
   for (const classification of classifications) {
     buckets[classification.tier]?.push(classification.tagName);
   }
-
   return {
     classifications,
     rejectedTags,
@@ -288,24 +249,20 @@ function classifyCemDeclaration(
   const ssr = openElement?.ssr ?? false;
   const dsd = openElement?.dsd ?? false;
   const hydrate = openElement?.hydrate ?? 'idle';
-
   let tier: CompatibilityTier = 'client-only';
   let reason = manifest.packageName
     ? `CEM-only package ${manifest.packageName} (no openElement SSR declaration)`
     : 'CEM-only package (no openElement SSR declaration)';
-
   if (openElement?.ssr === true) {
     if (openElement.layer) {
       tier = 'ssr-capable';
       reason = `ssr: true with layer: ${openElement.layer}`;
     } else {
-      tier = 'client-only';
       reason = 'ssr: true but no adapter/layer declared';
     }
   } else if (openElement?.ssr === false) {
     reason = 'ssr: false (explicit client-only)';
   }
-
   return {
     tagName: declaration.tagName!,
     tier,

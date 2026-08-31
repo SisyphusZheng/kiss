@@ -29,10 +29,9 @@
  *    - Browser-only packages: caught by try/catch
  *    - SSR decision: `manifest.declarations[].openElement.ssr` field
  *
- * 3. CEM manifests (v0.18.0):
- *    - Discovered by `scanCemManifests()` - reads custom-elements.json from
- *      node_modules packages WITHOUT importing package code
- *    - Results fed into the compatibility classifier (parseCem + classifyCemManifest)
+ * 3. CEM manifests:
+ *    - `scanCemManifests()` reads custom-elements.json without importing code.
+ *    - `parseCem()` and `classifyCemManifest()` establish compatibility facts.
  *
  * 4. Nested compiled custom elements:
  *    - NOT handled in this file

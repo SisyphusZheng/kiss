@@ -22,7 +22,7 @@ export const openElement = defineIslandConfig({ hydrate: 'only', ssr: false, dsd
 
 @element('only-ticker', { root: 'shadow-open' })
 export default class OnlyTicker extends OpenElement {
-  static styles = tickerStyles;
+  static override styles = tickerStyles;
 
   @property({ reflect: false, attribute: false })
   tick = 0;
