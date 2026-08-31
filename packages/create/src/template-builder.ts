@@ -66,9 +66,9 @@ const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
 
 function versionTokens(v: ProductVersions): Record<string, string> {
   return {
-    '${v.app}': v.app,
-    '${v.adapterVite}': v.adapterVite,
-    '${v.element}': v.element,
+    ['$' + '{v.app}']: v.app,
+    ['$' + '{v.adapterVite}']: v.adapterVite,
+    ['$' + '{v.element}']: v.element,
   };
 }
 

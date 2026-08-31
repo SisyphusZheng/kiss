@@ -298,12 +298,13 @@ const activeRetiredPattern = new RegExp(`(?:${retiredFullForm}|${retiredShortFor
 const removedPackageAlternation = REMOVED_PACKAGE_NAMES
   .map((name) => name.slice(name.lastIndexOf('/') + 1))
   .join('|');
+const retiredPackageBoundary = String.raw`(?:[/\x60'"\s]|$)`;
 
 const wwwForbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'mojibake', re: new RegExp(`[${MOJIBAKE_CHARS.join('')}]`) },
   {
     name: 'retired product package',
-    re: new RegExp(`@openelement/(?:${removedPackageAlternation})(?:[/'"\`\s]|$)`),
+    re: new RegExp(`@openelement/(?:${removedPackageAlternation})${retiredPackageBoundary}`),
   },
   {
     name: 'retired two-product doctrine',
@@ -313,7 +314,10 @@ const wwwForbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'retired app vite subpath', re: /@openelement\/app\/vite|\/vite subpath/i },
   { name: 'internal build contract', re: /\bBuildPlan\b|\bAppShell protocol\b/ },
   { name: 'beta.4 published claim', re: /beta\.4 (?:is |was )?(?:released|published)/i },
-  { name: 'externally hosted site font', re: /fonts\.(?:googleapis|gstatic)\.com/i },
+  {
+    name: 'externally hosted site font',
+    re: /(?:https?:\/\/|\/\/)fonts\.(?:googleapis|gstatic)\.com(?:[/:]|$)/i,
+  },
   {
     name: 'retired generic fullstack SEO claim',
     re: /openElement (?:is a |[-–—] )?Web Components Fullstack Framework/i,

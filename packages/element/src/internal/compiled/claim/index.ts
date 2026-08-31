@@ -970,6 +970,13 @@ function appendAll(parent: Node, nodes: Node[]): void {
   for (const node of nodes) parent.appendChild(node);
 }
 
+function createProgramElement(doc: Document, tag: string): Element {
+  if (!/^[a-z][a-z0-9-]*$/.test(tag)) {
+    throw new CompiledProgramValidationError('template', 'element tag is invalid');
+  }
+  return doc.createElement(tag);
+}
+
 function buildItemNodes(
   doc: Document,
   part: SpikeEachPart,
@@ -982,7 +989,7 @@ function buildItemNodes(
       }
       if (node.k === 'text') return doc.createTextNode(node.value);
       if (node.k === 'el') {
-        const element = doc.createElement(node.tag);
+        const element = createProgramElement(doc, node.tag);
         for (const [name, value] of node.attrs) element.setAttribute(name, value);
         for (const [name, field] of node.iattrs ?? []) {
           const value = itemAttrSerialized(item[field]);
@@ -1003,7 +1010,7 @@ function buildStaticNodes(doc: Document, nodes: SpikeTreeNode[]): Node[] {
   return nodes.map((node) => {
     if (node.k === 'text') return doc.createTextNode(node.value);
     if (node.k === 'el') {
-      const element = doc.createElement(node.tag);
+      const element = createProgramElement(doc, node.tag);
       for (const [name, value] of node.attrs) element.setAttribute(name, value);
       if (!voidElement(node.tag)) appendAll(element, buildStaticNodes(doc, node.children));
       return element;

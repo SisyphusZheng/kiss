@@ -16,6 +16,21 @@ import { deepQueryAllInPage } from '../../tools/lib/shadow-walker.ts';
 // CI runners are fast and deterministic; local Windows dev boxes can be
 // much slower, so relax the load-time ceiling outside of CI.
 const LOAD_THRESHOLD_MS = process.env.CI ? 5000 : 60000;
+const NON_CRITICAL_EXTERNAL_HOSTS = new Set([
+  'gc.zgo.at',
+  'openelement.goatcounter.com',
+  'cdnjs.cloudflare.com',
+  'cdn.jsdelivr.net',
+]);
+
+function isNonCriticalExternalUrl(value: string): boolean {
+  if (!value) return false;
+  try {
+    return NON_CRITICAL_EXTERNAL_HOSTS.has(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+}
 
 test.describe('Accessibility', () => {
   test('shared prose and mobile rail color pairs meet WCAG AA', async ({ page }) => {
@@ -139,6 +154,17 @@ test.describe('Accessibility', () => {
 });
 
 test.describe('Performance', () => {
+  test('external console allowlist requires an exact hostname', () => {
+    expect(isNonCriticalExternalUrl('https://cdnjs.cloudflare.com/library.js')).toBe(true);
+    expect(isNonCriticalExternalUrl('https://cdnjs.cloudflare.com.evil.test/library.js')).toBe(
+      false,
+    );
+    expect(isNonCriticalExternalUrl('https://evil.test/cdnjs.cloudflare.com/library.js')).toBe(
+      false,
+    );
+    expect(isNonCriticalExternalUrl('not a URL')).toBe(false);
+  });
+
   test('homepage loads within 5 seconds', async ({ page }) => {
     const start = Date.now();
     await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -180,16 +206,13 @@ test.describe('Performance', () => {
     // Filter out known non-critical errors (e.g., analytics, CDN, external CDN integrity mismatch)
     const criticalErrors = errors.filter(
       ({ text, url }) =>
-        !url.includes('gc.zgo.at') &&
-        !url.includes('openelement.goatcounter.com') &&
+        !isNonCriticalExternalUrl(url) &&
         !text.includes('gc.zgo.at/count.js') &&
         !text.includes('net::ERR') &&
         !text.includes('favicon') &&
         !text.includes('Manifest') &&
         // CDN integrity hash mismatches - external CDN resources change
         // independently of the app; these are infrastructure noise, not bugs.
-        !url.includes('cdnjs.cloudflare.com') &&
-        !url.includes('cdn.jsdelivr.net') &&
         !text.includes("Failed to find a valid digest in the 'integrity' attribute"),
     );
 
