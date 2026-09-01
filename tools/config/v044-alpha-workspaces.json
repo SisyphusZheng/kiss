@@ -15,8 +15,8 @@
         "packages/adapter-vite/src/internal/compiler/compile.ts",
         "packages/adapter-vite/src/internal/compiler/program.ts",
         "packages/adapter-vite/src/internal/compiler/diagnostics/",
-        "packages/adapter-vite/__fixtures__/compiled-element-spike/",
-        "packages/adapter-vite/__tests__/compiled-element-spike.test.ts"
+        "packages/adapter-vite/__fixtures__/compiled-element-v1/",
+        "packages/adapter-vite/__tests__/compiled-element-v1.test.ts"
       ]
     },
     {
@@ -33,7 +33,7 @@
         "packages/element/src/open-element-form.ts",
         "packages/element/src/open-element-styles.ts",
         "packages/element/src/error-boundary.ts",
-        "packages/element/__tests__/compiled-part-program-spike.test.ts",
+        "packages/element/__tests__/part-program-v1-conformance.test.ts",
         "packages/element/__tests__/compiled-runtime/"
       ]
     },
@@ -134,7 +134,7 @@
       "packages/element/__tests__/compiled-runtime/",
       "packages/element/__tests__/compiled-server/",
       "packages/element/__tests__/compiled-claim/",
-      "packages/element/__tests__/compiled-part-program-spike.test.ts",
+      "packages/element/__tests__/part-program-v1-conformance.test.ts",
       "packages/element/__fixtures__/compiled-server/",
       "packages/element/__fixtures__/compiled-claim/",
       "packages/adapter-vite/src/internal/compiler/",
@@ -144,10 +144,10 @@
       "packages/adapter-vite/src/framework.ts",
       "packages/adapter-vite/src/build.ts",
       "packages/adapter-vite/src/nitro-mount.ts",
-      "packages/adapter-vite/__fixtures__/compiled-element-spike/",
+      "packages/adapter-vite/__fixtures__/compiled-element-v1/",
       "packages/adapter-vite/__fixtures__/request-time/",
       "packages/adapter-vite/__fixtures__/static-only/",
-      "packages/adapter-vite/__tests__/compiled-element-spike.test.ts",
+      "packages/adapter-vite/__tests__/compiled-element-v1.test.ts",
       "packages/adapter-vite/__tests__/compiler-semantic-core-boundary.test.ts",
       "packages/adapter-vite/__tests__/v044-delivery/",
       "packages/app/",

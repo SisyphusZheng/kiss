@@ -64,8 +64,12 @@ export function validateExecutionState(
   if (typeof state.currentIssue !== 'number' || !Number.isInteger(state.currentIssue)) {
     failures.push('execution state currentIssue must be an integer');
   }
-  if (state.executionMode !== 'independent-alpha-workspaces') {
-    failures.push('Alpha executionMode must be independent-alpha-workspaces');
+  const alphaExecutionModes = new Set([
+    'independent-alpha-workspaces',
+    'alpha8-integration-plus-alpha9-semantic-convergence',
+  ]);
+  if (typeof state.executionMode !== 'string' || !alphaExecutionModes.has(state.executionMode)) {
+    failures.push('Alpha executionMode must be the workspace or integration/convergence mode');
   }
   if (state.threeRoleLoopActive !== false) {
     failures.push('three-role loop must be disabled throughout Alpha');
@@ -82,12 +86,19 @@ export function validateExecutionState(
     for (const workspace of ALPHA_WORKSPACES) {
       if (!(workspace in workspaces)) failures.push(`execution state omits ${workspace}`);
     }
+    if (
+      state.executionMode === 'alpha8-integration-plus-alpha9-semantic-convergence' &&
+      !('alpha.9' in workspaces)
+    ) {
+      failures.push('Alpha integration/convergence state omits alpha.9');
+    }
   }
   if (
     typeof state.authoritativeCiOwner !== 'string' ||
-    !state.authoritativeCiOwner.includes('alpha.8')
+    !(state.authoritativeCiOwner.includes('alpha.8') ||
+      state.authoritativeCiOwner.includes('PR #1199'))
   ) {
-    failures.push('authoritative full CI owner must be the alpha.8 exact-SHA pull request');
+    failures.push('authoritative full CI owner must be PR #1199 exact head');
   }
   if (state.betaThreeRoleExecutorConfig !== V044_ROLE_CONFIG_PATH) {
     failures.push(`Beta executor configuration must reference ${V044_ROLE_CONFIG_PATH}`);
@@ -299,8 +310,8 @@ export function validateAlphaWorkspaceTopology(plan: string): string[] {
       'one final integration workspace',
       'does not use the three-role release loop',
       'One agent owns each alpha.1-alpha.7 workspace end-to-end',
-      'alpha.8 integration agent is the only aggregator',
-      'alpha.8 pull request to `dev` runs the only full matrix',
+      'Alpha integration agent is the only aggregator',
+      'PR #1199 runs the only full matrix',
       'No internal Alpha ID causes a tag',
       'Beta.1',
       'Beta.3',
@@ -417,7 +428,7 @@ export function validateReleaseDoctrine(texts: ReleaseDoctrineTexts): string[] {
     const required of [
       'does not use the three-role release loop',
       'No internal Alpha ID causes a tag',
-      'alpha.8 pull request to `dev` runs the only full matrix',
+      'PR #1199 runs the only full matrix',
     ]
   ) {
     if (!plan.includes(required)) failures.push(`execution plan omits "${required}"`);

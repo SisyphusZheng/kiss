@@ -37,6 +37,14 @@ Deno.test('Alpha workspace execution state validates without three-role sessions
   assertEquals(validateExecutionState(validState(), config), []);
 });
 
+Deno.test('Alpha.8 plus Alpha.9 convergence keeps PR #1199 as exact-head authority', () => {
+  const state = validState();
+  state.executionMode = 'alpha8-integration-plus-alpha9-semantic-convergence';
+  state.authoritativeCiOwner = 'PR #1199 final exact head';
+  (state.workspaces as Record<string, string>)['alpha.9'] = 'BLOCKING_BETA1';
+  assertEquals(validateExecutionState(state, config), []);
+});
+
 Deno.test('Alpha state rejects an active three-role loop or embedded role sessions', () => {
   const active = validState();
   active.threeRoleLoopActive = true;
@@ -50,14 +58,16 @@ Deno.test('Alpha state rejects an active three-role loop or embedded role sessio
   assert(failures.some((failure) => failure.includes('releaseVerifier')));
 });
 
-Deno.test('Alpha state rejects a missing workspace or non-alpha.8 CI owner', () => {
+Deno.test('Alpha state rejects a missing workspace or non-authoritative CI owner', () => {
   const missing = validState();
   delete (missing.workspaces as Record<string, unknown>)['alpha.4'];
   assert(validateExecutionState(missing, config).some((failure) => failure.includes('alpha.4')));
 
   const wrongOwner = validState();
   wrongOwner.authoritativeCiOwner = 'every workspace';
-  assert(validateExecutionState(wrongOwner, config).some((failure) => failure.includes('alpha.8')));
+  assert(
+    validateExecutionState(wrongOwner, config).some((failure) => failure.includes('PR #1199')),
+  );
 });
 
 Deno.test('Beta executor capability remains pinned but is not activated by Alpha state', () => {
@@ -127,8 +137,8 @@ function alphaPlan(): string {
     '| alpha.7 | Qualification | #1176 |',
     '| alpha.8 | Final Integration | #1181 |',
     'One agent owns each alpha.1-alpha.7 workspace end-to-end.',
-    'The alpha.8 integration agent is the only aggregator.',
-    'The alpha.8 pull request to `dev` runs the only full matrix for its exact SHA.',
+    'The Alpha integration agent is the only aggregator.',
+    'PR #1199 runs the only full matrix for its exact SHA.',
     'No internal Alpha ID causes a tag, npm publication, GitHub Release, dist-tag change, `main` promotion, three-role GO or fresh release-verifier run.',
     'Beta.1 activates the three-role release loop. Beta.3 owns #1192 #1156 #1187 #1188 #1189.',
     '#1150 #1157 #1158 #1159 #1177 #1178',
@@ -167,10 +177,10 @@ Deno.test('workspace topology rejects three-role Alpha execution and per-workspa
   assert(validateAlphaWorkspaceTopology(roles).some((failure) => failure.includes('three-role')));
 
   const matrices = alphaPlan().replace(
-    'alpha.8 pull request to `dev` runs the only full matrix',
+    'PR #1199 runs the only full matrix',
     'every workspace runs the full matrix',
   );
-  assert(validateAlphaWorkspaceTopology(matrices).some((failure) => failure.includes('alpha.8')));
+  assert(validateAlphaWorkspaceTopology(matrices).some((failure) => failure.includes('PR #1199')));
 });
 
 async function doctrineCorpus(): Promise<ReleaseDoctrineTexts> {

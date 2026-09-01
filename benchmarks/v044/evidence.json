@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "source": "tools/benchmark-v044.ts",
-  "fixtureId": "compiled-element-spike",
+  "fixtureId": "part-program-v1",
   "versions": {
     "baseline": "0.43.3",
-    "candidate": "0.44.0-alpha.0"
+    "candidate": "0.44.0-internal-alpha.9"
   },
   "artifact": {
-    "source": "packages/adapter-vite/__fixtures__/compiled-element-spike/counter.tsx",
-    "program": "packages/adapter-vite/__fixtures__/compiled-element-spike/expected-program.json",
+    "source": "packages/adapter-vite/__fixtures__/compiled-element-v1/counter.tsx",
+    "program": "packages/adapter-vite/__fixtures__/compiled-element-v1/expected-program.json",
     "compiler": "packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts",
     "runtime": "packages/element/src/internal/compiled/runtime.ts",
-    "programBytes": 15442,
-    "generatedModuleBytes": 25744,
+    "programBytes": 15438,
+    "generatedModuleBytes": 25750,
     "instructionCount": 5
   },
   "baseline": {
@@ -20,9 +20,9 @@
     "description": "Frozen 0.43.3 equivalent compact binding/update Part Program budget for this fixture; diagnostic source maps are reported separately through full artifact and generated-module bytes"
   },
   "candidate": {
-    "interactiveProgramBytes": 3938,
-    "generatedModuleBytes": 25744,
-    "programBytes": 15442
+    "interactiveProgramBytes": 3943,
+    "generatedModuleBytes": 25750,
+    "programBytes": 15438
   },
   "staticOutput": {
     "runtimeBytes": 0,
@@ -68,16 +68,16 @@
         "subscriptions": 2
       },
       "timing": {
-        "serializeMs": 0.193,
-        "freshMs": 0.944,
-        "claimMs": 1.805,
-        "updateMs": 0.033,
-        "churnMs": 3.594
+        "serializeMs": 1.849,
+        "freshMs": 0.834,
+        "claimMs": 0.68,
+        "updateMs": 0.034,
+        "churnMs": 16.264
       },
-      "heapGrowthBytes": 0,
+      "heapGrowthBytes": 4141816,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
-      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul></ul></div>"
+      "serializedHtml": "<div class=\"proof\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul></ul></div>"
     },
     {
       "id": "conditional",
@@ -106,16 +106,16 @@
         "subscriptions": 3
       },
       "timing": {
-        "serializeMs": 0.124,
-        "freshMs": 0.164,
-        "claimMs": 0.046,
-        "updateMs": 0.243,
-        "churnMs": 2.722
+        "serializeMs": 0.524,
+        "freshMs": 0.287,
+        "claimMs": 0.243,
+        "updateMs": 0.124,
+        "churnMs": 14.99
       },
-      "heapGrowthBytes": 1720624,
+      "heapGrowthBytes": 0,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
-      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul></ul></div>"
+      "serializedHtml": "<div class=\"proof\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul></ul></div>"
     },
     {
       "id": "keyed-list",
@@ -144,16 +144,16 @@
         "subscriptions": 3
       },
       "timing": {
-        "serializeMs": 0.077,
-        "freshMs": 0.114,
-        "claimMs": 0.458,
-        "updateMs": 0.096,
-        "churnMs": 4.914
+        "serializeMs": 0.297,
+        "freshMs": 0.335,
+        "claimMs": 0.196,
+        "updateMs": 0.242,
+        "churnMs": 14.165
       },
-      "heapGrowthBytes": 0,
+      "heapGrowthBytes": 2842368,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
-      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul><!--oe:p3--><li>alpha</li><li>beta</li><li>gamma</li><li>delta</li><!--oe:/p3--></ul></div>"
+      "serializedHtml": "<div class=\"proof\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><ul><!--oe:p3--><li>alpha</li><li>beta</li><li>gamma</li><li>delta</li><!--oe:/p3--></ul></div>"
     },
     {
       "id": "nested-real-app",
@@ -182,20 +182,20 @@
         "subscriptions": 4
       },
       "timing": {
-        "serializeMs": 0.03,
-        "freshMs": 0.018,
-        "claimMs": 0.042,
-        "updateMs": 0.041,
-        "churnMs": 3.488
+        "serializeMs": 0.184,
+        "freshMs": 0.147,
+        "claimMs": 0.176,
+        "updateMs": 0.084,
+        "churnMs": 13.607
       },
-      "heapGrowthBytes": 5346152,
+      "heapGrowthBytes": 489704,
       "retainedSubscriptions": 0,
       "retainedListeners": 0,
-      "serializedHtml": "<div class=\"spike\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul><!--oe:p4--><li>item-00</li><li>item-01</li><li>item-02</li><li>item-03</li><li>item-04</li><li>item-05</li><li>item-06</li><li>item-07</li><li>item-08</li><li>item-09</li><li>item-10</li><li>item-11</li><!--oe:/p4--></ul></div>"
+      "serializedHtml": "<div class=\"proof\"><h1>Count: <!--oe:p0-->0</h1><input value=\"ready\"><button type=\"button\">+</button><!--oe:p3--><p class=\"parity\">zero</p><!--oe:/p3--><ul><!--oe:p4--><li>item-00</li><li>item-01</li><li>item-02</li><li>item-03</li><li>item-04</li><li>item-05</li><li>item-06</li><li>item-07</li><li>item-08</li><li>item-09</li><li>item-10</li><li>item-11</li><!--oe:/p4--></ul></div>"
     }
   ],
   "resources": {
-    "maxHeapGrowthBytes": 5346152,
+    "maxHeapGrowthBytes": 4141816,
     "maxRetainedSubscriptions": 0,
     "maxRetainedListeners": 0
   },

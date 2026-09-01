@@ -11,7 +11,7 @@
  */
 
 import { fromFileUrl, join, resolve } from '@std/path';
-import { compileElementSpike } from '../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
+import { compileElementProgram } from '../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 import {
   claimExistingDom,
   createFreshDom,
@@ -21,8 +21,8 @@ import type {
   PartProgram as Program,
   ProgramDependencyRecord,
   ProgramLocationRecord,
-  SpikePart as ProgramPart,
-  SpikeTreeNode as TreeNode,
+  ProgramPart as ProgramPart,
+  ProgramTreeNode as TreeNode,
 } from '../packages/adapter-vite/src/internal/compiler/semantic-core/program.ts';
 
 const defaultFixtureRoot = new URL('../benchmarks/v044/', import.meta.url);
@@ -596,7 +596,7 @@ function build043Proxy(
 ): FElement {
   const host = doc.createElement('host');
   const div = doc.createElement('div');
-  div.setAttribute('class', 'spike');
+  div.setAttribute('class', 'proof');
   host.appendChild(div);
 
   const h1 = doc.createElement('h1');
@@ -1191,7 +1191,7 @@ export async function runV044Qualification(
   assertProgramShape(artifact);
   // The checked Part Program fixture carries a stable virtual source identity;
   // host checkout paths must never make qualification evidence machine-specific.
-  const compiled = compileElementSpike(source, '/project/app/islands/counter.tsx');
+  const compiled = compileElementProgram(source, '/project/app/islands/counter.tsx');
   if (canonicalJson(compiled.program) !== canonicalJson(artifact)) {
     throw new Error('[v044-performance] compiler output does not match the checked artifact');
   }

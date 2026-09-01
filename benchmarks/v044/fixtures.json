@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "fixtureId": "compiled-element-spike",
+  "fixtureId": "part-program-v1",
   "versions": {
     "baseline": "0.43.3",
-    "candidate": "0.44.0-alpha.0"
+    "candidate": "0.44.0-internal-alpha.9"
   },
   "artifact": {
-    "source": "packages/adapter-vite/__fixtures__/compiled-element-spike/counter.tsx",
-    "program": "packages/adapter-vite/__fixtures__/compiled-element-spike/expected-program.json",
+    "source": "packages/adapter-vite/__fixtures__/compiled-element-v1/counter.tsx",
+    "program": "packages/adapter-vite/__fixtures__/compiled-element-v1/expected-program.json",
     "compiler": "packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts",
     "runtime": "packages/element/src/internal/compiled/runtime.ts",
     "staticFixture": "benchmarks/v044/static.html"
