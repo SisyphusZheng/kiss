@@ -42,11 +42,26 @@ Deno.test('v0.44 regression: compiled reading shell and page rail are present in
 Deno.test('v0.27.0 regression: open-layout has DSD template', () => {
   const html = readPage(DOCS_PAGE);
   // The light-root app shell and static article chain must be expanded, while
-  // admitted shadow-root islands retain native DSD.
+  // admitted shadow-root islands retain native DSD. Article-embedded components
+  // (open-code-block inside the article's Trusted HTML) stay SSR-inert on
+  // purpose: trusted content is opaque to nested composition, so only shell
+  // admitted islands compose server-side. The inert host must not gain a
+  // server DSD template from an opaque string.
   const count = (html.match(/shadowrootmode="open"/g) || []).length;
-  assert(count >= 2, `Expected >= 2 DSD templates in docs page, got ${count}`);
+  assert(count >= 1, `Expected >= 1 DSD template in docs page, got ${count}`);
   assertStringIncludes(html, '<open-layout', 'App shell host must be present');
   assertStringIncludes(html, 'data-oe-light', 'Compiled light roots must be expanded');
+  assertStringIncludes(
+    html,
+    '<open-theme-toggle><template shadowrootmode="open"',
+    'Admitted shadow islands must keep native DSD',
+  );
+  const codeBlock = html.indexOf('<open-code-block');
+  assert(codeBlock !== -1, 'open-code-block host must be present in article content');
+  assertFalse(
+    html.slice(codeBlock, codeBlock + 200).includes('<template shadowrootmode'),
+    'Trusted HTML content must stay opaque to nested composition',
+  );
 });
 
 Deno.test('v0.27.0 regression: open-search is present in output', () => {
