@@ -154,6 +154,42 @@ Deno.test('Trusted HTML remains opaque to nested component composition', () => {
   });
 });
 
+Deno.test('nested compiled boolean host attributes preserve presence semantics', () => {
+  const child = testProgram({
+    tag: 'oe-boolean-child',
+    rootMode: 'light',
+    properties: [{
+      name: 'active',
+      attribute: 'active',
+      type: 'boolean',
+      converter: 'boolean',
+      reflect: true,
+      default: false,
+    }],
+    template: [{ k: 'el', tag: 'slot', attrs: [], children: [] }],
+    parts: [],
+  });
+  const parent = testProgram({
+    tag: 'oe-boolean-parent',
+    rootMode: 'shadow-open',
+    template: [{
+      k: 'el',
+      tag: 'oe-boolean-child',
+      attrs: [['active', '']],
+      children: [],
+    }],
+    parts: [],
+  });
+
+  withRegistry(new Map([['oe-boolean-child', compiledClass(child)]]), () => {
+    const html = renderDsd('oe-boolean-parent', {
+      componentClass: compiledClass(parent),
+      ssrRenderableTags: ['oe-boolean-child'],
+    }).html;
+    assertStringIncludes(html, '<oe-boolean-child active="" data-oe-light>');
+  });
+});
+
 Deno.test('public light-child projection rejects forged TrustedHtml values', () => {
   const shell = testProgram({
     tag: 'oe-safe-shell',

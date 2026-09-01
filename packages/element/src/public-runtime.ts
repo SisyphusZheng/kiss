@@ -274,7 +274,14 @@ function renderDsdAtDepth(
         const attribute = nested.attributes.find(([name]) =>
           name === record.name || name === record.attribute
         );
-        if (attribute) nestedProps[record.name] = coerceServerProp(record, attribute[1]);
+        // Boolean attributes are true by presence, including the canonical
+        // static JSX encoding `name=""`. Do not feed the empty serialized
+        // value through Boolean("") or the nested host loses its state.
+        if (attribute) {
+          nestedProps[record.name] = record.type === 'boolean'
+            ? true
+            : coerceServerProp(record, attribute[1]);
+        }
       }
       const passthrough = nested.attributes.filter(([name]) => !propertyAttributes.has(name));
       const nestedMode = nestedClass.__partProgram.root.kind;

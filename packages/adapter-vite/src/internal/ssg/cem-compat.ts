@@ -127,23 +127,23 @@ export function parseCem(json: string): CemParseResult {
   };
   const seenTagNames = new Set<string>();
   for (let i = 0; i < manifest.modules.length; i++) {
-    const module = manifest.modules[i];
+    const cemModule = manifest.modules[i];
     const modulePath = `modules[${i}]`;
-    if (!module.kind) {
+    if (!cemModule.kind) {
       warnings.push({
         code: 'CEM_MODULE_NO_KIND',
         message: `Module at index ${i} has no kind field`,
         path: modulePath,
       });
     }
-    if (!module.path) {
+    if (!cemModule.path) {
       errors.push({
         code: 'CEM_MODULE_NO_PATH',
         message: `Module at index ${i} has no path field`,
         path: modulePath,
       });
     }
-    for (const [j, declaration] of (module.declarations ?? []).entries()) {
+    for (const [j, declaration] of (cemModule.declarations ?? []).entries()) {
       if (!isCemCustomElement(declaration)) continue;
       const declarationPath = `${modulePath}.declarations[${j}]`;
       const tagName = declaration.tagName;
@@ -169,7 +169,7 @@ export function parseCem(json: string): CemParseResult {
         seenTagNames.add(tagName);
       }
     }
-    for (const [j, exported] of (module.exports ?? []).entries()) {
+    for (const [j, exported] of (cemModule.exports ?? []).entries()) {
       if (!exported.declaration) {
         errors.push({
           code: 'CEM_EXPORT_NO_DECLARATION',

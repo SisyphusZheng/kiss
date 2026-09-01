@@ -163,6 +163,12 @@ export function findReachableIslandTags(
     }
     const semantics = analyzeModuleSemantics(source, normalizedPath);
     recordSource(source, normalizedPath);
+    // Importing a local island module is an explicit registration-capability
+    // edge even when its tag is created later by opaque third-party code.
+    // The declaration itself is therefore observable reachability evidence.
+    for (const tag of semantics.definedCustomElementTags) {
+      if (candidateSet.has(tag)) reachable.add(tag);
+    }
     for (const specifier of semantics.relativeImports) {
       const imported = resolveSourceImport(normalizedPath, specifier, root);
       if (imported) recordSourceFile(imported);

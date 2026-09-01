@@ -409,3 +409,45 @@ Deno.test('v0.44 client delivery follows islands imported through a route compon
     await Deno.remove(root, { recursive: true });
   }
 });
+
+Deno.test('v0.44 client delivery keeps an explicitly imported island capability', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'open-element-alpha9-capability-' });
+  try {
+    const routesDir = join(root, 'app', 'routes');
+    const componentsDir = join(root, 'app', 'components');
+    const islandsDir = join(root, 'app', 'islands');
+    await Deno.mkdir(routesDir, { recursive: true });
+    await Deno.mkdir(componentsDir, { recursive: true });
+    await Deno.mkdir(islandsDir, { recursive: true });
+    await Deno.writeTextFile(
+      join(routesDir, 'index.tsx'),
+      "import Content from '../components/content.tsx';\nexport default Content;",
+    );
+    await Deno.writeTextFile(
+      join(componentsDir, 'content.tsx'),
+      "import '../islands/late-child.tsx';\n" +
+        'export default function Content() { return <opaque-third-party />; }',
+    );
+    await Deno.writeTextFile(
+      join(islandsDir, 'late-child.tsx'),
+      "import { OpenElement } from '@openelement/element';\n" +
+        'declare function element(tag: string): ClassDecorator;\n' +
+        "@element('oe-late-child')\n" +
+        'export default class LateChild extends OpenElement { render() { return <span />; } }',
+    );
+
+    const ctx = new OpenElementBuildContext({});
+    ctx.phase3.routesDir = 'app/routes';
+    ctx.phase1.cachedRoutes = [{
+      path: '/',
+      filePath: 'index.tsx',
+      type: 'page',
+      varName: 'route_index',
+    }];
+
+    const reachable = findReachableIslandTags(ctx, root, 'dist', ['oe-late-child']);
+    assertEquals([...reachable], ['oe-late-child']);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});

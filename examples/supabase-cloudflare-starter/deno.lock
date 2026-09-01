@@ -22,6 +22,7 @@
     "npm:pdfjs-dist@4.8.69": "4.8.69",
     "npm:preact@^10.28.0": "10.29.8_preact-render-to-string@6.7.0",
     "npm:typescript@^5.9.0": "5.9.3",
+    "npm:urlpattern-polyfill@10.1.0": "10.1.0",
     "npm:valibot@^1.1.0": "1.4.2_typescript@5.9.3",
     "npm:vite@8.0.16": "8.0.16_esbuild@0.25.12_jiti@2.7.0_yaml@2.9.0",
     "npm:wrangler@latest": "4.123.0",
@@ -1803,6 +1804,9 @@
         "db0",
         "ofetch"
       ]
+    },
+    "urlpattern-polyfill@10.1.0": {
+      "integrity": "sha512-IGjKp/o0NL3Bso1PymYURCJxMPNAf/ILOpendP9f5B6e1rTJgdgiOvgfoT8VxCAdY+Wisb9uhGaJJf3yZ2V9nw=="
     },
     "util-deprecate@1.0.2": {
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
