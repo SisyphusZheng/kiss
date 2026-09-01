@@ -36,14 +36,7 @@ export interface LocalIslandMeta {
   reason?: string;
 }
 
-/**
- * Island metadata as stored in the build context (ctx.phase1.islandMeta):
- * scanned local metadata narrowed onto the frozen 0.43 decl view
- * (Record<string, Partial<IslandDecl>>). The runtime objects keep their
- * alpha.4 delivery fields (media/tags/tagNames/exportNames and a possible
- * 'media' hydrate strategy); readers intersect the delivery fields back in at
- * the use site, the same convention as expandIslandDeliveryDecl.
- */
+/** Island metadata stored in the build context. */
 export type StoredIslandMeta = LocalIslandMeta & Partial<IslandDecl>;
 
 /**
@@ -71,10 +64,6 @@ export function resolveIslandSsrDsd(meta: {
 }
 
 /** Effective island upgrade strategy: island metadata -> configured upgrade strategy -> 'idle'. */
-export function resolveIslandHydrate(
-  hydrate: HydrationStrategy | undefined,
-  upgradeStrategy?: HydrationStrategy,
-): HydrationStrategy;
 export function resolveIslandHydrate(
   hydrate: IslandDeliveryStrategy | undefined,
   upgradeStrategy?: HydrationStrategy,
@@ -125,17 +114,8 @@ export function expandIslandDeliveryDecl(island: IslandDecl): IslandDecl[] {
   })) as IslandDecl[];
 }
 
-/**
- * Package island declaration with the alpha.4 delivery fields resolved. The
- * runtime object carries the delivery aliases (media/tags/exportNames) and may
- * use the 'media' strategy, which the frozen 0.43 IslandDecl view cannot
- * express; the build context stores the IslandDecl view and readers intersect
- * the delivery fields back in at the use site (same convention as
- * expandIslandDeliveryDecl).
- */
-export type DeliveryIslandDecl = Omit<IslandDecl, 'hydrate'> & IslandDeliveryMeta & {
-  hydrate?: IslandDeliveryStrategy;
-};
+/** Package island declaration with delivery aliases resolved. */
+export type DeliveryIslandDecl = IslandDecl & IslandDeliveryMeta;
 
 /**
  * Build package island declarations from scanned package manifests.
@@ -212,10 +192,7 @@ export function buildPackageIslandDecls(
         };
       })
   );
-  // The frozen 0.43 IslandDecl view cannot express the delivery strategy
-  // union ('media'); the delivery fields remain on the stored objects and are
-  // intersected back in by readers at the use site.
-  return decls as IslandDecl[];
+  return decls;
 }
 
 function staticOpenElementError(message: string): OpenElementError {

@@ -1,7 +1,10 @@
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { join } from 'node:path';
 import { buildCriticalHeadExtras } from '../../src/internal/ssg/critical-assets.ts';
-import { createCompiledElementSourceMap } from '../../src/internal/compiler/plugin.ts';
+import {
+  compiledElementPlugin,
+  createCompiledElementSourceMap,
+} from '../../src/internal/compiler/plugin.ts';
 import { generateClientEntry } from '../../src/internal/ssg/entry-client-codegen.ts';
 import { createIslandScheduler } from '../../src/internal/ssg/island-scheduler.ts';
 import { readIslandConfig } from '../../src/internal/ssg/island-scanner.ts';
@@ -9,6 +12,8 @@ import { buildSsrAdmissionPlan } from '../../src/internal/ssg/entry-descriptor.t
 import { OpenElementBuildContext } from '../../src/build-context.ts';
 import { findReachableIslandTags } from '../../src/cli/build-client.ts';
 import { createOpenPlugin } from '../../src/plugin.ts';
+import { compilerBehaviorDeclarations } from '../../src/internal/ssg/client-admission.ts';
+import { buildClientIslandEntries } from '../../src/internal/ssg/client-island-entries.ts';
 
 Deno.test('v0.44 island delivery emits one scheduler for multi-element media islands', () => {
   const entries = [
@@ -33,6 +38,37 @@ Deno.test('v0.44 island delivery emits one scheduler for multi-element media isl
   assertStringIncludes(code, "matchMedia('(prefers-reduced-motion: no-preference)')");
   assertStringIncludes(code, 'oe-clock');
   assertStringIncludes(code, 'oe-calendar');
+});
+
+Deno.test('v0.44 compiler behavior metadata controls exact client output', () => {
+  const declarations = compilerBehaviorDeclarations([
+    {
+      tagName: 'oe-static-card',
+      modulePath: '/app/components/static-card.tsx',
+      compilerInteractionEvents: [],
+    },
+    {
+      tagName: 'oe-menu-button',
+      modulePath: '/app/components/menu-button.tsx',
+      compilerInteractionEvents: ['click', 'keydown'],
+    },
+  ], 'idle');
+  assertEquals(declarations.map((entry) => entry.tagName), ['oe-menu-button']);
+
+  const entries = buildClientIslandEntries({
+    root: '/project',
+    islandsDir: 'app/islands',
+    islandTagNames: [],
+    islandFiles: [],
+    islandMeta: {},
+    packageIslandDecls: [],
+    compilerBehaviorDecls: declarations,
+    upgradeStrategy: 'idle',
+  });
+  const code = generateClientEntry(entries);
+  assertStringIncludes(code, '"oe-menu-button": () => import("/app/components/menu-button.tsx")');
+  assertStringIncludes(code, 'idle: ["oe-menu-button"]');
+  assertEquals(code.includes('oe-static-card'), false);
 });
 
 Deno.test('v0.44 media delivery loads once when the query first matches', () => {
@@ -203,11 +239,11 @@ Deno.test('v0.44 compiler hook transforms once and classifies HMR shape changes'
     ].join('\n');
     await Deno.writeTextFile(file, source);
 
-    const plugins = createOpenPlugin({ compiledSpike: true });
+    const plugins = createOpenPlugin();
     const core = plugins.find((plugin) => plugin.name === 'open:core');
-    const compiler = plugins.find((plugin) => plugin.name === 'open:compiled-element');
-    if (!core || typeof core.transform !== 'function' || !compiler) {
-      throw new Error('compiler integration plugins were not registered');
+    const compiler = compiledElementPlugin();
+    if (!core || typeof core.transform !== 'function') {
+      throw new Error('canonical compiler integration hook was not registered');
     }
     const transform = core.transform as unknown as (
       this: { error(message: string): never },
@@ -344,7 +380,9 @@ Deno.test('v0.44 client delivery follows islands imported through a route compon
     await Deno.mkdir(componentsDir, { recursive: true });
     await Deno.writeTextFile(
       join(routesDir, 'index.tsx'),
-      "import Content from '../components/content.tsx'; export default Content;",
+      "import Content from '../components/content.tsx';\n" +
+        "const documentation = '<oe-unused />'; // <oe-unused />\n" +
+        'export default Content;\nvoid documentation;',
     );
     await Deno.writeTextFile(
       join(componentsDir, 'content.tsx'),

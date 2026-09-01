@@ -12,6 +12,7 @@ import {
   replayPreUpgradeEvents,
 } from '../../src/internal/compiled/claim/index.ts';
 import { serializeProgramContent } from '../../src/internal/compiled/server/index.ts';
+import { trustedHtml } from '../../src/internal/core/security.ts';
 import { testProgram } from '../compiled-runtime/test-program.ts';
 
 interface Counters {
@@ -139,6 +140,7 @@ class TestElement extends TestNode {
   selectionStart: number | null = null;
   selectionEnd: number | null = null;
   #value = '';
+  #innerHtml = '';
 
   constructor(ownerDocument: TestDocument, tagName: string) {
     super(ownerDocument);
@@ -152,6 +154,15 @@ class TestElement extends TestNode {
   set value(next: string) {
     this.#value = next;
     this.ownerDocument.counters.valueWrites++;
+  }
+
+  get innerHTML(): string {
+    return this.#innerHtml;
+  }
+
+  set innerHTML(next: string) {
+    for (const child of [...this.childNodes]) this.removeChild(child);
+    this.#innerHtml = next;
   }
 
   simulateUserInput(next: string): void {
@@ -740,4 +751,55 @@ Deno.test('claim preserves externally projected route content inside an empty sl
   const claimed = claimExistingDom(program, { signals: {}, handlers: {} }, root as unknown as Node);
   assertStrictEquals((main.childNodes[0] as TestElement).childNodes[0], route);
   claimed.dispose();
+});
+
+Deno.test('compiled claim requires TrustedHtml before accepting an opaque html Part', () => {
+  const program = testProgram({
+    tag: 'oe-claim-html',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [{ k: 'html', index: 0, signal: 'body', path: [0] }],
+  });
+  const doc = new TestDocument();
+  const root = element(doc, 'host');
+  const div = element(doc, 'div');
+  const strong = element(doc, 'strong');
+  strong.appendChild(doc.createTextNode('safe'));
+  div.appendChild(strong);
+  root.appendChild(div);
+  const body = new TestSignal<unknown>(trustedHtml('<strong>safe</strong>'), doc.counters);
+  const claimed = claimExistingDom(
+    program,
+    { signals: { body }, handlers: {} },
+    root as unknown as Node,
+  );
+  body.value = trustedHtml('<em>updated</em>');
+  assertEquals(div.innerHTML, '<em>updated</em>');
+  assertThrows(
+    () => {
+      body.value = '<img src=x onerror=alert(1)>';
+    },
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+  assertEquals(div.innerHTML, '<em>updated</em>');
+  claimed.dispose();
+
+  const unsafeDoc = new TestDocument();
+  const unsafeRoot = element(unsafeDoc, 'host');
+  unsafeRoot.appendChild(element(unsafeDoc, 'div'));
+  assertThrows(
+    () =>
+      claimExistingDom(
+        program,
+        {
+          signals: {
+            body: new TestSignal<unknown>('<strong>unsafe</strong>', unsafeDoc.counters),
+          },
+          handlers: {},
+        },
+        unsafeRoot as unknown as Node,
+      ),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
 });

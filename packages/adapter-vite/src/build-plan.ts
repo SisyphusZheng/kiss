@@ -46,6 +46,13 @@ export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPl
         ssr: island.ssr,
         source: 'package' as const,
       })),
+      ...ctx.phase1.compilerBehaviorDecls.map((island) => ({
+        tagName: island.tagName,
+        modulePath: island.modulePath,
+        hydrate: island.hydrate,
+        ssr: island.ssr,
+        source: 'nested' as const,
+      })),
     ],
     output: {
       root,

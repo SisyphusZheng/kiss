@@ -17,7 +17,7 @@ import type {
   CompiledElementMetadata,
   CompiledPropertyMetadata,
   PartProgram,
-  SpikePart,
+  ProgramPart,
 } from './program.ts';
 import type { CompiledElementKernel } from './runtime/kernel.ts';
 import { signal } from '../signal/index.ts';
@@ -337,8 +337,8 @@ export function handleCompiledAttributeChange(
 /** Collect the handler names the program references on the host. */
 function programHandlerNames(program: PartProgram): string[] {
   const names = new Set<string>();
-  for (const part of program.parts as readonly SpikePart[]) {
-    if ((part.k === 'event' || part.k === 'ref') && part.handler !== undefined) {
+  for (const part of program.parts as readonly ProgramPart[]) {
+    if (part.k === 'event') {
       names.add(part.handler);
     }
   }

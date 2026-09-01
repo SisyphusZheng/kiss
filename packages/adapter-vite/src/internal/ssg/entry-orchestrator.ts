@@ -104,11 +104,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('');
   }
 
-  // --- Document wrapper ---
-  // wrapInDocument is a codegen-owned runtime helper (entry-render-runtime.ts)
-  // since 0.44 — the element package no longer exports a runtime document
-  // wrapper. jsx/renderDsdTree are gone: pages render through the sync
-  // compiled renderDsd via __ssr.
+  // Element owns document and compiled-render semantics; this entry wires them.
   lines.push(`import { createLogger } from '@openelement/element';`);
   lines.push(
     `import { createRuntimeAdapter, insertBeforeBodyClose as __insertBeforeBodyClose } from '@openelement/element/build-utils';`,
@@ -117,7 +113,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push(`import { composeFetchMiddleware } from '@openelement/element/build-utils';`);
   }
   lines.push(
-    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader, PROBLEM_JSON_MEDIA_TYPE as __problemJsonMediaType } from '@openelement/app';`,
+    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, classifyActionResult as __classifyActionResult, ACTION_FETCH_HEADER as __actionFetchHeader, PROBLEM_JSON_MEDIA_TYPE as __problemJsonMediaType } from '@openelement/app';`,
   );
   lines.push(
     `import { headerNav as __headerNav, navSections as __navSections } from '@openelement/generated/nav';`,

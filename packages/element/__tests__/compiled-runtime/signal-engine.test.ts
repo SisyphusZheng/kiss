@@ -3,7 +3,7 @@ import { createPreactEngine } from '../../src/internal/signal/preact-engine.ts';
 import { createTestEngine } from '../../src/internal/signal/test-engine.ts';
 import { type BatchedSignalEngine, isBatchCapable } from '../../src/internal/signal/types.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
-import { type CompiledSpikeHost, createFreshDom } from '../../src/internal/compiled/runtime.ts';
+import { type CompiledRuntimeHost, createFreshDom } from '../../src/internal/compiled/runtime.ts';
 import { TestDocument, type TestElement, toHtml } from './test-dom.ts';
 import { testProgram } from './test-program.ts';
 
@@ -113,7 +113,7 @@ Deno.test('compiled Part subscriptions track the lazy engine without an initial 
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [{ k: 'text', index: 0, signal: 'message' }],
   });
-  const host = { signals: { message }, handlers: {} } as unknown as CompiledSpikeHost;
+  const host = { signals: { message }, handlers: {} } as unknown as CompiledRuntimeHost;
   const document = new TestDocument();
   const root = document.createElement('host');
   const instance = createFreshDom(program, host, root as unknown as Node);

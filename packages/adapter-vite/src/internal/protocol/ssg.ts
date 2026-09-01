@@ -12,6 +12,9 @@ import type {
   SsrAdmissionDecision,
 } from './framework.ts';
 
+/** Adapter-owned browser delivery strategy, including media-query admission. */
+export type IslandDeliveryStrategy = HydrationStrategy | 'media';
+
 // ─── SSG render pipeline options ─────────────────────────────
 
 /** Options passed to the shared SSG render pipeline. */
@@ -98,7 +101,7 @@ export interface ClientIslandEntry {
    * When absent, the factory falls back to `mod.default` (local/route islands).
    */
   exportName?: string;
-  strategy: HydrationStrategy;
+  strategy: IslandDeliveryStrategy;
   strategySource?: 'default' | 'manifest' | 'component' | 'route';
   ssr?: boolean;
   dsd?: boolean;
@@ -162,7 +165,7 @@ export interface IslandDecl {
    * component chunks. Absent for local/route islands (which use default).
    */
   exportName?: string;
-  hydrate?: HydrationStrategy;
+  hydrate?: IslandDeliveryStrategy;
   ssr?: boolean;
   dsd?: boolean;
   authoring?: 'basic-element' | 'third-party-wc';
@@ -178,6 +181,8 @@ export interface IslandDecl {
 export interface StaticComponentDecl {
   tagName: string;
   modulePath: string;
+  /** Compiler-owned interaction events; empty means no inferred browser entry. */
+  compilerInteractionEvents: string[];
 }
 
 export interface SsrAdmissionPlan {
@@ -396,7 +401,7 @@ export interface BuildIslandInput {
   tagName: string;
   modulePath: string;
   isPackage?: boolean;
-  hydrate?: HydrationStrategy;
+  hydrate?: IslandDeliveryStrategy;
   ssr?: boolean;
   dsd?: boolean;
   source?: 'local' | 'package' | 'nested';

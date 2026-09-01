@@ -28,6 +28,7 @@ import { generateClientEntry } from './internal/ssg/index.ts';
 import { buildClientIslandEntries } from './internal/ssg/client-island-entries.ts';
 import { VIRTUAL_RUNTIME_SPECIFIERS } from './internal/ssg/entry-generators.ts';
 import { DEFAULT_ISLANDS_DIR } from './internal/paths.ts';
+import { compilerBehaviorDeclarations } from './internal/ssg/client-admission.ts';
 
 const VIRTUAL_CLIENT_ENTRY_ID = 'virtual:open-client-entry';
 // Exported for plugin.ts: the dev watcher invalidates this module when the
@@ -89,6 +90,10 @@ export function devIslandClientPlugin(
         islandFiles: ctx.phase1.islandFiles ?? [],
         islandMeta: ctx.phase1.islandMeta ?? {},
         packageIslandDecls: ctx.phase1.packageIslandDecls ?? [],
+        compilerBehaviorDecls: compilerBehaviorDeclarations(
+          ctx.phase1.staticComponents,
+          options.island?.upgradeStrategy,
+        ),
         upgradeStrategy: options.island?.upgradeStrategy,
       });
       return generateClientEntry(islandEntries, { enhancedForms });

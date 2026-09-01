@@ -1,4 +1,4 @@
-import { computed, OpenElement } from '@openelement/element';
+import { computed, OpenElement, trustedHtml } from '@openelement/element';
 import '../islands/open-page-rail.tsx';
 import './open-reading-shell.tsx';
 import type { ArticlePageModel } from './article-page-model.ts';
@@ -6,7 +6,7 @@ import { openArticleViewStyles } from './open-article-view-styles.ts';
 
 declare function element(tag: string): ClassDecorator;
 declare function property(
-  options: { reflect: boolean; attribute?: false },
+  options: { reflect: boolean; attribute?: false; type?: ObjectConstructor },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('open-article-view')
@@ -38,8 +38,8 @@ export default class OpenArticleView extends OpenElement {
   navigation = computed(() => this.model.navigation);
   @property({ reflect: false, attribute: false })
   railItems = computed(() => this.model.railItems);
-  @property({ reflect: false, attribute: false })
-  articleHtml = computed(() => this.model.articleHtml);
+  @property({ type: Object, reflect: false, attribute: false })
+  articleHtml = computed(() => trustedHtml(this.model.articleHtml));
 
   render() {
     return (

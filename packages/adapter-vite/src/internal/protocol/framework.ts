@@ -1,4 +1,4 @@
-/** Internal compatibility path. The explicit public authority is ../../framework.ts. */
+/** Internal forwarding path. The explicit public authority is ../../framework.ts. */
 export type {
   AppShellConfig,
   CompatibilityClassification,

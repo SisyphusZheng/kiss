@@ -10,7 +10,7 @@
 import { build } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { compileElementSpike } from '../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
+import { compileElementProgram } from '../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 
 // The SPA/router sources import '@openelement/element' at runtime (`createLogger`,
 // and JSX via jsx-runtime). The e2e bare bundle runs with `configFile: false`, so it
@@ -64,7 +64,7 @@ export function bundleModuleForBrowser(entry: URL): Promise<string> {
             if (resolve(id.split('?')[0]) !== entryPath || !code.includes('@element(')) {
               return null;
             }
-            return compileElementSpike(code, entryPath).code;
+            return compileElementProgram(code, entryPath).code;
           },
         }],
         resolve: {

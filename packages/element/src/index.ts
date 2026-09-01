@@ -49,11 +49,13 @@ export type { Signal } from './public-runtime.ts';
 
 // ─── HTML utilities (re-export from core) ────────────────
 
-export { escapeAttr, escapeHtml } from './public-runtime.ts';
+export { escapeAttr, escapeHtml, wrapInDocument } from './public-runtime.ts';
 
 // ─── Security predicates (re-export from core) ───────────────────
 
 export { isSafeAttributeName } from './public-runtime.ts';
+export { trustedHtml } from './public-runtime.ts';
+export type { TrustedHtml } from './public-runtime.ts';
 
 // ─── Island types (protocol) ─────────────────────────────
 

@@ -19,6 +19,7 @@ import { OpenElementError } from './internal/core/errors.ts';
 import { signal } from './internal/signal/index.ts';
 import type { CompiledProgramHost } from './internal/compiled/server/index.ts';
 import type { RenderOutput } from './internal/protocol/render.ts';
+import { type TrustedHtml, trustedHtmlValue } from './internal/core/security.ts';
 
 export { collectPublicProps } from './internal/core/props-utils.ts';
 export type { RenderOutput, SsrAdmissionDecision } from './internal/protocol/render.ts';
@@ -35,8 +36,9 @@ export {
 export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';
 export { computed, effect, signal } from './internal/signal/index.ts';
 export type { Signal } from './internal/protocol/signal.ts';
-export { isSafeAttributeName } from './internal/core/security.ts';
-export { escapeAttr, escapeHtml } from './internal/core/html-escape.ts';
+export { isSafeAttributeName, trustedHtml } from './internal/core/security.ts';
+export type { TrustedHtml } from './internal/core/security.ts';
+export { escapeAttr, escapeHtml, wrapInDocument } from './internal/core/html-escape.ts';
 export type { IslandOptions } from './internal/protocol/island.ts';
 export { DATA_SSR_PROPS } from './internal/protocol/hydration-markers.ts';
 export { StyleSheet } from './internal/core/style-sheet.ts';
@@ -86,6 +88,16 @@ export interface RenderDsdOptions {
   componentClass?: CustomElementConstructor;
   props?: Record<string, unknown>;
   sourceInfo?: { route?: string; source?: string };
+  /** Build-admitted nested compiled tags. Omitted means shell-only rendering. */
+  ssrRenderableTags?: readonly string[];
+  /** Trusted parent-owned light children keyed by slot name. */
+  projectedChildren?: ReadonlyMap<string, TrustedHtml>;
+}
+
+/** Element-private normalized options used while recursively composing components. */
+interface InternalRenderDsdOptions extends Omit<RenderDsdOptions, 'projectedChildren'> {
+  hostAttrs?: readonly (readonly [string, unknown])[];
+  projectedChildren?: ReadonlyMap<string, string>;
 }
 
 function classNameOf(ctor: object): string {
@@ -153,10 +165,17 @@ function parseJsonProp(record: CompiledPropertyMetadata, raw: string): unknown {
  * Fails closed with `OE_PROGRAM_MISSING` for unregistered or uncompiled
  * classes — there is no runtime JSX fallback renderer in 0.44.
  */
-export function renderDsd(
+function renderDsdAtDepth(
   input: string | CustomElementConstructor,
-  options: RenderDsdOptions = {},
+  options: InternalRenderDsdOptions = {},
+  depth = 0,
 ): RenderOutput {
+  if (depth > 8) {
+    throw new OpenElementError(
+      '[openElement] nested element expansion exceeded the depth bound; cyclic component composition is not renderable.',
+      { code: 'OE_SSR_COMPOSITION_DEPTH', phase: 'ssr' },
+    );
+  }
   const resolvedClass = (options.componentClass ??
     (typeof input === 'string'
       ? (typeof customElements !== 'undefined' ? customElements.get(input) : undefined)
@@ -187,7 +206,7 @@ export function renderDsd(
   const props = options.props ?? {};
 
   const signals: Record<string, ReturnType<typeof signal>> = {};
-  const hostAttrs: Array<readonly [string, unknown]> = [];
+  const hostAttrs: Array<readonly [string, unknown]> = [...(options.hostAttrs ?? [])];
   for (const record of properties) {
     if (record.computed) continue;
     const value = record.name in props
@@ -224,12 +243,55 @@ export function renderDsd(
     : 'closed';
   const host: CompiledProgramHost = { signals, handlers: {} };
   const staticStyleCss = collectStaticStyleCss(resolvedClass);
+  const admitted = new Set(options.ssrRenderableTags ?? []);
   const html = serializeCompiledProgram(program, host, {
     mode,
     hostAttrs,
     styleCss: mode === 'light' && staticStyleCss
       ? scopeCompiledLightCss(tag, staticStyleCss)
       : staticStyleCss,
+    projectedChildren: options.projectedChildren,
+    renderNestedElement: admitted.size === 0 ? undefined : (nested) => {
+      if (!admitted.has(nested.tag)) return undefined;
+      const nestedClass = typeof customElements === 'undefined'
+        ? undefined
+        : customElements.get(nested.tag) as CompiledComponentConstructor | undefined;
+      if (!nestedClass?.__partProgram) {
+        throw new OpenElementError(
+          `[openElement] admitted nested component <${nested.tag}> is not registered with a compiled Part Program.`,
+          { code: 'OE_PROGRAM_MISSING', phase: 'ssr' },
+        );
+      }
+      const nestedProperties = Array.isArray(nestedClass.__compiledProperties)
+        ? nestedClass.__compiledProperties
+        : nestedClass.__partProgram.metadata.properties;
+      const nestedProps: Record<string, unknown> = { ...nested.properties };
+      const propertyAttributes = new Set<string>();
+      for (const record of nestedProperties) {
+        propertyAttributes.add(record.name);
+        if (record.attribute !== null) propertyAttributes.add(record.attribute);
+        if (record.name in nestedProps) continue;
+        const attribute = nested.attributes.find(([name]) =>
+          name === record.name || name === record.attribute
+        );
+        if (attribute) nestedProps[record.name] = coerceServerProp(record, attribute[1]);
+      }
+      const passthrough = nested.attributes.filter(([name]) => !propertyAttributes.has(name));
+      const nestedMode = nestedClass.__partProgram.root.kind;
+      const rendered = renderDsdAtDepth(nested.tag, {
+        componentClass: nestedClass,
+        props: nestedProps,
+        sourceInfo: options.sourceInfo,
+        ssrRenderableTags: options.ssrRenderableTags,
+        hostAttrs: passthrough,
+        projectedChildren: nestedMode === 'light' ? nested.projectedChildren : undefined,
+      }, depth + 1).html;
+      if (nestedMode === 'light') return rendered;
+      const closing = `</${nested.tag}>`;
+      return nested.children === ''
+        ? rendered
+        : rendered.slice(0, -closing.length) + nested.children + closing;
+    },
   });
 
   return {
@@ -245,4 +307,21 @@ export function renderDsd(
     },
     hydrationHints: [],
   };
+}
+
+/** Server-render one compiled element through canonical Element composition. */
+export function renderDsd(
+  input: string | CustomElementConstructor,
+  options: RenderDsdOptions = {},
+): RenderOutput {
+  const { projectedChildren, ...publicOptions } = options;
+  const normalizedProjectedChildren = projectedChildren
+    ? new Map(
+      [...projectedChildren].map(([slot, value]) => [slot, trustedHtmlValue(value)] as const),
+    )
+    : undefined;
+  return renderDsdAtDepth(input, {
+    ...publicOptions,
+    projectedChildren: normalizedProjectedChildren,
+  });
 }

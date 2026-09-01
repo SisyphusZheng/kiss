@@ -38,6 +38,7 @@ import {
   resolveIslandDeliveryTags,
   validateIslandDeliveryExportNames,
 } from './delivery.ts';
+import { compilerBehaviorDeclarations } from './client-admission.ts';
 
 function normalizeAppShellImport(importPath: string): string {
   if (importPath.startsWith('./')) return `/${importPath.slice(2)}`;
@@ -113,7 +114,7 @@ export function buildEntryDescriptor(
   imports.push({ from: 'hono/body-limit', names: ['bodyLimit'], alias: '__bodyLimit' });
   imports.push({
     from: '@openelement/element',
-    names: ['renderDsd', 'escapeHtml'],
+    names: ['renderDsd', 'trustedHtml', 'escapeHtml', 'wrapInDocument'],
   });
 
   // Conditional middleware imports
@@ -296,10 +297,7 @@ export function buildEntryDescriptor(
         : `/${islandsSpecifierDir}/${tagName}.ts`,
       source: 'local',
       ...resolveIslandSsrDsd(deliveryMeta),
-      // The legacy protocol type is intentionally kept untouched on the
-      // frozen base. The adapter carries the alpha delivery value in the
-      // serialized declaration and narrows it only at this old seam.
-      hydrate: hydrate as HydrationStrategy,
+      hydrate,
       ...(hydrate === 'media' && deliveryMeta.media !== undefined
         ? { media: deliveryMeta.media }
         : {}),
@@ -314,7 +312,15 @@ export function buildEntryDescriptor(
     options.upgradeStrategy,
   );
 
-  const islandDeclarations: IslandDecl[] = [...localIslands, ...packageIslandDecls];
+  const compilerBehaviorIslands = compilerBehaviorDeclarations(
+    options.staticComponents ?? [],
+    options.upgradeStrategy,
+  );
+  const islandDeclarations: IslandDecl[] = [
+    ...localIslands,
+    ...compilerBehaviorIslands,
+    ...packageIslandDecls,
+  ];
   const islands: IslandDecl[] = islandDeclarations.flatMap(expandIslandDeliveryDecl);
   const cemClassifications = options.cemClassifications || [];
   const ssrAdmissionPlan = buildSsrAdmissionPlan(

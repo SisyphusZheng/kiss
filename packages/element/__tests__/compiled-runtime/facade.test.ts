@@ -4,7 +4,7 @@
  * Proves the 0.44 public class against the REAL compiler artifact: the class
  * below carries the frozen expected-program.json Part Program emitted by the
  * adapter compiler for the counter fixture (the same cross-package fixture
- * compiled-part-program-spike.test.ts consumes — adapter src is never
+ * compiled-part-program-v1.test.ts consumes — adapter src is never
  * imported). Covered behavior:
  *   - fresh connect renders the program (text/prop/event/when/each parts)
  *   - attribute -> property conversion and property -> attribute reflection
@@ -40,14 +40,14 @@ const { OpenElementError } = await import('../../src/internal/core/errors.ts');
 const FIXTURE_PROGRAM = JSON.parse(
   await Deno.readTextFile(
     new URL(
-      '../../../adapter-vite/__fixtures__/compiled-element-spike/expected-program.json',
+      '../../../adapter-vite/__fixtures__/compiled-element-v1/expected-program.json',
       import.meta.url,
     ),
   ),
 );
 
 /** The counter fixture as the adapter compiler emits it (statics verbatim). */
-class SpikeCounter extends OpenElement {
+class ProgramCounter extends OpenElement {
   static __partProgram = FIXTURE_PROGRAM;
   static __compiledProperties = FIXTURE_PROGRAM.metadata.properties;
   static __elementMetadata = FIXTURE_PROGRAM.metadata;
@@ -61,14 +61,14 @@ class SpikeCounter extends OpenElement {
     this.count++;
   }
 }
-dom.registry.define('oe-spike-counter', SpikeCounter);
+dom.registry.define('oe-program-counter', ProgramCounter);
 
-function freshCounter(attrs: Record<string, string> = {}): InstanceType<typeof SpikeCounter> & {
+function freshCounter(attrs: Record<string, string> = {}): InstanceType<typeof ProgramCounter> & {
   childNodes: unknown[];
 } {
-  const element = dom.document.createElement('oe-spike-counter') as unknown as
+  const element = dom.document.createElement('oe-program-counter') as unknown as
     & InstanceType<
-      typeof SpikeCounter
+      typeof ProgramCounter
     >
     & { childNodes: unknown[] };
   for (const [name, value] of Object.entries(attrs)) element.setAttribute(name, value);
@@ -89,7 +89,7 @@ Deno.test('facade: fresh connect renders the compiled program end to end', () =>
   assertEquals(element.label, 'ready');
   assertEquals(
     toHtml(shadowOf(element).childNodes[0]),
-    '<div class="spike">' +
+    '<div class="proof">' +
       '<h1>Count: <!--oe:p0-->0</h1>' +
       '<input value="ready">' +
       '<button type="button">+</button>' +
@@ -151,11 +151,11 @@ Deno.test('facade: event handlers wire to instance methods and survive reconnect
 });
 
 Deno.test('facade: claim from serialized HTML preserves node identity', () => {
-  const serialized = renderDsd('oe-spike-counter', {
-    componentClass: SpikeCounter as unknown as CustomElementConstructor,
+  const serialized = renderDsd('oe-program-counter', {
+    componentClass: ProgramCounter as unknown as CustomElementConstructor,
     props: { count: 3 },
   }).html;
-  assertStringIncludes(serialized, '<oe-spike-counter count="3" data-oe-light>');
+  assertStringIncludes(serialized, '<oe-program-counter count="3" data-oe-light>');
 
   let claimedDiv: unknown;
   let claimedH1: unknown;
@@ -179,8 +179,8 @@ Deno.test('facade: claim from serialized HTML preserves node identity', () => {
 });
 
 Deno.test('facade: pre-upgrade capture replays one click after claim', () => {
-  const serialized = renderDsd('oe-spike-counter', {
-    componentClass: SpikeCounter as unknown as CustomElementConstructor,
+  const serialized = renderDsd('oe-program-counter', {
+    componentClass: ProgramCounter as unknown as CustomElementConstructor,
   }).html;
 
   // The generated client entry installs capture on an owning root before

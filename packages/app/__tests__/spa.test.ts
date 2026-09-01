@@ -8,7 +8,14 @@
  * The legacy definePage render-function + applyPageHostData seam is gone.
  */
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
-import { defineApp, definePage, notFound, type PagePropsContext, redirect } from '../src/index.ts';
+import {
+  defineApp,
+  definePage,
+  fail,
+  notFound,
+  type PagePropsContext,
+  redirect,
+} from '../src/index.ts';
 import { assertValidTagName } from '@openelement/element';
 import type { RouteConfig } from '../src/internal/router/client-router.ts';
 
@@ -207,6 +214,50 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
 
     // Non-form submissions and routes without an action are ignored.
     submit?.({ target: {}, composedPath: () => [], preventDefault() {} } as unknown as Event);
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});
+
+Deno.test('defineApp projects returned fail() data through the same action outcome as the server', async () => {
+  let submit: ((event: Event) => void) | undefined;
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'home-page': Page });
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild() {},
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: () => Promise.resolve({ page: 'home' }),
+      action: () => Promise.resolve(fail(422, { field: 'required' })),
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    submit?.({
+      target: { tagName: 'FORM' },
+      composedPath: () => [],
+      preventDefault() {},
+    } as unknown as Event);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(calls.errors, []);
+    assertEquals(calls.normal.length, 2);
+    assertEquals(calls.normal[1].data, { page: 'home' });
+    assertEquals(calls.normal[1].actionData, { field: 'required' });
   } finally {
     app.dispose();
     env.restore();

@@ -1,7 +1,7 @@
 /**
- * v0.44.0-alpha.0 compiler spike fixture (#1160).
+ * v0.44.0-alpha.0 compiler v1 fixture (#1160).
  *
- * This is the exact TSX grammar recognized by the open:compiled-element spike
+ * This is the exact TSX grammar recognized by the open:compiled-element v1
  * transform. The file is transformed through the Vite plugin hook; it is never
  * executed directly. The local decorator declarations exist only so the fixture
  * is self-contained - the canonical decorator contract is owned by #1162.
@@ -11,8 +11,8 @@ import { OpenElement } from '@openelement/element';
 declare function element(tag: string): ClassDecorator;
 declare function property(options: { reflect: boolean }): PropertyDecorator;
 
-@element('oe-spike-counter')
-export class SpikeCounter extends OpenElement {
+@element('oe-program-counter')
+export class ProgramCounter extends OpenElement {
   @property({ reflect: true })
   count = 0;
 
@@ -31,7 +31,7 @@ export class SpikeCounter extends OpenElement {
 
   render() {
     return (
-      <div class='spike'>
+      <div class='proof'>
         <h1>Count: {this.count}</h1>
         <input value={this.label} />
         <button type='button' onClick={this.increment}>+</button>

@@ -22,7 +22,6 @@ Deno.test('fixed Parts validate every exact DOM sink', () => {
         event: 'click',
         handler: 'onClick',
         action: { kind: 'method', name: 'onClick' },
-        options: { capture: true, once: true, passive: false },
         path: [0],
       },
       { k: 'ref', index: 6, ref: 'captureRef', path: [0] },

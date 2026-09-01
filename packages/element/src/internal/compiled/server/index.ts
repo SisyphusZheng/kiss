@@ -11,11 +11,11 @@
 import {
   partAnchorEndMarker,
   partAnchorMarker,
-  type PartProgramSpike,
-  type SpikeEachPart,
-  type SpikeElementNode,
-  type SpikeTreeNode,
-  type SpikeWhenPart,
+  type PartProgramV1,
+  type ProgramEachPart,
+  type ProgramElementNode,
+  type ProgramTreeNode,
+  type ProgramWhenPart,
   STATIC_STYLES_MARKER,
 } from '../program.ts';
 import {
@@ -29,6 +29,7 @@ import {
   styleValueOf,
   voidElement,
 } from './shared.ts';
+import { trustedHtmlValue } from '../../core/security.ts';
 
 export type { CompiledProgramHost, CompiledSignalLike } from './shared.ts';
 export { assertCompiledProgram, CompiledProgramValidationError } from './shared.ts';
@@ -44,6 +45,14 @@ export interface CompiledDsdOptions {
 }
 
 export type CompiledHostAttribute = readonly [name: string, value: unknown];
+
+export interface CompiledNestedElement {
+  tag: string;
+  attributes: readonly CompiledHostAttribute[];
+  properties: Readonly<Record<string, unknown>>;
+  children: string;
+  projectedChildren: ReadonlyMap<string, string>;
+}
 
 // The serializer emits the component's static styles as the first child of
 // the DSD template (legacy renderDsd parity): never-upgrading hosts (pages)
@@ -65,12 +74,16 @@ export interface CompiledServerOptions {
    * into markup injection.
    */
   styleCss?: string;
+  /** Canonical nested-component seam; adapters supply registry/admission only. */
+  renderNestedElement?: (element: CompiledNestedElement) => string | undefined;
+  /** Light-root projection supplied by an owning compiled parent. */
+  projectedChildren?: ReadonlyMap<string, string>;
 }
 
 const PROPERTY_PATH_SEPARATOR = '.';
 
 interface SerializeContext {
-  readonly program: PartProgramSpike;
+  readonly program: PartProgramV1;
   readonly host: unknown;
   readonly propPartsByPath: Map<string, Array<{ name: string; signal: string }>>;
   /** attr/bool/class/style sinks keyed by template path (part-index order). */
@@ -84,6 +97,8 @@ interface SerializeContext {
   >;
   /** html content sinks keyed by template path. */
   readonly htmlSinksByPath: Map<string, { signal: string }>;
+  readonly options: CompiledServerOptions;
+  readonly consumedProjections: Set<string>;
 }
 
 function escapeText(value: string): string {
@@ -103,7 +118,11 @@ function pathKey(path: readonly number[]): string {
   return path.join(PROPERTY_PATH_SEPARATOR);
 }
 
-function createSerializeContext(program: PartProgramSpike, host: unknown): SerializeContext {
+function createSerializeContext(
+  program: PartProgramV1,
+  host: unknown,
+  options: CompiledServerOptions = {},
+): SerializeContext {
   const propPartsByPath = new Map<string, Array<{ name: string; signal: string }>>();
   const valueSinksByPath = new Map<
     string,
@@ -135,7 +154,15 @@ function createSerializeContext(program: PartProgramSpike, host: unknown): Seria
       htmlSinksByPath.set(pathKey(part.path), { signal: part.signal });
     }
   }
-  return { program, host, propPartsByPath, valueSinksByPath, htmlSinksByPath };
+  return {
+    program,
+    host,
+    propPartsByPath,
+    valueSinksByPath,
+    htmlSinksByPath,
+    options,
+    consumedProjections: new Set(),
+  };
 }
 
 function serializeAttribute(name: string, value: string): string {
@@ -233,7 +260,10 @@ function serializeDsdAttributes(options: CompiledDsdOptions | undefined): string
 }
 
 /** Item fields referenced by an each Region's template (ival + iattr slots). */
-function itemTemplateFields(nodes: readonly SpikeTreeNode[], out = new Set<string>()): Set<string> {
+function itemTemplateFields(
+  nodes: readonly ProgramTreeNode[],
+  out = new Set<string>(),
+): Set<string> {
   for (const node of nodes) {
     if (node.k === 'ival') {
       if (node.field !== undefined) out.add(node.field);
@@ -249,7 +279,7 @@ function itemTemplateFields(nodes: readonly SpikeTreeNode[], out = new Set<strin
 
 function itemsFor(
   ctx: SerializeContext,
-  part: SpikeEachPart,
+  part: ProgramEachPart,
 ): Array<Record<string, unknown>> {
   if (part.key === undefined) {
     throw new CompiledProgramValidationError(
@@ -303,11 +333,11 @@ function itemsFor(
 }
 
 function whenIsActive(
-  part: SpikeWhenPart,
+  part: ProgramWhenPart,
   value: unknown,
 ): boolean {
   try {
-    return Number(value) > part.gt;
+    return Number(value) > part.test.value;
   } catch {
     throw new CompiledProgramValidationError(
       `parts[${part.index}].signal`,
@@ -323,12 +353,17 @@ function serializeItemAttribute(value: unknown): string | null {
   return String(value);
 }
 
-function serializeItemNodes(
-  nodes: SpikeTreeNode[],
-  part: SpikeEachPart,
+function serializeItemChildren(
+  ctx: SerializeContext,
+  nodes: ProgramTreeNode[],
+  part: ProgramEachPart,
   item: Record<string, unknown>,
-): string {
-  return nodes.map((node) => {
+): { html: string; projected: Map<string, string> } {
+  let html = '';
+  const projected = new Map<string, string>();
+  for (const node of nodes) {
+    let serialized: string;
+    let slotName = '';
     if (node.k === 'ival') {
       const field = node.field ?? part.field;
       if (field === undefined) {
@@ -337,63 +372,166 @@ function serializeItemNodes(
           'item value slot needs a field',
         );
       }
-      return escapeText(String(item[field]));
-    }
-    if (node.k === 'text') return escapeText(node.value);
-    if (node.k === 'el') {
-      const attrs = node.attrs.map(([name, value]) => serializeAttribute(name, value));
+      serialized = escapeText(String(item[field]));
+    } else if (node.k === 'text') {
+      serialized = escapeText(node.value);
+    } else if (node.k === 'el') {
+      const attributes: CompiledHostAttribute[] = node.attrs.map(([name, value]) => [name, value]);
       for (const [name, field] of node.iattrs ?? []) {
-        const serialized = serializeItemAttribute(item[field]);
-        if (serialized === null) continue;
-        attrs.push(serialized === '' ? ` ${name}` : serializeAttribute(name, serialized));
+        const value = serializeItemAttribute(item[field]);
+        if (value !== null) attributes.push([name, value === '' ? true : value]);
       }
-      if (voidElement(node.tag)) return `<${node.tag}${attrs.join('')}>`;
-      return `<${node.tag}${attrs.join('')}>${
-        serializeItemNodes(node.children, part, item)
-      }</${node.tag}>`;
+      slotName = String(attributes.find(([name]) => name === 'slot')?.[1] ?? '');
+      const attrText = attributes.map(([name, value]) =>
+        value === true ? ` ${name}` : serializeAttribute(name, String(value))
+      ).join('');
+      if (voidElement(node.tag)) {
+        serialized = `<${node.tag}${attrText}>`;
+      } else {
+        const children = serializeItemChildren(ctx, node.children, part, item);
+        if (node.tag.includes('-') && ctx.options.renderNestedElement) {
+          serialized = ctx.options.renderNestedElement({
+            tag: node.tag,
+            attributes,
+            properties: {},
+            children: children.html,
+            projectedChildren: children.projected,
+          }) ?? `<${node.tag}${attrText}>${children.html}</${node.tag}>`;
+        } else {
+          serialized = `<${node.tag}${attrText}>${children.html}</${node.tag}>`;
+        }
+      }
+    } else {
+      throw new CompiledProgramValidationError(
+        `parts[${part.index}].item`,
+        'item templates may not contain Part anchors',
+      );
     }
+    html += serialized;
+    projected.set(slotName, (projected.get(slotName) ?? '') + serialized);
+  }
+  return { html, projected };
+}
+
+function serializeItemNodes(
+  ctx: SerializeContext,
+  nodes: ProgramTreeNode[],
+  part: ProgramEachPart,
+  item: Record<string, unknown>,
+): string {
+  return serializeItemChildren(ctx, nodes, part, item).html;
+}
+
+function slotNameFor(
+  ctx: SerializeContext,
+  node: ProgramElementNode,
+  programPath: readonly number[],
+): string {
+  let name = node.attrs.find(([attribute]) => attribute === 'slot')?.[1] ?? '';
+  for (const sink of ctx.valueSinksByPath.get(pathKey(programPath)) ?? []) {
+    if (sink.k === 'attr' && sink.name === 'slot') {
+      const value = attributeValueOf(signalOf(ctx.host, sink.signal).value);
+      name = value ?? '';
+    }
+  }
+  return name;
+}
+
+function serializeNode(
+  ctx: SerializeContext,
+  node: ProgramTreeNode,
+  nodePath: readonly number[],
+): string {
+  if (node.k === 'text') return escapeText(node.value);
+  if (node.k === 'el') return serializeElement(ctx, node, nodePath);
+  if (node.k === 'ival') {
     throw new CompiledProgramValidationError(
-      `parts[${part.index}].item`,
-      'item templates may not contain Part anchors',
+      'template',
+      'item value slot is outside an each Region',
     );
-  }).join('');
+  }
+  const part = ctx.program.parts[node.index];
+  const start = `<!--${partAnchorMarker(part.index)}-->`;
+  if (part.k === 'text') {
+    return `${start}${escapeText(String(signalOf(ctx.host, part.signal).value))}`;
+  }
+  if (part.k === 'when') {
+    const value = signalOf(ctx.host, part.signal).value;
+    const active = whenIsActive(part, value);
+    const branch = active ? part.on : part.off;
+    const end = `<!--${partAnchorEndMarker(part.index)}-->`;
+    return `${start}${serializeNodes(ctx, branch, [])}${end}`;
+  }
+  if (part.k === 'each') {
+    const end = `<!--${partAnchorEndMarker(part.index)}-->`;
+    const items = itemsFor(ctx, part)
+      .map((item) => serializeItemNodes(ctx, part.item, part, item))
+      .join('');
+    return `${start}${items}${end}`;
+  }
+  throw new CompiledProgramValidationError(
+    `template${nodePath.map((value) => `[${value}]`).join('')}`,
+    `Part ${node.index} does not own a serializable anchor`,
+  );
+}
+
+function serializeChildren(
+  ctx: SerializeContext,
+  nodes: ProgramTreeNode[],
+  parentPath: readonly number[],
+): { html: string; projected: Map<string, string> } {
+  let html = '';
+  const projected = new Map<string, string>();
+  nodes.forEach((node, index) => {
+    const nodePath = [...parentPath, index];
+    const serialized = serializeNode(ctx, node, nodePath);
+    html += serialized;
+    const name = node.k === 'el' ? slotNameFor(ctx, node, nodePath) : '';
+    projected.set(name, (projected.get(name) ?? '') + serialized);
+  });
+  return { html, projected };
 }
 
 function serializeElement(
   ctx: SerializeContext,
-  node: SpikeElementNode,
+  node: ProgramElementNode,
   programPath: readonly number[],
 ): string {
-  const attrs = node.attrs.map(([name, value]) => serializeAttribute(name, value));
+  const attributes: CompiledHostAttribute[] = node.attrs.map(([name, value]) => [name, value]);
+  const properties: Record<string, unknown> = {};
+  const attrText = (): string =>
+    attributes.map(([name, value]) =>
+      value === true ? ` ${name}` : serializeAttribute(name, String(value))
+    ).join('');
+
   const key = pathKey(programPath);
   for (const sink of ctx.valueSinksByPath.get(key) ?? []) {
     const value = signalOf(ctx.host, sink.signal).value;
     if (sink.k === 'attr') {
       const serialized = attributeValueOf(value);
-      if (serialized !== null) attrs.push(serializeAttribute(sink.name!, serialized));
+      if (serialized !== null) attributes.push([sink.name!, serialized]);
       continue;
     }
     if (sink.k === 'bool') {
-      if (value) attrs.push(` ${sink.name!}`);
+      if (value) attributes.push([sink.name!, true]);
       continue;
     }
     if (sink.k === 'class') {
       const serialized = classValueOf(value);
-      if (serialized !== '') attrs.push(serializeAttribute('class', serialized));
+      if (serialized !== '') attributes.push(['class', serialized]);
       continue;
     }
     const serialized = styleValueOf(value);
-    if (serialized !== '') attrs.push(serializeAttribute('style', serialized));
+    if (serialized !== '') attributes.push(['style', serialized]);
   }
   for (const part of ctx.propPartsByPath.get(key) ?? []) {
     const value = signalOf(ctx.host, part.signal).value;
+    properties[part.name] = value;
     let serialized: string;
     if (node.tag.includes('-') && typeof value !== 'string') {
       try {
         const encoded = JSON.stringify(value);
-        if (encoded === undefined) {
-          throw new TypeError('value has no JSON representation');
-        }
+        if (encoded === undefined) throw new TypeError('value has no JSON representation');
         serialized = encoded;
       } catch (error) {
         throw new CompiledProgramValidationError(
@@ -404,74 +542,58 @@ function serializeElement(
     } else {
       serialized = String(value);
     }
-    attrs.push(serializeAttribute(part.name, serialized));
+    attributes.push([part.name, serialized]);
   }
-  const open = `<${node.tag}${attrs.join('')}`;
+
+  const open = `<${node.tag}${attrText()}`;
   if (voidElement(node.tag)) return `${open}>`;
   const htmlSink = ctx.htmlSinksByPath.get(key);
   if (htmlSink) {
-    // Trusted-HTML sink: the value must be pre-sanitized build-time content;
-    // it replaces the element's (compiler-guaranteed empty) content verbatim.
-    const value = signalOf(ctx.host, htmlSink.signal).value;
-    if (typeof value !== 'string') {
-      throw new CompiledProgramValidationError(
-        `template[${programPath.join('][')}]`,
-        'html sink value must be a string',
-      );
-    }
+    const value = trustedHtmlValue(signalOf(ctx.host, htmlSink.signal).value);
     return `${open}>${value}</${node.tag}>`;
   }
-  return `${open}>${serializeNodes(ctx, node.children, programPath)}</${node.tag}>`;
+
+  const children = serializeChildren(ctx, node.children, programPath);
+  let content = children.html;
+  if (node.tag === 'slot' && ctx.options.projectedChildren) {
+    const name = attributes.find(([attribute]) => attribute === 'name')?.[1];
+    const slotName = typeof name === 'string' ? name : '';
+    if (!ctx.consumedProjections.has(slotName) && ctx.options.projectedChildren.has(slotName)) {
+      content = ctx.options.projectedChildren.get(slotName)!;
+      ctx.consumedProjections.add(slotName);
+    }
+  }
+
+  if (node.tag.includes('-') && ctx.options.renderNestedElement) {
+    const rendered = ctx.options.renderNestedElement({
+      tag: node.tag,
+      attributes,
+      properties,
+      children: content,
+      projectedChildren: children.projected,
+    });
+    if (rendered !== undefined) return rendered;
+  }
+  return `${open}>${content}</${node.tag}>`;
 }
 
 function serializeNodes(
   ctx: SerializeContext,
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   parentPath: readonly number[],
 ): string {
-  return nodes.map((node, index) => {
-    const nodePath = [...parentPath, index];
-    if (node.k === 'text') return escapeText(node.value);
-    if (node.k === 'el') return serializeElement(ctx, node, nodePath);
-    if (node.k === 'ival') {
-      throw new CompiledProgramValidationError(
-        'template',
-        'item value slot is outside an each Region',
-      );
-    }
-    const part = ctx.program.parts[node.index];
-    const start = `<!--${partAnchorMarker(part.index)}-->`;
-    if (part.k === 'text') {
-      return `${start}${escapeText(String(signalOf(ctx.host, part.signal).value))}`;
-    }
-    if (part.k === 'when') {
-      const value = signalOf(ctx.host, part.signal).value;
-      const active = whenIsActive(part, value);
-      const branch = active ? part.on : part.off;
-      const end = `<!--${partAnchorEndMarker(part.index)}-->`;
-      return `${start}${serializeNodes(ctx, branch, [])}${end}`;
-    }
-    if (part.k === 'each') {
-      const end = `<!--${partAnchorEndMarker(part.index)}-->`;
-      return `${start}${
-        itemsFor(ctx, part).map((item) => serializeItemNodes(part.item, part, item)).join('')
-      }${end}`;
-    }
-    throw new CompiledProgramValidationError(
-      `template${nodePath.map((value) => `[${value}]`).join('')}`,
-      `Part ${node.index} does not own a serializable anchor`,
-    );
-  }).join('');
+  return serializeChildren(ctx, nodes, parentPath).html;
 }
 
 function snapshotProgram(
   raw: unknown,
   host: unknown,
-): { program: PartProgramSpike; ctx: SerializeContext } {
+  options: CompiledServerOptions = {},
+): { program: PartProgramV1; ctx: SerializeContext } {
   const program = assertCompiledProgram(raw);
   // The host is intentionally checked lazily by signalOf so static-only
   // programs remain server-only and need no client signal artifact.
-  return { program, ctx: createSerializeContext(program, host) };
+  return { program, ctx: createSerializeContext(program, host, options) };
 }
 
 /** Serialize only the program-owned root content, with deterministic markers. */
@@ -490,7 +612,7 @@ export function serializeCompiledProgram(
   host: unknown,
   options: CompiledServerOptions = {},
 ): string {
-  const { program, ctx } = snapshotProgram(raw, host);
+  const { program, ctx } = snapshotProgram(raw, host, options);
   const mode = options.mode ?? 'open';
   if (mode !== 'light' && mode !== 'open' && mode !== 'closed') {
     throw new CompiledProgramValidationError(
@@ -499,6 +621,14 @@ export function serializeCompiledProgram(
     );
   }
   const content = serializeNodes(ctx, program.template, []);
+  for (const [name, value] of options.projectedChildren ?? []) {
+    if (!ctx.consumedProjections.has(name) && (name !== '' || value.trim() !== '')) {
+      throw new CompiledProgramValidationError(
+        'projectedChildren',
+        `light content targets missing slot ${JSON.stringify(name || 'default')}`,
+      );
+    }
+  }
   const hostAttrs = serializeHostAttributes(options.hostAttrs, mode);
   const styleCss = options.styleCss ?? '';
   if (/<\/style/i.test(styleCss)) {

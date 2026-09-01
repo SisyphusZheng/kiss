@@ -121,6 +121,16 @@ export class TestElement extends TestNodeBase {
     this.ownerDocument.counts.valueWrites++;
   }
 
+  get innerHTML(): string {
+    return this.childNodes.map(toHtml).join('');
+  }
+
+  set innerHTML(html: string) {
+    for (const child of [...this.childNodes]) this.removeChild(child);
+    const fragment = parseHtml(this.ownerDocument, html);
+    for (const child of [...fragment.childNodes]) this.appendChild(child);
+  }
+
   simulateUserInput(next: string): void {
     this.#value = next;
   }
@@ -172,6 +182,21 @@ export class TestElement extends TestNodeBase {
     }
   }
 
+  dispatchEvent(event: Event): boolean {
+    for (const listener of [...this.listeners.get(event.type) ?? []]) {
+      listener.fn(event);
+      if (listener.once) this.listeners.get(event.type)?.delete(listener);
+      if (event.cancelBubble) break;
+    }
+    if (!event.cancelBubble && event.bubbles) {
+      const parent = this.parentNode as unknown;
+      if (parent instanceof TestElement || parent instanceof TestShadowRoot) {
+        parent.dispatchEvent(event);
+      }
+    }
+    return !event.defaultPrevented;
+  }
+
   attachShadow(init: { mode: 'open' | 'closed' }): TestShadowRoot {
     if (this.shadowRoot) throw new Error('shadow root already exists');
     const root = new TestShadowRoot(this.ownerDocument, this);
@@ -186,6 +211,13 @@ export class TestShadowRoot extends TestNodeBase {
 
   constructor(ownerDocument: TestDocument, readonly host: TestElement) {
     super(ownerDocument);
+  }
+
+  dispatchEvent(event: Event): boolean {
+    if (!event.cancelBubble && event.bubbles && event.composed) {
+      return this.host.dispatchEvent(event);
+    }
+    return !event.defaultPrevented;
   }
 }
 

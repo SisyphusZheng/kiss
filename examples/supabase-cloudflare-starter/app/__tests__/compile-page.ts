@@ -6,7 +6,7 @@
  * directly — the ambient @element/@property decorators are compile-time-only
  * input and throw at module evaluation outside the adapter transform.
  */
-import { compileElementSpike } from '../../../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
+import { compileElementProgram } from '../../../../packages/adapter-vite/src/internal/compiler/semantic-core/compile.ts';
 
 const ELEMENT_URL = new URL('../../../../packages/element/src/index.ts', import.meta.url).href;
 const APP_URL = new URL('../../../../packages/app/src/index.ts', import.meta.url).href;
@@ -17,7 +17,7 @@ export async function compileComponentClass(
 ): Promise<CustomElementConstructor> {
   const absoluteSource = new URL(sourceUrl, import.meta.url);
   const source = await Deno.readTextFile(absoluteSource);
-  const { code } = compileElementSpike(source, sourceUrl);
+  const { code } = compileElementProgram(source, sourceUrl);
   // The emitted module imports the framework packages by bare specifier;
   // re-point them at the monorepo sources, and rebase the component's
   // relative imports onto its own directory. The rewritten module imports

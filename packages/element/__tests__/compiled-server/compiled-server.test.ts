@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
-import type { PartProgramSpike } from '../../src/internal/compiled/program.ts';
+import type { PartProgramV1 } from '../../src/internal/compiled/program.ts';
+import { trustedHtml } from '../../src/internal/core/security.ts';
 import { testProgram } from '../compiled-runtime/test-program.ts';
 
 const PROGRAM = testProgram({
@@ -29,6 +30,35 @@ const HOST = {
   handlers: {},
 };
 
+Deno.test('compiled server requires the TrustedHtml capability for html Parts', async () => {
+  const { serializeProgramContent } = await import(
+    '../../src/internal/compiled/server/index.ts'
+  );
+  const program = testProgram({
+    tag: 'oe-server-html',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [{ k: 'html', index: 0, signal: 'body', path: [0] }],
+  });
+  const host = (value: unknown) => ({
+    signals: { body: { value, subscribe: () => () => {} } },
+    handlers: {},
+  });
+  assertEquals(
+    serializeProgramContent(program, host(trustedHtml('<strong>safe</strong>'))),
+    '<div><strong>safe</strong></div>',
+  );
+  assertThrows(
+    () => serializeProgramContent(program, host('<strong>unsafe</strong>')),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+  assertThrows(
+    () => serializeProgramContent(program, host(structuredClone(trustedHtml('<b>x</b>')))),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+});
+
 const FIXTURE_PROGRAM_URL = new URL(
   '../../__fixtures__/compiled-server/program.json',
   import.meta.url,
@@ -49,8 +79,8 @@ const STATIC_ONLY_EXPECTED_URL = new URL(
   import.meta.url,
 );
 
-async function readFixtureProgram(): Promise<PartProgramSpike> {
-  return JSON.parse(await Deno.readTextFile(FIXTURE_PROGRAM_URL)) as PartProgramSpike;
+async function readFixtureProgram(): Promise<PartProgramV1> {
+  return JSON.parse(await Deno.readTextFile(FIXTURE_PROGRAM_URL)) as PartProgramV1;
 }
 
 function fixtureHost() {
@@ -177,7 +207,7 @@ Deno.test('alpha.3 server output escapes values, supports native DSD flags, and 
       signal: 'items',
       key: 'id',
       field: 'text',
-      item: [{ k: 'ival' }],
+      item: [{ k: 'ival', field: 'text' }],
     }],
   });
   const inheritedError = assertThrows(

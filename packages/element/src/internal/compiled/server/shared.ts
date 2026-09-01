@@ -10,12 +10,8 @@
  * static branches; other unified-schema kinds fail closed here.
  */
 
-import {
-  type PartProgramSpike,
-  type SpikePart,
-  type SpikeTreeNode,
-  validatePartProgram,
-} from '../program.ts';
+import { type PartProgramV1, type ProgramPart, type ProgramTreeNode } from '../program.ts';
+import { normalizePartProgram, type RuntimeProgramIR } from '../runtime-program.ts';
 
 export interface CompiledSignalLike<T = unknown> {
   readonly value: T;
@@ -108,7 +104,7 @@ function validateAttributes(
 }
 
 function validateStaticNodes(
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   path: string,
   allowItemValue: boolean,
   allowAnchors = false,
@@ -161,7 +157,7 @@ function validateStaticNodes(
   });
 }
 
-function validatePart(part: SpikePart, index: number): void {
+function validatePart(part: ProgramPart, index: number): void {
   const path = `parts[${index}]`;
   if (part.index !== index) fail(path, `index must equal its position (${index})`);
   const fixedPathOk = part.k !== 'text' && part.k !== 'when' && part.k !== 'each'
@@ -206,7 +202,7 @@ function validatePart(part: SpikePart, index: number): void {
       return;
     case 'when':
       if (!part.signal) fail(path, 'conditional Region needs a non-empty signal name');
-      if (!Number.isFinite(part.gt)) fail(`${path}.gt`, 'threshold must be finite');
+      if (!Number.isFinite(part.test.value)) fail(`${path}.test.value`, 'threshold must be finite');
       validateStaticNodes(part.on, `${path}.on`, false);
       validateStaticNodes(part.off, `${path}.off`, false);
       return;
@@ -222,12 +218,12 @@ function validatePart(part: SpikePart, index: number): void {
 }
 
 function resolveTemplateNode(
-  program: PartProgramSpike,
+  program: PartProgramV1,
   path: number[],
   where: string,
-): SpikeTreeNode {
+): ProgramTreeNode {
   let nodes = program.template;
-  let node: SpikeTreeNode | undefined;
+  let node: ProgramTreeNode | undefined;
   path.forEach((index, depth) => {
     node = nodes[index];
     if (!node) fail(where, `path [${path.join(',')}] is unresolved at depth ${depth}`);
@@ -240,9 +236,9 @@ function resolveTemplateNode(
   return node;
 }
 
-function validateLocations(program: PartProgramSpike): void {
+function validateLocations(program: PartProgramV1): void {
   const anchorCounts = new Map<number, number>();
-  const walkAnchors = (nodes: SpikeTreeNode[], path: string): void => {
+  const walkAnchors = (nodes: ProgramTreeNode[], path: string): void => {
     nodes.forEach((node, index) => {
       const nodePath = `${path}[${index}]`;
       if (node.k === 'el') {
@@ -254,7 +250,7 @@ function validateLocations(program: PartProgramSpike): void {
         fail(nodePath, `Part anchor index ${String(node.index)} is outside parts`);
       }
       const part = program.parts[node.index];
-      if (part.k !== 'text' && part.k !== 'when' && part.k !== 'each' && part.k !== 'child') {
+      if (part.k !== 'text' && part.k !== 'when' && part.k !== 'each') {
         fail(nodePath, 'anchor must reference a text Part or Region');
       }
       const count = (anchorCounts.get(node.index) ?? 0) + 1;
@@ -265,7 +261,7 @@ function validateLocations(program: PartProgramSpike): void {
   walkAnchors(program.template, 'template');
 
   program.parts.forEach((part) => {
-    if (part.k === 'text' || part.k === 'when' || part.k === 'each' || part.k === 'child') {
+    if (part.k === 'text' || part.k === 'when' || part.k === 'each') {
       if (anchorCounts.get(part.index) !== 1) {
         fail(`parts[${part.index}]`, 'every dynamic Part/Region must have exactly one anchor');
       }
@@ -329,15 +325,15 @@ function validateLocations(program: PartProgramSpike): void {
 }
 
 /** Validate the unified program plus the server/claim security and ownership invariants. */
-export function assertCompiledProgram(raw: unknown): PartProgramSpike {
+export function assertCompiledProgram(raw: unknown): RuntimeProgramIR {
+  let program: RuntimeProgramIR;
   try {
-    validatePartProgram(raw);
+    program = normalizePartProgram(raw);
   } catch (error) {
     if (error instanceof CompiledProgramValidationError) throw error;
     const detail = error instanceof Error ? error.message : String(error);
     fail('program', detail);
   }
-  const program = raw;
   validateTag(program.tag, 'tag');
   validateStaticNodes(program.template, 'template', false, true);
   program.parts.forEach(validatePart);

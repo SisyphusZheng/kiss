@@ -5,7 +5,7 @@
  * in definePage(); the compiled Part Program is the render — there is no
  * runtime JSX path. The ambient decorator declarations exist only so the
  * module typechecks standalone (the open:compiled-element transform erases
- * them); see __fixtures__/compiled-element-spike/counter.tsx.
+ * them); see __fixtures__/compiled-element-v1/counter.tsx.
  */
 import { OpenElement } from '@openelement/element';
 

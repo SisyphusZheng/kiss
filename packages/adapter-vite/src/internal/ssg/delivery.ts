@@ -7,8 +7,8 @@
  * rendering. A capability module may expose one or many element constructors.
  */
 
-import type { HydrationStrategy } from '../protocol/framework.ts';
-import type { ClientIslandEntry } from '../protocol/ssg.ts';
+import type { ClientIslandEntry, IslandDeliveryStrategy } from '../protocol/ssg.ts';
+export type { IslandDeliveryStrategy } from '../protocol/ssg.ts';
 import { isValidTagName } from '@openelement/element';
 
 export const ISLAND_DELIVERY_STRATEGIES = [
@@ -19,16 +19,8 @@ export const ISLAND_DELIVERY_STRATEGIES = [
   'only',
 ] as const;
 
-export type IslandDeliveryStrategy = HydrationStrategy | 'media';
-
-/**
- * The protocol in the 0.43 maintenance line has one tag per declaration.
- * Alpha.4 extends that declaration at the adapter boundary with `tags` and
- * per-tag named exports so one Island can deliver one capability module to
- * several native custom elements.
- */
-export interface ClientIslandDeliveryEntry extends Omit<ClientIslandEntry, 'strategy'> {
-  strategy: IslandDeliveryStrategy;
+/** One capability module may deliver several native custom elements. */
+export interface ClientIslandDeliveryEntry extends ClientIslandEntry {
   /** A media query required when `strategy` is `media`. */
   media?: string;
   /** Optional one-to-many element names served by this module. */

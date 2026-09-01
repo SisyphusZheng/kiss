@@ -42,7 +42,6 @@ import {
 } from './internal/ssg/critical-assets.ts';
 import { islandTransformPlugin } from './island-transform.ts';
 import {
-  compiledElementPlugin,
   compileElementModule,
   createCompiledElementSourceMap,
 } from './internal/compiler/plugin.ts';
@@ -130,7 +129,7 @@ export function optionalPackageStubsPlugin(): Plugin {
  * @internal
  */
 export function createOpenPlugin(
-  options: FrameworkOptions & { ssg?: SsgBehaviorOptions; compiledSpike?: boolean } = {},
+  options: FrameworkOptions & { ssg?: SsgBehaviorOptions } = {},
   externalCtx?: OpenElementBuildContext,
 ): Plugin[] {
   // Build the validated legacy head channel, then prepend the opt-in alpha.4
@@ -149,7 +148,6 @@ export function createOpenPlugin(
   const resolvedOptions: FrameworkOptions & {
     allowHeadExtrasScripts?: boolean;
     ssg?: SsgBehaviorOptions;
-    compiledSpike?: boolean;
   } = {
     ...options,
     routesDir: options.routesDir || DEFAULT_ROUTES_DIR,
@@ -789,16 +787,6 @@ export function createOpenPlugin(
     // URL the production build emits (<base>client/islands/client.js).
     devIslandClientPlugin(resolvedOptions, ctx),
   );
-
-  // #1160 / ADR-0143: compiled-element compilation is mandatory in the
-  // default 0.44 pipeline — the open:core transform hook above compiles every
-  // .tsx module carrying a real @element decorator application. This flag only
-  // adds the standalone open:compiled-element plugin; generated output carries
-  // no @element marker, so a module is never compiled twice when both hooks
-  // see it.
-  if (resolvedOptions.compiledSpike) {
-    plugins.push(compiledElementPlugin());
-  }
 
   return plugins;
 }

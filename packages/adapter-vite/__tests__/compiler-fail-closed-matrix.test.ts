@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import {
-  CompiledSpikeError,
-  compileElementSpike,
+  CompiledElementError,
+  compileElementProgram,
 } from '../src/internal/compiler/semantic-core/compile.ts';
 
 const PRELUDE = `
@@ -24,11 +24,11 @@ function component(fields: string, render: string, methods = ''): string {
 function expectCompilerFailure(source: string, code: string, fragment: string): void {
   let thrown: unknown;
   try {
-    compileElementSpike(source, '/project/app/components/fail-closed-matrix.tsx');
+    compileElementProgram(source, '/project/app/components/fail-closed-matrix.tsx');
   } catch (error) {
     thrown = error;
   }
-  assert(thrown instanceof CompiledSpikeError, `expected ${code}, got ${String(thrown)}`);
+  assert(thrown instanceof CompiledElementError, `expected ${code}, got ${String(thrown)}`);
   assertStringIncludes(String(thrown), code);
   assertStringIncludes(String(thrown), fragment);
 }
@@ -44,8 +44,8 @@ Deno.test('semantic compiler accepts the complete JSON-safe property literal gra
     `,
     `<main data-negative={-2} data-zero={0} data-label={\`ok\`} hidden={false}>{null}{true}{3}</main>`,
   );
-  const first = compileElementSpike(source, '/project/app/components/literals.tsx');
-  const second = compileElementSpike(source, '/project/app/components/literals.tsx');
+  const first = compileElementProgram(source, '/project/app/components/literals.tsx');
+  const second = compileElementProgram(source, '/project/app/components/literals.tsx');
   assertEquals(first.program, second.program);
   assertEquals(first.program.metadata.properties.map((property) => property.type), [
     'number',

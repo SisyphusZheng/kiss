@@ -1,5 +1,6 @@
 /** Dynamic blog route; all request data is projected into a compiled page. */
 import { definePage } from '@openelement/app';
+import { trustedHtml } from '@openelement/element';
 import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 import { prepareArticle } from '@openelement/site-ui/article-body.ts';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
@@ -37,7 +38,7 @@ export default definePage(PageBlogPost, {
         tags: [],
         railItems: [],
         navigation: {},
-        articleHtml: '',
+        articleHtml: trustedHtml(''),
         nextDispatchHref: blogHref,
         nextDispatchText: resolved === 'en' ? 'Back to all dispatches →' : '返回全部文章 →',
       };
@@ -75,7 +76,7 @@ export default definePage(PageBlogPost, {
           ? { href: `${blogHref}/${next.slug}`, label: next.frontmatter.title }
           : undefined,
       },
-      articleHtml: article.html,
+      articleHtml: trustedHtml(article.html),
       nextDispatchHref: next ? `${blogHref}/${next.slug}` : blogHref,
       nextDispatchText: next
         ? `${next.frontmatter.title} →`

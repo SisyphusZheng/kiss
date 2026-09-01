@@ -1,94 +1,158 @@
 /**
- * signal-context.ts - SignalContext DOM-tree-based cross-component signal sharing.
- *
- * v0.29.6: WeakMap replaces symbol-keyed DOM property stamping.
- * Consumer walks parentElement / shadowRoot.host upward to find signals.
- *
- * @module ./signal-context.ts
+ * Community Context Protocol transport backed by consumer-local Signals.
+ * Browser event propagation owns provider discovery; no OpenElement ancestry
+ * walk or provider Signal crosses the interoperability boundary.
  */
 
-import type { WritableSignal } from '../signal/index.ts';
+import type { Unsubscribe, WritableSignal } from '../protocol/signal.ts';
 import { signal } from '../signal/index.ts';
 
+export const CONTEXT_REQUEST_EVENT = 'context-request';
+
 export interface Context<T> {
-  key: symbol;
-  defaultValue: T;
+  /** Strict-equality protocol identity shared with vanilla and Lit consumers. */
+  readonly key: symbol;
+  readonly defaultValue: T;
 }
 
-const defaultSignals = new WeakMap<Context<unknown>, WritableSignal<unknown>>();
-const hostSignals = new WeakMap<object, Map<symbol, WritableSignal<unknown>>>();
+export type ContextCallback<T> = (value: T, unsubscribe?: Unsubscribe) => void;
+
+export interface ContextRequest<T = unknown> extends Event {
+  readonly context: unknown;
+  readonly contextTarget: Element;
+  readonly callback: ContextCallback<T>;
+  readonly subscribe: boolean;
+}
+
+export class ContextRequestEvent<T> extends Event implements ContextRequest<T> {
+  readonly context: unknown;
+  readonly contextTarget: Element;
+  readonly callback: ContextCallback<T>;
+  readonly subscribe: boolean;
+
+  constructor(
+    context: unknown,
+    contextTarget: Element,
+    callback: ContextCallback<T>,
+    subscribe = false,
+  ) {
+    super(CONTEXT_REQUEST_EVENT, { bubbles: true, composed: true });
+    this.context = context;
+    this.contextTarget = contextTarget;
+    this.callback = callback;
+    this.subscribe = subscribe;
+  }
+}
+
+interface ProviderRecord<T> {
+  value: WritableSignal<T>;
+  listener: EventListener;
+  dispose: Unsubscribe;
+}
+
+const providers = new WeakMap<HTMLElement, Map<symbol, ProviderRecord<unknown>>>();
+const consumedSignalCleanups = new WeakMap<WritableSignal<unknown>, Unsubscribe>();
 
 export function createContext<T>(key: symbol, defaultValue: T): Context<T> {
-  const context: Context<T> = { key, defaultValue };
-  const s = signal<T>(defaultValue);
-  defaultSignals.set(context as Context<unknown>, s as WritableSignal<unknown>);
-  return context;
+  return Object.freeze({ key, defaultValue });
 }
 
-function getOrCreateHostSignal<T>(
-  host: object,
-  ctx: Context<T>,
-  initialValue: T,
-): WritableSignal<T> {
-  let map = hostSignals.get(host);
-  if (!map) {
-    map = new Map();
-    hostSignals.set(host, map);
+function providerRecord<T>(host: HTMLElement, context: Context<T>, initial: T): ProviderRecord<T> {
+  let hostProviders = providers.get(host);
+  if (!hostProviders) {
+    hostProviders = new Map();
+    providers.set(host, hostProviders);
   }
-  let scoped = map.get(ctx.key) as WritableSignal<T> | undefined;
-  if (!scoped) {
-    scoped = signal<T>(initialValue);
-    map.set(ctx.key, scoped as WritableSignal<unknown>);
-  }
-  return scoped;
+  const existing = hostProviders.get(context.key) as ProviderRecord<T> | undefined;
+  if (existing) return existing;
+
+  const value = signal(initial);
+  const listener: EventListener = (event) => {
+    const request = event as ContextRequest<T>;
+    if (
+      request.context !== context.key || typeof request.callback !== 'function' ||
+      typeof request.subscribe !== 'boolean'
+    ) return;
+    event.stopImmediatePropagation();
+    const current = value.value;
+    if (!request.subscribe) {
+      request.callback(current);
+      return;
+    }
+    let subscribing = true;
+    const unsubscribe = value.subscribe((next) => {
+      if (subscribing && Object.is(next, current)) return;
+      request.callback(next);
+    });
+    subscribing = false;
+    request.callback(current, unsubscribe);
+  };
+  host.addEventListener(CONTEXT_REQUEST_EVENT, listener);
+  const record: ProviderRecord<T> = {
+    value,
+    listener,
+    dispose: () => {
+      host.removeEventListener(CONTEXT_REQUEST_EVENT, listener);
+      hostProviders!.delete(context.key);
+      if (hostProviders!.size === 0) providers.delete(host);
+    },
+  };
+  hostProviders.set(context.key, record as ProviderRecord<unknown>);
+  return record;
 }
 
+/** Provide a plain protocol value; the provider Signal remains OE-private. */
 export function provideContext<T>(
   host: HTMLElement,
-  ctx: Context<T>,
+  context: Context<T>,
   value: T,
-): void {
-  const scoped = getOrCreateHostSignal(host, ctx, value);
-  scoped.value = value;
+): Unsubscribe {
+  const provider = providerRecord(host, context, value);
+  provider.value.value = value;
+  return provider.dispose;
 }
 
-function findProvidedSignal<T>(
-  host: HTMLElement | undefined,
-  ctx: Context<T>,
-): WritableSignal<T> | undefined {
-  let current: Node | null | undefined = host;
-  let lastNode: Node | null = host ?? null;
-  while (current) {
-    const store = hostSignals.get(current as object);
-    if (store) {
-      const candidate = store.get(ctx.key);
-      if (candidate) return candidate as WritableSignal<T>;
-    }
-    current = current.parentNode;
-    if (current) {
-      lastNode = current;
-    } else {
-      // Crossed the top of the current tree. Derive the next node from the last
-      // real node visited (not the original host) so each shadow boundary is
-      // crossed exactly once and the walk terminates at the document root.
-      const root = lastNode?.getRootNode?.();
-      // Duck-typed `.host` read (no `instanceof ShadowRoot`: the global is
-      // absent in non-DOM runtimes, #1025). A non-shadow root has no host
-      // and ends the walk.
-      current = ((root as ShadowRoot | undefined)?.host as Node | undefined) ?? null;
-      if (current) lastNode = current;
-    }
+/** Dispatch one Community Context Protocol request and return its cleanup. */
+export function requestContext<T>(
+  host: HTMLElement,
+  context: Context<T>,
+  callback: ContextCallback<T>,
+  subscribe = true,
+): Unsubscribe {
+  let providerUnsubscribe: Unsubscribe | undefined;
+  const event = new ContextRequestEvent<T>(
+    context.key,
+    host,
+    (value, unsubscribe) => {
+      if (unsubscribe) providerUnsubscribe = unsubscribe;
+      callback(value);
+    },
+    subscribe,
+  );
+  host.dispatchEvent(event);
+  return () => {
+    const unsubscribe = providerUnsubscribe;
+    providerUnsubscribe = undefined;
+    unsubscribe?.();
+  };
+}
+
+/** Consumer-local reactive projection of a protocol context value. */
+export function consumeContext<T>(context: Context<T>, host?: HTMLElement): WritableSignal<T> {
+  const local = signal(context.defaultValue);
+  if (host) {
+    const cleanup = requestContext(host, context, (value) => {
+      local.value = value;
+    });
+    consumedSignalCleanups.set(local as WritableSignal<unknown>, cleanup);
   }
-  return undefined;
+  return local;
 }
 
-export function consumeContext<T>(
-  ctx: Context<T>,
-  host?: HTMLElement,
-): WritableSignal<T> {
-  const scoped = findProvidedSignal(host, ctx);
-  if (scoped) return scoped;
-  const s = defaultSignals.get(ctx as Context<unknown>);
-  if (s) return s as WritableSignal<T>;
-  return signal(ctx.defaultValue);
+/** Internal lifecycle hook for releasing a protocol subscription. */
+export function releaseConsumedContext(signalValue: WritableSignal<unknown>): void {
+  const cleanup = consumedSignalCleanups.get(signalValue);
+  if (!cleanup) return;
+  consumedSignalCleanups.delete(signalValue);
+  cleanup();
 }

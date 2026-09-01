@@ -1,5 +1,6 @@
 /** Changelog route: request projection and build-time Markdown loading. */
 import { definePage } from '@openelement/app';
+import { trustedHtml } from '@openelement/element';
 import { sanitizeHtml } from '@openelement/element/sanitize';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { localizePath } from '@openelement/site-ui/link.ts';
@@ -115,7 +116,7 @@ export default definePage(PageChangelog, {
         label: text.railLabels[index] ?? id,
         depth: '2',
       })),
-      changelogHtml: loadChangelogHtml(text.loadError),
+      changelogHtml: trustedHtml(loadChangelogHtml(text.loadError)),
       roadmapHref: localizePath('/roadmap', resolved),
       roadmapLabel: text.navRoadmap,
       gettingStartedHref: localizePath('/guide/getting-started', resolved),

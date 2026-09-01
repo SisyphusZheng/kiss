@@ -11,11 +11,11 @@
 import {
   partAnchorEndMarker,
   partAnchorMarker,
-  type PartProgramSpike,
-  type SpikeEachPart,
-  type SpikeElementNode,
-  type SpikeTreeNode,
-  type SpikeWhenPart,
+  type PartProgramV1,
+  type ProgramEachPart,
+  type ProgramElementNode,
+  type ProgramTreeNode,
+  type ProgramWhenPart,
   STATIC_STYLES_MARKER,
 } from '../program.ts';
 import {
@@ -29,6 +29,7 @@ import {
   styleValueOf,
   voidElement,
 } from '../server/shared.ts';
+import { trustedHtmlValue } from '../../core/security.ts';
 
 export type { CompiledProgramHost, CompiledSignalLike } from '../server/shared.ts';
 export { assertCompiledProgram, CompiledProgramValidationError } from '../server/shared.ts';
@@ -43,7 +44,7 @@ interface RegionClaimOwner {
   parent: Node;
   anchor: Comment;
   end: Comment;
-  part: SpikeWhenPart | SpikeEachPart;
+  part: ProgramWhenPart | ProgramEachPart;
 }
 
 type ClaimOwner = RootClaimOwner | RegionClaimOwner;
@@ -231,13 +232,13 @@ export function replayPreUpgradeEvents(
 
 interface TextBinding {
   kind: 'text';
-  part: Extract<SpikePartOf<PartProgramSpike>, { k: 'text' }>;
+  part: Extract<ProgramPartOf<PartProgramV1>, { k: 'text' }>;
   text: Text;
 }
 
 interface WhenState {
   kind: 'when';
-  part: SpikeWhenPart;
+  part: ProgramWhenPart;
   anchor: Comment;
   end: Comment;
   current: boolean;
@@ -253,7 +254,7 @@ interface EachEntry {
 
 interface EachState {
   kind: 'each';
-  part: SpikeEachPart;
+  part: ProgramEachPart;
   anchor: Comment;
   end: Comment;
   byKey: Map<string, EachEntry>;
@@ -263,19 +264,19 @@ interface EachState {
 type RegionState = WhenState | EachState;
 
 interface PropBinding {
-  part: Extract<SpikePartOf<PartProgramSpike>, { k: 'prop' }>;
+  part: Extract<ProgramPartOf<PartProgramV1>, { k: 'prop' }>;
   element: Element;
 }
 
 interface EventBinding {
-  part: Extract<SpikePartOf<PartProgramSpike>, { k: 'event' }>;
+  part: Extract<ProgramPartOf<PartProgramV1>, { k: 'event' }>;
   element: Element;
 }
 
 /** attr/bool/class/style/html sinks claimed against an existing element. */
 interface ValueBinding {
   part: Extract<
-    SpikePartOf<PartProgramSpike>,
+    ProgramPartOf<PartProgramV1>,
     { k: 'attr' | 'bool' | 'class' | 'style' | 'html' }
   >;
   element: Element;
@@ -290,7 +291,7 @@ interface ClaimPlan {
   elements: Map<string, Element>;
 }
 
-type SpikePartOf<P> = P extends { parts: Array<infer T> } ? T : never;
+type ProgramPartOf<P> = P extends { parts: Array<infer T> } ? T : never;
 
 interface PropertySink extends Element {
   [property: string]: unknown;
@@ -344,9 +345,14 @@ function stringValue(value: unknown, path: string, owner: ClaimOwner): string {
   }
 }
 
-function activeWhen(part: SpikeWhenPart, value: unknown, path: string, owner: ClaimOwner): boolean {
+function activeWhen(
+  part: ProgramWhenPart,
+  value: unknown,
+  path: string,
+  owner: ClaimOwner,
+): boolean {
   try {
-    return Number(value) > part.gt;
+    return Number(value) > part.test.value;
   } catch {
     claimFailure(path, 'conditional dependency cannot be converted to a number', owner);
   }
@@ -370,18 +376,18 @@ function attributeNames(element: Element): string[] | null {
   return names;
 }
 
-function isExpandedNestedLightHost(element: Element, node: SpikeElementNode): boolean {
+function isExpandedNestedLightHost(element: Element, node: ProgramElementNode): boolean {
   return node.children.length === 0 && node.tag.includes('-') &&
     element.getAttribute('data-oe-light') !== null;
 }
 
-function isExternalProjectionBoundary(element: Element, node: SpikeElementNode): boolean {
+function isExternalProjectionBoundary(element: Element, node: ProgramElementNode): boolean {
   return node.tag === 'slot' && node.children.length === 0 && childrenLength(element) > 0;
 }
 
 function verifyAttributes(
   element: Element,
-  node: SpikeElementNode,
+  node: ProgramElementNode,
   dynamicNames: readonly string[],
   path: string,
   owner: ClaimOwner,
@@ -416,7 +422,7 @@ function verifyAttributes(
 
 function verifyStaticElement(
   element: Element,
-  node: SpikeElementNode,
+  node: ProgramElementNode,
   path: string,
   owner: ClaimOwner,
   dynamicNames: readonly string[] = [],
@@ -445,7 +451,7 @@ function findRegionEnd(
 function regionOwner(
   parent: Node,
   start: number,
-  part: SpikeWhenPart | SpikeEachPart,
+  part: ProgramWhenPart | ProgramEachPart,
   anchor: Comment,
   fallback: ClaimOwner,
 ): ClaimOwner {
@@ -459,7 +465,7 @@ function regionOwner(
  * Region's optional `field` remains the fallback for field-less slots.
  */
 function eachKey(
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   path: string,
   owner: ClaimOwner,
 ): string {
@@ -470,7 +476,10 @@ function eachKey(
 }
 
 /** Item fields referenced by an each Region's template (ival + iattr slots). */
-function itemTemplateFields(nodes: readonly SpikeTreeNode[], out = new Set<string>()): Set<string> {
+function itemTemplateFields(
+  nodes: readonly ProgramTreeNode[],
+  out = new Set<string>(),
+): Set<string> {
   for (const node of nodes) {
     if (node.k === 'ival') {
       if (node.field !== undefined) out.add(node.field);
@@ -486,7 +495,7 @@ function itemTemplateFields(nodes: readonly SpikeTreeNode[], out = new Set<strin
 
 /** Per-item slot value for one field (ival text / iattr attribute). */
 function itemFieldValue(
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   item: Record<string, unknown>,
   field: string | undefined,
 ): unknown {
@@ -502,7 +511,7 @@ function itemAttrSerialized(value: unknown): string | null {
 }
 
 function itemRecords(
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   value: unknown,
   path: string,
   owner: ClaimOwner,
@@ -533,7 +542,7 @@ function itemRecords(
 }
 
 function dynamicNamesFor(
-  program: PartProgramSpike,
+  program: PartProgramV1,
   path: readonly number[],
 ): string[] {
   return program.parts.flatMap((part) => {
@@ -550,7 +559,7 @@ function dynamicNamesFor(
 function claimStaticChildren(
   parent: Node,
   cursor: number,
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   path: string,
   owner: ClaimOwner,
 ): number {
@@ -577,8 +586,8 @@ function claimStaticChildren(
 }
 
 function claimItemNodes(
-  part: SpikeEachPart,
-  nodes: SpikeTreeNode[],
+  part: ProgramEachPart,
+  nodes: ProgramTreeNode[],
   parent: Node,
   cursor: number,
   item: Record<string, unknown>,
@@ -641,8 +650,8 @@ function claimItemNodes(
 }
 
 function claimItemChildren(
-  part: SpikeEachPart,
-  node: SpikeElementNode,
+  part: ProgramEachPart,
+  node: ProgramElementNode,
   element: Element,
   item: Record<string, unknown>,
   path: string,
@@ -700,11 +709,11 @@ function claimItemChildren(
 }
 
 function scanChildren(
-  program: PartProgramSpike,
+  program: PartProgramV1,
   host: unknown,
   parent: Node,
   cursor: number,
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   path: string,
   programPath: readonly number[],
   owner: ClaimOwner,
@@ -848,7 +857,7 @@ function scanChildren(
 }
 
 function createPlan(
-  program: PartProgramSpike,
+  program: PartProgramV1,
   host: unknown,
   root: Node,
   options: ClaimOptions = {},
@@ -979,10 +988,10 @@ function createProgramElement(doc: Document, tag: string): Element {
 
 function buildItemNodes(
   doc: Document,
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   item: Record<string, unknown>,
 ): Node[] {
-  const build = (nodes: SpikeTreeNode[]): Node[] =>
+  const build = (nodes: ProgramTreeNode[]): Node[] =>
     nodes.map((node) => {
       if (node.k === 'ival') {
         return doc.createTextNode(String(itemFieldValue(part, item, node.field) ?? ''));
@@ -1006,7 +1015,7 @@ function buildItemNodes(
   return build(part.item);
 }
 
-function buildStaticNodes(doc: Document, nodes: SpikeTreeNode[]): Node[] {
+function buildStaticNodes(doc: Document, nodes: ProgramTreeNode[]): Node[] {
   return nodes.map((node) => {
     if (node.k === 'text') return doc.createTextNode(node.value);
     if (node.k === 'el') {
@@ -1020,10 +1029,10 @@ function buildStaticNodes(doc: Document, nodes: SpikeTreeNode[]): Node[] {
 }
 
 function buildNodes(
-  program: PartProgramSpike,
+  program: PartProgramV1,
   host: unknown,
   doc: Document,
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   parentPath: readonly number[],
 ): Node[] {
   const output: Node[] = [];
@@ -1060,13 +1069,7 @@ function buildNodes(
           if (value === '') element.removeAttribute('style');
           else element.setAttribute('style', value);
         } else if (part.k === 'html') {
-          const value = signalOf(host, part.signal).value;
-          if (typeof value !== 'string') {
-            throw new CompiledProgramValidationError(
-              `parts[${part.index}].signal`,
-              'html sink value must be a string',
-            );
-          }
+          const value = trustedHtmlValue(signalOf(host, part.signal).value);
           (element as Element & { innerHTML: string }).innerHTML = value;
         }
       }
@@ -1128,7 +1131,7 @@ function buildNodes(
 }
 
 function buildRegionContent(
-  part: SpikeWhenPart | SpikeEachPart,
+  part: ProgramWhenPart | ProgramEachPart,
   host: unknown,
   doc: Document,
 ): Node[] {
@@ -1156,7 +1159,7 @@ function removeAllChildren(parent: Node): void {
 
 function recoverOwner(
   error: PartProgramClaimError,
-  program: PartProgramSpike,
+  program: PartProgramV1,
   host: unknown,
 ): boolean {
   if (error.owner.kind === 'region') {
@@ -1296,14 +1299,9 @@ function attachPlan(
         continue;
       }
       // html: trusted pre-sanitized content replaces the opaque subtree.
+      trustedHtmlValue(signalOf(host, part.signal).value);
       subscribeWrites(host, part.signal, (value) => {
-        if (typeof value !== 'string') {
-          throw new CompiledProgramValidationError(
-            `parts[${part.index}].signal`,
-            'html sink value must be a string',
-          );
-        }
-        (element as Element & { innerHTML: string }).innerHTML = value;
+        (element as Element & { innerHTML: string }).innerHTML = trustedHtmlValue(value);
       }, cleanup);
     }
     const handlers = handlersOf(host);
@@ -1389,7 +1387,7 @@ function updateEach(state: EachState, value: unknown, root: Node): void {
 }
 
 function collectItemValueSlots(
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   domNodes: Node[],
   texts: Array<{ text: Text; field?: string }>,
   attrs: Array<{ element: Element; name: string; field: string }>,

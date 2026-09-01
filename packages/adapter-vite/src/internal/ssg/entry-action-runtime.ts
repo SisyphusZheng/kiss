@@ -63,30 +63,27 @@ export function renderActionRuntime(): string {
     return { response };
   }
 
-  const actionResult = await actionFn({ ...loadContext, formData });
-  if (actionResult instanceof Response) {
-    throw new Error('[openElement] Actions must not return a Response object; return data, fail(status, data), or throw redirect() (ADR-0121).');
-  }
+  const actionOutcome = __classifyActionResult(await actionFn({ ...loadContext, formData }));
   const prgParams = new URLSearchParams(url.search);
   for (const key of [...prgParams.keys()]) if (key.startsWith('/')) prgParams.delete(key);
   const search = prgParams.toString();
   const prgTarget = url.pathname + (search ? '?' + search : '');
 
   if (state.isFetch) {
-    if (__isActionFailure(actionResult)) {
-      let data = actionResult.data;
+    if (actionOutcome.kind === 'failure') {
+      let data = actionOutcome.data;
       try {
         if (JSON.stringify(data) === undefined) data = null;
       } catch {
         data = null;
       }
-      return { response: c.json({ type: 'failure', status: actionResult.status, data }, actionResult.status) };
+      return { response: c.json({ type: 'failure', status: actionOutcome.status, data }, actionOutcome.status) };
     }
     return { response: c.json({ type: 'redirect', status: 303, location: prgTarget }) };
   }
-  if (!__isActionFailure(actionResult)) {
+  if (actionOutcome.kind === 'success') {
     return { response: c.redirect(prgTarget, 303) };
   }
-  return { actionResult };
+  return { actionResult: actionOutcome };
 }`;
 }

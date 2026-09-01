@@ -1,8 +1,8 @@
 import type { PartProgram } from '../program.ts';
 import {
   claimExistingDom,
-  type CompiledSpikeHost,
-  type CompiledSpikeInstance,
+  type CompiledProgramInstance,
+  type CompiledRuntimeHost,
   createFreshDom,
 } from '../runtime.ts';
 import { CompiledErrorBoundary, type CompiledErrorBoundaryOptions } from './error-boundary.ts';
@@ -18,7 +18,7 @@ import type { StyleSheetLike } from '../../../internal/protocol/style-sheet.ts';
 
 export type CompiledRootMode = 'light' | 'open' | 'closed';
 
-export interface CompiledElementKernelOptions extends CompiledSpikeHost {
+export interface CompiledElementKernelOptions extends CompiledRuntimeHost {
   rootMode?: CompiledRootMode;
   /** A previously created closed root may be supplied on re-entry. */
   root?: CompiledStyleRoot;
@@ -45,7 +45,7 @@ export class CompiledElementKernel {
   #options: CompiledElementKernelOptions;
   #styleScope = new CompiledStyleScope();
   #root?: CompiledStyleRoot;
-  #instance?: CompiledSpikeInstance;
+  #instance?: CompiledProgramInstance;
   #active = false;
   #destroyed = false;
 

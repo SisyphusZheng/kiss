@@ -36,6 +36,7 @@ export interface BuildContextView {
     islandTagNames: string[];
     islandFiles?: string[];
     packageIslandDecls: IslandDecl[];
+    compilerBehaviorDecls?: IslandDecl[];
     islandMeta: Record<string, Partial<IslandDecl>>;
   };
 }
@@ -86,7 +87,11 @@ export async function postProcessClientIslandBuild(
   for (const tagName of ctx.phase1.islandTagNames || []) {
     if (!localMetaTags.has(tagName)) localMetas.push([tagName, { tagName }]);
   }
-  const packageMetas = (ctx.phase1.packageIslandDecls || []).flatMap((island) =>
+  const declaredMetas = [
+    ...(ctx.phase1.compilerBehaviorDecls || []),
+    ...(ctx.phase1.packageIslandDecls || []),
+  ];
+  const packageMetas = declaredMetas.flatMap((island) =>
     expandIslandDeliveryDecl(island).map((expanded) =>
       [expanded.tagName, expanded as DeliveryIslandMeta] as [string, DeliveryIslandMeta]
     )
@@ -113,7 +118,7 @@ export async function postProcessClientIslandBuild(
       addAliases(tagName, [primaryTag, ...(basename ? [basename] : [])]);
     }
   }
-  for (const island of ctx.phase1.packageIslandDecls || []) {
+  for (const island of declaredMetas) {
     const delivery = island as IslandDecl & {
       tags?: readonly string[];
       tagNames?: readonly string[];

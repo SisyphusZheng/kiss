@@ -327,12 +327,14 @@ Deno.test('renderEntry: imports Hono and DSD renderer', () => {
   assertStringIncludes(code, "import { Hono } from 'hono'");
   // v0.5.0: DSD renderer replaces @lit-labs/ssr; v0.44: the compiled sync
   // renderDsd is the only serializer — no runtime JSX or tree renderer.
-  assertStringIncludes(code, "import { renderDsd, escapeHtml } from '@openelement/element'");
+  assertStringIncludes(
+    code,
+    "import { renderDsd, trustedHtml, escapeHtml, wrapInDocument } from '@openelement/element'",
+  );
   assertFalse(code.includes('renderDsdTree'));
   assertFalse(code.includes("import { jsx } from '@openelement/element'"));
-  // wrapInDocument is a codegen-owned runtime helper since 0.44.
-  assertFalse(code.includes("import { wrapInDocument } from '@openelement/element'"));
-  assertStringIncludes(code, 'function wrapInDocument(html, options = {}) {');
+  // Element owns document/head/body semantics; generated entries only call it.
+  assertFalse(code.includes('function wrapInDocument(html, options = {}) {'));
 });
 
 Deno.test('renderEntry: app shell composes the page host through the compiled serializer', () => {
@@ -345,13 +347,11 @@ Deno.test('renderEntry: app shell composes the page host through the compiled se
   assertStringIncludes(code, 'function __renderAppShell(pageHtml, routePath');
   assertStringIncludes(code, '"tagName": "open-layout"');
   assertStringIncludes(code, 'import * as __shell_0 from "@openelement/ui/open-layout";');
-  assertStringIncludes(code, '__ssr(shell.tagName, layoutProps, { route: routePath })');
-  assertStringIncludes(code, 'const slot = "<slot></slot>"');
-  assertStringIncludes(code, 'must render an empty <slot></slot>');
   assertStringIncludes(
     code,
-    'layoutHtml.slice(0, index) + "<slot>" + content + "</slot>"',
+    '__ssr(shell.tagName, layoutProps, { route: routePath }, 0, new Map([["", trustedHtml(content)]]))',
   );
+  assertFalse(code.includes('layoutHtml.slice'));
 });
 
 Deno.test('renderEntry: unconfigured appShell defaults to false (no import)', () => {
@@ -442,7 +442,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   assertStringIncludes(code, 'function __pageDefinition(module) {');
   assertStringIncludes(
     code,
-    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader, PROBLEM_JSON_MEDIA_TYPE as __problemJsonMediaType } from '@openelement/app';",
+    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, classifyActionResult as __classifyActionResult, ACTION_FETCH_HEADER as __actionFetchHeader, PROBLEM_JSON_MEDIA_TYPE as __problemJsonMediaType } from '@openelement/app';",
   );
   assertFalse(code.includes('function __isOpenElementRedirect(error) {'));
   assertFalse(code.includes('function __isOpenElementNotFound(error) {'));
@@ -848,7 +848,7 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
 
   // The action runs before the loader (revalidation invariant): a mutation
   // never renders stale loader data.
-  const actionIndex = code.indexOf('const actionResult = await actionFn');
+  const actionIndex = code.indexOf('const actionOutcome = __classifyActionResult(await actionFn');
   const loaderIndex = code.indexOf('const __data =', actionIndex);
   assertEquals(actionIndex > 0, true, 'action execution must be emitted');
   assertEquals(loaderIndex > actionIndex, true, 'loader must run after the action on POST');
@@ -856,7 +856,7 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   // Real FormData (not parseBody objects), fail() 422 channel, PRG 303 on
   // success, named actions via ?/name, fetch-path ActionResult JSON.
   assertStringIncludes(code, 'await c.req.raw.formData()');
-  assertStringIncludes(code, '__isActionFailure(actionResult)');
+  assertStringIncludes(code, "actionOutcome.kind === 'failure'");
   assertStringIncludes(code, 'response: c.redirect(prgTarget, 303)');
   assertStringIncludes(code, "key.startsWith('/')");
   assertStringIncludes(code, 'namedActions[actionName]');
@@ -870,7 +870,7 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   );
   assertStringIncludes(
     code,
-    "{ type: 'failure', status: actionResult.status, data }",
+    "{ type: 'failure', status: actionOutcome.status, data }",
   );
   assertStringIncludes(code, ', __actionStatus)');
   // No action export on a route: POST is a defined 404, not a render.
@@ -892,8 +892,10 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
 
   // #542: named-action dispatch is own-key gated (prototype keys are 404).
   assertStringIncludes(code, 'Object.prototype.hasOwnProperty.call(namedActions, actionName)');
-  // #541: a returned Response is a contract violation, never a response.
-  assertStringIncludes(code, 'Actions must not return a Response object');
+  // #541: App owns returned-Response rejection; generated Hono code consumes
+  // the canonical action classifier instead of redefining the contract.
+  assertStringIncludes(code, '__classifyActionResult(await actionFn');
+  assertEquals(code.includes('actionResult instanceof Response'), false);
   // #548: the default PRG target strips the ?/name action marker.
   assertStringIncludes(code, 'prgParams.delete(key)');
   assertStringIncludes(code, "{ type: 'redirect', status: 303, location: prgTarget }");

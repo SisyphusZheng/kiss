@@ -14,51 +14,26 @@
  * explicit client-only entries. SSR rendering and hydration behavior are
  * unchanged — foreign tags remain an opaque passthrough.
  *
- * Like the route/island scanners this is regex-based (no module execution).
- * Usage extraction runs on string-masked source (maskSourceStrings) so code
- * samples embedded in template literals never register as consumed tags;
- * definition extraction runs on the raw source because the tag name there is
- * itself a string literal.
+ * Compiler semantic analysis owns TSX/tag meaning; this adapter only reads
+ * files and aggregates the returned module facts.
  */
 import { createLogger } from '@openelement/element';
 import { join } from 'node:path';
-import { maskSourceStrings } from './route-scanner.ts';
 import { safeReadFile } from './route-scanner-fs.ts';
+import { analyzeModuleSemantics } from '../compiler/semantic-core/module-analysis.ts';
 
 const log = createLogger('foreign-tag-scan');
 
-/**
- * JSX usage of a custom element: an opening tag whose name contains a hyphen.
- * Closing tags are not matched (the name follows `</`), which is fine — an
- * opening usage always exists for a consumed element. String-masked source
- * keeps JSX as code while blanking embedded samples.
- */
-const FOREIGN_TAG_USAGE_RE = /<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)(?=[\s/>])/g;
-
-/**
- * openElement-authored element definitions whose tag name is a string literal:
- * defineElement('x-y', …), defineIsland('x-y', …), customElements.define('x-y', …).
- */
-const DEFINED_TAG_RE =
-  /\b(?:defineElement|defineIsland|customElements\.define)\s*\(\s*['"`]([a-z][a-z0-9]*(?:-[a-z0-9]+)+)['"`]/g;
-
-/** Extract custom-element tags an openElement module defines itself (raw source). */
+/** Extract custom-element tags the compiler semantic core sees as definitions. */
 export function collectDefinedTags(source: string): Set<string> {
-  const defined = new Set<string>();
-  for (const match of source.matchAll(DEFINED_TAG_RE)) {
-    defined.add(match[1]);
-  }
-  return defined;
+  return new Set(analyzeModuleSemantics(source, 'foreign-tag-module.tsx').definedCustomElementTags);
 }
 
-/** Extract custom-element tags used in JSX (string-masked source). */
+/** Extract compiler-proven custom-element JSX references. */
 export function collectUsedTags(source: string): Set<string> {
-  const used = new Set<string>();
-  const masked = maskSourceStrings(source);
-  for (const match of masked.matchAll(FOREIGN_TAG_USAGE_RE)) {
-    used.add(match[1]);
-  }
-  return used;
+  return new Set(
+    analyzeModuleSemantics(source, 'foreign-tag-module.tsx').referencedCustomElementTags,
+  );
 }
 
 /**

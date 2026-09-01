@@ -12,10 +12,9 @@
 
 import {
   type PartProgram,
+  type ProgramCondition,
+  type ProgramEventAction,
   type RootMode,
-  type SpikeCondition,
-  type SpikeEventAction,
-  type SpikeEventOptions,
   validatePartProgram,
 } from '../../src/internal/compiled/program.ts';
 
@@ -37,11 +36,11 @@ export interface TestPartSpec {
     | 'bool'
     | 'class'
     | 'style'
+    | 'html'
     | 'ref'
     | 'event'
     | 'when'
-    | 'each'
-    | 'child';
+    | 'each';
   index: number;
   signal?: string;
   name?: string;
@@ -49,15 +48,12 @@ export interface TestPartSpec {
   ref?: string;
   handler?: string;
   event?: string;
-  action?: SpikeEventAction;
-  options?: SpikeEventOptions;
-  gt?: number;
-  test?: SpikeCondition;
+  action?: ProgramEventAction;
+  test?: ProgramCondition;
   on?: TestNodeSpec[];
   off?: TestNodeSpec[];
   key?: string;
   field?: string;
-  keyed?: boolean;
   item?: TestNodeSpec[];
 }
 
@@ -153,8 +149,8 @@ function resolveElementId(template: BuiltNode[], path: number[], partIndex: numb
   return node.id;
 }
 
-const FIXED_KINDS = new Set(['prop', 'attr', 'bool', 'class', 'style', 'ref', 'event']);
-const REGION_KINDS = new Set(['when', 'each', 'child']);
+const FIXED_KINDS = new Set(['prop', 'attr', 'bool', 'class', 'style', 'html', 'ref', 'event']);
+const REGION_KINDS = new Set(['when', 'each']);
 
 function sourceKind(recordId: string, regionPartIds: Set<string>): string {
   if (recordId === 'root') return 'root';

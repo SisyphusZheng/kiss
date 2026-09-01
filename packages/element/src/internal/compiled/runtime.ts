@@ -11,29 +11,33 @@
  */
 
 import type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
+import { trustedHtmlValue } from '../core/security.ts';
 import { noteCompiledProgramActivated } from '../signal/selection.ts';
 import {
   partAnchorEndMarker,
   partAnchorMarker,
-  type PartProgramSpike,
-  type SpikeAttrPart,
-  type SpikeBoolPart,
-  type SpikeChildPart,
-  type SpikeClassPart,
-  type SpikeEachPart,
-  type SpikeElementNode,
-  type SpikeEventPart,
-  type SpikeFixedPart,
-  type SpikeHtmlPart,
-  type SpikePropPart,
-  type SpikeRefPart,
-  type SpikeStylePart,
-  type SpikeTextPart,
-  type SpikeTreeNode,
-  type SpikeWhenPart,
+  type PartProgramV1,
+  type ProgramAttrPart,
+  type ProgramBoolPart,
+  type ProgramClassPart,
+  type ProgramEachPart,
+  type ProgramElementNode,
+  type ProgramEventPart,
+  type ProgramHtmlPart,
+  type ProgramPropPart,
+  type ProgramRefPart,
+  type ProgramStylePart,
+  type ProgramTextPart,
+  type ProgramTreeNode,
+  type ProgramWhenPart,
   STATIC_STYLES_MARKER,
-  validatePartProgram,
 } from './program.ts';
+import { normalizePartProgram, type RuntimeProgramIR } from './runtime-program.ts';
+
+type ProgramFixedPart = Extract<
+  PartProgramV1['parts'][number],
+  { k: 'attr' | 'prop' | 'bool' | 'class' | 'style' | 'html' | 'event' | 'ref' }
+>;
 
 /** Structured diagnostic for claim-time structure/identity drift. */
 export class PartProgramClaimError extends Error {
@@ -51,13 +55,13 @@ export type CompiledEventHandler = (event: unknown) => void;
 export type CompiledRefHandler = (element: Element | null) => void | Unsubscribe;
 
 /** Host-provided state and behavior keyed by compiler-emitted names. */
-export interface CompiledSpikeHost {
+export interface CompiledRuntimeHost {
   signals: Record<string, SignalLike<unknown>>;
   handlers: Record<string, CompiledEventHandler>;
   refs?: Record<string, CompiledRefHandler>;
 }
 
-export interface CompiledSpikeInstance {
+export interface CompiledProgramInstance {
   dispose(): void;
 }
 
@@ -143,14 +147,14 @@ class ResourceScope {
 }
 
 interface MountContext {
-  program: PartProgramSpike;
-  host: CompiledSpikeHost;
+  program: RuntimeProgramIR;
+  host: CompiledRuntimeHost;
   rootScope: ResourceScope;
-  fixedPartsByPath: Map<string, SpikeFixedPart[]>;
+  fixedPartsByPath: Map<string, ProgramFixedPart[]>;
 }
 
-function createContext(program: PartProgramSpike, host: CompiledSpikeHost): MountContext {
-  const fixedPartsByPath = new Map<string, SpikeFixedPart[]>();
+function createContext(program: RuntimeProgramIR, host: CompiledRuntimeHost): MountContext {
+  const fixedPartsByPath = new Map<string, ProgramFixedPart[]>();
   for (const part of program.parts) {
     if (!isFixedPart(part)) continue;
     const key = part.path.join('.');
@@ -198,14 +202,14 @@ function subscribeWrites(
   scope.add(unsub);
 }
 
-function isFixedPart(part: PartProgramSpike['parts'][number]): part is SpikeFixedPart {
+function isFixedPart(part: PartProgramV1['parts'][number]): part is ProgramFixedPart {
   return (
     part.k === 'attr' || part.k === 'prop' || part.k === 'bool' || part.k === 'class' ||
     part.k === 'style' || part.k === 'html' || part.k === 'event' || part.k === 'ref'
   );
 }
 
-function fixedPartsAtPath(ctx: MountContext, path: number[]): SpikeFixedPart[] {
+function fixedPartsAtPath(ctx: MountContext, path: number[]): ProgramFixedPart[] {
   const parts = [...(ctx.fixedPartsByPath.get(path.join('.')) ?? [])];
   return parts.sort((left, right) => left.index - right.index);
 }
@@ -220,11 +224,6 @@ function isText(node: Node): node is Text {
 
 function isElement(node: Node): node is Element {
   return node.nodeType === 1;
-}
-
-function isDomNode(value: unknown): value is Node {
-  return typeof value === 'object' && value !== null &&
-    typeof (value as { nodeType?: unknown }).nodeType === 'number';
 }
 
 function displayValue(value: unknown): string {
@@ -283,7 +282,7 @@ function insertNodesBefore(parent: Node, nodes: readonly Node[], reference: Node
   for (const node of nodes) parent.insertBefore(node, reference);
 }
 
-function itemValue(part: SpikeEachPart, item: unknown, field?: string): unknown {
+function itemValue(part: ProgramEachPart, item: unknown, field?: string): unknown {
   const selected = field ?? part.field;
   if (selected === undefined) return item;
   if (typeof item !== 'object' || item === null) return undefined;
@@ -299,8 +298,7 @@ function itemAttrValue(item: unknown, field: string): string | null {
   return String(value);
 }
 
-function itemKey(part: SpikeEachPart, item: unknown, index: number): string {
-  if (part.key === undefined || part.keyed === false) return `index:${index}`;
+function itemKey(part: ProgramEachPart, item: unknown, _index: number): string {
   if (typeof item !== 'object' || item === null) {
     throw new Error(`[compiled-runtime] each part ${part.index} keyed items must be records`);
   }
@@ -316,7 +314,7 @@ function itemKey(part: SpikeEachPart, item: unknown, index: number): string {
 
 interface WhenRegion {
   ctx: MountContext;
-  part: SpikeWhenPart;
+  part: ProgramWhenPart;
   scope: ResourceScope;
   anchor: Comment;
   end: Comment;
@@ -324,7 +322,7 @@ interface WhenRegion {
   branchScope: ResourceScope;
   nodes: Node[];
   item: unknown;
-  itemPart?: SpikeEachPart;
+  itemPart?: ProgramEachPart;
 }
 
 interface TextPartSlot {
@@ -350,16 +348,6 @@ interface ItemAttrSlot {
   field: string;
 }
 
-interface ChildRegion {
-  ctx: MountContext;
-  part: SpikeChildPart;
-  scope: ResourceScope;
-  anchor: Comment;
-  end: Comment;
-  currentValue: unknown;
-  nodes: Node[];
-}
-
 interface EachEntry {
   key: string;
   scope: ResourceScope;
@@ -370,7 +358,7 @@ interface EachEntry {
 
 interface EachRegion {
   ctx: MountContext;
-  part: SpikeEachPart;
+  part: ProgramEachPart;
   scope: ResourceScope;
   anchor: Comment;
   end: Comment;
@@ -379,70 +367,17 @@ interface EachRegion {
   item: unknown;
 }
 
-function whenActive(part: SpikeWhenPart, value: unknown): boolean {
-  return Number(value) > part.gt;
-}
-
-function buildDynamicValue(doc: Document, value: unknown): Node[] {
-  const out: Node[] = [];
-  let pendingText = '';
-  let hasPendingText = false;
-  const flushText = (): void => {
-    if (!hasPendingText) return;
-    if (pendingText.length > 0) out.push(doc.createTextNode(pendingText));
-    pendingText = '';
-    hasPendingText = false;
-  };
-  const append = (next: unknown): void => {
-    if (Array.isArray(next)) {
-      for (const item of next) append(item);
-      return;
-    }
-    if (next === null || next === undefined) return;
-    if (
-      typeof next === 'string' || typeof next === 'number' || typeof next === 'boolean' ||
-      typeof next === 'bigint'
-    ) {
-      pendingText += String(next);
-      hasPendingText = true;
-      return;
-    }
-    flushText();
-    if (isDomNode(next)) {
-      out.push(next);
-      return;
-    }
-    throw new Error(
-      '[compiled-runtime] child Region values must be primitives, DOM nodes, or arrays of those',
-    );
-  };
-  append(value);
-  flushText();
-  return out;
-}
-
-function serializeDynamicValue(value: unknown): string {
-  if (Array.isArray(value)) return value.map(serializeDynamicValue).join('');
-  if (value === null || value === undefined) return '';
-  if (isDomNode(value)) {
-    throw new Error('[compiled-runtime] DOM nodes cannot be serialized by a Part Program');
-  }
-  if (
-    typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' &&
-    typeof value !== 'bigint'
-  ) {
-    throw new Error('[compiled-runtime] child Region value is not serializable');
-  }
-  return escapeText(String(value));
+function whenActive(part: ProgramWhenPart, value: unknown): boolean {
+  return Number(value) > part.test.value;
 }
 
 function mountNodes(
   ctx: MountContext,
   scope: ResourceScope,
   doc: Document,
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   item: unknown = NO_ITEM,
-  itemPart?: SpikeEachPart,
+  itemPart?: ProgramEachPart,
   itemValueSlots?: ItemValueSlot[],
   parent?: Node,
   itemAttrSlots?: ItemAttrSlot[],
@@ -520,7 +455,7 @@ function buildItem(
   ctx: MountContext,
   regionScope: ResourceScope,
   doc: Document,
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   item: unknown,
   parent?: Node,
 ): { nodes: Node[]; valueSlots: ItemValueSlot[]; attrSlots: ItemAttrSlot[]; scope: ResourceScope } {
@@ -548,9 +483,9 @@ function buildWhen(
   ctx: MountContext,
   parentScope: ResourceScope,
   doc: Document,
-  part: SpikeWhenPart,
+  part: ProgramWhenPart,
   item: unknown,
-  itemPart?: SpikeEachPart,
+  itemPart?: ProgramEachPart,
   parent?: Node,
 ): Node[] {
   const scope = parentScope.child();
@@ -625,40 +560,6 @@ function updateWhen(region: WhenRegion, value: unknown): void {
   region.current = next;
 }
 
-function buildChild(
-  ctx: MountContext,
-  parentScope: ResourceScope,
-  doc: Document,
-  part: SpikeChildPart,
-): Node[] {
-  const scope = parentScope.child();
-  const anchor = doc.createComment(partAnchorMarker(part.index));
-  const end = doc.createComment(partAnchorEndMarker(part.index));
-  const currentValue = signalOf(ctx, part.signal).value;
-  const region: ChildRegion = {
-    ctx,
-    part,
-    scope,
-    anchor,
-    end,
-    currentValue,
-    nodes: buildDynamicValue(doc, currentValue),
-  };
-  scope.addRangeCleanup(() => removeNodes(region.nodes));
-  subscribeWrites(ctx, scope, part.signal, (value) => updateChild(region, value));
-  return [anchor, ...region.nodes, end];
-}
-
-function updateChild(region: ChildRegion, value: unknown): void {
-  if (region.scope.disposed || Object.is(region.currentValue, value)) return;
-  const parent = region.end.parentNode;
-  if (!parent) return;
-  removeNodes(region.nodes);
-  region.nodes = buildDynamicValue(region.end.ownerDocument, value);
-  insertNodesBefore(parent, region.nodes, region.end);
-  region.currentValue = value;
-}
-
 function updateTextPart(slot: TextPartSlot, value: unknown): void {
   if (slot.scope.disposed) return;
   const next = displayValue(value);
@@ -684,7 +585,7 @@ function buildTextPart(
   ctx: MountContext,
   parentScope: ResourceScope,
   doc: Document,
-  part: SpikeTextPart,
+  part: ProgramTextPart,
 ): Node[] {
   const scope = parentScope.child();
   const anchor = doc.createComment(partAnchorMarker(part.index));
@@ -707,7 +608,7 @@ function buildEach(
   ctx: MountContext,
   parentScope: ResourceScope,
   doc: Document,
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   parent?: Node,
 ): Node[] {
   const scope = parentScope.child();
@@ -807,7 +708,7 @@ function removeItemValue(entry: EachEntry, slot: ItemValueSlot, text: Text): voi
 }
 
 function updateItemValues(
-  part: SpikeEachPart,
+  part: ProgramEachPart,
   entry: EachEntry,
   item: unknown,
   regionParent: Node,
@@ -934,14 +835,13 @@ function mountPart(
   doc: Document,
   index: number,
   item: unknown,
-  itemPart?: SpikeEachPart,
+  itemPart?: ProgramEachPart,
   parent?: Node,
 ): Node[] {
   const part = ctx.program.parts[index];
   if (!part) throw new Error(`[compiled-runtime] missing Part ${index}`);
   if (part.k === 'text') return buildTextPart(ctx, parentScope, doc, part);
   if (part.k === 'when') return buildWhen(ctx, parentScope, doc, part, item, itemPart, parent);
-  if (part.k === 'child') return buildChild(ctx, parentScope, doc, part);
   if (part.k === 'each') return buildEach(ctx, parentScope, doc, part, parent);
   throw new Error(`[compiled-runtime] fixed Part ${part.index} cannot be used as an anchor`);
 }
@@ -1006,12 +906,12 @@ function installValuePart(
   ctx: MountContext,
   root: Node,
   part:
-    | SpikeAttrPart
-    | SpikePropPart
-    | SpikeBoolPart
-    | SpikeClassPart
-    | SpikeStylePart
-    | SpikeHtmlPart,
+    | ProgramAttrPart
+    | ProgramPropPart
+    | ProgramBoolPart
+    | ProgramClassPart
+    | ProgramStylePart
+    | ProgramHtmlPart,
   mode: 'fresh' | 'claim',
   rootOffset = 0,
 ): void {
@@ -1020,18 +920,13 @@ function installValuePart(
   const initial = signalOf(ctx, part.signal).value;
 
   if (part.k === 'html') {
-    if (typeof initial !== 'string') {
-      throw new Error('[compiled-runtime] html Part expects a string signal value');
-    }
-    let current = initial;
+    let current = trustedHtmlValue(initial);
     if (mode === 'fresh') (element as Element).innerHTML = current;
     subscribeWrites(ctx, scope, part.signal, (value) => {
-      if (typeof value !== 'string') {
-        throw new Error('[compiled-runtime] html Part expects a string signal value');
-      }
-      if (Object.is(value, current)) return;
-      (element as Element).innerHTML = value;
-      current = value;
+      const next = trustedHtmlValue(value);
+      if (Object.is(next, current)) return;
+      (element as Element).innerHTML = next;
+      current = next;
     });
     return;
   }
@@ -1093,107 +988,42 @@ function installValuePart(
   });
 }
 
-function eventHandler(
-  ctx: MountContext,
-  part: SpikeEventPart,
-  value?: unknown,
-): CompiledEventHandler {
-  if (part.handler !== undefined) {
-    const handler = ctx.host.handlers?.[part.handler];
-    if (!handler) throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
-    return handler;
-  }
-  const handler = value ?? signalOf(ctx, part.signal as string).value;
-  if (typeof handler !== 'function') {
-    throw new Error(`[compiled-runtime] event Part ${part.index} signal must contain a function`);
-  }
-  return handler as CompiledEventHandler;
-}
-
 function installEventPart(
   ctx: MountContext,
   root: Node,
-  part: SpikeEventPart,
+  part: ProgramEventPart,
   rootOffset = 0,
 ): void {
   const element = resolvePath(root, part.path, 'event Part', rootOffset);
   const scope = ctx.rootScope.child();
-  const options = part.options;
-  let listener: EventListener | undefined;
-  let current: CompiledEventHandler;
-
-  const add = (handler: CompiledEventHandler): void => {
-    const next: EventListener = (event) => handler(event);
-    element.addEventListener(part.event, next, options);
-    listener = next;
-    current = handler;
-  };
-  const remove = (): void => {
-    if (!listener) return;
-    element.removeEventListener(part.event, listener, options);
-    listener = undefined;
-  };
-
-  current = eventHandler(ctx, part);
-  add(current);
-  scope.add(remove);
-  if (part.signal !== undefined) {
-    subscribeWrites(ctx, scope, part.signal, (value) => {
-      const next = eventHandler(ctx, part, value);
-      if (next === current) return;
-      remove();
-      add(next);
-    });
-  }
-}
-
-function refHandler(ctx: MountContext, part: SpikeRefPart, value?: unknown): CompiledRefHandler {
-  if (part.ref !== undefined) {
-    const ref = ctx.host.refs?.[part.ref];
-    if (!ref) throw new Error(`[compiled-runtime] missing host ref "${part.ref}"`);
-    return ref;
-  }
-  if (part.handler !== undefined) {
-    const handler = ctx.host.handlers?.[part.handler];
-    if (!handler) throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
-    return handler as CompiledRefHandler;
-  }
-  const ref = value ?? signalOf(ctx, part.signal as string).value;
-  if (typeof ref !== 'function') {
-    throw new Error(`[compiled-runtime] ref Part ${part.index} signal must contain a function`);
-  }
-  return ref as CompiledRefHandler;
+  const handler = ctx.host.handlers?.[part.handler];
+  if (!handler) throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
+  const listener: EventListener = (event) => handler(event);
+  element.addEventListener(part.event, listener);
+  scope.add(() => element.removeEventListener(part.event, listener));
 }
 
 function installRefPart(
   ctx: MountContext,
   root: Node,
-  part: SpikeRefPart,
+  part: ProgramRefPart,
   rootOffset = 0,
 ): void {
   const element = resolvePath(root, part.path, 'ref Part', rootOffset);
   const scope = ctx.rootScope.child();
-  let current = refHandler(ctx, part);
-  let cleanup = current(element);
+  const ref = ctx.host.refs?.[part.ref];
+  if (!ref) throw new Error(`[compiled-runtime] missing host ref "${part.ref}"`);
+  let cleanup = ref(element);
 
   const detach = (): void => {
     try {
       if (typeof cleanup === 'function') cleanup();
     } finally {
       cleanup = undefined;
-      current(null);
+      ref(null);
     }
   };
   scope.add(detach);
-  if (part.signal !== undefined) {
-    subscribeWrites(ctx, scope, part.signal, (value) => {
-      const next = refHandler(ctx, part, value);
-      if (next === current) return;
-      detach();
-      current = next;
-      cleanup = current(element);
-    });
-  }
 }
 
 function attachFixedParts(
@@ -1216,7 +1046,7 @@ function attachFixedParts(
   }
 }
 
-function instance(ctx: MountContext): CompiledSpikeInstance {
+function instance(ctx: MountContext): CompiledProgramInstance {
   let disposed = false;
   return {
     dispose(): void {
@@ -1229,13 +1059,12 @@ function instance(ctx: MountContext): CompiledSpikeInstance {
 
 /** Fresh browser DOM creation from the validated Part Program. */
 export function createFreshDom(
-  program: PartProgramSpike,
-  host: CompiledSpikeHost,
+  program: PartProgramV1,
+  host: CompiledRuntimeHost,
   root: Node,
-): CompiledSpikeInstance {
+): CompiledProgramInstance {
   noteCompiledProgramActivated();
-  validatePartProgram(program);
-  const ctx = createContext(program, host);
+  const ctx = createContext(normalizePartProgram(program), host);
   const doc = root.ownerDocument;
   if (!doc) throw new Error('[compiled-runtime] root must have an ownerDocument');
   if (root.childNodes.length > 0) {
@@ -1297,7 +1126,7 @@ function escapeAttr(value: string): string {
 
 function serializedFixedAttributes(
   ctx: MountContext,
-  node: SpikeElementNode,
+  node: ProgramElementNode,
   path: number[],
 ): Array<[string, string]> {
   const attrs = new Map<string, string>();
@@ -1329,10 +1158,10 @@ function serializedFixedAttributes(
 
 function serializeElement(
   ctx: MountContext,
-  node: SpikeElementNode,
+  node: ProgramElementNode,
   programPath: number[],
   item: unknown,
-  itemPart?: SpikeEachPart,
+  itemPart?: ProgramEachPart,
 ): string {
   const attrList = serializedFixedAttributes(ctx, node, programPath);
   if (node.iattrs !== undefined) {
@@ -1349,10 +1178,7 @@ function serializeElement(
   if (VOID_TAGS.has(node.tag)) return `${open}>`;
   const htmlSink = fixedPartsAtPath(ctx, programPath).find((part) => part.k === 'html');
   if (htmlSink && htmlSink.k === 'html') {
-    const value = signalOf(ctx, htmlSink.signal).value;
-    if (typeof value !== 'string') {
-      throw new Error('[compiled-runtime] html Part expects a string signal value');
-    }
+    const value = trustedHtmlValue(signalOf(ctx, htmlSink.signal).value);
     return `${open}>${value}</${node.tag}>`;
   }
   const children = node.children
@@ -1363,10 +1189,10 @@ function serializeElement(
 
 function serializeNode(
   ctx: MountContext,
-  node: SpikeTreeNode,
+  node: ProgramTreeNode,
   programPath: number[],
   item: unknown = NO_ITEM,
-  itemPart?: SpikeEachPart,
+  itemPart?: ProgramEachPart,
 ): string {
   if (node.k === 'text') return escapeText(node.value);
   if (node.k === 'ival') {
@@ -1383,9 +1209,6 @@ function serializeNode(
   const open = `<!--${partAnchorMarker(part.index)}-->`;
   if (part.k === 'text') return open + escapeText(displayValue(signalOf(ctx, part.signal).value));
   const close = `<!--${partAnchorEndMarker(part.index)}-->`;
-  if (part.k === 'child') {
-    return open + serializeDynamicValue(signalOf(ctx, part.signal).value) + close;
-  }
   if (part.k === 'when') {
     const branch = whenActive(part, signalOf(ctx, part.signal).value) ? part.on : part.off;
     return open + branch.map((child, index) =>
@@ -1408,9 +1231,8 @@ function serializeNode(
 }
 
 /** Server serialization: the same program renders deterministic HTML. */
-export function serializeToHtml(program: PartProgramSpike, host: CompiledSpikeHost): string {
-  validatePartProgram(program);
-  const ctx = createContext(program, host);
+export function serializeToHtml(program: PartProgramV1, host: CompiledRuntimeHost): string {
+  const ctx = createContext(normalizePartProgram(program), host);
   return ctx.program.template.map((node, index) => serializeNode(ctx, node, [index])).join('');
 }
 
@@ -1440,7 +1262,7 @@ function dynamicAttributeNames(ctx: MountContext, path: number[]): Set<string> {
 function claimElementAttributes(
   ctx: MountContext,
   element: Element,
-  node: SpikeElementNode,
+  node: ProgramElementNode,
   path: string,
   programPath: number[],
 ): void {
@@ -1468,64 +1290,16 @@ function claimElementAttributes(
   }
 }
 
-function claimDynamicValue(
-  parent: Node,
-  cursor: number,
-  value: unknown,
-  path: string,
-): number {
-  const expectedTexts: string[] = [];
-  let pendingText = '';
-  let hasPendingText = false;
-  const flushText = (): void => {
-    if (!hasPendingText) return;
-    if (pendingText.length > 0) expectedTexts.push(pendingText);
-    pendingText = '';
-    hasPendingText = false;
-  };
-  const collect = (next: unknown): void => {
-    if (Array.isArray(next)) {
-      for (const item of next) collect(item);
-      return;
-    }
-    if (next === null || next === undefined) return;
-    if (
-      typeof next === 'string' || typeof next === 'number' || typeof next === 'boolean' ||
-      typeof next === 'bigint'
-    ) {
-      pendingText += String(next);
-      hasPendingText = true;
-      return;
-    }
-    flushText();
-    if (isDomNode(next)) {
-      claimFailure(path, 'DOM node values are not claimable from serialized HTML');
-    }
-    claimFailure(path, 'dynamic value is not claimable');
-  };
-  collect(value);
-  flushText();
-  for (const expected of expectedTexts) {
-    const node = parent.childNodes[cursor];
-    if (!node || !isText(node)) claimFailure(path, 'expected dynamic text node');
-    if (node.data !== expected) {
-      claimFailure(path, `dynamic text drift: expected ${JSON.stringify(expected)}`);
-    }
-    cursor++;
-  }
-  return cursor;
-}
-
 function claimNodes(
   ctx: MountContext,
   parent: Node,
   cursor: number,
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   path: string,
   programPath: number[],
   scope: ResourceScope,
   item: unknown = NO_ITEM,
-  itemPart?: SpikeEachPart,
+  itemPart?: ProgramEachPart,
   itemValueSlots?: ItemValueSlot[],
   itemAttrSlots?: ItemAttrSlot[],
 ): number {
@@ -1654,30 +1428,6 @@ function claimNodes(
       });
       continue;
     }
-    if (part.k === 'child') {
-      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
-      const start = cursor;
-      cursor = claimDynamicValue(
-        parent,
-        cursor,
-        signalOf(ctx, part.signal).value,
-        `${nodePath}.value`,
-      );
-      const end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
-      const partScope = scope.child();
-      const region: ChildRegion = {
-        ctx,
-        part,
-        scope: partScope,
-        anchor,
-        end,
-        currentValue: signalOf(ctx, part.signal).value,
-        nodes: Array.from(parent.childNodes).slice(start, cursor - 1),
-      };
-      partScope.addRangeCleanup(() => removeNodes(region.nodes));
-      subscribeWrites(ctx, partScope, part.signal, (value) => updateChild(region, value));
-      continue;
-    }
     if (part.k === 'when') {
       const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
       const active = whenActive(part, signalOf(ctx, part.signal).value);
@@ -1792,14 +1542,13 @@ function isStaticStyleNode(node: Node | undefined): boolean {
 
 /** Claim existing SSR DOM without allocating or overwriting live values. */
 export function claimExistingDom(
-  program: PartProgramSpike,
-  host: CompiledSpikeHost,
+  program: PartProgramV1,
+  host: CompiledRuntimeHost,
   root: Node,
   options: CompiledClaimOptions = {},
-): CompiledSpikeInstance {
+): CompiledProgramInstance {
   noteCompiledProgramActivated();
-  validatePartProgram(program);
-  const ctx = createContext(program, host);
+  const ctx = createContext(normalizePartProgram(program), host);
   const styleNode = root.childNodes[0];
   const hasStaticStyle = isStaticStyleNode(styleNode);
   if (hasStaticStyle && !options.expectStaticStyle) {

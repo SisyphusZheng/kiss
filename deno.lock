@@ -10,6 +10,7 @@
     "jsr:@std/path@^1.1.5": "1.1.5",
     "jsr:@std/semver@1": "1.0.8",
     "npm:@hono/vite-dev-server@~0.25.3": "0.25.3_hono@4.12.25",
+    "npm:@lit/context@1.1.6": "1.1.6",
     "npm:@mdx-js/rollup@^3.1.1": "3.1.1_rollup@4.62.0",
     "npm:@playwright/test@1.59.1": "1.59.1",
     "npm:@preact/signals-core@^1.12.1": "1.14.3",
@@ -33,6 +34,7 @@
     "npm:preact-render-to-string@^6.5.0": "6.7.0_preact@10.29.2",
     "npm:preact@^10.28.0": "10.29.2",
     "npm:typescript@^5.9.0": "5.9.3",
+    "npm:urlpattern-polyfill@10.1.0": "10.1.0",
     "npm:valibot@^1.1.0": "1.4.2_typescript@5.9.3",
     "npm:vite@8.0.16": "8.0.16_yaml@2.9.0",
     "npm:yaml@^2.8.1": "2.9.0",
@@ -292,6 +294,12 @@
     },
     "@lit-labs/ssr-dom-shim@1.6.0": {
       "integrity": "sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ=="
+    },
+    "@lit/context@1.1.6": {
+      "integrity": "sha512-M26qDE6UkQbZA2mQ3RjJ3Gzd8TxP+/0obMgE5HfkfLhEEyYE3Bui4A5XHiGPjy0MUGAyxB3QgVuw2ciS0kHn6A==",
+      "dependencies": [
+        "@lit/reactive-element"
+      ]
     },
     "@lit/react@1.0.8_@types+react@19.2.17": {
       "integrity": "sha512-p2+YcF+JE67SRX3mMlJ1TKCSTsgyOVdAwd/nxp3NuV1+Cb6MWALbN6nT7Ld4tpmYofcE5kcaSY1YBB9erY+6fw==",
@@ -2439,6 +2447,9 @@
         "ofetch"
       ]
     },
+    "urlpattern-polyfill@10.1.0": {
+      "integrity": "sha512-IGjKp/o0NL3Bso1PymYURCJxMPNAf/ILOpendP9f5B6e1rTJgdgiOvgfoT8VxCAdY+Wisb9uhGaJJf3yZ2V9nw=="
+    },
     "util-deprecate@1.0.2": {
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
@@ -2527,6 +2538,7 @@
       "jsr:@std/fs@1",
       "jsr:@std/path@1",
       "jsr:@std/semver@1",
+      "npm:@lit/context@1.1.6",
       "npm:@playwright/test@1.59.1",
       "npm:@preact/signals-core@^1.12.1",
       "npm:@rollup/plugin-terser@1.0.0",
@@ -2537,6 +2549,7 @@
       "npm:pagefind@1.5.2",
       "npm:preact@^10.28.0",
       "npm:typescript@^5.9.0",
+      "npm:urlpattern-polyfill@10.1.0",
       "npm:valibot@^1.1.0",
       "npm:vite@8.0.16",
       "npm:yaml@^2.8.1",

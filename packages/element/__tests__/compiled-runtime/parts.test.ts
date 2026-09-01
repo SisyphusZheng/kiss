@@ -1,11 +1,12 @@
 import { assertEquals, assertStrictEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import {
   claimExistingDom,
-  type CompiledSpikeHost,
+  type CompiledRuntimeHost,
   createFreshDom,
   serializeToHtml,
 } from '../../src/internal/compiled/runtime.ts';
 import { validatePartProgram } from '../../src/internal/compiled/program.ts';
+import { trustedHtml } from '../../src/internal/core/security.ts';
 import { signal } from '../../src/internal/signal/framework.ts';
 import { parseHtml, TestDocument, type TestElement, toHtml } from './test-dom.ts';
 import { testProgram } from './test-program.ts';
@@ -31,8 +32,8 @@ const FIXED_PROGRAM = testProgram({
       k: 'event',
       index: 5,
       event: 'click',
-      signal: 'clickHandler',
-      options: { once: true },
+      handler: 'onClick',
+      action: { kind: 'method', name: 'onClick' },
       path: [0, 1],
     },
     { k: 'ref', index: 6, ref: 'inputRef', path: [0, 0] },
@@ -45,21 +46,21 @@ function fixedHost() {
   const disabled = signal(false);
   const classes = signal<unknown>({ selected: true, active: true });
   const styles = signal<unknown>({ display: 'block', color: 'red' });
-  const clickHandler = signal<unknown>((event: unknown) => {
-    clicks.push((event as { type: string }).type);
-  });
   const clicks: string[] = [];
+  const onClick = (event: unknown) => {
+    clicks.push((event as { type: string }).type);
+  };
   const refs: Array<string | null> = [];
   const host = {
-    signals: { title, value, disabled, classes, styles, clickHandler },
-    handlers: {},
+    signals: { title, value, disabled, classes, styles },
+    handlers: { onClick },
     refs: {
       inputRef: (element: Element | null) => {
         refs.push(element?.tagName ?? null);
       },
     },
-  } as unknown as CompiledSpikeHost;
-  return { host, title, value, disabled, classes, styles, clickHandler, clicks, refs };
+  } as unknown as CompiledRuntimeHost;
+  return { host, title, value, disabled, classes, styles, clicks, refs };
 }
 
 function asNode(element: TestElement): Node {
@@ -106,7 +107,7 @@ Deno.test('fixed Parts share normalized commits across fresh and claim paths', (
 
   button.dispatch('click');
   button.dispatch('click');
-  assertEquals(initial.clicks, ['click'], 'once option is owned by the event Part');
+  assertEquals(initial.clicks, ['click', 'click'], 'the fixed handler runs for each event');
 
   const claimDoc = new TestDocument();
   const claimRoot = parseHtml(claimDoc, html);
@@ -128,20 +129,103 @@ Deno.test('fixed Parts share normalized commits across fresh and claim paths', (
   assertEquals(claimHost.refs, ['INPUT', null]);
   fresh.dispose();
   assertEquals(initial.refs, ['INPUT', null]);
+  button.dispatch('click');
+  assertEquals(initial.clicks, ['click', 'click'], 'dispose removes the fixed handler');
+});
+
+Deno.test('TrustedHtml is required across serialization, fresh DOM, claim, and updates', () => {
+  const program = testProgram({
+    tag: 'oe-trusted-html',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [{ k: 'html', index: 0, signal: 'body', path: [0] }],
+  });
+  const body = signal<unknown>(trustedHtml('<strong>safe</strong>'));
+  const host = { signals: { body }, handlers: {} } as CompiledRuntimeHost;
+  const html = serializeToHtml(program, host);
+  assertEquals(html, '<div><strong>safe</strong></div>');
+
+  const freshDocument = new TestDocument();
+  const freshRoot = freshDocument.createElement('host');
+  const fresh = createFreshDom(program, host, asNode(freshRoot));
+  assertEquals(toHtml(freshRoot), `<host>${html}</host>`);
+  body.value = trustedHtml('<em>updated</em>');
+  assertEquals(toHtml(freshRoot), '<host><div><em>updated</em></div></host>');
+  assertThrows(
+    () => {
+      body.value = '<img src=x onerror=alert(1)>';
+    },
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+  assertEquals(toHtml(freshRoot), '<host><div><em>updated</em></div></host>');
+  fresh.dispose();
+
+  const claimDocument = new TestDocument();
+  const claimRoot = parseHtml(claimDocument, html);
+  const claimedBody = signal<unknown>(trustedHtml('<strong>safe</strong>'));
+  const claimed = claimExistingDom(
+    program,
+    { signals: { body: claimedBody }, handlers: {} } as CompiledRuntimeHost,
+    asNode(claimRoot),
+  );
+  claimedBody.value = trustedHtml('<i>claimed update</i>');
+  assertEquals(toHtml(claimRoot), '<host><div><i>claimed update</i></div></host>');
+  claimed.dispose();
+
+  const plain = {
+    signals: { body: signal<unknown>('<b>unsafe</b>') },
+    handlers: {},
+  } as CompiledRuntimeHost;
+  assertThrows(
+    () => serializeToHtml(program, plain),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+  assertThrows(
+    () =>
+      createFreshDom(
+        program,
+        plain,
+        asNode(new TestDocument().createElement('host')),
+      ),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+  assertThrows(
+    () => claimExistingDom(program, plain, asNode(parseHtml(new TestDocument(), html))),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
+});
+
+Deno.test('TrustedHtml capability is identity-bound and deliberately lost on serialization', () => {
+  const value = trustedHtml('<b>safe</b>');
+  assertEquals(Object.isFrozen(value), true);
+  const clone = structuredClone(value);
+  const program = testProgram({
+    tag: 'oe-trusted-html-clone',
+    template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
+    parts: [{ k: 'html', index: 0, signal: 'body', path: [0] }],
+  });
+  assertThrows(
+    () =>
+      serializeToHtml(program, {
+        signals: { body: signal<unknown>(clone) },
+        handlers: {},
+      } as CompiledRuntimeHost),
+    Error,
+    'requires a value created by trustedHtml()',
+  );
 });
 
 Deno.test('fixed Part errors are explicit and unsupported claim shapes fail closed', () => {
   const host = fixedHost();
-  const eventIndex = FIXED_PROGRAM.parts.findIndex((part) => part.k === 'event');
   const missingHandlerProgram = {
     ...FIXED_PROGRAM,
     parts: FIXED_PROGRAM.parts.map((part) =>
-      part.k === 'event' ? { ...part, signal: 'missingHandler' } : part
-    ),
-    dependencies: FIXED_PROGRAM.dependencies.map((dependency) =>
-      dependency.owner.kind === 'part' && dependency.owner.index === eventIndex
-        ? { ...dependency, signal: 'missingHandler' }
-        : dependency
+      part.k === 'event'
+        ? { ...part, handler: 'missingHandler', action: { kind: 'method', name: 'missingHandler' } }
+        : part
     ),
   };
   validatePartProgram(missingHandlerProgram);
@@ -153,7 +237,7 @@ Deno.test('fixed Part errors are explicit and unsupported claim shapes fail clos
         asNode(new TestDocument().createElement('host')),
       ),
     Error,
-    'missing host signal',
+    'missing host handler',
   );
 
   const html = serializeToHtml(FIXED_PROGRAM, host.host);
@@ -171,7 +255,7 @@ Deno.test('a fixed-Part path of [0] targets the sole template root; an empty pat
     template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
     parts: [{ k: 'attr', index: 0, signal: 'title', name: 'title', path: [0] }],
   });
-  const host = { signals: { title }, handlers: {} } as unknown as CompiledSpikeHost;
+  const host = { signals: { title }, handlers: {} } as unknown as CompiledRuntimeHost;
   const html = serializeToHtml(program, host);
   assertEquals(html, '<div title="initial"></div>');
   const doc = new TestDocument();
@@ -206,43 +290,6 @@ Deno.test('a fixed-Part path of [0] targets the sole template root; an empty pat
   assertThrows(() => validatePartProgram(emptyPath), Error, 'path must target an element');
 });
 
-Deno.test('signal-driven event Parts replace handlers without duplicating listeners', () => {
-  const handler = signal<unknown>(() => {});
-  const program = testProgram({
-    tag: 'oe-event-replace',
-    template: [{ k: 'el', tag: 'button', attrs: [], children: [] }],
-    parts: [{ k: 'event', index: 0, event: 'click', signal: 'handler', path: [0] }],
-  });
-  const host = { signals: { handler }, handlers: {} } as unknown as CompiledSpikeHost;
-
-  const document = new TestDocument();
-  const root = document.createElement('host');
-  const instance = createFreshDom(program, host, asNode(root));
-  const button = root.childNodes[0] as TestElement;
-  const listenerCount = () => button.listeners.get('click')?.size ?? 0;
-
-  const calls: string[] = [];
-  handler.value = () => calls.push('first');
-  assertEquals(listenerCount(), 1);
-  button.dispatch('click');
-  assertEquals(calls, ['first']);
-
-  handler.value = () => calls.push('second');
-  assertEquals(listenerCount(), 1, 'replacement removes the previous listener');
-  button.dispatch('click');
-  assertEquals(calls, ['first', 'second'], 'the replaced handler no longer fires');
-
-  handler.value = () => calls.push('third');
-  assertEquals(listenerCount(), 1);
-  button.dispatch('click');
-  assertEquals(calls, ['first', 'second', 'third']);
-
-  instance.dispose();
-  assertEquals(listenerCount(), 0, 'dispose removes the listener');
-  button.dispatch('click');
-  assertEquals(calls, ['first', 'second', 'third']);
-});
-
 Deno.test('style Parts normalize vendor-prefixed and custom declarations', () => {
   const styles = signal<unknown>({
     WebkitTransform: 'scale(1)',
@@ -254,7 +301,7 @@ Deno.test('style Parts normalize vendor-prefixed and custom declarations', () =>
     template: [{ k: 'el', tag: 'div', attrs: [], children: [] }],
     parts: [{ k: 'style', index: 0, signal: 'styles', path: [0] }],
   });
-  const host = { signals: { styles }, handlers: {} } as unknown as CompiledSpikeHost;
+  const host = { signals: { styles }, handlers: {} } as unknown as CompiledRuntimeHost;
   const doc = new TestDocument();
   const root = doc.createElement('host');
   createFreshDom(program, host, asNode(root));

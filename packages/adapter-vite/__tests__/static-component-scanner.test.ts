@@ -28,7 +28,7 @@ Deno.test('scanStaticComponents follows the local route graph deterministically'
     await write(
       root,
       'app/components/reading-shell.tsx',
-      `@element('open-reading-shell')\nexport default class ReadingShell extends OpenElement {}`,
+      `@element('open-reading-shell')\nexport default class ReadingShell extends OpenElement { render() { return <button onClick={() => this.open()}>Open</button>; } open() {} }`,
     );
     await write(
       root,
@@ -44,8 +44,16 @@ Deno.test('scanStaticComponents follows the local route graph deterministically'
         routes: ROUTES,
       }),
       [
-        { tagName: 'open-article-view', modulePath: '/app/components/article.tsx' },
-        { tagName: 'open-reading-shell', modulePath: '/app/components/reading-shell.tsx' },
+        {
+          tagName: 'open-article-view',
+          modulePath: '/app/components/article.tsx',
+          compilerInteractionEvents: [],
+        },
+        {
+          tagName: 'open-reading-shell',
+          modulePath: '/app/components/reading-shell.tsx',
+          compilerInteractionEvents: ['click'],
+        },
       ],
     );
   } finally {

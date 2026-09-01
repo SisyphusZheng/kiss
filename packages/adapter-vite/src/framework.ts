@@ -16,7 +16,7 @@ export type {
 } from '@openelement/element';
 
 /**
- * Adapter options extend the frozen element options with build-only delivery
+ * Adapter options extend Element options with build-only delivery
  * declarations. The element package remains unaware of Vite/SSG policy.
  */
 export type FrameworkOptions = ElementFrameworkOptions & {
@@ -62,9 +62,8 @@ export interface OpenElementBuildContextLike {
 
 export type { OpenElementPackageManifest } from '@openelement/element';
 
-// Alpha.4 build-side extensions. They are intentionally adapter-owned: the
-// stable element package keeps its 0.43 public contracts unchanged while the
-// Vite adapter serializes delivery and critical-path decisions into artifacts.
+// Build-side extensions are adapter-owned: Element remains unaware of
+// Vite/SSG delivery and critical-path decisions.
 export type { IslandDeliveryStrategy } from './internal/ssg/delivery.ts';
 export type {
   CriticalAssetsOptions,

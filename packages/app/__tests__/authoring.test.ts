@@ -15,9 +15,11 @@
 import { assertEquals, assertExists, assertInstanceOf, assertThrows } from '@std/assert';
 import { OpenElement, OpenElementError, renderDsd } from '@openelement/element';
 import {
+  classifyActionResult,
   defineApp,
   defineIslandConfig,
   definePage,
+  fail,
   isOpenElementNotFound,
   isOpenElementRedirect,
   notFound,
@@ -214,6 +216,23 @@ Deno.test('projectPageProps() defaults to params + loader-data record entries', 
   // Non-record loader data contributes nothing (arrays are positional, not named).
   assertEquals(projectPageProps({ params: { id: '7' }, data: ['a'] }), { id: '7' });
   assertEquals(projectPageProps({}), {});
+});
+
+Deno.test('classifyActionResult() is the shared success, validation, and invalid-Response authority', () => {
+  assertEquals(classifyActionResult({ saved: true }), {
+    kind: 'success',
+    data: { saved: true },
+  });
+  assertEquals(classifyActionResult(fail(422, { field: 'required' })), {
+    kind: 'failure',
+    status: 422,
+    data: { field: 'required' },
+  });
+  assertThrows(
+    () => classifyActionResult(new Response('not allowed')),
+    OpenElementError,
+    'Actions must not return a Response object',
+  );
 });
 
 Deno.test('redirect() and notFound() expose typed lifecycle control errors', () => {

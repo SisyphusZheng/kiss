@@ -72,7 +72,7 @@ export type ProgramLocationRecord =
   | { id: string; kind: 'anchor'; part: number; path: number[] }
   | { id: string; kind: 'sink'; part: number; node: string; path: number[] };
 
-export interface SpikeElementNode {
+export interface ProgramElementNode {
   k: 'el';
   id: string;
   tag: string;
@@ -84,15 +84,15 @@ export interface SpikeElementNode {
    * omit it, anything else serializes with String().
    */
   iattrs?: Array<[string, string]>;
-  children: SpikeTreeNode[];
+  children: ProgramTreeNode[];
 }
 
-export interface SpikeTextNode {
+export interface ProgramTextNode {
   k: 'text';
   value: string;
 }
 
-export interface SpikePartAnchorNode {
+export interface ProgramPartAnchorNode {
   k: 'part';
   id: string;
   index: number;
@@ -103,18 +103,18 @@ export interface SpikePartAnchorNode {
  * names the item field rendered by this slot — multi-field item templates
  * carry one slot per field, and the compiler always emits it.
  */
-export interface SpikeItemValueNode {
+export interface ProgramItemValueNode {
   k: 'ival';
   field: string;
 }
 
-export type SpikeTreeNode =
-  | SpikeElementNode
-  | SpikeTextNode
-  | SpikePartAnchorNode
-  | SpikeItemValueNode;
+export type ProgramTreeNode =
+  | ProgramElementNode
+  | ProgramTextNode
+  | ProgramPartAnchorNode
+  | ProgramItemValueNode;
 
-export interface SpikeTextPart {
+export interface ProgramTextPart {
   k: 'text';
   index: number;
   signal: string;
@@ -122,7 +122,7 @@ export interface SpikeTextPart {
 }
 
 /** DOM property sink bound to a Signal; `path` is retained for seed consumers. */
-export interface SpikePropPart {
+export interface ProgramPropPart {
   k: 'prop';
   index: number;
   signal: string;
@@ -132,7 +132,7 @@ export interface SpikePropPart {
 }
 
 /** String attribute sink bound to a Signal. */
-export interface SpikeAttrPart {
+export interface ProgramAttrPart {
   k: 'attr';
   index: number;
   signal: string;
@@ -142,7 +142,7 @@ export interface SpikeAttrPart {
 }
 
 /** Boolean attribute sink bound to a Signal. */
-export interface SpikeBoolPart {
+export interface ProgramBoolPart {
   k: 'bool';
   index: number;
   signal: string;
@@ -152,7 +152,7 @@ export interface SpikeBoolPart {
 }
 
 /** Specialized fixed sinks make ownership explicit for class and style text. */
-export interface SpikeClassPart {
+export interface ProgramClassPart {
   k: 'class';
   index: number;
   signal: string;
@@ -160,7 +160,7 @@ export interface SpikeClassPart {
   location: ProgramLocation;
 }
 
-export interface SpikeStylePart {
+export interface ProgramStylePart {
   k: 'style';
   index: number;
   signal: string;
@@ -169,14 +169,14 @@ export interface SpikeStylePart {
 }
 
 /**
- * Trusted-HTML content sink (ADR-0143 alpha.8). The signal value must be a
- * string of pre-sanitized, build-time-trusted HTML; it replaces the target
+ * Trusted-HTML content sink (ADR-0150 alpha.9). The signal value must carry
+ * the runtime TrustedHtml capability; its HTML replaces the target
  * element's content. The target's subtree is opaque to the claim path. The
  * compiler emits this only for an explicit `innerHTML={this.<field>}` sink on
  * an otherwise childless element — there is no implicit or discovery path to
  * raw HTML.
  */
-export interface SpikeHtmlPart {
+export interface ProgramHtmlPart {
   k: 'html';
   index: number;
   signal: string;
@@ -185,7 +185,7 @@ export interface SpikeHtmlPart {
 }
 
 /** A named ref slot is serializable; the generated class supplies the ref value. */
-export interface SpikeRefPart {
+export interface ProgramRefPart {
   k: 'ref';
   index: number;
   ref: string;
@@ -193,44 +193,42 @@ export interface SpikeRefPart {
   location: ProgramLocation;
 }
 
-export type SpikeEventAction =
+export type ProgramEventAction =
   | { kind: 'method'; name: string }
   | { kind: 'call'; name: string }
   | { kind: 'increment' | 'decrement'; signal: string }
   | { kind: 'assign'; signal: string; value: SerializableValue }
   | { kind: 'add' | 'subtract'; signal: string; value: number };
 
-export interface SpikeEventPart {
+export interface ProgramEventPart {
   k: 'event';
   index: number;
   event: string;
   handler: string;
-  action: SpikeEventAction;
+  action: ProgramEventAction;
   path: number[];
   location: ProgramLocation;
 }
 
 export type ConditionOperator = 'greater-than';
 
-export interface SpikeCondition {
+export interface ProgramCondition {
   signal: string;
   op: ConditionOperator;
-  value?: SerializableValue;
+  value: number;
 }
 
-export interface SpikeWhenPart {
+export interface ProgramWhenPart {
   k: 'when';
   index: number;
   signal: string;
-  /** Seed-runtime field for the common `this.signal > number` form. */
-  gt?: number;
-  test: SpikeCondition;
-  on: SpikeTreeNode[];
-  off: SpikeTreeNode[];
+  test: ProgramCondition;
+  on: ProgramTreeNode[];
+  off: ProgramTreeNode[];
   location: ProgramLocation;
 }
 
-export interface SpikeEachPart {
+export interface ProgramEachPart {
   k: 'each';
   index: number;
   signal: string;
@@ -241,22 +239,22 @@ export interface SpikeEachPart {
    * carries its own field).
    */
   field?: string;
-  item: SpikeTreeNode[];
+  item: ProgramTreeNode[];
   location: ProgramLocation;
 }
 
-export type SpikePart =
-  | SpikeTextPart
-  | SpikePropPart
-  | SpikeAttrPart
-  | SpikeBoolPart
-  | SpikeClassPart
-  | SpikeStylePart
-  | SpikeHtmlPart
-  | SpikeRefPart
-  | SpikeEventPart
-  | SpikeWhenPart
-  | SpikeEachPart;
+export type ProgramPart =
+  | ProgramTextPart
+  | ProgramPropPart
+  | ProgramAttrPart
+  | ProgramBoolPart
+  | ProgramClassPart
+  | ProgramStylePart
+  | ProgramHtmlPart
+  | ProgramRefPart
+  | ProgramEventPart
+  | ProgramWhenPart
+  | ProgramEachPart;
 
 export interface ProgramRegionRecord {
   id: string;
@@ -319,12 +317,12 @@ export interface CompiledElementMetadata {
 }
 
 /** The one deterministic program consumed by all execution modes. */
-export interface PartProgramSpike {
+export interface PartProgramV1 {
   version: typeof PART_PROGRAM_VERSION;
   tag: string;
   root: ProgramRoot;
-  template: SpikeTreeNode[];
-  parts: SpikePart[];
+  template: ProgramTreeNode[];
+  parts: ProgramPart[];
   regions: ProgramRegionRecord[];
   dependencies: ProgramDependencyRecord[];
   locations: ProgramLocationRecord[];
@@ -332,7 +330,7 @@ export interface PartProgramSpike {
   metadata: CompiledElementMetadata;
 }
 
-export type PartProgram = PartProgramSpike;
+export type PartProgram = PartProgramV1;
 
 /** Anchor marker payloads shared by seed runtime consumers. */
 export function partAnchorMarker(index: number): string {
@@ -349,6 +347,17 @@ function fail(reason: string): never {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validateKeys(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+  where: string,
+): void {
+  const keys = new Set(allowed);
+  for (const key of Object.keys(value)) {
+    if (!keys.has(key)) fail(`${where}.${key} is not part of Part Program v1`);
+  }
 }
 
 function isIntegerArray(value: unknown): value is number[] {
@@ -398,6 +407,7 @@ function isSerializable(value: unknown, seen = new Set<unknown>()): value is Ser
 
 function validatePosition(value: unknown, where: string): void {
   if (!isRecord(value)) fail(`${where} must be a position object`);
+  validateKeys(value, ['offset', 'line', 'column'], where);
   const offset = value.offset;
   const line = value.line;
   const column = value.column;
@@ -416,6 +426,7 @@ function validateSourceRange(value: unknown, where: string): void {
   if (!isRecord(value) || typeof value.file !== 'string' || value.file.length === 0) {
     fail(`${where} must contain a source file`);
   }
+  validateKeys(value, ['file', 'start', 'end'], where);
   validatePosition(value.start, `${where}.start`);
   validatePosition(value.end, `${where}.end`);
   const start = value.start as Record<string, unknown>;
@@ -433,12 +444,17 @@ function validateTreeNodes(
   elementLocations: Map<string, { tag: string; path: number[] }>,
   pathPrefix: number[] = [],
   rootPath: number[] | undefined = undefined,
-): asserts nodes is SpikeTreeNode[] {
+): asserts nodes is ProgramTreeNode[] {
   if (!Array.isArray(nodes)) fail(`${where} must be an array`);
   for (const [position, rawNode] of nodes.entries()) {
     if (!isRecord(rawNode)) fail(`${where}[${position}] must be an object`);
     switch (rawNode.k) {
       case 'el': {
+        validateKeys(
+          rawNode,
+          ['k', 'id', 'tag', 'attrs', 'iattrs', 'children'],
+          `${where}[${position}]`,
+        );
         if (typeof rawNode.id !== 'string' || !/^e\d+$/.test(rawNode.id)) {
           fail(`${where}[${position}] element needs a stable eN id`);
         }
@@ -527,11 +543,13 @@ function validateTreeNodes(
         break;
       }
       case 'text':
+        validateKeys(rawNode, ['k', 'value'], `${where}[${position}]`);
         if (typeof rawNode.value !== 'string' || rawNode.value.length === 0) {
           fail(`${where}[${position}].value must be a non-empty string`);
         }
         break;
       case 'part': {
+        validateKeys(rawNode, ['k', 'id', 'index'], `${where}[${position}]`);
         if (!allowAnchors) fail(`${where}[${position}] may not contain a part anchor`);
         const index = rawNode.index;
         if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
@@ -545,6 +563,7 @@ function validateTreeNodes(
         break;
       }
       case 'ival':
+        validateKeys(rawNode, ['k', 'field'], `${where}[${position}]`);
         if (!allowItemValues) fail(`${where}[${position}] may not contain an item value slot`);
         if (!isIdentifier(rawNode.field)) fail(`${where}[${position}].field must be an identifier`);
         break;
@@ -556,6 +575,11 @@ function validateTreeNodes(
 
 function validateLocation(value: unknown, where: string): asserts value is ProgramLocation {
   if (!isRecord(value)) fail(`${where} must be a location object`);
+  validateKeys(
+    value,
+    value.kind === 'sink' ? ['id', 'kind', 'path', 'node'] : ['id', 'kind', 'path'],
+    where,
+  );
   if (typeof value.id !== 'string' || !/^p\d+$/.test(value.id)) fail(`${where}.id is invalid`);
   if (value.kind !== 'anchor' && value.kind !== 'sink') fail(`${where}.kind is invalid`);
   if (!isIntegerArray(value.path)) fail(`${where}.path must be non-negative child indices`);
@@ -564,17 +588,18 @@ function validateLocation(value: unknown, where: string): asserts value is Progr
   }
 }
 
-function validateCondition(value: unknown, where: string): asserts value is SpikeCondition {
+function validateCondition(value: unknown, where: string): asserts value is ProgramCondition {
   if (
     !isRecord(value) || !isIdentifier(value.signal) || value.op !== 'greater-than' ||
     typeof value.value !== 'number' || !Number.isFinite(value.value)
   ) {
     fail(`${where} supports only greater-than with a finite numeric value`);
   }
+  validateKeys(value, ['signal', 'op', 'value'], where);
 }
 
 function validateItemValueFields(
-  nodes: SpikeTreeNode[],
+  nodes: ProgramTreeNode[],
   field: string | undefined,
   where: string,
 ): void {
@@ -594,14 +619,14 @@ function validateItemValueFields(
 }
 
 function validatePartPath(
-  template: SpikeTreeNode[],
+  template: ProgramTreeNode[],
   path: unknown,
   where: string,
   elementIds: Set<string>,
 ): string {
   if (!isIntegerArray(path) || path.length === 0) fail(`${where}.path must target an element`);
   let nodes = template;
-  let node: SpikeTreeNode | undefined;
+  let node: ProgramTreeNode | undefined;
   for (const index of path) {
     node = nodes[index];
     if (!node) fail(`${where}.path [${path.join(',')}] is unresolved`);
@@ -613,7 +638,7 @@ function validatePartPath(
 }
 
 function validateAnchorPath(
-  template: SpikeTreeNode[],
+  template: ProgramTreeNode[],
   path: unknown,
   partIndex: number,
   where: string,
@@ -622,7 +647,7 @@ function validateAnchorPath(
     fail(`${where}.path must target a template anchor`);
   }
   let nodes = template;
-  let node: SpikeTreeNode | undefined;
+  let node: ProgramTreeNode | undefined;
   for (const [position, index] of path.entries()) {
     node = nodes[index];
     if (!node) fail(`${where}.path [${path.join(',')}] is unresolved`);
@@ -637,7 +662,7 @@ function validateAnchorPath(
 }
 
 function validateFixedPartPath(
-  template: SpikeTreeNode[],
+  template: ProgramTreeNode[],
   path: number[],
   where: string,
 ): void {
@@ -654,43 +679,47 @@ function validateFixedPartPath(
 }
 
 function hasSignal(
-  part: SpikePart,
+  part: ProgramPart,
 ): part is
-  | SpikeTextPart
-  | SpikePropPart
-  | SpikeAttrPart
-  | SpikeBoolPart
-  | SpikeClassPart
-  | SpikeStylePart
-  | SpikeHtmlPart
-  | SpikeWhenPart
-  | SpikeEachPart {
+  | ProgramTextPart
+  | ProgramPropPart
+  | ProgramAttrPart
+  | ProgramBoolPart
+  | ProgramClassPart
+  | ProgramStylePart
+  | ProgramHtmlPart
+  | ProgramWhenPart
+  | ProgramEachPart {
   return part.k === 'text' || part.k === 'prop' || part.k === 'attr' || part.k === 'bool' ||
     part.k === 'class' || part.k === 'style' || part.k === 'html' || part.k === 'when' ||
     part.k === 'each';
 }
 
-function isRegion(part: SpikePart): part is SpikeWhenPart | SpikeEachPart {
+function isRegion(part: ProgramPart): part is ProgramWhenPart | ProgramEachPart {
   return part.k === 'when' || part.k === 'each';
 }
 
 function validateEventAction(value: unknown, where: string): void {
   if (!isRecord(value) || typeof value.kind !== 'string') fail(`${where} must be an event action`);
   if (value.kind === 'method' || value.kind === 'call') {
+    validateKeys(value, ['kind', 'name'], where);
     if (!isIdentifier(value.name)) fail(`${where}.name must be an identifier`);
     return;
   }
   if (value.kind === 'increment' || value.kind === 'decrement') {
+    validateKeys(value, ['kind', 'signal'], where);
     if (!isIdentifier(value.signal)) fail(`${where}.signal must be an identifier`);
     return;
   }
   if (value.kind === 'assign') {
+    validateKeys(value, ['kind', 'signal', 'value'], where);
     if (!isIdentifier(value.signal) || !isSerializable(value.value)) {
       fail(`${where} assign action needs a signal and serializable value`);
     }
     return;
   }
   if (value.kind === 'add' || value.kind === 'subtract') {
+    validateKeys(value, ['kind', 'signal', 'value'], where);
     if (
       !isIdentifier(value.signal) || typeof value.value !== 'number' ||
       !Number.isFinite(value.value)
@@ -709,11 +738,24 @@ function validateEventAction(value: unknown, where: string): void {
  */
 export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
   if (!isRecord(raw)) fail('program must be an object');
+  validateKeys(raw, [
+    'version',
+    'tag',
+    'root',
+    'template',
+    'parts',
+    'regions',
+    'dependencies',
+    'locations',
+    'sourceMap',
+    'metadata',
+  ], 'program');
   if (raw.version !== PART_PROGRAM_VERSION) fail('version must be 1');
   if (typeof raw.tag !== 'string' || !/^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(raw.tag)) {
     fail('tag must be a custom-element tag name');
   }
   if (!isRecord(raw.root) || raw.root.id !== 'root') fail('root must be a root record');
+  validateKeys(raw.root, ['id', 'kind', 'nodes'], 'root');
   if (
     raw.root.kind !== 'light' && raw.root.kind !== 'shadow-open' &&
     raw.root.kind !== 'shadow-closed'
@@ -736,15 +778,15 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     anchorIds,
     elementLocations,
   );
-  const topLevelElements = (raw.template as SpikeTreeNode[])
-    .filter((node): node is SpikeElementNode => node.k === 'el')
+  const topLevelElements = (raw.template as ProgramTreeNode[])
+    .filter((node): node is ProgramElementNode => node.k === 'el')
     .map((node) => node.id);
   if (JSON.stringify(raw.root.nodes) !== JSON.stringify(topLevelElements)) {
     fail('root.nodes must match top-level template elements in order');
   }
 
   if (!Array.isArray(raw.parts)) fail('parts must be an array');
-  const parts = raw.parts as SpikePart[];
+  const parts = raw.parts as ProgramPart[];
   const anchorPartCounts = new Map<number, number>();
   parts.forEach((part, position) => {
     if (!isRecord(part)) fail(`parts[${position}] must be an object`);
@@ -753,10 +795,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     if (part.location.id !== `p${position}`) fail(`parts[${position}].location id is out of order`);
     switch (part.k) {
       case 'text':
+        validateKeys(part, ['k', 'index', 'signal', 'location'], `parts[${position}]`);
         if (!isIdentifier(part.signal)) fail(`parts[${position}].signal must be an identifier`);
         if (part.location.kind !== 'anchor') fail(`parts[${position}] text must own an anchor`);
         validateAnchorPath(
-          raw.template as SpikeTreeNode[],
+          raw.template as ProgramTreeNode[],
           part.location.path,
           position,
           `parts[${position}]`,
@@ -766,6 +809,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
       case 'prop':
       case 'attr':
       case 'bool':
+        validateKeys(
+          part,
+          ['k', 'index', 'signal', 'name', 'path', 'location'],
+          `parts[${position}]`,
+        );
         if (!isIdentifier(part.signal) || typeof part.name !== 'string' || part.name.length === 0) {
           fail(`parts[${position}] ${part.k} needs signal and name`);
         }
@@ -778,7 +826,7 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         if (part.location.kind !== 'sink') fail(`parts[${position}] ${part.k} must own a sink`);
         if (
           validatePartPath(
-            raw.template as SpikeTreeNode[],
+            raw.template as ProgramTreeNode[],
             part.path,
             `parts[${position}]`,
             elementIds,
@@ -793,12 +841,13 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         break;
       case 'class':
       case 'style':
+        validateKeys(part, ['k', 'index', 'signal', 'path', 'location'], `parts[${position}]`);
         if (!isIdentifier(part.signal) || part.location.kind !== 'sink') {
           fail(`parts[${position}] ${part.k} is invalid`);
         }
         if (
           validatePartPath(
-            raw.template as SpikeTreeNode[],
+            raw.template as ProgramTreeNode[],
             part.path,
             `parts[${position}]`,
             elementIds,
@@ -812,11 +861,12 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         }
         break;
       case 'html': {
+        validateKeys(part, ['k', 'index', 'signal', 'path', 'location'], `parts[${position}]`);
         if (!isIdentifier(part.signal) || part.location.kind !== 'sink') {
           fail(`parts[${position}] html is invalid`);
         }
         const htmlTargetId = validatePartPath(
-          raw.template as SpikeTreeNode[],
+          raw.template as ProgramTreeNode[],
           part.path,
           `parts[${position}]`,
           elementIds,
@@ -829,8 +879,8 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         }
         // The HTML sink owns its target's whole content: the target must be a
         // childless element (the serializer would overwrite program children).
-        let htmlTarget: SpikeTreeNode | undefined;
-        let htmlNodes = raw.template as SpikeTreeNode[];
+        let htmlTarget: ProgramTreeNode | undefined;
+        let htmlNodes = raw.template as ProgramTreeNode[];
         for (const pathIndex of part.path) {
           htmlTarget = htmlNodes[pathIndex];
           htmlNodes = htmlTarget?.k === 'el' ? htmlTarget.children : [];
@@ -841,12 +891,13 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         break;
       }
       case 'ref':
+        validateKeys(part, ['k', 'index', 'ref', 'path', 'location'], `parts[${position}]`);
         if (!isIdentifier(part.ref) || part.location.kind !== 'sink') {
           fail(`parts[${position}] ref is invalid`);
         }
         if (
           validatePartPath(
-            raw.template as SpikeTreeNode[],
+            raw.template as ProgramTreeNode[],
             part.path,
             `parts[${position}]`,
             elementIds,
@@ -860,6 +911,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         }
         break;
       case 'event':
+        validateKeys(
+          part,
+          ['k', 'index', 'event', 'handler', 'action', 'path', 'location'],
+          `parts[${position}]`,
+        );
         if (
           !isIdentifier(part.handler) || typeof part.event !== 'string' || part.event.length === 0
         ) {
@@ -872,7 +928,7 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         if (part.location.kind !== 'sink') fail(`parts[${position}] event must own a sink`);
         if (
           validatePartPath(
-            raw.template as SpikeTreeNode[],
+            raw.template as ProgramTreeNode[],
             part.path,
             `parts[${position}]`,
             elementIds,
@@ -886,15 +942,15 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         }
         break;
       case 'when':
-        if (
-          !isIdentifier(part.signal) || typeof part.gt !== 'number' || !Number.isFinite(part.gt)
-        ) {
-          fail(`parts[${position}] when needs a signal and finite threshold`);
-        }
+        validateKeys(
+          part,
+          ['k', 'index', 'signal', 'test', 'on', 'off', 'location'],
+          `parts[${position}]`,
+        );
+        if (!isIdentifier(part.signal)) fail(`parts[${position}] when needs a signal`);
         if (part.location.kind !== 'anchor') fail(`parts[${position}] when must own an anchor`);
         validateCondition(part.test, `parts[${position}].test`);
         if (part.test.signal !== part.signal) fail(`parts[${position}] test signal mismatch`);
-        if (part.test.value !== part.gt) fail(`parts[${position}] threshold mismatches its test`);
         validateTreeNodes(
           part.on,
           `parts[${position}].on`,
@@ -918,7 +974,7 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
           [],
         );
         validateAnchorPath(
-          raw.template as SpikeTreeNode[],
+          raw.template as ProgramTreeNode[],
           part.location.path,
           position,
           `parts[${position}]`,
@@ -926,6 +982,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
         anchorPartCounts.set(position, (anchorPartCounts.get(position) ?? 0) + 1);
         break;
       case 'each':
+        validateKeys(
+          part,
+          ['k', 'index', 'signal', 'key', 'field', 'item', 'location'],
+          `parts[${position}]`,
+        );
         if (
           !isIdentifier(part.signal) || !isIdentifier(part.key) ||
           (part.field !== undefined && !isIdentifier(part.field))
@@ -950,7 +1011,7 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
           `parts[${position}].item`,
         );
         validateAnchorPath(
-          raw.template as SpikeTreeNode[],
+          raw.template as ProgramTreeNode[],
           part.location.path,
           position,
           `parts[${position}]`,
@@ -964,7 +1025,7 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
 
   for (const part of parts) {
     if (part.k === 'text' || part.k === 'when' || part.k === 'each') continue;
-    validateFixedPartPath(raw.template as SpikeTreeNode[], part.path, `parts[${part.index}]`);
+    validateFixedPartPath(raw.template as ProgramTreeNode[], part.path, `parts[${part.index}]`);
   }
 
   for (const [index, id] of anchorIds) {
@@ -991,6 +1052,13 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     fail('regions must describe every Region part exactly once');
   }
   regions.forEach((region, position) => {
+    if (isRecord(region)) {
+      validateKeys(
+        region,
+        ['id', 'index', 'kind', 'anchor', 'end', 'source'],
+        `regions[${position}]`,
+      );
+    }
     if (
       !isRecord(region) || region.id !== `r${region.index}` ||
       region.index !== regionParts[position].index ||
@@ -1014,6 +1082,8 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     if (!isRecord(dependency) || !isIdentifier(dependency.signal) || !isRecord(dependency.owner)) {
       fail(`dependencies[${position}] is invalid`);
     }
+    validateKeys(dependency, ['signal', 'owner', 'location'], `dependencies[${position}]`);
+    validateKeys(dependency.owner, ['kind', 'index'], `dependencies[${position}].owner`);
     if (dependency.owner.kind !== 'part' && dependency.owner.kind !== 'region') {
       fail(`dependencies[${position}].owner.kind is invalid`);
     }
@@ -1048,6 +1118,14 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     if (!isRecord(location) || typeof location.id !== 'string' || locationIds.has(location.id)) {
       fail(`locations[${position}] must have a unique id`);
     }
+    const locationKeys = location.kind === 'element'
+      ? ['id', 'kind', 'tag', 'path']
+      : location.kind === 'anchor'
+      ? ['id', 'kind', 'part', 'path']
+      : location.kind === 'sink'
+      ? ['id', 'kind', 'part', 'node', 'path']
+      : ['id', 'kind', 'path'];
+    validateKeys(location, locationKeys, `locations[${position}]`);
     locationIds.add(location.id);
     locationById.set(location.id, location);
     if (!isIntegerArray(location.path)) fail(`locations[${position}].path is invalid`);
@@ -1090,18 +1168,25 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
 
   if (!isRecord(raw.metadata)) fail('metadata must be an object');
   const metadata = raw.metadata;
+  validateKeys(
+    metadata,
+    ['tag', 'className', 'sourceFile', 'properties', 'observedAttributes', 'cem'],
+    'metadata',
+  );
   if (
     !isRecord(raw.sourceMap) || raw.sourceMap.version !== 1 ||
     raw.sourceMap.file !== metadata.sourceFile
   ) {
     fail('sourceMap must be version 1 and identify the metadata source file');
   }
+  validateKeys(raw.sourceMap, ['version', 'file', 'records'], 'sourceMap');
   if (!Array.isArray(raw.sourceMap.records)) fail('sourceMap.records must be an array');
   const sourceIds = new Set<string>();
   for (const [position, record] of raw.sourceMap.records.entries()) {
     if (!isRecord(record) || typeof record.id !== 'string' || sourceIds.has(record.id)) {
       fail(`sourceMap.records[${position}] must have a unique id`);
     }
+    validateKeys(record, ['id', 'kind', 'source'], `sourceMap.records[${position}]`);
     sourceIds.add(record.id);
     const kinds = new Set<ProgramSourceKind>([
       'root',
@@ -1163,6 +1248,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     ) {
       fail(`metadata.properties[${position}] is invalid`);
     }
+    validateKeys(
+      property,
+      ['name', 'attribute', 'type', 'converter', 'reflect', 'default', 'computed', 'deps'],
+      `metadata.properties[${position}]`,
+    );
     if (computed !== undefined) {
       // Computed fields derive their signal from other properties, so they can
       // never be attribute-backed, reflect, or carry no source list.
@@ -1206,6 +1296,12 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
   ) {
     fail('metadata.cem identity or shape is invalid');
   }
+  validateKeys(
+    cem,
+    ['tagName', 'className', 'declaration', 'attributes', 'members'],
+    'metadata.cem',
+  );
+  validateKeys(cem.declaration, ['name', 'module'], 'metadata.cem.declaration');
   const cemAttributes = cem.attributes;
   const expectedCemAttributes = metadataProperties.filter((property) =>
     property.attribute !== null
@@ -1223,6 +1319,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     ) {
       fail(`metadata.cem.attributes[${position}] is invalid`);
     }
+    validateKeys(
+      attribute,
+      ['name', 'fieldName', 'type', 'reflect'],
+      `metadata.cem.attributes[${position}]`,
+    );
     const expected = expectedCemAttributes[position];
     if (
       attribute.name !== expected.attribute || attribute.fieldName !== expected.name ||
@@ -1241,6 +1342,11 @@ export function validatePartProgram(raw: unknown): asserts raw is PartProgram {
     ) {
       fail(`metadata.cem.members[${position}] is invalid`);
     }
+    validateKeys(
+      member,
+      ['name', 'fieldName', 'type', 'attribute', 'reflect'],
+      `metadata.cem.members[${position}]`,
+    );
     const expected = metadataProperties[position];
     if (
       member.name !== expected.name || member.fieldName !== expected.name ||

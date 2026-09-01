@@ -121,30 +121,61 @@ Deno.test('buildEntryDescriptor: route import paths include routesDir', () => {
 Deno.test('buildEntryDescriptor: static components are explicit and rendered into the SSR entry', () => {
   const desc = buildEntryDescriptor(sampleRoutes, {
     staticComponents: [
-      { tagName: 'open-article-view', modulePath: '/app/components/article.tsx' },
+      {
+        tagName: 'open-article-view',
+        modulePath: '/app/components/article.tsx',
+        compilerInteractionEvents: [],
+      },
     ],
   });
   const code = renderEntry(desc);
 
   assertEquals(desc.staticComponents, [
-    { tagName: 'open-article-view', modulePath: '/app/components/article.tsx' },
+    {
+      tagName: 'open-article-view',
+      modulePath: '/app/components/article.tsx',
+      compilerInteractionEvents: [],
+    },
   ]);
   assertStringIncludes(code, 'import * as __static_component_0 from "/app/components/article.tsx"');
   assertStringIncludes(
     code,
     '__registerSsrComponent("open-article-view", __static_component_0.default)',
   );
-  assertStringIncludes(
-    code,
-    '!candidate.computed && (candidate.name === match[1] || candidate.attribute === match[1])',
-  );
-  assertStringIncludes(code, 'return __expandNestedHosts(out.html, sourceInfo, __depth, tag)');
-  assertStringIncludes(code, 'out.replace(__nestedShellPattern(tag)');
-  assertStringIncludes(code, '([\\\\s\\\\S]*?)');
-  assertStringIncludes(code, 'data-oe-light');
-  assertStringIncludes(code, 'inner.trimStart().startsWith("<template shadowrootmode=")');
-  assertEquals(code.includes('const __nestedShells ='), false);
+  assertStringIncludes(code, 'ssrRenderableTags: __ssrRenderableTags');
+  assertEquals(code.includes('__expandNestedHosts'), false);
+  assertEquals(code.includes('__nestedShellPattern'), false);
+  assertEquals(code.includes('__propsFromAttrs'), false);
+  assertEquals(code.includes('__projectLightChildren'), false);
   assertStringIncludes(code, '"open-article-view"');
+});
+
+Deno.test('buildEntryDescriptor: compiler-proven interaction becomes one client admission input', () => {
+  const desc = buildEntryDescriptor(sampleRoutes, {
+    upgradeStrategy: 'visible',
+    staticComponents: [{
+      tagName: 'open-menu-button',
+      modulePath: '/app/components/menu-button.tsx',
+      compilerInteractionEvents: ['click', 'keydown'],
+    }],
+  });
+  const code = renderEntry(desc);
+
+  assertEquals(desc.staticComponents, []);
+  assertEquals(desc.islands, [{
+    tagName: 'open-menu-button',
+    modulePath: '/app/components/menu-button.tsx',
+    hydrate: 'visible',
+    ssr: true,
+    dsd: true,
+    authoring: 'basic-element',
+    source: 'nested',
+    reason: 'compiler-proven interaction events: click, keydown',
+  }]);
+  assertEquals(desc.ssrAdmissionPlan.renderableTags, ['open-menu-button']);
+  assertStringIncludes(code, 'import * as __island_open_menu_button');
+  assertStringIncludes(code, '"open-menu-button"');
+  assertEquals(code.includes('__static_component_0'), false);
 });
 
 // renderEntry tests
@@ -158,7 +189,7 @@ Deno.test('renderEntry: produces valid module code', () => {
   // import — the legacy VNode tree renderer is gone.
   assertStringIncludes(
     code,
-    "import { renderDsd, escapeHtml } from '@openelement/element'",
+    "import { renderDsd, trustedHtml, escapeHtml, wrapInDocument } from '@openelement/element'",
   );
   assertEquals(code.includes('renderDsdTree'), false);
   assertStringIncludes(code, 'export default app');

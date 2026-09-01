@@ -217,22 +217,27 @@ Deno.test('kernel reconnect cycles never duplicate event listeners', () => {
   const document = new TestDocument();
   const element = document.createElement('oe-kernel-test');
   const message = signal('x');
-  const handler = signal<unknown>(() => {});
+  const calls: string[] = [];
   const program = testProgram({
     tag: 'oe-kernel-test',
     template: [{ k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] }],
     parts: [
       { k: 'text', index: 0, signal: 'message' },
-      { k: 'event', index: 1, event: 'click', signal: 'handler', path: [0] },
+      {
+        k: 'event',
+        index: 1,
+        event: 'click',
+        handler: 'handleClick',
+        action: { kind: 'method', name: 'handleClick' },
+        path: [0],
+      },
     ],
   });
   const kernel = new CompiledElementKernel(element as unknown as HTMLElement, program, {
-    signals: { message, handler },
-    handlers: {},
+    signals: { message },
+    handlers: { handleClick: () => calls.push('clicked') },
     rootMode: 'light',
   });
-  const calls: string[] = [];
-  handler.value = () => calls.push('clicked');
   const div = () => element.childNodes[0] as TestElement;
   const listenerCount = () => div().listeners.get('click')?.size ?? 0;
 

@@ -1,4 +1,4 @@
-import { OpenElement } from '@openelement/element';
+import { OpenElement, type TrustedHtml, trustedHtml } from '@openelement/element';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '../islands/open-page-rail.tsx';
@@ -6,7 +6,7 @@ import { pageChangelogStyles } from './page-changelog-styles.ts';
 
 declare function element(tag: string): ClassDecorator;
 declare function property(
-  options: { reflect: boolean; attribute?: false },
+  options: { reflect: boolean; attribute?: false; type?: ObjectConstructor },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 interface ChangelogRailItem {
@@ -56,8 +56,8 @@ export default class PageChangelog extends OpenElement {
   withdrawnBody = '';
   @property({ reflect: false, attribute: false })
   footnote = '';
-  @property({ reflect: false, attribute: false })
-  changelogHtml = '';
+  @property({ type: Object, reflect: false, attribute: false })
+  changelogHtml: TrustedHtml = trustedHtml('');
   @property({ reflect: false, attribute: false })
   roadmapHref = '';
   @property({ reflect: false, attribute: false })

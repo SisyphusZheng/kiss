@@ -1,4 +1,5 @@
 export {
+  classifyActionResult,
   defineIslandConfig,
   definePage,
   fail,
@@ -13,6 +14,7 @@ export {
   redirect,
 } from './authoring.ts';
 export type {
+  ActionOutcome,
   IslandConfig,
   IslandDeliveryStrategy,
   OpenElementPageDescriptor,

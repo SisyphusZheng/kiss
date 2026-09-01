@@ -52,6 +52,9 @@ class Phase1Meta {
   /** Compiled non-island components reachable from local page imports. */
   staticComponents: StaticComponentDecl[] = [];
 
+  /** Exact compiler-proven components selected for browser delivery. */
+  compilerBehaviorDecls: IslandDecl[] = [];
+
   /** Island tag names discovered during route scanning (local islands) */
   islandTagNames: string[] = [];
 

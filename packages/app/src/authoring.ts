@@ -181,6 +181,29 @@ export function isActionFailure(error: unknown): error is OpenElementActionFailu
     );
 }
 
+export type ActionOutcome<Data = unknown> =
+  | { kind: 'success'; data: Data }
+  | { kind: 'failure'; status: number; data: unknown };
+
+/**
+ * Canonical application-level classification for an action return value.
+ * Hono and SPA executors project this result differently, but neither may
+ * redefine validation failure or admit a raw Response as action data.
+ */
+export function classifyActionResult<Data>(result: Data): ActionOutcome<Data> {
+  if (result instanceof Response) {
+    throw new OpenElementError(
+      `${ERROR_PREFIX} Actions must not return a Response object; return data, ` +
+        'fail(status, data), or throw redirect().',
+      { code: 'INVALID_ACTION_RESPONSE', phase: 'validation' },
+    );
+  }
+  if (isActionFailure(result)) {
+    return { kind: 'failure', status: result.status, data: result.data };
+  }
+  return { kind: 'success', data: result };
+}
+
 interface PageHead {
   title?: string;
   description?: string;

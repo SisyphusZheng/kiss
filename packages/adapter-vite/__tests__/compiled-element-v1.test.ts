@@ -1,7 +1,7 @@
 /**
- * @openelement/adapter-vite — #1160 TSX-to-Part Program vertical compiler spike.
+ * @openelement/adapter-vite — #1160 TSX-to-Part Program vertical compiler v1.
  *
- * Behavior-first coverage for the open:compiled-element spike transform:
+ * Behavior-first coverage for the open:compiled-element v1 transform:
  *   - the one-component fixture is transformed through the actual Vite plugin
  *     transform hook registered by createOpenPlugin()
  *   - the emitted module embeds one deterministic, serializable Part Program
@@ -20,7 +20,7 @@ import { assert, assertEquals, assertStringIncludes, assertThrows } from '@std/a
 import { createOpenPlugin } from '../src/plugin.ts';
 import type { Plugin } from 'vite';
 
-const FIXTURE_DIR = new URL('../__fixtures__/compiled-element-spike/', import.meta.url);
+const FIXTURE_DIR = new URL('../__fixtures__/compiled-element-v1/', import.meta.url);
 
 async function readFixture(name: string): Promise<string> {
   return await Deno.readTextFile(new URL(name, FIXTURE_DIR));
@@ -60,33 +60,22 @@ function decodeBase64(value: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-Deno.test('compiled-element spike - harness sanity (fixtures load)', async () => {
+Deno.test('compiled-element v1 - harness sanity (fixtures load)', async () => {
   const counter = await readFixture('counter.tsx');
   const expected = await readFixture('expected-program.json');
-  assert(counter.includes("@element('oe-spike-counter')"));
-  assertEquals(JSON.parse(expected).tag, 'oe-spike-counter');
+  assert(counter.includes("@element('oe-program-counter')"));
+  assertEquals(JSON.parse(expected).tag, 'oe-program-counter');
 });
 
-Deno.test('compiled-element spike - plugin registration through createOpenPlugin', async (t) => {
-  await t.step('default pipeline does not register the spike compiler', () => {
-    const plugins = createOpenPlugin();
-    assertEquals(plugins.some((p) => p.name === 'open:compiled-element'), false);
-  });
-
-  await t.step('opt-in spike flag registers the compiler plugin', async () => {
-    // Behavior-first ordering (repair-1, R3): the pipeline assertion runs
-    // BEFORE the compiler module is imported, so a regression fails because
-    // the opt-in pipeline lacks the plugin — not because a module cannot be
-    // resolved. createOpenPlugin() now accepts `compiledSpike` in its options
-    // type, so the flag is passed directly without a cast.
-    const plugins = createOpenPlugin({ compiledSpike: true });
-    assertEquals(plugins.some((p) => p.name === 'open:compiled-element'), true);
-    const { compiledElementPlugin } = await loadPluginModule();
-    assertEquals(compiledElementPlugin().name, 'open:compiled-element');
-  });
+Deno.test('compiled-element v1 - default pipeline has one canonical compiler hook', async () => {
+  const plugins = createOpenPlugin();
+  assertEquals(plugins.filter((p) => p.name === 'open:core').length, 1);
+  assertEquals(plugins.some((p) => p.name === 'open:compiled-element'), false);
+  const { compiledElementPlugin } = await loadPluginModule();
+  assertEquals(compiledElementPlugin().name, 'open:compiled-element');
 });
 
-Deno.test('compiled-element spike - fixture transforms through the Vite hook', async (t) => {
+Deno.test('compiled-element v1 - fixture transforms through the Vite hook', async (t) => {
   const { compiledElementPlugin } = await loadPluginModule();
   const plugin = compiledElementPlugin();
   const transform = transformOf(plugin);
@@ -207,12 +196,12 @@ Deno.test('compiled-element spike - fixture transforms through the Vite hook', a
     const generatedBytes = new TextEncoder().encode(emitted!).length;
     const programBytes = new TextEncoder().encode(programJson).length;
     const instructionCount = JSON.parse(programJson).parts.length;
-    // Frozen spike evidence (alpha.0 fixture): regenerated only by changing the
+    // Frozen program evidence (alpha.0 fixture): regenerated only by changing the
     // fixture grammar. These are evidence, not a performance claim.
     assertEquals(instructionCount, 5);
     console.log(
       JSON.stringify({
-        spike: 'adapter-compiler',
+        proof: 'adapter-compiler',
         generatedBytes,
         programBytes,
         instructionCount,
@@ -220,7 +209,7 @@ Deno.test('compiled-element spike - fixture transforms through the Vite hook', a
     );
   });
 
-  await t.step('files outside the spike grammar marker pass through untouched', () => {
+  await t.step('files outside the program grammar marker pass through untouched', () => {
     const result = transform.call(
       failingContext(),
       'export class Plain { render() { return null; } }',
@@ -230,7 +219,7 @@ Deno.test('compiled-element spike - fixture transforms through the Vite hook', a
   });
 });
 
-Deno.test('compiled-element spike - unsupported syntax fails closed with located diagnostics', async (t) => {
+Deno.test('compiled-element v1 - unsupported syntax fails closed with located diagnostics', async (t) => {
   const { compiledElementPlugin } = await loadPluginModule();
   const transform = transformOf(compiledElementPlugin());
 
@@ -256,7 +245,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
       "import { OpenElement } from '@openelement/element';",
       'declare function element(tag: string): ClassDecorator;',
       'declare function mystery(): ClassDecorator;',
-      "@element('oe-spike-mystery')",
+      "@element('oe-proof-mystery')",
       '@mystery()',
       'export class Mystery extends OpenElement {',
       '  render() { return <div>ok</div>; }',
@@ -277,7 +266,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
   await t.step('classes not extending OpenElement fail closed', () => {
     const source = [
       'declare function element(tag: string): ClassDecorator;',
-      "@element('oe-spike-alien')",
+      "@element('oe-proof-alien')",
       'export class Alien extends HTMLElement {',
       '  render() { return null; }',
       '}',
@@ -298,7 +287,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
       "import { OpenElement } from '@openelement/element';",
       'declare function element(tag: string): ClassDecorator;',
       'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-      "@element('oe-spike-unsafe-path')",
+      "@element('oe-proof-unsafe-path')",
       'export class UnsafePath extends OpenElement {',
       '  @property({ reflect: false }) count = 0;',
       "  @property({ reflect: false }) label = 'ready';",
@@ -321,7 +310,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
       "import { OpenElement } from '@openelement/element';",
       'declare function element(tag: string): ClassDecorator;',
       'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-      "@element('oe-spike-duplicate-attribute')",
+      "@element('oe-proof-duplicate-attribute')",
       'export class DuplicateAttribute extends OpenElement {',
       "  @property({ reflect: false }) label = 'ready';",
       '  render() { return <input value="static" value={this.label} />; }',
@@ -340,7 +329,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
     const source = [
       "import { OpenElement } from '@openelement/element';",
       'declare function element(tag: string): ClassDecorator;',
-      "@element('oe-spike-void-children')",
+      "@element('oe-proof-void-children')",
       'export class VoidChildren extends OpenElement {',
       '  render() { return <input>not supported</input>; }',
       '}',
@@ -359,7 +348,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
       "import { OpenElement } from '@openelement/element';",
       'declare function element(tag: string): ClassDecorator;',
       'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-      "@element('oe-spike-unsafe-attribute')",
+      "@element('oe-proof-unsafe-attribute')",
       'export class UnsafeAttribute extends OpenElement {',
       "  @property({ reflect: false }) label = 'ready';",
       '  render() { return <input onclick={this.label} />; }',
@@ -379,7 +368,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
       "import { OpenElement } from '@openelement/element';",
       'declare function element(tag: string): ClassDecorator;',
       'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-      "@element('oe-spike-unsupported-condition')",
+      "@element('oe-proof-unsupported-condition')",
       'export class UnsupportedCondition extends OpenElement {',
       '  @property({ reflect: false }) count = 0;',
       '  render() { return <div>{this.count === 1 ? <p>one</p> : <p>other</p>}</div>; }',
@@ -397,7 +386,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
   await t.step(
     'list Regions admit multi-field item slots and fail closed on non-item expressions',
     async () => {
-      const { compileElementSpike } = await import(
+      const { compileElementProgram } = await import(
         '../src/internal/compiler/semantic-core/compile.ts'
       );
       // alpha.8: item templates carry one ival/iattr slot per item field — a row
@@ -406,7 +395,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
         "import { OpenElement } from '@openelement/element';",
         'declare function element(tag: string): ClassDecorator;',
         'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-        "@element('oe-spike-multi-field')",
+        "@element('oe-proof-multi-field')",
         'export class MultiField extends OpenElement {',
         "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha', link: '/a' }];",
         '  render() {',
@@ -414,7 +403,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
         '  }',
         '}',
       ].join('\n');
-      const program = compileElementSpike(source, '/project/app/islands/multi-field.tsx').program;
+      const program = compileElementProgram(source, '/project/app/islands/multi-field.tsx').program;
       const each = program.parts.find((part: { k: string }) => part.k === 'each') as {
         field?: string;
         item: unknown[];
@@ -432,7 +421,7 @@ Deno.test('compiled-element spike - unsupported syntax fails closed with located
         "import { OpenElement } from '@openelement/element';",
         'declare function element(tag: string): ClassDecorator;',
         'declare function property(options: { reflect: boolean }): PropertyDecorator;',
-        "@element('oe-spike-bad-item')",
+        "@element('oe-proof-bad-item')",
         'export class BadItem extends OpenElement {',
         "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha' }];",
         '  render() {',
@@ -524,12 +513,12 @@ Deno.test('compiled-element alpha.1 - canonical program records and decorator lo
 });
 
 Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe identity', async () => {
-  const [{ compileElementSpike }, { validatePartProgram }] = await Promise.all([
+  const [{ compileElementProgram }, { validatePartProgram }] = await Promise.all([
     import('../src/internal/compiler/semantic-core/compile.ts'),
     import('../src/internal/compiler/semantic-core/program.ts'),
   ]);
   const source = await readFixture('counter.tsx');
-  const program = compileElementSpike(source, '/project/app/islands/counter.tsx').program;
+  const program = compileElementProgram(source, '/project/app/islands/counter.tsx').program;
 
   const shiftedLocation = structuredClone(program) as {
     parts: Array<{ location: { path: number[] } }>;
@@ -585,7 +574,7 @@ Deno.test('compiled-element alpha.1 - program validation fails closed on unsafe 
 });
 
 Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', async (t) => {
-  const { compileElementSpike, CompiledSpikeError } = await import(
+  const { compileElementProgram, CompiledElementError } = await import(
     '../src/internal/compiler/semantic-core/compile.ts'
   );
 
@@ -606,7 +595,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       '  render() { return <main><h1>{this.label}</h1></main>; }',
       '}',
     ].join('\n');
-    const { code, program } = compileElementSpike(source, '/project/app/routes/alpha8.tsx');
+    const { code, program } = compileElementProgram(source, '/project/app/routes/alpha8.tsx');
     assertEquals(program.root.kind, 'shadow-open');
     assertStringIncludes(code, 'export default class Alpha8Page extends OpenElement {');
     // The island delivery policy is copied verbatim into the compiled module.
@@ -629,7 +618,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
         '  }',
         '}',
       ].join('\n');
-      const { program } = compileElementSpike(source, '/project/app/components/host.tsx');
+      const { program } = compileElementProgram(source, '/project/app/components/host.tsx');
       const template = JSON.stringify(program.template);
       assert(template.includes('"tag":"decoupled-view"'), template);
       assert(template.includes('"tag":"live-counter"'), template);
@@ -652,7 +641,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       '  }',
       '}',
     ].join('\n');
-    const { program } = compileElementSpike(source, '/project/app/components/list.tsx');
+    const { program } = compileElementProgram(source, '/project/app/components/list.tsx');
     const each = program.parts.find((part: { k: string }) => part.k === 'each');
     assert(each, 'each Region must exist');
     assert(JSON.stringify(each).includes('"tag":"live-counter"'));
@@ -671,11 +660,11 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
     const expectFailure = (source: string, code: string, fragment: string) => {
       let thrown: unknown;
       try {
-        compileElementSpike(source, '/project/app/components/bad.tsx');
+        compileElementProgram(source, '/project/app/components/bad.tsx');
       } catch (error) {
         thrown = error;
       }
-      assert(thrown instanceof CompiledSpikeError, `expected ${code} failure`);
+      assert(thrown instanceof CompiledElementError, `expected ${code} failure`);
       const text = String(thrown);
       assertStringIncludes(text, code);
       assertStringIncludes(text, fragment);
@@ -683,7 +672,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
 
     // Host children are the host's light content (slot projection is platform
     // behavior): they lower with the ordinary grammar.
-    const withChildren = compileElementSpike(
+    const withChildren = compileElementProgram(
       render('render() { return <main><live-counter><span>x</span></live-counter></main>; }'),
       '/project/app/components/host-children.tsx',
     );
@@ -741,20 +730,23 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       // Positive: computed field drives a bool sink; innerHTML sink; element
       // options emit the facade statics.
       const source = [
-        "import { computed, OpenElement } from '@openelement/element';",
+        "import { computed, OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';",
         'declare function element(tag: string, options?: { root: string; delegatesFocus?: boolean; formAssociated?: boolean }): ClassDecorator;',
-        'declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;',
+        'declare function property(options: { type?: unknown; reflect: boolean; attribute?: false }): PropertyDecorator;',
         "@element('oe-alpha8-computed', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })",
         'export default class Alpha8Computed extends OpenElement {',
         "  @property({ reflect: false }) label = '';",
-        "  @property({ reflect: false, attribute: false }) bodyHtml = '';",
+        "  @property({ type: Object, reflect: false, attribute: false }) bodyHtml: TrustedHtml = trustedHtml('');",
         "  @property({ reflect: false, attribute: false }) noLabel = computed(() => this.label === '') as unknown as boolean;",
         '  render() {',
-        '    return <main><button hidden={this.noLabel}>{this.label}</button><div innerHTML={this.bodyHtml}></div></main>;',
+        '    return <main><button hidden={this.noLabel}>{this.label}</button><div innerHTML={this.bodyHtml} trustedHtml></div></main>;',
         '  }',
         '}',
       ].join('\n');
-      const { code, program } = compileElementSpike(source, '/project/app/components/computed.tsx');
+      const { code, program } = compileElementProgram(
+        source,
+        '/project/app/components/computed.tsx',
+      );
       const meta = program.metadata.properties.find((p: { name: string }) =>
         p.name === 'noLabel'
       ) as {
@@ -772,12 +764,12 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       const expectFailure = (src: string, code: string, fragment: string) => {
         let thrown: unknown;
         try {
-          compileElementSpike(src, '/project/app/components/bad-computed.tsx');
+          compileElementProgram(src, '/project/app/components/bad-computed.tsx');
         } catch (error) {
           thrown = error;
         }
         assert(
-          thrown instanceof CompiledSpikeError,
+          thrown instanceof CompiledElementError,
           `expected ${code} failure, got ${String(thrown)}`,
         );
         const text = String(thrown);
@@ -818,13 +810,13 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       // An html sink with element children fails closed (the sink owns content).
       expectFailure(
         [
-          "import { OpenElement } from '@openelement/element';",
+          "import { OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';",
           'declare function element(tag: string): ClassDecorator;',
-          'declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;',
+          'declare function property(options: { type?: unknown; reflect: boolean; attribute?: false }): PropertyDecorator;',
           "@element('oe-alpha8-bad-html')",
           'export class BadHtml extends OpenElement {',
-          "  @property({ reflect: false, attribute: false }) bodyHtml = '';",
-          '  render() { return <main><div innerHTML={this.bodyHtml}><span>x</span></div></main>; }',
+          "  @property({ type: Object, reflect: false, attribute: false }) bodyHtml: TrustedHtml = trustedHtml('');",
+          '  render() { return <main><div innerHTML={this.bodyHtml} trustedHtml><span>x</span></div></main>; }',
           '}',
         ].join('\n'),
         'OEC9026',
@@ -832,4 +824,85 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       );
     },
   );
+});
+
+Deno.test('compiled-element alpha.9 - trusted HTML sink admission matrix', async (t) => {
+  const { compileElementProgram, CompiledElementError } = await import(
+    '../src/internal/compiler/semantic-core/compile.ts'
+  );
+
+  const validPrelude = [
+    "import { OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';",
+    'declare function element(tag: string): ClassDecorator;',
+    'declare function property(options: { type?: unknown; reflect: boolean; attribute?: string | false }): PropertyDecorator;',
+    "@element('oe-alpha9-trusted-html')",
+    'export class Alpha9TrustedHtml extends OpenElement {',
+  ];
+  const validField =
+    "  @property({ type: Object, reflect: false, attribute: false }) bodyHtml: TrustedHtml = trustedHtml('');";
+  const sourceFor = (render: string, field = validField) =>
+    [...validPrelude, field, '  render() { return ' + render + '; }', '}'].join('\n');
+
+  await t.step('accepts marker + Object + TrustedHtml initializer', () => {
+    const result = compileElementProgram(
+      sourceFor('<div innerHTML={this.bodyHtml} trustedHtml></div>'),
+      '/project/app/components/alpha9-trusted-html.tsx',
+    );
+    assert(result.program.parts.some((part: { k: string }) => part.k === 'html'));
+    assertEquals(result.program.metadata.properties[0], {
+      name: 'bodyHtml',
+      attribute: null,
+      type: 'object',
+      converter: 'object',
+      reflect: false,
+      default: null,
+    });
+  });
+
+  const expectOec9026 = (name: string, source: string) => {
+    let thrown: unknown;
+    try {
+      compileElementProgram(source, `/project/app/components/${name}.tsx`);
+    } catch (error) {
+      thrown = error;
+    }
+    assert(thrown instanceof CompiledElementError, `${name} must fail with CompiledElementError`);
+    assertStringIncludes(String(thrown), 'OEC9026');
+  };
+
+  await t.step('rejects an innerHTML sink without the marker', () => {
+    expectOec9026(
+      'alpha9-missing-marker',
+      sourceFor('<div innerHTML={this.bodyHtml}></div>'),
+    );
+  });
+
+  await t.step('rejects trustedHtml={false}', () => {
+    expectOec9026(
+      'alpha9-false-marker',
+      sourceFor('<div innerHTML={this.bodyHtml} trustedHtml={false}></div>'),
+    );
+  });
+
+  await t.step('rejects a marker without an innerHTML sink', () => {
+    expectOec9026('alpha9-marker-without-sink', sourceFor('<div trustedHtml></div>'));
+  });
+
+  await t.step('rejects a string-typed innerHTML sink', () => {
+    const stringField =
+      "  @property({ type: String, reflect: false, attribute: false }) bodyHtml: string = '';";
+    expectOec9026(
+      'alpha9-string-sink',
+      sourceFor('<div innerHTML={this.bodyHtml} trustedHtml></div>', stringField),
+    );
+  });
+
+  await t.step('rejects a TrustedHtml initializer without type:Object/attribute:false', () => {
+    const incompleteField =
+      "  @property({ reflect: false }) bodyHtml: TrustedHtml = trustedHtml('');";
+    expectOec9026(
+      'alpha9-incomplete-trusted-html-field',
+      sourceFor('<div innerHTML={this.bodyHtml} trustedHtml></div>', incompleteField),
+    );
+  });
 });

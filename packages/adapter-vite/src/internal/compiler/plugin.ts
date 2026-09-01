@@ -1,5 +1,5 @@
 /**
- * @openelement/adapter-vite — open:compiled-element spike plugin (#1160).
+ * @openelement/adapter-vite — open:compiled-element v1 plugin (#1160).
  *
  * Vite integration boundary for the alpha.0 TSX-to-Part Program compiler.
  * The hook activates only for .tsx modules that opt into the compiled model
@@ -13,16 +13,16 @@
  * this.error() with a source-located OEC9xx diagnostic — there is no runtime
  * fallback.
  *
- * Internal alpha.0 spike only: not part of the public adapter API.
+ * Internal Part Program v1 pipeline: not part of the public adapter API.
  */
 
-import ts from 'typescript';
 import type { Plugin } from 'vite';
 import {
-  CompiledSpikeError,
-  compileElementSpike,
-  type CompileSpikeResult,
+  CompiledElementError,
+  compileElementProgram,
+  type CompileElementResult,
 } from './semantic-core/compile.ts';
+import { analyzeModuleSemantics } from './semantic-core/module-analysis.ts';
 
 export const COMPILED_ELEMENT_MARKER = '@element(';
 
@@ -49,14 +49,7 @@ export function isCompiledElementModule(code: string, id: string): boolean {
  * the marker in a string literal or comment do not reach the compiler.
  */
 export function hasElementDecoratorApplication(code: string, id: string): boolean {
-  const sf = ts.createSourceFile(id, code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
-  return sf.statements.some((statement) =>
-    ts.isClassDeclaration(statement) &&
-    (ts.getDecorators(statement) ?? []).some((decorator) => {
-      const expr = decorator.expression;
-      return ts.isCallExpression(expr) && expr.expression.getText(sf) === 'element';
-    })
-  );
+  return analyzeModuleSemantics(code, id).compiledElementDecorator;
 }
 
 /**
@@ -66,10 +59,10 @@ export function hasElementDecoratorApplication(code: string, id: string): boolea
  * null for modules without a real @element decorator application, so
  * marker-mentioning modules pass through untouched.
  */
-export function compileElementModule(code: string, id: string): CompileSpikeResult | null {
+export function compileElementModule(code: string, id: string): CompileElementResult | null {
   if (!isCompiledElementModule(code, id)) return null;
   if (!hasElementDecoratorApplication(code, id)) return null;
-  return compileElementSpike(code, id);
+  return compileElementProgram(code, id);
 }
 
 function encodeVlq(value: number): string {
@@ -137,7 +130,7 @@ export function compiledElementPlugin(): Plugin {
       try {
         return compileElementModule(code, id)?.code ?? null;
       } catch (error) {
-        if (error instanceof CompiledSpikeError) {
+        if (error instanceof CompiledElementError) {
           this.error(error.message);
         }
         throw error;

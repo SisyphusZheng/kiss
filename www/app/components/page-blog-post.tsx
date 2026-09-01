@@ -1,11 +1,11 @@
-import { OpenElement } from '@openelement/element';
+import { OpenElement, type TrustedHtml, trustedHtml } from '@openelement/element';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '../islands/open-page-rail.tsx';
 import { pageBlogPostStyles } from './page-blog-post-styles.ts';
 
 declare function element(tag: string): ClassDecorator;
 declare function property(
-  options: { reflect: boolean; attribute?: false },
+  options: { reflect: boolean; attribute?: false; type?: ObjectConstructor },
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 interface BlogTag {
@@ -59,8 +59,8 @@ export default class PageBlogPost extends OpenElement {
   railItems: BlogRailItem[] = [];
   @property({ reflect: false, attribute: false })
   navigation: BlogNavigation = {};
-  @property({ reflect: false, attribute: false })
-  articleHtml = '';
+  @property({ type: Object, reflect: false, attribute: false })
+  articleHtml: TrustedHtml = trustedHtml('');
   @property({ reflect: false, attribute: false })
   nextDispatchLabel = '';
   @property({ reflect: false, attribute: false })

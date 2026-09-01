@@ -34,6 +34,7 @@ export function buildClientIslandEntries(options: {
   /** Local island metadata indexed by tag name. */
   islandMeta: Record<string, Partial<IslandDecl>>;
   packageIslandDecls: IslandDecl[];
+  compilerBehaviorDecls?: IslandDecl[];
   upgradeStrategy?: HydrationStrategy;
 }): ClientIslandDeliveryEntry[] {
   const {
@@ -43,6 +44,7 @@ export function buildClientIslandEntries(options: {
     islandFiles,
     islandMeta,
     packageIslandDecls,
+    compilerBehaviorDecls = [],
     upgradeStrategy,
   } = options;
 
@@ -74,7 +76,7 @@ export function buildClientIslandEntries(options: {
         reason: meta?.reason,
       };
     }),
-    ...packageIslandDecls.map(
+    ...[...compilerBehaviorDecls, ...packageIslandDecls].map(
       (island) => {
         const delivery = island as IslandDecl & {
           media?: string;
@@ -89,7 +91,7 @@ export function buildClientIslandEntries(options: {
         return ({
           tagName: island.tagName,
           modulePath: island.modulePath,
-          isPackage: true,
+          isPackage: island.source === 'package' || island.isPackage === true,
           // #638: forward the named export so the client factory reads
           // mod[exportName] (UI package chunks dropped `export default`).
           exportName: island.exportName,

@@ -3,10 +3,13 @@ import {
   compileRouteMatcher,
   createRouter,
   matchRoute,
-  matchRouteLinear,
-  matchRouteLinearForTests,
   type RouteConfig,
 } from '../src/internal/router/client-router.ts';
+import {
+  RouteTable,
+  type URLPatternConstructor,
+  URLPatternPolyfillConstructor,
+} from '../src/internal/router/route-table.ts';
 
 const routes: RouteConfig[] = [{ path: '/items/:id', tagName: 'item-page' }];
 
@@ -35,251 +38,317 @@ Deno.test('client router preserves malformed query escapes without aborting matc
   assertEquals(match?.params['key%'], 'value%');
 });
 
-Deno.test('compiled route matcher is equivalent to the declaration-order matcher', () => {
-  const fixtures: RouteConfig[] = [
-    { path: '/', tagName: 'home-page' },
-    { path: '/docs/new', tagName: 'new-page' },
-    { path: '/docs/:slug', tagName: 'doc-page' },
-    { path: '/:locale?/guide/:page?', tagName: 'guide-page' },
-    { path: '/assets/:path*', tagName: 'asset-page' },
-    { path: '*', tagName: 'fallback-page' },
-  ];
-  const cases = [
-    ['/', ''],
-    ['/docs/new', '?preview=yes'],
-    ['/docs/start', ''],
-    ['/guide', ''],
-    ['/zh/guide/api', ''],
-    ['/assets/icons/ui/add.svg', ''],
-    ['/unknown/path', ''],
-  ] as const;
-  const compiled = compileRouteMatcher(fixtures);
+interface ExpectedRouteMatch {
+  route: string | null;
+  params: Record<string, string>;
+}
 
-  for (const [pathname, search] of cases) {
-    assertEquals(
-      compiled.match(pathname, search),
-      matchRouteLinearForTests(pathname, search, fixtures),
-    );
+interface MatcherEngine {
+  name: string;
+  table: RouteTable<RouteConfig>;
+}
+
+function concreteMatch(
+  match: { route: RouteConfig; params: Record<string, string> } | null,
+): ExpectedRouteMatch {
+  return match === null
+    ? { route: null, params: {} }
+    : { route: match.route.tagName, params: Object.fromEntries(Object.entries(match.params)) };
+}
+
+function matcherEngines(routes: RouteConfig[]): MatcherEngine[] {
+  const engines: MatcherEngine[] = [{
+    name: 'polyfill',
+    table: new RouteTable(routes, URLPatternPolyfillConstructor),
+  }];
+  if (typeof globalThis.URLPattern === 'function') {
+    engines.push({
+      name: 'native',
+      table: new RouteTable(
+        routes,
+        globalThis.URLPattern as unknown as URLPatternConstructor,
+      ),
+    });
+  }
+  return engines;
+}
+
+const semanticRoutes: RouteConfig[] = [
+  { path: '/', tagName: 'home-page' },
+  { path: '/static', tagName: 'static-page' },
+  { path: '/docs/:slug', tagName: 'dynamic-doc-page' },
+  { path: '/docs/new', tagName: 'static-doc-page' },
+  { path: '/:locale?/guide/:page?', tagName: 'guide-page' },
+  { path: '/assets/:path*', tagName: 'assets-page' },
+  { path: '/assets/logo.svg', tagName: 'asset-logo-page' },
+  { path: '/products/:slug{.+}', tagName: 'product-page' },
+  { path: '/unicode/:value', tagName: 'unicode-page' },
+  { path: '/items/:id', tagName: 'item-page' },
+  { path: '/reserved/:__proto__/:prototype/:constructor', tagName: 'reserved-page' },
+];
+
+const semanticCases: Array<{
+  name: string;
+  pathname: string;
+  search: string;
+  expected: ExpectedRouteMatch;
+}> = [
+  { name: 'static root', pathname: '/', search: '', expected: { route: 'home-page', params: {} } },
+  {
+    name: 'static path',
+    pathname: '/static',
+    search: '',
+    expected: { route: 'static-page', params: {} },
+  },
+  {
+    name: 'declaration order keeps the earlier dynamic route',
+    pathname: '/docs/new',
+    search: '',
+    expected: { route: 'dynamic-doc-page', params: { slug: 'new' } },
+  },
+  {
+    name: 'named parameter',
+    pathname: '/docs/start',
+    search: '',
+    expected: { route: 'dynamic-doc-page', params: { slug: 'start' } },
+  },
+  {
+    name: 'optional parameters absent',
+    pathname: '/guide',
+    search: '',
+    expected: { route: 'guide-page', params: {} },
+  },
+  {
+    name: 'optional page parameter',
+    pathname: '/guide/api',
+    search: '',
+    expected: { route: 'guide-page', params: { page: 'api' } },
+  },
+  {
+    name: 'optional locale and page parameters',
+    pathname: '/zh/guide/api',
+    search: '',
+    expected: { route: 'guide-page', params: { locale: 'zh', page: 'api' } },
+  },
+  {
+    name: 'repeat absent',
+    pathname: '/assets',
+    search: '',
+    expected: { route: 'assets-page', params: {} },
+  },
+  {
+    name: 'repeat captures multiple segments',
+    pathname: '/assets/icons/ui/add.svg',
+    search: '',
+    expected: { route: 'assets-page', params: { path: 'icons/ui/add.svg' } },
+  },
+  {
+    name: 'declaration order keeps the earlier repeat route',
+    pathname: '/assets/logo.svg',
+    search: '',
+    expected: { route: 'assets-page', params: { path: 'logo.svg' } },
+  },
+  {
+    name: 'named catch-all captures encoded multi-segment value',
+    pathname: '/products/a%20b/c',
+    search: '',
+    expected: { route: 'product-page', params: { slug: 'a b/c' } },
+  },
+  {
+    name: 'encoded Unicode parameter',
+    pathname: '/unicode/%E2%98%83',
+    search: '',
+    expected: { route: 'unicode-page', params: { value: '☃' } },
+  },
+  {
+    name: 'literal Unicode parameter',
+    pathname: '/unicode/東京',
+    search: '',
+    expected: { route: 'unicode-page', params: { value: '東京' } },
+  },
+  {
+    name: 'malformed path escape is preserved',
+    pathname: '/docs/%E0%A4%A',
+    search: '',
+    expected: { route: 'dynamic-doc-page', params: { slug: '%E0%A4%A' } },
+  },
+  {
+    name: 'query decoding, repeated keys, and path precedence',
+    pathname: '/items/hello%20world',
+    search: '?id=query&view=first&view=last&encoded=a%2Bb+two',
+    expected: {
+      route: 'item-page',
+      params: { id: 'hello world', view: 'last', encoded: 'a+b two' },
+    },
+  },
+  {
+    name: 'malformed query escapes are preserved',
+    pathname: '/items/id',
+    search: '?bad=%&also=%2&key%=value%',
+    expected: {
+      route: 'item-page',
+      params: { bad: '%', also: '%2', 'key%': 'value%', id: 'id' },
+    },
+  },
+  {
+    name: 'reserved parameter names are omitted safely',
+    pathname: '/reserved/a/b/c',
+    search: '',
+    expected: { route: 'reserved-page', params: {} },
+  },
+  {
+    name: 'trailing slash does not match',
+    pathname: '/docs/new/',
+    search: '',
+    expected: { route: null, params: {} },
+  },
+  {
+    name: 'repeated slash does not match',
+    pathname: '/docs//new',
+    search: '',
+    expected: { route: null, params: {} },
+  },
+  {
+    name: 'repeat trailing slash does not match',
+    pathname: '/assets/a/',
+    search: '',
+    expected: { route: null, params: {} },
+  },
+  {
+    name: 'repeat empty segment does not match',
+    pathname: '/assets/a//b',
+    search: '',
+    expected: { route: null, params: {} },
+  },
+];
+
+Deno.test('RouteTable and URLPattern engines agree on the semantic corpus', () => {
+  const engines = matcherEngines(semanticRoutes);
+  const compiled = compileRouteMatcher(semanticRoutes);
+
+  for (const testCase of semanticCases) {
+    const results = engines.map(({ name, table }) => ({
+      name,
+      result: concreteMatch(table.match(testCase.pathname, testCase.search)),
+    }));
+    const canonical = results[0].result;
+    assertEquals(canonical, testCase.expected, `${testCase.name}: polyfill expected result`);
+    for (const { name, result } of results) {
+      assertEquals(result, canonical, `${testCase.name}: ${name} differs from polyfill`);
+    }
+
+    const publicResult = concreteMatch(matchRoute(
+      testCase.pathname,
+      testCase.search,
+      semanticRoutes,
+    ));
+    const compiledResult = concreteMatch(compiled.match(testCase.pathname, testCase.search));
+    assertEquals(publicResult, canonical, `${testCase.name}: public matchRoute differs`);
+    assertEquals(compiledResult, canonical, `${testCase.name}: compiled matcher differs`);
   }
 });
 
-Deno.test('compiled matcher narrows a large static route table through the trie', () => {
+Deno.test('RouteTable preserves the 5,000-route static candidate regression', () => {
   const largeRoutes = Array.from({ length: 5_000 }, (_, index) => ({
     path: `/catalog/${index}/details`,
     tagName: `catalog-${index}`,
   }));
+  const table = new RouteTable(largeRoutes, URLPatternPolyfillConstructor);
   const compiled = compileRouteMatcher(largeRoutes);
 
-  assertEquals(compiled.match('/catalog/4999/details', '')?.route.tagName, 'catalog-4999');
+  const expected = { route: 'catalog-4999', params: {} };
+  assertEquals(concreteMatch(table.match('/catalog/4999/details', '')), expected);
+  assertEquals(concreteMatch(compiled.match('/catalog/4999/details', '')), expected);
+  assertEquals(table.candidateCount('/catalog/4999/details'), 1);
   assertEquals(compiled.candidateCount('/catalog/4999/details'), 1);
 });
 
-Deno.test('compiled matcher preserves declaration priority across dynamic and wildcard routes', () => {
-  const dynamicFirst: RouteConfig[] = [
-    { path: '/docs/:slug', tagName: 'dynamic-page' },
-    { path: '/docs/new', tagName: 'static-page' },
+Deno.test('RouteTable rejects malformed URLPattern patterns consistently', () => {
+  const malformedPatterns = [
+    '/foo/:',
+    '/foo/bar?',
+    '/foo/bar+',
+    '/foo/(bar',
+    '/foo/?bar',
+    '/foo/:name{(?:a}',
   ];
-  const wildcardFirst: RouteConfig[] = [
-    { path: '/assets/:path*', tagName: 'wildcard-page' },
-    { path: '/assets/logo.svg', tagName: 'logo-page' },
+  const constructors: Array<[string, URLPatternConstructor]> = [
+    ['polyfill', URLPatternPolyfillConstructor],
   ];
-
-  assertEquals(matchRoute('/docs/new', '', dynamicFirst)?.route.tagName, 'dynamic-page');
-  assertEquals(matchRoute('/assets/logo.svg', '', wildcardFirst)?.route.tagName, 'wildcard-page');
-});
-
-Deno.test('client router matches Hono-style `:param{.+}` catch-all patterns (#812)', () => {
-  const catchAll: RouteConfig[] = [{ path: '/products/:slug{.+}', tagName: 'product-page' }];
-
-  // Multi-segment paths match and capture the remainder under the plain param name...
-  const match = matchRoute('/products/a/b', '', catchAll);
-  assertEquals(match?.route.tagName, 'product-page');
-  assertEquals(match?.params.slug, 'a/b');
-  // ...single segments too, without leaking the `{.+}` suffix into the name.
-  assertEquals(matchRoute('/products/a', '', catchAll)?.params.slug, 'a');
-  // `{.+}` requires at least one segment.
-  assertEquals(matchRoute('/products', '', catchAll), null);
-  // The declaration-order oracle agrees with the compiled matcher.
-  assertEquals(
-    compileRouteMatcher(catchAll).match('/products/a/b', ''),
-    matchRouteLinearForTests('/products/a/b', '', catchAll),
-  );
-});
-
-Deno.test('client router semantics are WHATWG URLPattern semantics (#856, ADR-0123)', () => {
-  const fixtures: RouteConfig[] = [
-    { path: '/assets/:path*', tagName: 'asset-page' },
-    { path: '/products/:slug{.+}', tagName: 'product-page' },
-    { path: '/docs/new', tagName: 'new-page' },
-  ];
-
-  // `:param*` is zero-or-more segments: the bare prefix matches, with the
-  // param absent (URLPattern reports an unmatched repeat as undefined).
-  assertEquals(matchRoute('/assets', '', fixtures)?.route.tagName, 'asset-page');
-  assertEquals(matchRoute('/assets', '', fixtures)?.params.path, undefined);
-  // Multi-segment captures decode percent-encoded input exactly once.
-  assertEquals(matchRoute('/assets/a%20b/c', '', fixtures)?.params.path, 'a b/c');
-  // `:param{.+}` is the URLPattern `:param(.+)` regex group: one or more
-  // segments, decoded under the plain param name.
-  assertEquals(matchRoute('/products/a%20b/c', '', fixtures)?.params.slug, 'a b/c');
-  // URLPattern pathname matching is strict about trailing slashes — the old
-  // hand-written matcher silently ignored them.
-  assertEquals(matchRoute('/docs/new/', '', fixtures), null);
-});
-
-// ─── URLPattern fallback parity (#897) ─────────────────────────────
-
-const fallbackFixtures: RouteConfig[] = [
-  { path: '/', tagName: 'home-page' },
-  { path: '/docs/new', tagName: 'new-page' },
-  { path: '/docs/:slug', tagName: 'doc-page' },
-  { path: '/:locale?/guide/:page?', tagName: 'guide-page' },
-  { path: '/assets/:path*', tagName: 'asset-page' },
-  { path: '/products/:slug{.+}', tagName: 'product-page' },
-  { path: '/items/:id', tagName: 'item-page' },
-  { path: '/a/:x?/b', tagName: 'optional-mid-page' },
-  { path: '/mixed/:path*/tail', tagName: 'repeat-mid-page' },
-  { path: '*', tagName: 'fallback-page' },
-];
-
-const fallbackCases: Array<[string, string]> = [
-  ['/', ''],
-  ['/docs/new', '?preview=yes'],
-  ['/docs/new/', ''],
-  ['/docs/start', ''],
-  ['/guide', ''],
-  ['/zh/guide/api', ''],
-  ['/assets', ''],
-  ['/assets/', ''],
-  ['/assets/a/b', ''],
-  ['/assets/a//b', ''],
-  ['/assets/a%20b/c', ''],
-  ['/products/a/b', ''],
-  ['/products/a', ''],
-  ['/products', ''],
-  ['/products/', ''],
-  ['/items/hello%20world', '?id=query'],
-  ['/items/id', '?value=%25'],
-  ['/a/b', ''],
-  ['/a//b', ''],
-  ['/mixed/tail', ''],
-  ['/mixed/x/tail', ''],
-  ['/mixed/x/y/tail', ''],
-  ['/mixed//tail', ''],
-  ['/unknown/path', ''],
-];
-
-Deno.test('regex fallback matches the URLPattern path on identical fixtures', () => {
-  for (const [pathname, search] of fallbackCases) {
-    assertEquals(
-      matchRouteLinear(pathname, search, fallbackFixtures),
-      matchRouteLinearForTests(pathname, search, fallbackFixtures),
-      `fallback mismatch for ${pathname}${search}`,
-    );
+  if (typeof globalThis.URLPattern === 'function') {
+    constructors.push([
+      'native',
+      globalThis.URLPattern as unknown as URLPatternConstructor,
+    ]);
   }
-});
 
-Deno.test('regex fallback drives the compiled trie matcher identically', () => {
-  const compiled = compileRouteMatcher(fallbackFixtures);
-  for (const [pathname, search] of fallbackCases) {
-    assertEquals(
-      compiled.match(pathname, search),
-      matchRouteLinear(pathname, search, fallbackFixtures),
-      `trie mismatch for ${pathname}${search}`,
-    );
-  }
-});
-
-Deno.test('regex fallback accepts custom regexes containing nested groups (#1036)', () => {
-  const grouped: RouteConfig[] = [
-    { path: '/x/:name{(?:a|b)+}', tagName: 'grouped-page' },
-    { path: '/y/:v{[)]+}', tagName: 'class-page' },
-  ];
-  // A naive indexOf(')') stopped at the inner group's terminator and threw at
-  // compile time; pair-scanning accepts what URLPattern accepts.
-  const match = matchRouteLinear('/x/ab', '', grouped);
-  assertEquals(match?.route.tagName, 'grouped-page');
-  assertEquals(match?.params.name, 'ab');
-  assertEquals(matchRouteLinear('/x/c', '', grouped), null);
-  // A ')' inside a character class is not the group terminator either.
-  assertEquals(matchRouteLinear('/y/))', '', grouped)?.params.v, '))');
-  // Parity with the native URLPattern path.
-  assertEquals(matchRoute('/x/ab', '', grouped)?.params.name, 'ab');
-  // Unbalanced groups still fail fast at compile time.
-  let threw = false;
-  try {
-    matchRouteLinear('/z/a', '', [{ path: '/z/:name{(?:a}', tagName: 'bad-page' }]);
-  } catch {
-    threw = true;
-  }
-  assertEquals(threw, true);
-});
-
-Deno.test('router falls back to the regex matcher when URLPattern is absent', () => {
-  const original = globalThis.URLPattern;
-  // @ts-expect-error removing a browser global to simulate Firefox (#897)
-  delete globalThis.URLPattern;
-  try {
-    for (const [pathname, search] of fallbackCases) {
-      const viaFallback = matchRoute(pathname, search, fallbackFixtures);
-      const viaLinear = matchRouteLinear(pathname, search, fallbackFixtures);
-      assertEquals(viaFallback, viaLinear, `dispatch mismatch for ${pathname}${search}`);
+  for (const path of malformedPatterns) {
+    for (const [, Pattern] of constructors) {
+      assertThrows(
+        () => new RouteTable([{ path, tagName: 'bad-page' }], Pattern),
+        TypeError,
+      );
     }
-  } finally {
-    globalThis.URLPattern = original;
+    const routes: RouteConfig[] = [{ path, tagName: 'bad-page' }];
+    assertThrows(() => compileRouteMatcher(routes), TypeError);
+    assertThrows(() => matchRoute('/foo/bar', '', routes), TypeError);
   }
 });
 
-Deno.test('regex fallback fails fast on static-segment URLPattern tokens like the native path (#1067)', () => {
-  // Parity: patterns the native URLPattern rejects at compile time must also
-  // throw in the fallback instead of escaping into a never-matching route.
-  const nativeThrows = ['/foo/bar?', '/foo/bar+', '/foo/(bar', '/foo/?bar', '/foo/:'];
-  for (const path of nativeThrows) {
-    const routes: RouteConfig[] = [{ path, tagName: 'bad-page' }];
-    assertThrows(() => new URLPattern({ pathname: path }), TypeError);
-    assertThrows(() => matchRouteLinearForTests('/foo/bar', '', routes), TypeError);
-    assertThrows(() => matchRouteLinear('/foo/bar', '', routes), TypeError);
-  }
-  // Tokens the native parser would silently reinterpret (wildcard, group, or
-  // param inside a static segment) are outside the route dialect: the
-  // fallback rejects them at compile time rather than matching them
-  // literally while URLPattern matches something else.
-  const reinterpreted = ['/foo/bar)', '/foo/(bar)', '/foo/bar*', '/foo/a:b'];
-  for (const path of reinterpreted) {
-    const routes: RouteConfig[] = [{ path, tagName: 'bad-page' }];
-    assertThrows(() => matchRouteLinear('/foo/bar', '', routes), TypeError);
-  }
-  // Legal dialect patterns (including `:param?` and `{regex}` catch-alls)
-  // are unaffected.
-  for (const route of fallbackFixtures) {
-    matchRouteLinear('/x', '', [route]);
-  }
-});
-
-Deno.test('regex fallback rejects empty segments and trailing slashes like URLPattern', () => {
-  const original = globalThis.URLPattern;
-  // @ts-expect-error removing a browser global to simulate Firefox (#897)
-  delete globalThis.URLPattern;
-  const routes: RouteConfig[] = [
-    { path: '/assets/:path*', tagName: 'asset-page' },
-    { path: '/mixed/:path*/tail', tagName: 'repeat-mid-page' },
-    { path: '/docs/new', tagName: 'new-page' },
-    { path: '/products/:slug{.+}', tagName: 'product-page' },
+Deno.test('RouteTable classifies methods, HEAD, base paths, and trailing-slash policy', () => {
+  type MethodRoute = RouteConfig & { methods: readonly string[] };
+  const methodRoutes: MethodRoute[] = [
+    { path: '/items/:id', tagName: 'item-get', methods: ['GET'] },
+    { path: '/items/:id', tagName: 'item-post', methods: ['POST'] },
   ];
-  try {
-    // Repeat `:path*` does not match empty remainders.
-    assertEquals(matchRoute('/assets/', '', routes), null);
-    assertEquals(matchRoute('/assets/a/', '', routes), null);
-    assertEquals(matchRoute('/assets/a//b', '', routes), null);
-    assertEquals(matchRoute('/mixed//tail', '', routes), null);
-    // Trailing-slash strictness holds in fallback mode too.
-    assertEquals(matchRoute('/docs/new/', '', routes), null);
-    // Regex groups still match across slashes.
-    assertEquals(matchRoute('/products/a%20b/c', '', routes)?.params.slug, 'a b/c');
-    // Zero-segment repeat is absent, like URLPattern.
-    assertEquals(matchRoute('/assets', '', routes)?.params.path, undefined);
-  } finally {
-    globalThis.URLPattern = original;
+  const tables = [
+    new RouteTable(methodRoutes, URLPatternPolyfillConstructor, {
+      basePath: '/api',
+      trailingSlash: 'ignore',
+    }),
+    ...(typeof globalThis.URLPattern === 'function'
+      ? [
+        new RouteTable(
+          methodRoutes,
+          globalThis.URLPattern as unknown as URLPatternConstructor,
+          { basePath: '/api', trailingSlash: 'ignore' },
+        ),
+      ]
+      : []),
+  ];
+
+  const expected = [
+    { kind: 'match', route: 'item-get', params: { id: 'a b' } },
+    { kind: 'match', route: 'item-get', params: { id: 'a b' } },
+    { kind: 'match', route: 'item-post', params: { id: 'a b' } },
+    { kind: 'method-not-allowed', allow: ['GET', 'HEAD', 'POST'] },
+    { kind: 'not-found' },
+  ];
+  for (const table of tables) {
+    const actual = [
+      table.resolve('/api/items/a%20b/', '', 'GET'),
+      table.resolve('/api/items/a%20b/', '', 'HEAD'),
+      table.resolve('/api/items/a%20b/', '', 'POST'),
+      table.resolve('/api/items/a%20b/', '', 'DELETE'),
+      table.resolve('/items/a%20b/', '', 'GET'),
+    ].map((resolution) =>
+      resolution.kind === 'match'
+        ? {
+          kind: resolution.kind,
+          route: resolution.route.tagName,
+          params: Object.fromEntries(Object.entries(resolution.params)),
+        }
+        : resolution
+    );
+    assertEquals(actual as unknown, expected as unknown);
+  }
+});
+
+Deno.test('static RouteTable lookup preserves URLPattern Unicode normalization', () => {
+  const unicodeRoutes: RouteConfig[] = [{ path: '/café', tagName: 'cafe-page' }];
+  for (const { table } of matcherEngines(unicodeRoutes)) {
+    assertEquals(table.match('/café')?.route.tagName, 'cafe-page');
+    assertEquals(table.match('/caf%C3%A9')?.route.tagName, 'cafe-page');
   }
 });
 

@@ -12,7 +12,7 @@
  */
 
 import { createLogger, warnOnce } from './logger.ts';
-import { formatError } from './errors.ts';
+import { formatError, OpenElementError } from './errors.ts';
 
 /** Object prototype keys that must never be injected as SSR props. */
 const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
@@ -63,14 +63,38 @@ export function isSafeAttributeName(name: string): boolean {
  */
 const _securityLog = createLogger('security');
 
-export function trustRenderHtml(html: string): string {
+const trustedHtmlValues = new WeakSet<object>();
+
+export interface TrustedHtml {
+  readonly html: string;
+}
+
+export function trustedHtml(html: string): TrustedHtml {
+  const value = Object.freeze({ html });
+  trustedHtmlValues.add(value);
+  return value;
+}
+
+/** Internal sink guard. Serialization deliberately loses this capability. */
+export function trustedHtmlValue(value: unknown): string {
+  if (typeof value !== 'object' || value === null || !trustedHtmlValues.has(value)) {
+    throw new OpenElementError(
+      '[openElement] html Part requires a value created by trustedHtml(); ordinary strings are rejected.',
+      { code: 'UNTRUSTED_HTML_SINK', phase: 'render' },
+    );
+  }
+  return (value as TrustedHtml).html;
+}
+
+/** @deprecated Use trustedHtml(). */
+export function trustRenderHtml(html: string): TrustedHtml {
   warnOnce(
     'trustedHtml',
     _securityLog,
     'trustRenderHtml is a trust boundary, not a sanitizer. ' +
       'Caller must ensure HTML content is safe before passing to openElement.',
   );
-  return html;
+  return trustedHtml(html);
 }
 
 /**

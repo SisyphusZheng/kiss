@@ -143,7 +143,6 @@
       "k": "when",
       "index": 3,
       "signal": "count",
-      "gt": 0,
       "test": {
         "signal": "count",
         "op": "greater-than",
@@ -210,7 +209,8 @@
           "attrs": [],
           "children": [
             {
-              "k": "ival"
+              "k": "ival",
+              "field": "text"
             }
           ]
         }

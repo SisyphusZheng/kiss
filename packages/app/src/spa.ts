@@ -11,7 +11,12 @@ import {
   type RouterMode,
 } from './internal/router/client-router.ts';
 import { normalizeActionFailure, normalizeLoaderFailure } from './internal/action-error.ts';
-import { isOpenElementNotFound, isOpenElementRedirect, projectPageProps } from './authoring.ts';
+import {
+  classifyActionResult,
+  isOpenElementNotFound,
+  isOpenElementRedirect,
+  projectPageProps,
+} from './authoring.ts';
 import type { OpenElementPageDescriptor, PagePropsContext } from './authoring.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
 import { isDevMode } from './internal/dev-mode.ts';
@@ -233,10 +238,13 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     // Run action
     let actionData: unknown = undefined;
     try {
-      actionData = await route.action({
-        params: router.params,
-        formData: createFormData(form),
-      });
+      const outcome = classifyActionResult(
+        await route.action({
+          params: router.params,
+          formData: createFormData(form),
+        }),
+      );
+      actionData = outcome.data;
     } catch (err) {
       // #731: redirect()/notFound() are control flow, not action failures —
       // they must not be normalized into `{ error: 'Action failed' }` data.

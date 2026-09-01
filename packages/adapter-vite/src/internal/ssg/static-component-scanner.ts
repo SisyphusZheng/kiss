@@ -1,9 +1,9 @@
 /** Discover compiled static components reachable from local route imports. */
-import ts from 'typescript';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { RouteEntry } from '../protocol/framework.ts';
 import type { StaticComponentDecl } from '../protocol/ssg.ts';
 import { normalizeSeparators } from '@openelement/element/build-utils';
+import { analyzeModuleSemantics } from '../compiler/semantic-core/module-analysis.ts';
 
 const SOURCE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'] as const;
 
@@ -31,44 +31,6 @@ async function resolveLocalImport(from: string, specifier: string): Promise<stri
   for (const candidate of candidates) {
     const found = await sourceFile(candidate);
     if (found) return found;
-  }
-  return undefined;
-}
-
-function importedSpecifiers(sourceFile: ts.SourceFile): string[] {
-  const specifiers: string[] = [];
-  for (const statement of sourceFile.statements) {
-    if (
-      (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
-      statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)
-    ) {
-      specifiers.push(statement.moduleSpecifier.text);
-    }
-  }
-  return specifiers;
-}
-
-function defaultCompiledTag(sourceFile: ts.SourceFile): string | undefined {
-  for (const statement of sourceFile.statements) {
-    if (!ts.isClassDeclaration(statement)) continue;
-    const modifiers = statement.modifiers ?? [];
-    if (
-      !modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ||
-      !modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword)
-    ) continue;
-    const heritage = statement.heritageClauses?.find((clause) =>
-      clause.token === ts.SyntaxKind.ExtendsKeyword
-    );
-    if (heritage?.types[0]?.expression.getText(sourceFile) !== 'OpenElement') continue;
-    const decorators = ts.canHaveDecorators(statement) ? ts.getDecorators(statement) ?? [] : [];
-    for (const decorator of decorators) {
-      if (!ts.isCallExpression(decorator.expression)) continue;
-      if (decorator.expression.expression.getText(sourceFile) !== 'element') continue;
-      const tag = decorator.expression.arguments[0];
-      if (tag && ts.isStringLiteral(tag) && /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(tag.text)) {
-        return tag.text;
-      }
-    }
   }
   return undefined;
 }
@@ -107,15 +69,9 @@ export async function scanStaticComponents(
     } catch {
       continue;
     }
-    const parsed = ts.createSourceFile(
-      file,
-      source,
-      ts.ScriptTarget.Latest,
-      true,
-      ts.ScriptKind.TSX,
-    );
+    const semantics = analyzeModuleSemantics(source, file);
     const collect = !inside(routeRoot, file) && !inside(islandRoot, file);
-    const tagName = collect ? defaultCompiledTag(parsed) : undefined;
+    const tagName = collect ? semantics.defaultCompiledTag : undefined;
     if (tagName) {
       const modulePath = `/${normalizeSeparators(relative(root, file))}`;
       const existing = byTag.get(tagName);
@@ -125,9 +81,13 @@ export async function scanStaticComponents(
             `${existing.modulePath} and ${modulePath}.`,
         );
       }
-      byTag.set(tagName, { tagName, modulePath });
+      byTag.set(tagName, {
+        tagName,
+        modulePath,
+        compilerInteractionEvents: semantics.compilerInteractionEvents,
+      });
     }
-    for (const specifier of importedSpecifiers(parsed)) {
+    for (const specifier of semantics.relativeImports) {
       const imported = await resolveLocalImport(file, specifier);
       if (imported && inside(root, imported) && !seen.has(imported)) pending.push(imported);
     }

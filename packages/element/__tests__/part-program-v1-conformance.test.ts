@@ -1,9 +1,9 @@
 /**
- * @openelement/element — #1160 compiled Part Program spike (runtime vertical).
+ * @openelement/element — #1160 compiled Part Program v1 (runtime vertical).
  *
  * Behavior-first coverage proving the ADR-0143 replacement path on the
  * canonical alpha.1 fixture program (packages/adapter-vite/__fixtures__/
- * compiled-element-spike/expected-program.json — the same artifact the Vite
+ * compiled-element-v1/expected-program.json — the same artifact the Vite
  * transform test asserts structurally):
  *   - server serialization, fresh DOM creation and existing-DOM claim consume
  *     one Part Program and produce equivalent observable structure
@@ -281,7 +281,7 @@ const INITIAL_STATE: FixtureState = {
 function build043Equivalent(doc: FDocument, state: FixtureState): FElement {
   const host = doc.createElement('host');
   const div = doc.createElement('div');
-  div.setAttribute('class', 'spike');
+  div.setAttribute('class', 'proof');
   host.appendChild(div);
   const h1 = doc.createElement('h1');
   div.appendChild(h1);
@@ -338,24 +338,24 @@ function counting<T>(sig: WritableSignal<T>, counters: SubCounters): WritableSig
   };
 }
 
-interface SpikeInstance {
+interface ProgramInstance {
   dispose(): void;
 }
 
-interface SpikeRuntime {
-  createFreshDom(program: unknown, host: unknown, root: FElement): SpikeInstance;
+interface ProgramRuntime {
+  createFreshDom(program: unknown, host: unknown, root: FElement): ProgramInstance;
   serializeToHtml(program: unknown, host: unknown): string;
-  claimExistingDom(program: unknown, host: unknown, root: FElement): SpikeInstance;
+  claimExistingDom(program: unknown, host: unknown, root: FElement): ProgramInstance;
   PartProgramClaimError: new (path: string, message: string) => Error;
 }
 
 const PROGRAM_URL = new URL(
-  '../../adapter-vite/__fixtures__/compiled-element-spike/expected-program.json',
+  '../../adapter-vite/__fixtures__/compiled-element-v1/expected-program.json',
   import.meta.url,
 );
 
-async function loadSpike(): Promise<SpikeRuntime> {
-  return (await import('../src/internal/compiled/runtime.ts')) as unknown as SpikeRuntime;
+async function loadProgramRuntime(): Promise<ProgramRuntime> {
+  return (await import('../src/internal/compiled/runtime.ts')) as unknown as ProgramRuntime;
 }
 
 function makeHost(counters: SubCounters) {
@@ -428,24 +428,24 @@ function makeLazyHost(counters: SubCounters) {
 
 // ─── Tests ───────────────────────────────────────────────────────────
 
-Deno.test('compiled part program spike - harness sanity', async () => {
+Deno.test('compiled part program v1 - harness sanity', async () => {
   const programJson = await Deno.readTextFile(PROGRAM_URL);
   const program = JSON.parse(programJson);
-  assertEquals(program.tag, 'oe-spike-counter');
+  assertEquals(program.tag, 'oe-program-counter');
   const doc = new FDocument();
   const host = parseHtml(
     doc,
-    '<div class="spike"><h1>Count: <!--oe:p0-->0</h1><input value="ready"></div>',
+    '<div class="proof"><h1>Count: <!--oe:p0-->0</h1><input value="ready"></div>',
   );
   assertEquals(host.childNodes.length, 1);
   assertEquals(
     toHtml(host),
-    '<host><div class="spike"><h1>Count: <!--oe:p0-->0</h1><input value="ready"></div></host>',
+    '<host><div class="proof"><h1>Count: <!--oe:p0-->0</h1><input value="ready"></div></host>',
   );
 });
 
-Deno.test('compiled part program spike - one program, three execution modes', async (t) => {
-  const runtime = await loadSpike();
+Deno.test('compiled part program v1 - one program, three execution modes', async (t) => {
+  const runtime = await loadProgramRuntime();
   const programJson = await Deno.readTextFile(PROGRAM_URL);
   const program = JSON.parse(programJson);
   validatePartProgram(program);
@@ -454,7 +454,7 @@ Deno.test('compiled part program spike - one program, three execution modes', as
     const programBytes = new TextEncoder().encode(programJson).length;
     assertEquals(program.parts.length, 5);
     console.log(
-      JSON.stringify({ spike: 'element-program', programBytes, instructionCount: 5 }),
+      JSON.stringify({ proof: 'element-program', programBytes, instructionCount: 5 }),
     );
   });
 
@@ -465,7 +465,7 @@ Deno.test('compiled part program spike - one program, three execution modes', as
     ssrHtml = runtime.serializeToHtml(program, host);
     assertEquals(
       ssrHtml,
-      '<div class="spike">' +
+      '<div class="proof">' +
         '<h1>Count: <!--oe:p0-->0</h1>' +
         '<input value="ready">' +
         '<button type="button">+</button>' +
@@ -665,7 +665,7 @@ Deno.test('compiled part program spike - one program, three execution modes', as
     const proxyUpdateWalk = proxyDoc.counts.walkVisits;
 
     const summary = {
-      spike: 'element-runtime-measurements',
+      proof: 'element-runtime-measurements',
       compiled: {
         instructionCount: 5,
         freshAllocations: FRESH_ALLOCATIONS.elements + FRESH_ALLOCATIONS.texts +

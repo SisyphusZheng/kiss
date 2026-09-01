@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tag": "oe-spike-counter",
+  "tag": "oe-program-counter",
   "root": {
     "id": "root",
     "kind": "light",
@@ -16,7 +16,7 @@
       "attrs": [
         [
           "class",
-          "spike"
+          "proof"
         ]
       ],
       "children": [
@@ -142,7 +142,6 @@
     {
       "k": "when",
       "signal": "count",
-      "gt": 0,
       "test": {
         "signal": "count",
         "op": "greater-than",
@@ -402,12 +401,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 932,
+            "offset": 930,
             "line": 32,
             "column": 3
           },
           "end": {
-            "offset": 1312,
+            "offset": 1310,
             "line": 42,
             "column": 4
           }
@@ -419,12 +418,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 642,
+            "offset": 640,
             "line": 16,
             "column": 3
           },
           "end": {
-            "offset": 683,
+            "offset": 681,
             "line": 17,
             "column": 13
           }
@@ -436,12 +435,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 687,
+            "offset": 685,
             "line": 19,
             "column": 3
           },
           "end": {
-            "offset": 735,
+            "offset": 733,
             "line": 20,
             "column": 19
           }
@@ -453,12 +452,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 739,
+            "offset": 737,
             "line": 22,
             "column": 3
           },
           "end": {
-            "offset": 883,
+            "offset": 881,
             "line": 26,
             "column": 6
           }
@@ -470,12 +469,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 962,
+            "offset": 960,
             "line": 34,
             "column": 7
           },
           "end": {
-            "offset": 1301,
+            "offset": 1299,
             "line": 40,
             "column": 13
           }
@@ -487,12 +486,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 990,
+            "offset": 988,
             "line": 35,
             "column": 9
           },
           "end": {
-            "offset": 1018,
+            "offset": 1016,
             "line": 35,
             "column": 37
           }
@@ -504,12 +503,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1001,
+            "offset": 999,
             "line": 35,
             "column": 20
           },
           "end": {
-            "offset": 1013,
+            "offset": 1011,
             "line": 35,
             "column": 32
           }
@@ -521,12 +520,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1027,
+            "offset": 1025,
             "line": 36,
             "column": 9
           },
           "end": {
-            "offset": 1055,
+            "offset": 1053,
             "line": 36,
             "column": 37
           }
@@ -538,12 +537,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1034,
+            "offset": 1032,
             "line": 36,
             "column": 16
           },
           "end": {
-            "offset": 1052,
+            "offset": 1050,
             "line": 36,
             "column": 34
           }
@@ -555,12 +554,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1064,
+            "offset": 1062,
             "line": 37,
             "column": 9
           },
           "end": {
-            "offset": 1121,
+            "offset": 1119,
             "line": 37,
             "column": 66
           }
@@ -572,12 +571,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1086,
+            "offset": 1084,
             "line": 37,
             "column": 31
           },
           "end": {
-            "offset": 1110,
+            "offset": 1108,
             "line": 37,
             "column": 55
           }
@@ -589,12 +588,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1148,
+            "offset": 1146,
             "line": 38,
             "column": 27
           },
           "end": {
-            "offset": 1178,
+            "offset": 1176,
             "line": 38,
             "column": 57
           }
@@ -606,12 +605,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1181,
+            "offset": 1179,
             "line": 38,
             "column": 60
           },
           "end": {
-            "offset": 1207,
+            "offset": 1205,
             "line": 38,
             "column": 86
           }
@@ -623,12 +622,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1130,
+            "offset": 1128,
             "line": 38,
             "column": 9
           },
           "end": {
-            "offset": 1208,
+            "offset": 1206,
             "line": 38,
             "column": 87
           }
@@ -640,12 +639,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1130,
+            "offset": 1128,
             "line": 38,
             "column": 9
           },
           "end": {
-            "offset": 1208,
+            "offset": 1206,
             "line": 38,
             "column": 87
           }
@@ -657,12 +656,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1217,
+            "offset": 1215,
             "line": 39,
             "column": 9
           },
           "end": {
-            "offset": 1288,
+            "offset": 1286,
             "line": 39,
             "column": 80
           }
@@ -674,12 +673,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1247,
+            "offset": 1245,
             "line": 39,
             "column": 39
           },
           "end": {
-            "offset": 1281,
+            "offset": 1279,
             "line": 39,
             "column": 73
           }
@@ -691,12 +690,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1221,
+            "offset": 1219,
             "line": 39,
             "column": 13
           },
           "end": {
-            "offset": 1283,
+            "offset": 1281,
             "line": 39,
             "column": 75
           }
@@ -708,12 +707,12 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1221,
+            "offset": 1219,
             "line": 39,
             "column": 13
           },
           "end": {
-            "offset": 1283,
+            "offset": 1281,
             "line": 39,
             "column": 75
           }
@@ -722,8 +721,8 @@
     ]
   },
   "metadata": {
-    "tag": "oe-spike-counter",
-    "className": "SpikeCounter",
+    "tag": "oe-program-counter",
+    "className": "ProgramCounter",
     "sourceFile": "/project/app/islands/counter.tsx",
     "properties": [
       {
@@ -766,10 +765,10 @@
       "items"
     ],
     "cem": {
-      "tagName": "oe-spike-counter",
-      "className": "SpikeCounter",
+      "tagName": "oe-program-counter",
+      "className": "ProgramCounter",
       "declaration": {
-        "name": "SpikeCounter",
+        "name": "ProgramCounter",
         "module": "/project/app/islands/counter.tsx"
       },
       "attributes": [

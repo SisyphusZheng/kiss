@@ -1,8 +1,8 @@
 import { assert, assertEquals } from '@std/assert';
 import ts from 'typescript';
 import {
-  CompiledSpikeError,
-  compileElementSpike,
+  CompiledElementError,
+  compileElementProgram,
 } from '../src/internal/compiler/semantic-core/compile.ts';
 
 const CORE_ROOT = new URL('../src/internal/compiler/semantic-core/', import.meta.url);
@@ -75,7 +75,7 @@ export default class DeterministicElement extends OpenElement {
   render() { return <button onClick={this.increment}>{this.count}</button>; }
 }`;
   const file = '/canonical/app/islands/deterministic.tsx';
-  const outputs = Array.from({ length: 3 }, () => compileElementSpike(source, file));
+  const outputs = Array.from({ length: 3 }, () => compileElementProgram(source, file));
   assertEquals(outputs[1].code, outputs[0].code);
   assertEquals(outputs[2].code, outputs[0].code);
   assertEquals(JSON.stringify(outputs[1].program), JSON.stringify(outputs[0].program));
@@ -84,10 +84,10 @@ export default class DeterministicElement extends OpenElement {
   const invalid = `${source}\nconst runtimeTopLevel = Date.now();`;
   const diagnostics = Array.from({ length: 3 }, () => {
     try {
-      compileElementSpike(invalid, file);
+      compileElementProgram(invalid, file);
       throw new Error('invalid source unexpectedly compiled');
     } catch (error) {
-      assert(error instanceof CompiledSpikeError);
+      assert(error instanceof CompiledElementError);
       return JSON.stringify(error.diagnostics);
     }
   });

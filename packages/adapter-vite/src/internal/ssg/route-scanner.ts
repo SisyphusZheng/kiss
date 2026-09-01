@@ -38,11 +38,8 @@
  *    - Static component discovery is owned by `static-component-scanner.ts`;
  *      recursive expansion is owned by the generated SSG render runtime.
  *
- * ─── v0.41.0-alpha.1: AST removed ────────────────────────────
- *
- * Replaced TypeScript AST scanning with regex/glob-based extraction.
- * Route and island modules are simple ESM files; parsing the whole source
- * with the TypeScript compiler is overkill and adds a heavy dependency.
+ * TypeScript/TSX meaning is owned by the bundler-neutral compiler semantic
+ * core. This scanner owns only file discovery, route paths, and delivery data.
  */
 
 import type { RouteEntry, SpecialFileType } from '../protocol/framework.ts';
@@ -50,10 +47,8 @@ import { createLogger } from '@openelement/element';
 import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
 import { dirname, join, posix, resolve, sep } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
+import { analyzeModuleSemantics } from '../compiler/semantic-core/module-analysis.ts';
 
-/** data-open-enhance in attribute form (= or >), so prose never triggers (#569). */
-const ENHANCED_FORM_RE = /data-open-enhance\s*(?:=|>)/;
-const RELATIVE_IMPORT_RE = /^import\s[^'"]*from\s*['"](\.[^'"]+)['"]/gm;
 const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'];
 
 /**
@@ -68,12 +63,12 @@ async function sourceTreeHasEnhancedForms(
   depth = 0,
   seen: Set<string> = new Set(),
 ): Promise<boolean> {
-  if (ENHANCED_FORM_RE.test(source)) return true;
+  const semantics = analyzeModuleSemantics(source, filePath);
+  if (semantics.enhancedForm) return true;
   if (depth >= 3 || seen.has(filePath)) return false;
   seen.add(filePath);
   const dir = dirname(filePath);
-  for (const match of source.matchAll(RELATIVE_IMPORT_RE)) {
-    const specifier = match[1];
+  for (const specifier of semantics.relativeImports) {
     const candidates = [specifier, ...IMPORT_EXTENSIONS.map((ext) => specifier + ext)];
     for (const rel of candidates) {
       const candidate = join(dir, rel);
@@ -89,176 +84,6 @@ async function sourceTreeHasEnhancedForms(
 const log = createLogger('scanner');
 
 /**
- * #960 (registration decoupling, Option 2): a route whose default export is
- * definePage() always registers under the path-derived fallback tag; its
- * `tagName` export only names a content element and is ignored for
- * registration. Detection must not trip on `definePage(` occurrences inside
- * strings or comments — guide pages embed full route samples in template
- * literals (www/app/routes/guide/*.tsx), and a comment like
- * `// migrate to definePage(` must not flip a plain element route to the
- * path-derived fallback tag (ADR-0128) — so the regex runs against source
- * with string/template/comment contents masked (maskSourceStrings).
- */
-const DEFINE_PAGE_RE = /\bdefinePage\s*\(/;
-
-/**
- * Mask string, template-literal, and comment contents (replaced with spaces,
- * newlines preserved) so code samples and prose embedded in route sources
- * never trip static source detection. Quoted strings only mask within a
- * single line (JS strings cannot span raw newlines), so an apostrophe in JSX
- * text bails out unmasked; template literals mask to the closing backtick
- * while ${…} expressions are scanned as code (nested templates/strings
- * recurse). Line comments (`//` to end of line) and block comments
- * (slash-star to star-slash) are masked in code regions (including ${…}
- * expressions) so a comment merely mentioning `definePage(` or a
- * custom-element tag never changes the scan result.
- *
- * Limitation: regex literals are not tokenized — a `/` followed by `/` or
- * `*` is always treated as a comment opener. A regex literal containing a
- * raw `//` or `/*` sequence (e.g. `/[//]/`) therefore masks its own tail as
- * a comment; that is the safe direction (over-masking can only suppress a
- * detection, never invent one).
- *
- * Exported for the foreign-tag scanner (#979): JSX usage extraction must apply
- * the exact same masking so embedded samples never register as consumed tags.
- */
-export function maskSourceStrings(source: string): string {
-  const out = source.split('');
-  const len = source.length;
-
-  const blank = (from: number, to: number): void => {
-    for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
-  };
-
-  // Quoted string starting at i. Returns the index past the closing quote,
-  // or i + 1 when the quote never closes on the line (not a string — e.g.
-  // an apostrophe in JSX text).
-  const scanString = (i: number, quote: string): number => {
-    let j = i + 1;
-    while (j < len) {
-      const c = source[j];
-      if (c === '\\') {
-        j += 2;
-        continue;
-      }
-      if (c === '\n') return i + 1;
-      if (c === quote) {
-        blank(i, j + 1);
-        return j + 1;
-      }
-      j++;
-    }
-    return i + 1;
-  };
-
-  // Template literal starting at i (backtick). Raw text is masked; ${…}
-  // expression contents are scanned as code so nested samples are masked too.
-  const scanTemplate = (i: number): number => {
-    let segStart = i;
-    let j = i + 1;
-    while (j < len) {
-      const c = source[j];
-      if (c === '\\') {
-        j += 2;
-        continue;
-      }
-      if (c === '`') {
-        blank(segStart, j + 1);
-        return j + 1;
-      }
-      if (c === '$' && source[j + 1] === '{') {
-        blank(segStart, j + 2);
-        const exprEnd = scanCode(j + 2);
-        blank(exprEnd, Math.min(exprEnd + 1, len));
-        segStart = exprEnd + 1;
-        j = exprEnd + 1;
-        continue;
-      }
-      j++;
-    }
-    blank(segStart, len);
-    return len;
-  };
-
-  // Code starting at i; returns the index of the first unmatched '}' (or
-  // len). Strings, templates, and comments found along the way are masked.
-  const scanCode = (i: number): number => {
-    let j = i;
-    let depth = 0;
-    while (j < len) {
-      const c = source[j];
-      if (c === "'" || c === '"') {
-        j = scanString(j, c);
-        continue;
-      }
-      if (c === '`') {
-        j = scanTemplate(j);
-        continue;
-      }
-      if (c === '/' && source[j + 1] === '/') {
-        // Line comment: mask to end of line (the newline itself survives).
-        // Skipping the range keeps braces inside comments out of the depth
-        // accounting below. Strings are consumed before this branch, so a
-        // '//' inside a string never reaches here. Regex literals are not
-        // tokenized — a raw '//' inside one (e.g. /[//]/) over-masks the
-        // regex tail as a comment; documented limitation, safe direction.
-        let k = j + 2;
-        while (k < len && source[k] !== '\n') k++;
-        blank(j, k);
-        j = k;
-        continue;
-      }
-      if (c === '/' && source[j + 1] === '*') {
-        // Block comment: mask through the closing '*/' (newlines preserved).
-        let k = j + 2;
-        while (k < len && !(source[k] === '*' && source[k + 1] === '/')) k++;
-        const end = Math.min(k + 2, len);
-        blank(j, end);
-        j = end;
-        continue;
-      }
-      if (c === '{') depth++;
-      else if (c === '}') {
-        if (depth === 0) return j;
-        depth--;
-      }
-      j++;
-    }
-    return j;
-  };
-
-  scanCode(0);
-  return out.join('');
-}
-
-/** Escape a tag name for interpolation into a RegExp source. */
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/**
- * #960: a sanctioned shape-1 module USES its tagName export — it registers
- * the content element with defineElement(tagName, …) (or a string literal)
- * and/or the definePage render returns <tag/>. Those stay silent. Only a
- * definePage route whose tagName export is never used at all gets the
- * migration note. Usage is checked against the RAW source: a match inside
- * an embedded code sample merely suppresses the note (the safe direction).
- */
-function routeUsesTagName(source: string, tagName: string): boolean {
-  // defineElement(tagName, …) or customElements.define(tagName, …) — the
-  // www site and some starters register via the platform primitive.
-  if (/\b(?:defineElement|customElements\.define)\s*\(\s*tagName\b/.test(source)) return true;
-  if (
-    new RegExp(
-      `\\b(?:defineElement|customElements\\.define)\\s*\\(\\s*['"\`]${escapeRegExp(tagName)}['"\`]`,
-    ).test(source)
-  ) {
-    return true;
-  }
-  return new RegExp(`</?${escapeRegExp(tagName)}(?=[\\s/>])`).test(source);
-}
-
-/**
  * Missing-tagName notes fire at most once per file per process. scanRoutes()
  * is invoked by several build phases with different routesDir spellings
  * (relative vs absolute); keying on the resolved path keeps each file to a
@@ -271,12 +96,6 @@ const notedMissingTagName = new Set<string>();
  * per process (same multi-pass routesDir spellings as above).
  */
 const notedIgnoredTagName = new Set<string>();
-
-/** Read a static route tagName export from source text. */
-function readRouteTagName(source: string): string | undefined {
-  const match = source.match(/export\s+const\s+tagName\s*=\s*(["'`])([^"'`]+)\1/);
-  return match?.[2];
-}
 
 /**
  * Convert a route file path to a URL path pattern.
@@ -429,15 +248,14 @@ export async function scanRoutes(
         let source: string | undefined;
         let isDefinePage = false;
         if (routeType === 'page') {
-          // Regex-based scanning reads `export const tagName` without executing the module.
+          // The compiler semantic core reads route meaning without executing the module.
           source = await safeReadFile(fullPath);
           if (source === undefined) {
             log.debug(`Unable to read route module: ${fullPath}`);
           } else {
-            tagName = readRouteTagName(source);
-            // #960: masked so definePage( inside embedded code samples (guide
-            // pages) never flags a plain element route as a definePage route.
-            isDefinePage = DEFINE_PAGE_RE.test(maskSourceStrings(source));
+            const semantics = analyzeModuleSemantics(source, fullPath);
+            tagName = semantics.exportedTagName;
+            isDefinePage = semantics.definePage;
             // .mdx routes never carry a tagName export either — the entry
             // wraps their function component itself (#954), like definePage.
             if (tagName === undefined && !isDefinePage && !fullPath.endsWith('.mdx')) {
@@ -456,7 +274,7 @@ export async function scanRoutes(
             // a content element. Sanctioned shape-1 modules USE the tag
             // (defineElement + <tag/> in the render) and stay silent — an
             // orphaned export gets a one-time note.
-            if (isDefinePage && tagName !== undefined && !routeUsesTagName(source, tagName)) {
+            if (isDefinePage && tagName !== undefined && !semantics.usesExportedTagName) {
               const resolvedPath = resolve(fullPath);
               if (!notedIgnoredTagName.has(resolvedPath)) {
                 notedIgnoredTagName.add(resolvedPath);
@@ -477,7 +295,7 @@ export async function scanRoutes(
             // with the rename guidance instead of letting it ship silently.
             if (
               isDefinePage && tagName !== undefined && tagName === fileToTagName(relativePath) &&
-              routeUsesTagName(source, tagName)
+              semantics.usesExportedTagName
             ) {
               throw new Error(
                 `Route module ${resolve(fullPath)} self-registers content element '${tagName}', ` +

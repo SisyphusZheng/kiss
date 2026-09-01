@@ -17,37 +17,37 @@ import {
 } from './diagnostics/index.ts';
 import {
   type CompiledElementMetadata,
-  type PartProgramSpike,
+  type PartProgramV1,
+  type ProgramCondition,
   type ProgramDependencyRecord,
+  type ProgramEventAction,
   type ProgramLocation,
   type ProgramLocationRecord,
+  type ProgramPart,
   type ProgramRegionRecord,
   type ProgramSourceRecord,
+  type ProgramTreeNode,
   type PropertyValueType,
   type SerializableValue,
-  type SpikeCondition,
-  type SpikeEventAction,
-  type SpikePart,
-  type SpikeTreeNode,
   validatePartProgram,
 } from './program.ts';
 
-export interface SpikeDiagnostic extends CompilerDiagnostic {}
+export interface ElementCompilerDiagnostic extends CompilerDiagnostic {}
 
 /** Error shape consumed by the Vite plugin and compiler tests. */
-export class CompiledSpikeError extends CompilerDiagnosticError {
-  constructor(diagnostics: SpikeDiagnostic[]) {
+export class CompiledElementError extends CompilerDiagnosticError {
+  constructor(diagnostics: ElementCompilerDiagnostic[]) {
     super(diagnostics);
-    this.name = 'CompiledSpikeError';
+    this.name = 'CompiledElementError';
   }
 }
 
-export interface CompileSpikeResult {
+export interface CompileElementResult {
   code: string;
-  program: PartProgramSpike;
+  program: PartProgramV1;
 }
 
-interface SpikeField {
+interface CompiledField {
   name: string;
   reflect: boolean;
   attribute: string | null;
@@ -71,12 +71,12 @@ interface SpikeField {
 
 interface GeneratedHandler {
   name: string;
-  action: SpikeEventAction;
+  action: ProgramEventAction;
   node: ts.ArrowFunction;
 }
 
 /** Distributive input union for addPart (Omit<union> collapses; do not use). */
-type SpikePartInput =
+type ProgramPartInput =
   | { k: 'text'; signal: string }
   | { k: 'prop'; signal: string; name: string; path: number[] }
   | { k: 'attr'; signal: string; name: string; path: number[] }
@@ -89,18 +89,17 @@ type SpikePartInput =
     k: 'event';
     event: string;
     handler: string;
-    action: SpikeEventAction;
+    action: ProgramEventAction;
     path: number[];
   }
   | {
     k: 'when';
     signal: string;
-    gt?: number;
-    test: SpikeCondition;
-    on: SpikeTreeNode[];
-    off: SpikeTreeNode[];
+    test: ProgramCondition;
+    on: ProgramTreeNode[];
+    off: ProgramTreeNode[];
   }
-  | { k: 'each'; signal: string; key: string; field?: string; item: SpikeTreeNode[] };
+  | { k: 'each'; signal: string; key: string; field?: string; item: ProgramTreeNode[] };
 
 const BOOLEAN_ATTRIBUTES = new Set([
   'allowfullscreen',
@@ -223,6 +222,22 @@ function literalValue(expr: ts.Expression, sf: ts.SourceFile): SerializableValue
   return undefined;
 }
 
+/**
+ * The one non-serializable field default admitted by the compiled grammar.
+ * The wrapper is the runtime capability; limiting the argument to a literal
+ * keeps compiled metadata deterministic and prevents arbitrary initializer
+ * execution from entering the property schema.
+ */
+function isTrustedHtmlInitializer(expr: ts.Expression): boolean {
+  const value = unwrapExpression(expr);
+  if (
+    !ts.isCallExpression(value) || value.expression.getText() !== 'trustedHtml' ||
+    value.arguments.length !== 1
+  ) return false;
+  const html = unwrapExpression(value.arguments[0]);
+  return ts.isStringLiteral(html) || ts.isNoSubstitutionTemplateLiteral(html);
+}
+
 function primitiveText(value: SerializableValue): string | null {
   if (value === null) return '';
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -246,7 +261,7 @@ function propertyTypeFromConstructor(
   sf: ts.SourceFile,
   node: ts.Node,
   fail: (node: ts.Node, code: string, message: string) => never,
-): { label: PropertyValueType; constructorName: SpikeField['typeConstructor'] } {
+): { label: PropertyValueType; constructorName: CompiledField['typeConstructor'] } {
   const name = expr.getText(sf);
   if (
     name !== 'String' && name !== 'Number' && name !== 'Boolean' && name !== 'Array' &&
@@ -342,7 +357,7 @@ function inferPropertyType(
   member: ts.PropertyDeclaration,
   defaultValue: SerializableValue,
   sf: ts.SourceFile,
-): { label: PropertyValueType; constructorName: SpikeField['typeConstructor'] } {
+): { label: PropertyValueType; constructorName: CompiledField['typeConstructor'] } {
   const typeText = member.type?.getText(sf).replace(/[\s?]/g, '') ?? '';
   if (typeText === 'string' || typeText === 'String') {
     return { label: 'string', constructorName: 'String' };
@@ -382,7 +397,7 @@ function sourceRange(sf: ts.SourceFile, node: ts.Node): {
   };
 }
 
-function parseDiagnostic(sf: ts.SourceFile, diagnostic: ts.Diagnostic): SpikeDiagnostic {
+function parseDiagnostic(sf: ts.SourceFile, diagnostic: ts.Diagnostic): ElementCompilerDiagnostic {
   const start = diagnostic.start ?? 0;
   const end = diagnostic.start === undefined ? start : start + (diagnostic.length ?? 0);
   const position = sf.getLineAndCharacterOfPosition(start);
@@ -398,7 +413,7 @@ function parseDiagnostic(sf: ts.SourceFile, diagnostic: ts.Diagnostic): SpikeDia
 }
 
 class Lowering {
-  readonly parts: SpikePart[] = [];
+  readonly parts: ProgramPart[] = [];
   readonly regions: ProgramRegionRecord[] = [];
   readonly dependencies: ProgramDependencyRecord[] = [];
   readonly locations: ProgramLocationRecord[] = [];
@@ -412,7 +427,7 @@ class Lowering {
 
   constructor(
     private readonly sf: ts.SourceFile,
-    fields: SpikeField[],
+    fields: CompiledField[],
     methodNames: string[],
   ) {
     this.fieldNames = new Set(fields.map((field) => field.name));
@@ -424,7 +439,7 @@ class Lowering {
   }
 
   fail(node: ts.Node, code: string, message: string): never {
-    throw new CompiledSpikeError([diagnosticAt(this.sf, node, code, message)]);
+    throw new CompiledElementError([diagnosticAt(this.sf, node, code, message)]);
   }
 
   private addSource(id: string, kind: ProgramSourceRecord['kind'], node: ts.Node): void {
@@ -443,9 +458,9 @@ class Lowering {
     id: string,
     tag: string,
     attrs: Array<[string, string]>,
-    children: SpikeTreeNode[],
+    children: ProgramTreeNode[],
     iattrs?: Array<[string, string]>,
-  ): SpikeTreeNode {
+  ): ProgramTreeNode {
     return {
       k: 'el',
       id,
@@ -457,7 +472,7 @@ class Lowering {
   }
 
   private addPart(
-    part: SpikePartInput,
+    part: ProgramPartInput,
     path: number[],
     node: ts.Node,
     targetNode?: string,
@@ -470,7 +485,7 @@ class Lowering {
       path: [...path],
       ...(targetNode ? { node: targetNode } : {}),
     };
-    const fullPart = { ...part, index, location } as SpikePart;
+    const fullPart = { ...part, index, location } as ProgramPart;
     this.parts.push(fullPart);
     if (isAnchor) {
       this.locations.push({ id: `p${index}`, kind: 'anchor', part: index, path: [...path] });
@@ -532,7 +547,7 @@ class Lowering {
     return null;
   }
 
-  lowerRoot(expr: ts.Expression): SpikeTreeNode {
+  lowerRoot(expr: ts.Expression): ProgramTreeNode {
     const root = unwrapExpression(expr);
     if (ts.isJsxElement(root)) {
       return this.lowerElement(
@@ -560,7 +575,7 @@ class Lowering {
     path: number[],
     sourceNode: ts.Node,
     staticOnly = false,
-  ): SpikeTreeNode {
+  ): ProgramTreeNode {
     const tag = tagNameNode.getText(this.sf);
     // alpha.8: custom-element hosts (<x-y>) are admitted as nested hosts — the
     // page/layout composition renders them as host tags that the server entry
@@ -581,12 +596,24 @@ class Lowering {
     const attrs: Array<[string, string]> = [];
     const elementId = this.reserveElement(tag, path, sourceNode);
     const attributeNames = new Set<string>();
+    let trustedHtmlCapability = false;
+    for (const prop of attributes.properties) {
+      if (ts.isJsxSpreadAttribute(prop)) continue;
+      if (this.normalizeAttributeName(prop.name.getText(this.sf)) !== 'trustedHtml') continue;
+      const init = prop.initializer;
+      trustedHtmlCapability = init === undefined ||
+        (ts.isJsxExpression(init) && init.expression?.kind === ts.SyntaxKind.TrueKeyword);
+      if (!trustedHtmlCapability) {
+        this.fail(prop, 'OEC9026', 'trustedHtml capability marker must be the literal true');
+      }
+    }
     for (const prop of attributes.properties) {
       if (ts.isJsxSpreadAttribute(prop)) {
         this.fail(prop, 'OEC9011', 'spread attributes are not supported by the compiler grammar');
       }
       const name = this.normalizeAttributeName(prop.name.getText(this.sf));
       const init = prop.initializer;
+      if (name === 'trustedHtml') continue;
       const isDynamicEvent = /^on[A-Z]/.test(name) && init !== undefined &&
         ts.isJsxExpression(init) && init.expression !== undefined;
       if (isCustomHost && (isDynamicEvent || /^on[A-Z]/.test(name))) {
@@ -641,7 +668,15 @@ class Lowering {
           this.addPart({ k: 'prop', signal: field, name, path }, path, prop, elementId);
           continue;
         }
-        this.lowerDynamicAttribute(name, field, tag, path, prop, elementId);
+        this.lowerDynamicAttribute(
+          name,
+          field,
+          tag,
+          path,
+          prop,
+          elementId,
+          trustedHtmlCapability,
+        );
         continue;
       }
       const literal = literalValue(expr, this.sf);
@@ -660,12 +695,16 @@ class Lowering {
       attrs.push([name, literal === true ? '' : text ?? '']);
     }
 
+    const hasHtmlSink = this.parts.some((part) =>
+      part.k === 'html' && part.path.length === path.length &&
+      part.path.every((value, index) => value === path[index])
+    );
+    if (trustedHtmlCapability && !hasHtmlSink) {
+      this.fail(sourceNode, 'OEC9026', 'trustedHtml capability marker requires an innerHTML sink');
+    }
     if (
       !isCustomHost &&
-      this.parts.some((part) =>
-        part.k === 'html' && part.path.length === path.length &&
-        part.path.every((value, index) => value === path[index])
-      ) && children.some((child) => hasMeaningfulJsxChild(this.sf, child))
+      hasHtmlSink && children.some((child) => hasMeaningfulJsxChild(this.sf, child))
     ) {
       this.fail(
         sourceNode,
@@ -674,7 +713,7 @@ class Lowering {
       );
     }
 
-    const lowered: SpikeTreeNode[] = [];
+    const lowered: ProgramTreeNode[] = [];
     for (const child of children) {
       const childPath = [...path, lowered.length];
       if (ts.isJsxText(child)) {
@@ -743,7 +782,7 @@ class Lowering {
   private eventAction(
     expr: ts.Expression,
     sourceNode: ts.Node,
-  ): { handler: string; action: SpikeEventAction } {
+  ): { handler: string; action: ProgramEventAction } {
     const method = this.methodAccess(expr);
     if (method) return { handler: method, action: { kind: 'method', name: method } };
     if (!ts.isArrowFunction(expr) || expr.parameters.length > 1) {
@@ -774,7 +813,7 @@ class Lowering {
     return { handler: name, action };
   }
 
-  private parseEventMutation(expr: ts.Expression, near: ts.Node): SpikeEventAction {
+  private parseEventMutation(expr: ts.Expression, near: ts.Node): ProgramEventAction {
     const value = unwrapExpression(expr);
     const assertWritable = (signal: string): void => {
       if (this.computedNames.has(signal)) {
@@ -841,6 +880,7 @@ class Lowering {
     path: number[],
     sourceNode: ts.Node,
     elementId: string,
+    trustedHtmlCapability: boolean,
   ): void {
     const lowerName = name.toLowerCase();
     if (name === 'class') {
@@ -852,11 +892,21 @@ class Lowering {
       return;
     }
     if (name === 'innerHTML') {
-      // Trusted-HTML sink (alpha.8): pre-sanitized build-time content only.
-      // The field must be string-typed; the target must be childless (checked
-      // by the program validator, which also rejects raw-text targets).
-      if (this.fieldTypes.get(signal) !== 'string') {
-        this.fail(sourceNode, 'OEC9026', 'innerHTML sinks require a string-typed property');
+      // Trusted-HTML sink: the marker admits the sink at compile time and the
+      // Object-typed signal must carry the runtime TrustedHtml capability.
+      if (this.fieldTypes.get(signal) !== 'object') {
+        this.fail(
+          sourceNode,
+          'OEC9026',
+          'innerHTML sinks require an Object-typed TrustedHtml property',
+        );
+      }
+      if (!trustedHtmlCapability) {
+        this.fail(
+          sourceNode,
+          'OEC9026',
+          'innerHTML sinks require the explicit trustedHtml capability marker',
+        );
       }
       if (VOID_TAGS.has(tag)) {
         this.fail(sourceNode, 'OEC9026', `void element <${tag}> cannot carry an innerHTML sink`);
@@ -879,7 +929,7 @@ class Lowering {
     child: ts.JsxExpression,
     staticOnly: boolean,
     path: number[],
-  ): SpikeTreeNode | null {
+  ): ProgramTreeNode | null {
     if (!child.expression) return null;
     const expr = unwrapExpression(child.expression);
     const field = this.fieldAccess(expr);
@@ -904,9 +954,8 @@ class Lowering {
       const test = this.parseCondition(expr.condition, child);
       const on = this.lowerStaticBranch(expr.whenTrue, child);
       const off = this.lowerStaticBranch(expr.whenFalse, child);
-      const gt = test.value as number;
       const index = this.addPart(
-        { k: 'when', signal: test.signal, gt, test, on: [on], off: [off] },
+        { k: 'when', signal: test.signal, test, on: [on], off: [off] },
         path,
         child,
       );
@@ -925,7 +974,7 @@ class Lowering {
     );
   }
 
-  private parseCondition(expr: ts.Expression, near: ts.Node): SpikeCondition {
+  private parseCondition(expr: ts.Expression, near: ts.Node): ProgramCondition {
     const condition = unwrapExpression(expr);
     if (ts.isBinaryExpression(condition)) {
       const signal = this.fieldAccess(condition.left);
@@ -944,7 +993,7 @@ class Lowering {
     );
   }
 
-  private lowerStaticBranch(expr: ts.Expression, near: ts.Node): SpikeTreeNode {
+  private lowerStaticBranch(expr: ts.Expression, near: ts.Node): ProgramTreeNode {
     const branch = unwrapExpression(expr);
     if (ts.isJsxElement(branch)) {
       return this.lowerElement(
@@ -962,7 +1011,7 @@ class Lowering {
     this.fail(near, 'OEC9012', 'conditional Region branches must be single static JSX elements');
   }
 
-  private lowerEach(expr: ts.CallExpression, near: ts.Node, path: number[]): SpikeTreeNode {
+  private lowerEach(expr: ts.CallExpression, near: ts.Node, path: number[]): ProgramTreeNode {
     const callee = expr.expression;
     if (
       !ts.isPropertyAccessExpression(callee) || callee.name.text !== 'map' ||
@@ -1044,7 +1093,7 @@ class Lowering {
     itemFields: string[],
     path: number[],
     allowKey = false,
-  ): SpikeTreeNode {
+  ): ProgramTreeNode {
     const tagName = ts.isJsxElement(element) ? element.openingElement.tagName : element.tagName;
     const attributes = ts.isJsxElement(element)
       ? element.openingElement.attributes
@@ -1119,7 +1168,7 @@ class Lowering {
       if (literal === false || literal === null) continue;
       attrs.push([name, literal === true ? '' : text ?? '']);
     }
-    const children: SpikeTreeNode[] = [];
+    const children: ProgramTreeNode[] = [];
     const rawChildren = ts.isJsxElement(element) ? [...element.children] : [];
     if (VOID_TAGS.has(tag)) {
       const child = rawChildren.find((candidate) => hasMeaningfulJsxChild(this.sf, candidate));
@@ -1170,12 +1219,12 @@ function propertyFields(
   classNode: ts.ClassDeclaration,
   fail: (node: ts.Node, code: string, message: string) => never,
 ): {
-  fields: SpikeField[];
+  fields: CompiledField[];
   methods: ts.MethodDeclaration[];
   render: ts.MethodDeclaration;
   stylesText?: string;
 } {
-  const fields: SpikeField[] = [];
+  const fields: CompiledField[] = [];
   const methods: ts.MethodDeclaration[] = [];
   let render: ts.MethodDeclaration | null = null;
   let stylesText: string | undefined;
@@ -1259,7 +1308,10 @@ function propertyFields(
         computedFieldNames,
         fail,
       );
-      const defaultValue = computedInit ? null : literalValue(member.initializer, sf);
+      const trustedHtmlInit = !computedInit && isTrustedHtmlInitializer(member.initializer);
+      const defaultValue = computedInit || trustedHtmlInit
+        ? null
+        : literalValue(member.initializer, sf);
       if (defaultValue === undefined) {
         fail(member.initializer, 'OEC9020', 'property defaults must be serializable literals');
       }
@@ -1270,7 +1322,7 @@ function propertyFields(
       let reflect = false;
       let attribute: string | null | undefined;
       let explicitType:
-        | { label: PropertyValueType; constructorName: SpikeField['typeConstructor'] }
+        | { label: PropertyValueType; constructorName: CompiledField['typeConstructor'] }
         | undefined;
       let explicitConverter: PropertyValueType | undefined;
       const optionNames = new Set<string>();
@@ -1317,6 +1369,15 @@ function propertyFields(
       const inferred = explicitType ?? inferPropertyType(member, defaultValue, sf);
       const converter = explicitConverter ?? inferred.label;
       if (attribute === undefined) attribute = camelToKebab(member.name.text);
+      if (trustedHtmlInit) {
+        if (inferred.label !== 'object' || attribute !== null || reflect) {
+          fail(
+            member,
+            'OEC9026',
+            'trustedHtml field defaults require type: Object, reflect: false, and attribute: false',
+          );
+        }
+      }
       if (computedInit) {
         if (attribute !== null || reflect) {
           fail(
@@ -1484,7 +1545,7 @@ function hasRuntimeNamedImport(sf: ts.SourceFile, name: string): boolean {
  * different nodes. The v1 location id remains the identity; this guard keeps
  * the path retained for seed consumers safe until they consume that id.
  */
-function assertPathSafety(program: PartProgramSpike): void {
+function assertPathSafety(program: PartProgramV1): void {
   for (const part of program.parts) {
     if (part.k === 'text' || part.k === 'when' || part.k === 'each') continue;
     let nodes = program.template;
@@ -1493,7 +1554,7 @@ function assertPathSafety(program: PartProgramSpike): void {
         if (nodes[sibling]?.k === 'part') {
           const source = program.sourceMap.records.find((record) => record.id === `p${part.index}`)
             ?.source;
-          throw new CompiledSpikeError([{
+          throw new CompiledElementError([{
             code: 'OEC9015',
             message:
               `${part.k} part path [${part.path.join(',')}] is preceded by a dynamic anchor; ` +
@@ -1519,7 +1580,7 @@ function encodeBase64(value: string): string {
   return btoa(binary);
 }
 
-function runtimePropsText(fields: SpikeField[]): string[] {
+function runtimePropsText(fields: CompiledField[]): string[] {
   const lines = ['const __compiledProps = {'];
   for (const field of fields) {
     if (field.computed) {
@@ -1556,7 +1617,7 @@ function generatedHandlerText(handler: GeneratedHandler): string {
   return `  ${handler.name}(): void {}`;
 }
 
-export function compileElementSpike(source: string, fileName: string): CompileSpikeResult {
+export function compileElementProgram(source: string, fileName: string): CompileElementResult {
   const sf = ts.createSourceFile(fileName, source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
   const syntaxDiagnostics = ts.transpileModule(source, {
     fileName,
@@ -1564,11 +1625,11 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     compilerOptions: { jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 },
   }).diagnostics ?? [];
   if (syntaxDiagnostics.length > 0) {
-    throw new CompiledSpikeError([parseDiagnostic(sf, syntaxDiagnostics[0])]);
+    throw new CompiledElementError([parseDiagnostic(sf, syntaxDiagnostics[0])]);
   }
 
   function fail(node: ts.Node, code: string, message: string): never {
-    throw new CompiledSpikeError([diagnosticAt(sf, node, code, message)]);
+    throw new CompiledElementError([diagnosticAt(sf, node, code, message)]);
   }
 
   const passthroughStatements: string[] = [];
@@ -1789,7 +1850,7 @@ export function compileElementSpike(source: string, fileName: string): CompileSp
     })),
     ...lowering.sourceRecords,
   ];
-  const program: PartProgramSpike = {
+  const program: PartProgramV1 = {
     version: 1,
     tag,
     root: { id: 'root', kind: rootKind, nodes: [root.id] },
