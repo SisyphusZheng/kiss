@@ -17,8 +17,10 @@ practical.
 
 - Renovate proposes supported dependency updates, including Deno and GitHub
   Actions inputs.
-- Dependency review, CodeQL, Gitleaks, actionlint, zizmor, and OpenSSF Scorecard
-  provide complementary automated checks.
+- Dependency review and CodeQL provide complementary automated checks and run
+  on every change. Gitleaks, actionlint, zizmor, and OpenSSF Scorecard are
+  planned under the Beta.2 governance-offload work (ADR-0144, #1156) and are
+  not wired yet.
 - GitHub Secret Scanning and Push Protection are enabled where repository
   entitlement permits.
 - Publication uses npm Trusted Publishing/OIDC; long-lived npm publication

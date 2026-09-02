@@ -6,7 +6,7 @@ order: 40
 
 ## 文件路由
 
-Routes 应当能从仓库目录树中被发现。`definePage` 路由有两种合法写法（#960）：形状一导出 `tagName` 为内容元素命名，用 `defineElement(tagName, …)` 注册该元素，页面 render 返回该标签；形状二不导出 `tagName`，页面 render 直接拥有标记。两种写法中，页面本身始终注册在路由路径派生的标签下（`app/routes/index.tsx` 对应 `index-page`）——`definePage` 路由上的 `tagName` 导出只为内容元素命名，不参与页面注册。
+Routes 应当能从仓库目录树中被发现。`definePage` 路由默认导出由 `definePage(PageClass, { ... })` 包装的编译页面元素类；页面类位于非路由模块（例如 `app/components/`），其标记即编译后的 render 程序。路由仍可导出 `tagName` 为内容元素命名（#960），但在 `definePage` 路由上该导出只为内容元素命名，不参与页面注册：页面本身始终注册在路由路径派生的标签下（`app/routes/index.tsx` 对应 `index-page`）。生成的构建入口会注册所有被准入的路由与 island 类——路由模块从不自行注册。
 
 ## 元数据
 
@@ -24,6 +24,44 @@ Routes 应当能从仓库目录树中被发现。`definePage` 路由有两种合
 
 dynamic 路由可导出 `action({ formData })`——纯 HTML 表单无需 JavaScript 即可工作:校验失败返回 `fail(4xx, data)`,以 `fail()` 的状态码(惯例为 422)重渲染并回显;成功则以 303 应答(PRG)。命名 action 通过 `formaction='?/name'` 分派。标记 `data-open-enhance` 的表单经 fetch 提交并把返回的文档 morph 就位:light DOM 未变化的已水合 island 状态保留,`data-open-preserve` 豁免子树,URL 跟随 PRG 目标。action 在校验失败后必须可安全重跑；这些应用闭环语义已按 ADR-0122 冻结。
 
+### app/components/page-guestbook.tsx
+
+```tsx
+// 由 open:compiled-element transform 编译。
+import { element, OpenElement, property } from '@openelement/element';
+
+@element('guestbook-page', { root: 'shadow-open' })
+export default class GuestbookPage extends OpenElement {
+  @property({ reflect: false, attribute: false })
+  entries: string[] = [];
+
+  @property({ reflect: false, attribute: false })
+  message = '';
+
+  @property({ reflect: false, attribute: false })
+  error = '';
+
+  @property({ reflect: false, attribute: false })
+  echoed = '';
+
+  render() {
+    return (
+      <main>
+        <h1>guestbook</h1>
+        <form method='post' data-open-enhance>
+          <input name='message' type='text' value={this.message} />
+          <button type='submit'>Send</button>
+          <button type='submit' formaction='?/shout'>Shout</button>
+        </form>
+        {this.error ? <p role='alert'>{this.error}</p> : <span></span>}
+        {this.echoed ? <p>echo={this.echoed}</p> : <span></span>}
+        <ul>{this.entries.map((entry) => <li>{entry}</li>)}</ul>
+      </main>
+    );
+  }
+}
+```
+
 ### app/routes/guestbook.tsx
 
 ```ts
@@ -32,9 +70,8 @@ import {
   fail,
   type OpenElementActionFailure,
   redirect,
-  useActionData,
-  useLoaderData,
 } from '@openelement/app';
+import GuestbookPage from '../components/page-guestbook.tsx';
 
 interface GuestbookData {
   entries: string[];
@@ -67,29 +104,20 @@ export const actions = {
   },
 };
 
-const GuestbookPage = definePage({
+// props 投影器是把请求作用域映射到编译页面属性的唯一确定性接缝。
+export default definePage(GuestbookPage, {
   renderIntent: { mode: 'dynamic' },
-  render({ request }) {
-    const { entries } = useLoaderData() as GuestbookData;
-    const actionData = useActionData() as GuestbookActionData | undefined;
+  props({ data, actionData, request }) {
+    const action = actionData as GuestbookActionData | undefined;
     const echoed = request ? new URL(request.url).searchParams.get('echoed') : undefined;
-    return (
-      <main>
-        <h1>guestbook</h1>
-        <form method='post' data-open-enhance>
-          <input name='message' type='text' value={actionData?.message ?? ''} />
-          <button type='submit'>Send</button>
-          <button type='submit' formaction='?/shout'>Shout</button>
-        </form>
-        {actionData?.error ? <p role='alert'>{actionData.error}</p> : null}
-        {echoed ? <p>echo={echoed}</p> : null}
-        <ul>{entries.map((entry) => <li>{entry}</li>)}</ul>
-      </main>
-    );
+    return {
+      entries: data?.entries ?? [],
+      message: action?.message ?? '',
+      error: action?.error ?? '',
+      echoed: echoed ?? '',
+    };
   },
 });
-
-export default GuestbookPage;
 ```
 
 ## Action fetch 协商

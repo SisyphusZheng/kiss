@@ -6,7 +6,7 @@ order: 40
 
 ## File routes
 
-Routes should be discoverable from the repository tree. A `definePage` route supports two authoring shapes (#960): shape 1 exports `tagName` to name a content element registered with `defineElement(tagName, …)` and the page render returns that tag; shape 2 omits the export and the page render owns the markup directly. In both shapes the page itself always registers under the route-path tag (`app/routes/index.tsx` becomes `index-page`) — on a `definePage` route the `tagName` export names the content element only and never drives page registration.
+Routes should be discoverable from the repository tree. A `definePage` route default-exports the compiled page element class wrapped in `definePage(PageClass, { ... })`; the page class lives in a non-route module (for example `app/components/`) and owns the markup as its compiled render program. A route may still export `tagName` to name a content element (#960), but on a `definePage` route that export names the content element only and never drives page registration: the page itself always registers under the route-path tag (`app/routes/index.tsx` becomes `index-page`). Generated build entries register every admitted route and island class — route modules never self-register.
 
 ## Metadata
 
@@ -24,6 +24,44 @@ Keep data loading separate from presentation markup.
 
 A dynamic route may export an `action({ formData })` — plain HTML forms work without JavaScript: validation failures return `fail(4xx, data)` and re-render with the echo at `fail()`'s status (conventionally 422), successes answer 303 (PRG). Named actions dispatch via `formaction='?/name'`. Forms marked `data-open-enhance` submit via fetch and morph the returned document into place: hydrated islands whose light DOM did not change keep their state, `data-open-preserve` exempts a subtree, and the URL follows the PRG target. An action must be safe to re-run after a failed validation; these application-loop semantics are frozen under ADR-0122.
 
+### app/components/page-guestbook.tsx
+
+```tsx
+// Compiled by the open:compiled-element transform.
+import { element, OpenElement, property } from '@openelement/element';
+
+@element('guestbook-page', { root: 'shadow-open' })
+export default class GuestbookPage extends OpenElement {
+  @property({ reflect: false, attribute: false })
+  entries: string[] = [];
+
+  @property({ reflect: false, attribute: false })
+  message = '';
+
+  @property({ reflect: false, attribute: false })
+  error = '';
+
+  @property({ reflect: false, attribute: false })
+  echoed = '';
+
+  render() {
+    return (
+      <main>
+        <h1>guestbook</h1>
+        <form method='post' data-open-enhance>
+          <input name='message' type='text' value={this.message} />
+          <button type='submit'>Send</button>
+          <button type='submit' formaction='?/shout'>Shout</button>
+        </form>
+        {this.error ? <p role='alert'>{this.error}</p> : <span></span>}
+        {this.echoed ? <p>echo={this.echoed}</p> : <span></span>}
+        <ul>{this.entries.map((entry) => <li>{entry}</li>)}</ul>
+      </main>
+    );
+  }
+}
+```
+
 ### app/routes/guestbook.tsx
 
 ```ts
@@ -32,9 +70,8 @@ import {
   fail,
   type OpenElementActionFailure,
   redirect,
-  useActionData,
-  useLoaderData,
 } from '@openelement/app';
+import GuestbookPage from '../components/page-guestbook.tsx';
 
 interface GuestbookData {
   entries: string[];
@@ -67,29 +104,21 @@ export const actions = {
   },
 };
 
-const GuestbookPage = definePage({
+// The props projector is the single deterministic seam mapping request scope
+// onto the compiled page properties.
+export default definePage(GuestbookPage, {
   renderIntent: { mode: 'dynamic' },
-  render({ request }) {
-    const { entries } = useLoaderData() as GuestbookData;
-    const actionData = useActionData() as GuestbookActionData | undefined;
+  props({ data, actionData, request }) {
+    const action = actionData as GuestbookActionData | undefined;
     const echoed = request ? new URL(request.url).searchParams.get('echoed') : undefined;
-    return (
-      <main>
-        <h1>guestbook</h1>
-        <form method='post' data-open-enhance>
-          <input name='message' type='text' value={actionData?.message ?? ''} />
-          <button type='submit'>Send</button>
-          <button type='submit' formaction='?/shout'>Shout</button>
-        </form>
-        {actionData?.error ? <p role='alert'>{actionData.error}</p> : null}
-        {echoed ? <p>echo={echoed}</p> : null}
-        <ul>{entries.map((entry) => <li>{entry}</li>)}</ul>
-      </main>
-    );
+    return {
+      entries: data?.entries ?? [],
+      message: action?.message ?? '',
+      error: action?.error ?? '',
+      echoed: echoed ?? '',
+    };
   },
 });
-
-export default GuestbookPage;
 ```
 
 ## Action fetch negotiation

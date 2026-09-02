@@ -2,7 +2,7 @@
 
 Project scaffolding CLI for openElement applications.
 
-> 0.42.0 stable surface (frozen under ADR-0122):
+> Stable surface (frozen under ADR-0122):
 > Framework product entry. This package is part of the
 > first-run Framework story alongside `@openelement/app` and
 > `@openelement/adapter-vite`.
@@ -18,7 +18,7 @@ cd my-app
 deno task dev
 ```
 
-The default dist-tag is the stable 0.42 line, and
+The default dist-tag is the stable 0.43 line, and
 `--minimum-dependency-age 0` is needed because Deno's default
 minimumDependencyAge (~24h) refuses packages published within the last day.
 

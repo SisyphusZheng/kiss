@@ -18,7 +18,7 @@ the ADR-0120 protocol, not the library:
    after validation passes.
 
 ```ts
-import { definePage, fail, redirect, useActionData } from '@openelement/app';
+import { fail, redirect } from '@openelement/app';
 import { z } from 'zod';
 
 const schema = z.object({ email: z.string().email('a valid email is required') });
@@ -36,5 +36,7 @@ export function action(ctx: { formData: FormData }) {
 ```
 
 valibot is interchangeable (`v.safeParse(schema, input)`); see the fixture
-for both. The page reads the failure via `useActionData()`; mark the form
+for both. The page reads the failure through its descriptor's `props`
+projector (`actionData` on the projector context, mapped onto the compiled
+page properties); mark the form
 `data-open-enhance` to get the morph-based enhanced path for free.

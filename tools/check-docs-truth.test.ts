@@ -1,6 +1,75 @@
 import { assert, assertEquals } from '@std/assert';
-import { isInEvidenceWindow } from './check-docs-truth.ts';
+import { findRemovedAuthoringVocabulary, isInEvidenceWindow } from './check-docs-truth.ts';
 import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+
+Deno.test('docs-truth current: removed authoring vocabulary is flagged on current surfaces', () => {
+  // A10.10/#1218: removed v0.43 authoring names must not survive in current
+  // documentation surfaces (www content collections, package/root READMEs,
+  // non-historical docs).
+  const drift = "import { defineElement, useActionData } from '@openelement/app';\n" +
+    "defineIsland('x-island', () => null);\n" +
+    "bindSsrProps(el); registerSignal('count', count); useLoaderData();\n" +
+    'const list = `<For each={items}>`;\n';
+  const names = findRemovedAuthoringVocabulary('www/content/guide/routing-and-data.md', drift);
+  assert(names.includes('removed defineElement authoring helper'), names.join(','));
+  assert(names.includes('removed defineIsland() authoring helper'), names.join(','));
+  assert(names.includes('removed render-scope useLoaderData() hook'), names.join(','));
+  assert(names.includes('removed render-scope useActionData() hook'), names.join(','));
+  assert(names.includes('removed bindSsrProps() SSR-props helper'), names.join(','));
+  assert(names.includes('removed registerSignal() marker API'), names.join(','));
+  assert(names.includes('removed For control-flow factory'), names.join(','));
+});
+
+Deno.test('docs-truth current: VNode is flagged on prose surfaces but not in docs/current negations', () => {
+  assert(
+    findRemovedAuthoringVocabulary('www/content/architecture/islands-deep.md', 'returns a VNode')
+      .includes('removed VNode runtime vocabulary'),
+  );
+  assert(
+    findRemovedAuthoringVocabulary('packages/element/README.md', 'VNode').includes(
+      'removed VNode runtime vocabulary',
+    ),
+  );
+  // Contract documents may name the removed renderer in negated statements
+  // ("there is no VNode … fallback"); other removed authoring names are still
+  // forbidden there.
+  assertEquals(
+    findRemovedAuthoringVocabulary(
+      'docs/current/v0.44.0-ALPHA-CONTRACT.md',
+      'There is no VNode, binding-discovery, generic-hydration or interpreter fallback.',
+    ),
+    [],
+  );
+  assert(
+    findRemovedAuthoringVocabulary('docs/current/PACKAGE_SURFACE.md', 'defineElement').includes(
+      'removed defineElement authoring helper',
+    ),
+  );
+});
+
+Deno.test('docs-truth current: lookalikes and out-of-scope surfaces are not flagged', () => {
+  // defineIslandConfig stays: only the removed defineIsland( call is matched.
+  assertEquals(
+    findRemovedAuthoringVocabulary(
+      'www/content/guide/islands-and-ssr.md',
+      "defineIslandConfig({ hydrate: 'visible', ssr: true, dsd: true })",
+    ),
+    [],
+  );
+  // The canonical v0.44 authoring form is clean.
+  assertEquals(
+    findRemovedAuthoringVocabulary(
+      'packages/app/README.md',
+      "@element('home-page') class HomePage extends OpenElement",
+    ),
+    [],
+  );
+  // www/app sources carry their own www gate and are out of scope here.
+  assertEquals(
+    findRemovedAuthoringVocabulary('www/app/routes/apilist.tsx', 'defineElement'),
+    [],
+  );
+});
 
 Deno.test('docs-truth evidence window: prerelease ordering is semver, not lexicographic', () => {
   // Lexicographic order ranks '0.41.0-alpha.2' above '0.41.0-alpha.14'; the

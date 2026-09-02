@@ -3,7 +3,9 @@
 > Status: **verified against 0.42.0 source** — executed end-to-end on a
 > scratch app built from this repository: a request-time route's loader
 > read two JSON files through the adapter and rendered their contents.
-> Not CI-gated; reproduce with the steps below.
+> Not CI-gated; reproduce with the steps below. The route example below is
+> written in the current v0.44 compiled-class authoring form; the recorded
+> verification run predates that re-authoring.
 
 ADR-0095 deferred the file-backed data adapter to recipe level; this is
 that recipe. Two drift notes against the ADR's original sketch:
@@ -58,11 +60,38 @@ export function createFileDataAdapter<T = unknown>(dir: string): DataAdapter<T> 
 }
 ```
 
-Wired into a blog-like request-time route:
+Wired into a blog-like request-time route (the page is a compiled element
+class; the default projection maps loader-data record entries onto the
+compiled properties):
 
 ```tsx
+// app/components/page-notes.tsx — compiled by the open:compiled-element transform
+import { element, OpenElement, property } from '@openelement/element';
+
+interface NoteItem {
+  key: string;
+  note: { title: string; body: string } | null;
+}
+
+@element('notes-page', { root: 'shadow-open' })
+export default class NotesPage extends OpenElement {
+  @property({ reflect: false, attribute: false })
+  items: NoteItem[] = [];
+
+  render() {
+    return (
+      <ul>
+        {this.items.map(({ key, note }) => <li>{key}: {note?.title} — {note?.body}</li>)}
+      </ul>
+    );
+  }
+}
+```
+
+```ts
 // app/routes/notes.tsx
-import { definePage, useLoaderData } from '@openelement/app';
+import { definePage } from '@openelement/app';
+import NotesPage from '../components/page-notes.tsx';
 import { createFileDataAdapter } from '../data/file-adapter.ts';
 
 interface Note {
@@ -80,16 +109,8 @@ export async function loader() {
   return { items };
 }
 
-export default definePage({
+export default definePage(NotesPage, {
   renderIntent: { mode: 'dynamic' },
-  render() {
-    const { items } = useLoaderData() as { items: Array<{ key: string; note: Note | null }> };
-    return (
-      <ul>
-        {items.map(({ key, note }) => <li>{key}: {note?.title} — {note?.body}</li>)}
-      </ul>
-    );
-  },
 });
 ```
 
