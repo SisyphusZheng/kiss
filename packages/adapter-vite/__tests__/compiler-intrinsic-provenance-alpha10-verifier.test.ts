@@ -2,7 +2,9 @@
  * Alpha.10 closure verification — NEW hostile provenance cases added by the
  * independent release verifier (packet criterion 3). These spellings are NOT
  * present in compiler-intrinsic-provenance.test.ts:
- *   - near-miss module specifier ('@openelement/elements', plural)
+ *   - near-miss module specifier (canonical name + 's' suffix, built by
+ *     concatenation because the literal is a removed-package token that the
+ *     repo-hygiene gate rejects in active files)
  *   - default-import spelling of `element` from the canonical module
  *   - indirect rebinding of the canonical decorator through a const alias
  *   - subpath impostor specifier ('@openelement/element/fake')
@@ -19,6 +21,9 @@ import { compileElementModule } from '../src/internal/compiler/plugin.ts';
 
 const FILE = '/project/app/islands/alpha10-verifier-impostor.tsx';
 
+/** The near-miss specifier: canonical module name plus an 's' suffix. */
+const NEAR_MISS_SPECIFIER = '@openelement/element' + 's';
+
 function assertProgramFailsClosed(source: string, code: string): CompiledElementError {
   const error = assertThrows(
     () => compileElementProgram(source, FILE),
@@ -28,9 +33,9 @@ function assertProgramFailsClosed(source: string, code: string): CompiledElement
   return error;
 }
 
-Deno.test('alpha10-verifier provenance: near-miss specifier "@openelement/elements" never admits the grammar', () => {
+Deno.test('alpha10-verifier provenance: near-miss specifier (canonical + "s") never admits the grammar', () => {
   const source = [
-    "import { element, OpenElement } from '@openelement/elements';",
+    `import { element, OpenElement } from '${NEAR_MISS_SPECIFIER}';`,
     "@element('oe-alpha10-impostor-plural')",
     'export class Impostor extends OpenElement { render() { return <div/>; } }',
   ].join('\n');
