@@ -20,6 +20,13 @@
 
 import type { AppShellPlan } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
+// The canonical dangerous-key rule lives in @openelement/element
+// (constitution 4.2 — one rule, no second copy). Generated server entries
+// cannot import Element at all in some consumer setups, so the canonical
+// list is serialized into the generated code here, exactly like the admitted
+// tag list below; changing the canonical guard automatically re-derives the
+// copy.
+import { DANGEROUS_KEYS } from '@openelement/element';
 
 /**
  * Render all runtime helper function definitions as a single code block.
@@ -89,13 +96,33 @@ export function renderRuntimeHelpers(
 
   // Page props projection: the page descriptor's props projector is the only
   // channel that maps request-scoped data onto the compiled page properties.
+  // Every projection seam fails closed for the canonical dangerous keys
+  // (#1214): the list is serialized from Element's security.ts so generated
+  // code enforces the one canonical rule without importing Element internals.
+  lines.push(
+    `const __DANGEROUS_KEYS = new Set(${quoteGeneratedJavaScriptValue([...DANGEROUS_KEYS])});`,
+  );
+  lines.push('function __filterPageProps(record) {');
+  lines.push('  const clean = {}');
+  lines.push('  for (const key of Object.keys(record)) {');
+  lines.push('    if (__DANGEROUS_KEYS.has(key)) continue');
+  lines.push('    clean[key] = record[key]');
+  lines.push('  }');
+  lines.push('  return clean');
+  lines.push('}');
   lines.push('function __defaultPageProps(context) {');
   lines.push('  const props = {}');
   lines.push('  const params = context.params || {}');
-  lines.push('  for (const key of Object.keys(params)) props[key] = params[key]');
+  lines.push('  for (const key of Object.keys(params)) {');
+  lines.push('    if (__DANGEROUS_KEYS.has(key)) continue');
+  lines.push('    props[key] = params[key]');
+  lines.push('  }');
   lines.push('  const data = context.data');
   lines.push('  if (data && typeof data === "object" && !Array.isArray(data)) {');
-  lines.push('    for (const key of Object.keys(data)) props[key] = data[key]');
+  lines.push('    for (const key of Object.keys(data)) {');
+  lines.push('      if (__DANGEROUS_KEYS.has(key)) continue');
+  lines.push('      props[key] = data[key]');
+  lines.push('    }');
   lines.push('  }');
   lines.push('  return props');
   lines.push('}');
@@ -105,7 +132,9 @@ export function renderRuntimeHelpers(
   );
   lines.push('  if (page && typeof page.props === "function") {');
   lines.push('    const projected = page.props(context)');
-  lines.push('    return projected && typeof projected === "object" ? projected : {}');
+  lines.push(
+    '    return projected && typeof projected === "object" ? __filterPageProps(projected) : {}',
+  );
   lines.push('  }');
   lines.push('  return __defaultPageProps(context)');
   lines.push('}');
@@ -116,7 +145,9 @@ export function renderRuntimeHelpers(
   lines.push(
     '  const projected = page && typeof page.error === "function" ? page.error(error, context) : {}',
   );
-  lines.push('  return projected && typeof projected === "object" ? projected : {}');
+  lines.push(
+    '  return projected && typeof projected === "object" ? __filterPageProps(projected) : {}',
+  );
   lines.push('}');
   lines.push('');
 

@@ -189,6 +189,12 @@ unaffected: their `tagName` export remains the registration tag.
   `cli/start --mode=preview` (#859); `PageRenderingMode` narrowed to
   `'static' | 'dynamic'` (#609).
 
+### v0.44 experimental additions (unfrozen)
+
+| Export (element root)                                 | Class                | Purpose                                                                                                                                                                                                       | Removal/move condition                                              |
+| ----------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `isDangerousKey`, `injectPropsSafe`, `DANGEROUS_KEYS` | experimental (#1214) | The one canonical prototype-pollution guard shared by page projection (SPA bootstrap, `projectPageProps`) and adapter codegen, which serializes `DANGEROUS_KEYS` into generated server runtimes at build time | May move to a dedicated security subpath at the B1.2 surface freeze |
+
 ## Removed from current graph
 
 The following alpha implementation packages are absorbed and are not supported

@@ -16,7 +16,7 @@ import { ERROR_PREFIX } from '@openelement/element';
  * render function. There is no runtime JSX render path.
  */
 
-import { isValidTagName, OpenElementError } from '@openelement/element';
+import { isDangerousKey, isValidTagName, OpenElementError } from '@openelement/element';
 import { HYDRATION_STRATEGIES } from '@openelement/element';
 import type { HydrationStrategy } from '@openelement/element';
 
@@ -382,15 +382,25 @@ export function definePage<
  * so extra entries are ignored. Shared by the generated server entries and
  * the SPA bootstrap (each carries its own copy — generated code cannot import
  * this module's internals).
+ *
+ * Dangerous keys are filtered through the canonical isDangerousKey predicate
+ * (#1214): a hostile loader payload such as JSON.parse('{"__proto__": ...}')
+ * can never re-prototype the projection record or the page host it is
+ * projected onto. The generated server runtime enforces the same rule with a
+ * serialized copy of the canonical DANGEROUS_KEYS list.
  */
 export function projectPageProps(
   context: { params?: Record<string, string>; data?: unknown },
 ): Record<string, unknown> {
   const props: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(context.params ?? {})) props[key] = value;
+  for (const [key, value] of Object.entries(context.params ?? {})) {
+    if (isDangerousKey(key)) continue;
+    props[key] = value;
+  }
   const data = context.data;
   if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      if (isDangerousKey(key)) continue;
       props[key] = value;
     }
   }

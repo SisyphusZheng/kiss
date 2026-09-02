@@ -56,6 +56,14 @@ export { escapeAttr, escapeHtml, wrapInDocument } from './public-runtime.ts';
 export { isSafeAttributeName } from './public-runtime.ts';
 export { trustedHtml } from './public-runtime.ts';
 export type { TrustedHtml } from './public-runtime.ts';
+/**
+ * @experimental Canonical dangerous-key guard (#903, #1214): the single
+ * prototype-pollution rule shared by host prop collection, page projection,
+ * and generated server runtimes (which serialize `DANGEROUS_KEYS` into
+ * generated code at build time). May move to a dedicated security subpath at
+ * the B1.2 surface freeze.
+ */
+export { DANGEROUS_KEYS, injectPropsSafe, isDangerousKey } from './public-runtime.ts';
 
 // ─── Island types (protocol) ─────────────────────────────
 
