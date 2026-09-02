@@ -25,6 +25,8 @@ and tool configuration do not require an ADR.
 - `ADR-0147-internal-alpha-workspace-train.md`
 - `ADR-0148-compiler-semantic-core-vite-integration-boundary.md`
 - `ADR-0149-v044-prerelease-qualification-ladder.md`
+- `ADR-0150-internal-alpha9-semantic-convergence.md`
+- `ADR-0151-v044-release-train-retopology.md`
 
 The Alpha.0 ADR migration packet will replace this transitional list with the
 final active-decision set and manifest. No new ADR is required for that governance

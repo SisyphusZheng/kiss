@@ -15,15 +15,19 @@ Current execution anchor:
 
 - source package line `v0.43.3`;
 - npm registry line `v0.43.3` (published);
-- active target `v0.44.0-alpha.0`;
-- next internal train: `v0.44.0-alpha.1` workspace;
+- active target `v0.44.0-beta.1`;
+- current internal checkpoint: Alpha.10 (Truth Closure, unpublished; umbrella
+  issue #1155);
 - next public prerelease: `v0.44.0-beta.1`.
 
 ADR-0143 explicitly reopens the minor train after the 0.43 maintenance freeze.
-The compiled OpenElement execution order and internal alpha workspaces → beta.1
-UI → beta.2 website → beta.3 hardening → RC SaaS → Stable admission ladder live
-in `docs/current/VERSION_PLAN.md`; 0.43.x remains the stable maintenance fallback
-until 0.44 reaches stable.
+The compiled OpenElement execution order — internal Alpha workspaces (complete
+through Alpha.9) → Alpha.10 truth closure → Beta.1 framework qualification and
+governance freeze → Beta.2 productization and governance offload → Beta.3 final
+hardening, formal benchmark and real SaaS qualification → RC1 frozen candidate
+and soak → Stable/1.0 decision on Beta.3 evidence — lives in
+`docs/current/VERSION_PLAN.md` (ADR-0151); 0.43.x remains the stable
+maintenance fallback until 0.44 reaches stable.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
 second product. Beta names product-qualification boundaries, not a second

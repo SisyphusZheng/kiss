@@ -3,11 +3,12 @@
 OpenElement = Web Components-native fullstack application framework.
 
 The published stable line remains `v0.43.3`. The active target is the internal,
-unpublished Alpha.8 + Alpha.9 integration in PR #1199.
+unpublished Alpha.10 Truth Closure checkpoint tracked by umbrella issue #1155.
 
-ADR-0147 defines the Alpha workspace train. ADR-0150 inserts internal Alpha.9
-semantic convergence before Beta.1 while preserving ADR-0148 and the ADR-0149 public
-qualification ladder. ADR-0146 remains the release-role authority and activates at
+ADR-0147 defines the Alpha workspace train, which is complete through Alpha.9.
+ADR-0151 retopologizes the release train and supersedes the ADR-0149 five-Beta
+mapping; the remainder of ADR-0149 and ADR-0150 that is not about Beta topology
+is unaffected. ADR-0146 remains the release-role authority and activates at
 Beta.1.
 
 - Repository package line: `v0.43.3`
@@ -15,7 +16,8 @@ Beta.1.
 - Current source package line: `v0.43.3`
 - Current npm registry line: `v0.43.3`
 - Latest landed train: `v0.43.3`
-- Active internal target: Alpha.8 + Alpha.9 in PR #1199
+- Active internal target: Alpha.10 Truth Closure (internal, unpublished; umbrella #1155)
+- Active release target: `v0.44.0-beta.1`
 - Next planned public train: `v0.44.0-beta.1`
 - Next public prerelease: `v0.44.0-beta.1`
 
@@ -27,7 +29,7 @@ integration remains `nitro-mount`.
 
 ## Alpha is an internal workspace train
 
-`alpha.0` is the common foundation. `alpha.1` through `alpha.9` are internal work
+`alpha.0` is the common foundation. `alpha.1` through `alpha.10` are internal work
 identifiers, not npm versions and not release candidates. No Alpha work package
 creates a tag, npm publication, GitHub Release, dist-tag change, `main` promotion,
 fresh release-verifier run, or unanimous three-role release GO.
@@ -49,6 +51,9 @@ This is a short shared freeze, not a governance wave.
 
 ## Internal Alpha workspaces
 
+Alpha.1 through Alpha.9 are complete. Alpha.10 is the active internal
+checkpoint.
+
 | Internal ID | Workspace                   | Issues                                       | Agent ownership                                                        |
 | ----------- | --------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
 | alpha.1     | Compiler / Part Program     | #1161 #1162 #1163 compiler slice             | code, tests, fixtures and branch end-to-end                            |
@@ -60,6 +65,7 @@ This is a short shared freeze, not a governance wave.
 | alpha.7     | Performance / Qualification | #1176                                        | budgets, benchmarks, browser/runtime and packed-consumer qualification |
 | alpha.8     | Final Integration           | #1181                                        | absorb all accepted workspace SHAs and produce one coherent candidate  |
 | alpha.9     | Semantic Convergence        | Alpha.9 umbrella and workstreams             | prove one semantic owner before Beta.1 admission                       |
+| alpha.10    | Truth Closure               | #1209-#1220 under umbrella #1155             | close remaining truth drift; hard-block Beta.1 admission               |
 
 The first seven workspaces begin from that exact base and run concurrently. A workspace
 may use contract fixtures or mocks for another workspace, but may not introduce a
@@ -92,17 +98,35 @@ ownership, and produces the one final exact-head candidate. Workspace branches r
 targeted gates. They do not each run the full repository matrix. Failed integration
 or convergence creates another PR #1199 candidate SHA, not a release-verifier session.
 
-## Beta and release governance
+Alpha.8 and Alpha.9 are complete: the integrated candidate landed on `dev` and the
+ADR-0150 semantic workstreams closed with their recorded ownership evidence in
+[SEMANTIC_OWNERSHIP.md](./SEMANTIC_OWNERSHIP.md).
 
-| Phase  | Responsibility                                                                                                                                |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Beta.1 | Qualify and publish the integrated framework, activate the three-role loop, then converge remote branches to the `dev`/`main` long-lived pair |
-| Beta.2 | #1156 and #1187 establish release/governance foundations, Trusted Publishing, provenance, rulesets and mature pinned tools                    |
-| Beta.3 | #1150 qualifies the integrated UI system                                                                                                      |
-| Beta.4 | #1157 #1158 #1159 #1177 qualify content, API metadata, the real website and Starter                                                           |
-| Beta.5 | #1192 #1188 #1189 complete final evidence/document/media hardening and independent SaaS qualification of immutable artifacts                  |
-| RC     | #1178 admits the identical Beta.5 SHA and artifacts after the human architecture decision                                                     |
-| Stable | Explicit approval after the full product ladder and remaining soak                                                                            |
+## Alpha.10 truth closure
+
+Alpha.10, the current internal checkpoint (ADR-0151), closes the remaining
+release-truth drift left after Alpha.9 semantic convergence and is a hard blocker
+for Beta.1 admission: Beta.1 may not begin until every Alpha.10 issue carries
+exact closure evidence. Alpha.10 is governed by umbrella issue #1155 and the
+"v0.44 Alpha.10 — internal (unpublished truth closure)" milestone; its work
+issues are #1209 through #1220. It creates no tag, npm publication, GitHub
+Release, dist-tag change or `main` promotion, and no Alpha.10 artifact is
+published.
+
+## Beta, RC and the Stable/1.0 decision
+
+ADR-0151 defines the public train. Each phase answers one question:
+
+| Phase      | Question                                       | Responsibility                                                                                   |
+| ---------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Beta.1     | Is the framework itself trustworthy?           | Framework qualification and governance freeze; first public v0.44 prerelease; three-role loop on |
+| Beta.2     | Can external users really use and maintain it? | Productization and governance offload                                                            |
+| Beta.3     | Can real workloads break the architecture?     | Final hardening, formal benchmark and real SaaS qualification                                    |
+| RC1        | Did we misjudge the candidate?                 | Frozen candidate and soak                                                                        |
+| Stable/1.0 | —                                              | Decided on Beta.3 evidence only; never pre-declared                                              |
+
+The RC1 version string is `v1.0.0-rc.1` when the Beta.3 v1-admission assessment
+passes, otherwise `v0.44.0-rc.1`. An unproven surface is never relabeled as 1.0.
 
 At Beta.1 and later public boundaries, the configured thinker, implementer and fresh
 release verifier rules apply. PR CI remains the sole authoritative full matrix for an
@@ -113,8 +137,8 @@ Beta.1 branch convergence is fail closed: every remote head is classified, every
 PR is resolved or explicitly carried forward, and only an explicit reviewed deletion
 list may run. Unknown-owned branches and local user worktrees are never bulk deleted.
 
-Beta.5 is the immutable RC candidate. Any code, dependency, lockfile or artifact-byte
-change creates a new Beta.5 candidate and repeats SaaS qualification. RC promotion
-does not rebuild the artifacts and requires explicit human GO.
+RC1 is the immutable frozen candidate. Any code, dependency, lockfile or artifact-byte
+change after candidate freeze creates a new candidate and repeats qualification. RC
+promotion does not rebuild the artifacts and requires explicit human GO.
 
-`internal alpha.8 -> internal alpha.9 semantic convergence -> beta.1 framework -> beta.2 release foundations -> beta.3 UI -> beta.4 website -> beta.5 immutable real-product candidate -> RC -> Stable`
+`internal alpha.1-alpha.9 workspaces (complete) -> internal alpha.10 truth closure (current) -> beta.1 framework qualification + governance freeze -> beta.2 productization + governance offload -> beta.3 final hardening + formal benchmark + real SaaS qualification -> RC1 frozen candidate / soak -> Stable/1.0 decision on Beta.3 evidence`

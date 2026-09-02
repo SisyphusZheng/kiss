@@ -3,7 +3,7 @@
   "sourceVersion": "0.43.3",
   "publishedVersion": "0.43.3",
   "latestLandedTrain": "v0.43.3",
-  "activeTarget": "v0.44.0-alpha.0",
-  "nextPlannedTrain": "v0.44.0-alpha.1",
+  "activeTarget": "v0.44.0-beta.1",
+  "nextPlannedTrain": "v0.44.0-beta.2",
   "maturity": "stable"
 }

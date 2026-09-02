@@ -72,8 +72,12 @@ Cloudflare 是被组合的服务提供方，不是框架内建功能。
 至 beta.3 仍是已撤回的不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
 #390 试点在零招募后由 maintainer 决策退役（ADR-0119）。
 
-当前开发目标是 ADR-0143 规定的 `v0.44.0-alpha.0`：一个强制编译器将 TSX
-降为由服务端序列化、浏览器新建 DOM 与已有 DOM claim 共同消费的 Part Program。
+当前开发目标是内部 Alpha.10「真相闭合」(Truth Closure) 检查点：不发布、不打
+tag、不晋级 `main`，由伞形 issue #1155 及工作 issue #1209–#1220 跟踪，是
+Beta.1 准入的硬阻塞项。Alpha 编号是内部工作标识，不是 npm 版本；首个计划公开
+的 v0.44 预发布版本是 Beta.1（`v0.44.0-beta.1`）。0.44 架构列车仍由 ADR-0143
+开启：一个强制编译器将 TSX 降为由服务端序列化、浏览器新建 DOM 与已有 DOM
+claim 共同消费的 Part Program。
 在 0.44 预发布版本真正发布前，这不会改变已安装的稳定线。
 
 `0.42 = WC 轻量全栈（WC light fullstack）`。`0.42.0` 稳定线交付 request-time
