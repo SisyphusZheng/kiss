@@ -6,14 +6,47 @@ import {
   assertThrows,
 } from '@std/assert';
 import {
-  capturePreUpgradeEvents,
-  claimExistingDom,
+  claimExistingDom as claimExistingDomCanonical,
   PartProgramClaimError,
-  replayPreUpgradeEvents,
-} from '../../src/internal/compiled/claim/index.ts';
+} from '../../src/internal/compiled/runtime.ts';
 import { serializeProgramContent } from '../../src/internal/compiled/server/index.ts';
 import { trustedHtml } from '../../src/internal/core/security.ts';
 import { testProgram } from '../compiled-runtime/test-program.ts';
+
+/**
+ * The canonical claim executor is typed for the production kernel (branded
+ * signals, validated Part Programs). These tests deliberately exercise the
+ * untyped wire boundary — raw JSON programs and minimal structural signals —
+ * so the entry points are viewed through their wire-level shape here.
+ */
+interface WirePreUpgradeEventCapture {
+  readonly events: readonly unknown[];
+  stop(): void;
+}
+
+interface WireClaimOptions {
+  recovery?: 'throw' | 'owning';
+  onMismatch?: (error: PartProgramClaimError) => void;
+  preUpgradeEvents?: readonly unknown[] | WirePreUpgradeEventCapture;
+  expectStaticStyle?: boolean;
+}
+
+const claimExistingDom = claimExistingDomCanonical as unknown as (
+  program: unknown,
+  host: unknown,
+  root: Node,
+  options?: WireClaimOptions,
+) => { dispose(): void };
+
+const { capturePreUpgradeEvents, replayPreUpgradeEvents } = (await import(
+  '../../src/internal/compiled/runtime.ts'
+)) as unknown as {
+  capturePreUpgradeEvents: (
+    root: EventTarget,
+    eventTypes?: readonly string[],
+  ) => WirePreUpgradeEventCapture;
+  replayPreUpgradeEvents: (root: Node, captured: readonly unknown[]) => number;
+};
 
 interface Counters {
   createdElements: number;

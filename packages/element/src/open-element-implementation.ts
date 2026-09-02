@@ -48,9 +48,9 @@ import {
 } from './internal/compiled/facade-host.ts';
 import {
   capturePreUpgradeEvents,
+  type PreUpgradeEventCapture,
   replayPreUpgradeEvents,
-} from './internal/compiled/claim/index.ts';
-import type { PreUpgradeEventCapture } from './internal/compiled/claim/index.ts';
+} from './internal/compiled/runtime.ts';
 import { CompiledErrorBoundary } from './internal/compiled/runtime/error-boundary.ts';
 import {
   CompiledElementKernel,
@@ -72,7 +72,7 @@ const preUpgradeCaptures = new Map<EventTarget, PreUpgradeEventCapture>();
  * (default: the document). Generated client entries call this before any
  * compiled element upgrades; after a successful claim the element replays the
  * captured events whose targets live inside its root (compiled claim
- * capture/replay, internal/compiled/claim). Idempotent per root and a no-op
+ * capture/replay, internal/compiled/runtime.ts). Idempotent per root and a no-op
  * where no DOM exists (SSR).
  */
 export function ensurePreHydrationClickCapture(root?: EventTarget): void {
