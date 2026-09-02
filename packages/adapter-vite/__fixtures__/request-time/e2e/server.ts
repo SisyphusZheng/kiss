@@ -4,10 +4,10 @@
  * Serves the built app:
  *   - static files from dist/ (exact file, /path -> /path/index.html, /path.html)
  *   - request-time routes are delegated to the generated dist/server/index.js:
- *     the named matchRequestTimeRoute export (generated from the route table,
- *     #556) decides whether a pathname hits a request-time route, and the
- *     default export takes a Nitro v3 event ({ req }) and returns a
- *     Response.
+ *     the named isRequestTimePath export (derived from the route table,
+ *     #556, narrowed to admission-only by #1215) decides whether a pathname
+ *     could belong to request-time handling, and the default export takes a
+ *     Nitro v3 event ({ req }) and returns a Response.
  *
  * The MIME table, static candidate rules, and the server-entry contract come
  * from the shared adapter source (#732) so this fixture cannot drift from

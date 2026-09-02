@@ -195,8 +195,10 @@ export async function ssgRender(
     );
     writeFileSync(
       join(serverDir, 'index.js'),
+      // Admission predicate derivation (#1215): only the route paths reach the
+      // generated module — params/precedence stay with the canonical entry.
       renderRequestTimeServerModule(
-        requestTimeRoutes.map((r) => ({ path: r.path, paramNames: r.paramNames ?? [] })),
+        requestTimeRoutes.map((r) => ({ path: r.path })),
       ),
       'utf-8',
     );

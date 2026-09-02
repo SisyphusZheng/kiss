@@ -78,11 +78,11 @@ Deno.test('fullstack-boundary: sliceRouteHandlers ignores indented doc-comment e
   assertEquals(handlers[1].path, '/login');
 });
 
-Deno.test('fullstack-boundary: parseRequestTimeRoutePaths reads the generated route table', () => {
+Deno.test('fullstack-boundary: parseRequestTimeRoutePaths reads the generated admission patterns', () => {
   const indexSource = [
-    'const requestTimeRoutes = [',
-    '  { path: "/login", paramNames: [], pattern: new URLPattern({ pathname: "/login" }) },',
-    '  { path: "/notes", paramNames: [], pattern: new URLPattern({ pathname: "/notes" }) },',
+    'const requestTimePatterns = [',
+    '  new URLPattern({ pathname: "/login" }),',
+    '  new URLPattern({ pathname: "/notes" }),',
     '];',
   ].join('\n');
   assertEquals(parseRequestTimeRoutePaths(indexSource), ['/login', '/notes']);

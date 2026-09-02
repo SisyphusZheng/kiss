@@ -65,7 +65,7 @@ Deno.test('parseRouteFilePath maps a catch-all segment to a named Hono regex par
 });
 
 Deno.test('renderRequestTimeServerModule mounts the entry openElementHandler (#858)', () => {
-  const code = renderRequestTimeServerModule([{ path: '/live', paramNames: [] }]);
+  const code = renderRequestTimeServerModule([{ path: '/live' }]);
   // The generated server entry delegates to the entry's openElementHandler
   // export, which carries the composed middleware.use chain when configured —
   // no direct app.fetch bypass.
@@ -90,8 +90,8 @@ Deno.test('renderStandaloneServerModule fails fast below the URLPattern floor (#
 });
 
 Deno.test('renderRequestTimeServerModule carries the URLPattern floor guard (#969)', () => {
-  const code = renderRequestTimeServerModule([{ path: '/live', paramNames: [] }]);
-  // index.js builds its route table at module scope; direct
+  const code = renderRequestTimeServerModule([{ path: '/live' }]);
+  // index.js builds its admission patterns at module scope; direct
   // `node dist/server/index.js` on Node < 24 must fail with guidance (or
   // polyfill via node:url on 23.8+), not a raw ReferenceError.
   assertStringIncludes(code, "typeof globalThis.URLPattern === 'undefined'");

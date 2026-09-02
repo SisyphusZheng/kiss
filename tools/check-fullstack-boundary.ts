@@ -125,7 +125,13 @@ export function sliceRouteHandlers(entrySource: string): RouteHandlerSlice[] {
 
 /** Request-time route paths out of the generated dist/server/index.js table. */
 export function parseRequestTimeRoutePaths(indexSource: string): string[] {
-  return [...indexSource.matchAll(/\{ path: "([^"]+)", paramNames/g)].map((match) => match[1]);
+  // A10.7 (#1215): the generated server module carries a derived admission
+  // predicate only — `const requestTimePatterns = [new URLPattern({ pathname:
+  // "/…" }), …]` — not a route table with params/precedence. Parse the
+  // URLPattern pathname literals; JSON.parse decodes escapes faithfully.
+  return [...indexSource.matchAll(/new URLPattern\(\{ pathname: ("(?:[^"\\]|\\.)*") \}\)/g)].map(
+    (match) => JSON.parse(match[1]) as string,
+  );
 }
 
 const CACHE_CONTROL_EMISSION = /header\("Cache-Control",\s*"([^"]+)"\)/g;

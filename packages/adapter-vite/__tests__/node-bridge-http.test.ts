@@ -26,7 +26,7 @@ import { renderStandaloneServerModule } from '../src/internal/ssg/ssg-helpers.ts
 const startCli = join(import.meta.dirname!, '../src/cli/start.ts');
 
 /** Minimal request-time server entry exercising both bridge directions. */
-const SERVER_ENTRY = `export function matchRequestTimeRoute() { return null; }
+const SERVER_ENTRY = `export function isRequestTimePath() { return false; }
 export default async function openElementRequestTimeServer({ req }) {
   const url = new URL(req.url);
   if (url.pathname === '/cookies') {

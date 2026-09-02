@@ -619,7 +619,7 @@ export default app;
   }
 });
 
-Deno.test('request-time server entry matchRequestTimeRoute dispatches param routes (#556)', async () => {
+Deno.test('request-time server entry isRequestTimePath admits request-time paths (#556, narrowed #1215)', async () => {
   const { renderRequestTimeServerModule } = await import(
     '../src/internal/ssg/ssg-helpers.ts'
   );
@@ -639,39 +639,31 @@ export default app;
     await Deno.writeTextFile(
       join(dir, 'index.js'),
       renderRequestTimeServerModule([
-        { path: '/item/:id', paramNames: ['id'] },
-        { path: '/form', paramNames: [] },
-        { path: '/docs/:path{.+}', paramNames: ['path'] },
+        { path: '/item/:id' },
+        { path: '/form' },
+        { path: '/docs/:path{.+}' },
       ]),
     );
     await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
 
-    const mod = await import(toFileUrl(join(dir, 'index.js')).href + '?matcher') as {
-      matchRequestTimeRoute: (
-        pathname: string,
-      ) => { path: string; params: Record<string, string> } | null;
+    const mod = await import(toFileUrl(join(dir, 'index.js')).href + '?admission') as {
+      isRequestTimePath: (pathname: string) => boolean;
     };
-    assertEquals(mod.matchRequestTimeRoute('/form'), { path: '/form', params: {} });
-    assertEquals(mod.matchRequestTimeRoute('/item/42'), {
-      path: '/item/:id',
-      params: { id: '42' },
-    });
-    // The exact route wins over any parameterized pattern.
-    assertEquals(mod.matchRequestTimeRoute('/item'), null);
-    // URLPattern groups are raw; the matcher decodes them exactly once.
-    assertEquals(mod.matchRequestTimeRoute('/item/hello%20world'), {
-      path: '/item/:id',
-      params: { id: 'hello world' },
-    });
-    // Catch-all matches across segments and keeps the param name.
-    assertEquals(mod.matchRequestTimeRoute('/docs/a/b/c'), {
-      path: '/docs/:path{.+}',
-      params: { path: 'a/b/c' },
-    });
-    assertEquals(mod.matchRequestTimeRoute('/nope'), null);
-    // #823 survives the URLPattern migration (#856): a malformed
-    // percent-encoded pathname throws URIError so hosts answer 400.
-    assertThrows(() => mod.matchRequestTimeRoute('/item/%zz'), URIError);
+    // Admission is a boolean predicate — no winner, no params (#1215).
+    assertEquals(mod.isRequestTimePath('/form'), true);
+    assertEquals(mod.isRequestTimePath('/item/42'), true);
+    // '/item' alone matches no request-time pattern.
+    assertEquals(mod.isRequestTimePath('/item'), false);
+    // Encoded values admit without decoding (params stay canonical).
+    assertEquals(mod.isRequestTimePath('/item/hello%20world'), true);
+    // Catch-all admits across segments.
+    assertEquals(mod.isRequestTimePath('/docs/a/b/c'), true);
+    assertEquals(mod.isRequestTimePath('/nope'), false);
+    // #823 after #1215: admission never decodes, so a malformed escape cannot
+    // throw here — the static layer still answers 400 for non-admitted paths.
+    assertEquals(mod.isRequestTimePath('/item/%zz'), true);
+    // The generated module no longer exports a route winner (#1215).
+    assertEquals('matchRequestTimeRoute' in mod, false);
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }
