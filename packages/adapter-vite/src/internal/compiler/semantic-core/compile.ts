@@ -20,6 +20,7 @@ import {
   isCompileTimeOnlyImport,
   type ModuleIntrinsicBindings,
 } from './module-analysis.ts';
+import { type CompiledElementSourceMap, SourceMapSegmentBuilder } from './source-map.ts';
 import {
   type CompiledElementMetadata,
   type PartProgramV1,
@@ -49,6 +50,13 @@ export class CompiledElementError extends CompilerDiagnosticError {
 
 export interface CompileElementResult {
   code: string;
+  /**
+   * Real Source Map v3 for the emitted module (VLQ line+column segments
+   * derived from the compiler's span records and emission provenance). The
+   * same map is embedded as the module's inline map; the Vite shell returns it
+   * as its `map` output for downstream composition (#1210).
+   */
+  map: CompiledElementSourceMap;
   program: PartProgramV1;
 }
 
@@ -71,7 +79,7 @@ interface CompiledField {
    * source-signal dependencies and emits a `__computedFields` factory over the
    * instance's signal record; no field initializer runs on the generated class.
    */
-  computed?: { deps: string[]; factoryText: string };
+  computed?: { deps: string[]; factoryText: string; body: ts.Expression };
 }
 
 interface GeneratedHandler {
@@ -318,7 +326,7 @@ function parseComputedInitializer(
   plainFieldNames: ReadonlySet<string>,
   computedFieldNames: ReadonlySet<string>,
   fail: (node: ts.Node, code: string, message: string) => never,
-): { deps: string[]; factoryText: string } | null {
+): { deps: string[]; factoryText: string; body: ts.Expression } | null {
   const value = unwrapExpression(initializer);
   if (!ts.isCallExpression(value)) return null;
   const resolution = intrinsics.resolveIntrinsic(value.expression, 'computed');
@@ -394,7 +402,7 @@ function parseComputedInitializer(
       `__s.${replacement.name}.value` +
       bodyText.slice(replacement.end - offset);
   }
-  return { deps, factoryText: `(__s) => ${resolution.localName}(() => ${bodyText})` };
+  return { deps, factoryText: `(__s) => ${resolution.localName}(() => ${bodyText})`, body };
 }
 
 function inferPropertyType(
@@ -1268,11 +1276,13 @@ function propertyFields(
   methods: ts.MethodDeclaration[];
   render: ts.MethodDeclaration;
   stylesText?: string;
+  stylesNode?: ts.Expression;
 } {
   const fields: CompiledField[] = [];
   const methods: ts.MethodDeclaration[] = [];
   let render: ts.MethodDeclaration | null = null;
   let stylesText: string | undefined;
+  let stylesNode: ts.Expression | undefined;
   const names = new Set<string>();
   const propertyAttributeNames = new Set<string>();
   for (const member of classNode.members) {
@@ -1297,6 +1307,7 @@ function propertyFields(
           fail(member, 'OEC9005', 'compiled classes may declare static styles only once');
         }
         stylesText = member.initializer.getText(sf);
+        stylesNode = member.initializer;
         continue;
       }
       const accessibilityModifiers = modifiers.filter((modifier) =>
@@ -1531,7 +1542,7 @@ function propertyFields(
     );
   }
   if (!render) fail(classNode, 'OEC9007', 'compiled classes must declare render()');
-  return { fields, methods, render, stylesText };
+  return { fields, methods, render, stylesText, stylesNode };
 }
 
 function isDeclareStatement(statement: ts.Statement): boolean {
@@ -1659,25 +1670,6 @@ function encodeBase64(value: string): string {
   return btoa(binary);
 }
 
-function runtimePropsText(fields: CompiledField[]): string[] {
-  const lines = ['const __compiledProps = {'];
-  for (const field of fields) {
-    if (field.computed) {
-      lines.push(
-        `  ${field.name}: { type: Object, default: undefined, reflect: false, attribute: false },`,
-      );
-      continue;
-    }
-    const attribute = field.attribute === null ? 'false' : JSON.stringify(field.attribute);
-    lines.push(
-      `  ${field.name}: { type: ${field.typeConstructor}, default: ${field.initializerText}, ` +
-        `reflect: ${field.reflect}, attribute: ${attribute} },`,
-    );
-  }
-  lines.push('};');
-  return lines;
-}
-
 function generatedHandlerText(handler: GeneratedHandler): string {
   const action = handler.action;
   if (action.kind === 'method') return `  ${handler.name}(): void { this.${action.name}(); }`;
@@ -1716,7 +1708,7 @@ export function compileElementProgram(source: string, fileName: string): Compile
   // analysis — no spelling-based recognizer survives in the compiler.
   const intrinsics = createModuleIntrinsicBindings(sf);
 
-  const passthroughStatements: string[] = [];
+  const passthroughStatements: ts.Statement[] = [];
   for (const statement of sf.statements) {
     if (
       ts.isImportDeclaration(statement) || ts.isClassDeclaration(statement) ||
@@ -1726,7 +1718,7 @@ export function compileElementProgram(source: string, fileName: string): Compile
     // alpha.8: the island delivery policy is the one runtime statement a
     // compiled module may carry; it is validated and copied verbatim below.
     if (isIslandConfigStatement(statement, intrinsics)) {
-      passthroughStatements.push(statement.getText(sf));
+      passthroughStatements.push(statement);
       continue;
     }
     fail(
@@ -1898,7 +1890,12 @@ export function compileElementProgram(source: string, fileName: string): Compile
   const openElementLocalName = heritageResolution.localName!;
   if (!classNode.name) fail(classNode, 'OEC9003', 'compiled classes must be named');
   const className = classNode.name.text;
-  const { fields, methods, render, stylesText } = propertyFields(sf, classNode, intrinsics, fail);
+  const { fields, methods, render, stylesText, stylesNode } = propertyFields(
+    sf,
+    classNode,
+    intrinsics,
+    fail,
+  );
   const methodNames = methods.map((method) => (method.name as ts.Identifier).text);
   const lowering = new Lowering(sf, fields, methodNames);
   const renderStatements = render.body?.statements ?? [];
@@ -1977,31 +1974,210 @@ export function compileElementProgram(source: string, fileName: string): Compile
   const propertiesJson = JSON.stringify(metadata.properties, null, 2);
   const metadataJson = JSON.stringify(metadata, null, 2);
   const observedJson = JSON.stringify(metadata.observedAttributes, null, 2);
-  const memberLines: string[] = [
-    '  static __partProgram = __partProgram;',
-    '  static __compiledProperties = __compiledProperties;',
-    '  static __elementMetadata = __elementMetadata;',
-    '  static props = __compiledProps;',
-    '  static observedAttributes = __observedAttributes;',
-  ];
-  if (delegatesFocus) memberLines.push('  static delegatesFocus = true;');
-  if (formAssociated) memberLines.push('  static formAssociated = true;');
+
+  // Emission provenance (#1210, ADR-0148): the semantic core owns both the
+  // original source spans and where each copied/derived construct lands in the
+  // generated module. Every such line records a real Source Map v3 segment
+  // (VLQ line+column, names where known); pure scaffolding stays unmapped so
+  // consumers fall through to the nearest real construct. The emitted module
+  // text is unchanged by this bookkeeping.
+  const segments = new SourceMapSegmentBuilder();
+  const codeLines: string[] = [];
+  const nodePosition = (node: ts.Node): { line: number; column: number } => {
+    const position = sf.getLineAndCharacterOfPosition(node.getStart(sf));
+    return { line: position.line + 1, column: position.character };
+  };
+  const mapLineAt = (
+    generatedLine: number,
+    generatedColumn: number,
+    node: ts.Node,
+    name?: string,
+  ): void => {
+    const position = nodePosition(node);
+    segments.add({
+      generatedLine,
+      generatedColumn,
+      sourceLine: position.line,
+      sourceColumn: position.column,
+      ...(name === undefined ? {} : { name }),
+    });
+  };
+  /**
+   * Continuation lines of a verbatim-copied block: text line i is authored
+   * line (start + i) verbatim, so generated column (prefix + whitespace) maps
+   * to authored column (whitespace) — the first non-whitespace character.
+   */
+  const mapContinuationLines = (
+    text: string,
+    firstGeneratedLine: number,
+    node: ts.Node,
+    prefix: number,
+  ): void => {
+    const position = nodePosition(node);
+    const lines = text.split('\n');
+    for (let index = 1; index < lines.length; index++) {
+      const whitespace = /^\s*/.exec(lines[index])![0].length;
+      segments.add({
+        generatedLine: firstGeneratedLine + index,
+        generatedColumn: prefix + whitespace,
+        sourceLine: position.line + index,
+        sourceColumn: whitespace,
+      });
+    }
+  };
+  /** Push a line or block: multiline text always splits so codeLines.length tracks emitted lines. */
+  const push = (text: string): void => {
+    for (const line of text.split('\n')) codeLines.push(line);
+  };
+  /** Push a verbatim copy of a node's text (optionally line-prefixed). */
+  const pushVerbatim = (text: string, node: ts.Node, prefix = '', name?: string): void => {
+    const firstGeneratedLine = codeLines.length + 1;
+    push(text.split('\n').map((line) => prefix + line).join('\n'));
+    mapLineAt(firstGeneratedLine, prefix.length, node, name);
+    mapContinuationLines(text, firstGeneratedLine, node, prefix.length);
+  };
+  /** Push one synthesized line embedding a verbatim value, mapping both. */
+  const pushDerivedLine = (
+    head: string,
+    valueText: string,
+    tail: string,
+    nameNode: ts.Node,
+    nameColumn: number,
+    name: string,
+    valueNode: ts.Node | undefined,
+  ): void => {
+    const generatedLine = codeLines.length + 1;
+    push(`${head}${valueText}${tail}`);
+    mapLineAt(generatedLine, nameColumn, nameNode, name);
+    if (valueNode !== undefined) {
+      mapLineAt(generatedLine, head.length, valueNode);
+      mapContinuationLines(valueText, generatedLine, valueNode, 0);
+    }
+  };
+  /** Push a synthesized block whose first line traces to `node`. */
+  const pushDerivedBlock = (text: string, node: ts.Node, name?: string): void => {
+    const firstGeneratedLine = codeLines.length + 1;
+    push(text);
+    mapLineAt(firstGeneratedLine, 0, node, name);
+  };
+
+  push('// <auto-generated by open:compiled-element; v0.44.0-alpha.1 - do not edit>');
+  for (const statement of sf.statements) {
+    if (!ts.isImportDeclaration(statement)) continue;
+    const rewritten = rewriteImportForGeneratedModule(sf, statement);
+    // No OpenElement import injection (#1209): heritage provenance is required,
+    // so the canonical binding (possibly aliased) always exists in the source
+    // and is carried by the copied imports above.
+    if (rewritten !== null) pushVerbatim(rewritten, statement);
+  }
+  push('');
+  for (const statement of passthroughStatements) pushVerbatim(statement.getText(sf), statement);
+  if (passthroughStatements.length > 0) push('');
+
+  // The serialized program payload derives from the render() JSX; each source
+  // record's own serialized entry maps to its authored span below.
+  const programStartLine = codeLines.length + 1;
+  pushDerivedBlock(`const __partProgram = ${programJson};`, render);
+  const programJsonPosition = (offset: number): { line: number; column: number } => {
+    const before = programJson.slice(0, offset);
+    return {
+      line: programStartLine + before.split('\n').length - 1,
+      column: offset - (before.lastIndexOf('\n') + 1),
+    };
+  };
+  const tagOffset = programJson.indexOf(`"tag": ${JSON.stringify(tag)}`);
+  if (tagOffset >= 0) {
+    // The compiled tag payload traces to the @element decorator application.
+    const at = programJsonPosition(tagOffset);
+    mapLineAt(at.line, at.column, decorator);
+  }
+  let recordsCursor = programJson.indexOf('"records": [');
+  if (recordsCursor >= 0) {
+    for (const record of program.sourceMap.records) {
+      const needle = `"id": ${JSON.stringify(record.id)}`;
+      const offset = programJson.indexOf(needle, recordsCursor);
+      if (offset < 0) continue; // records always serialize in order; defensive
+      recordsCursor = offset + needle.length;
+      const at = programJsonPosition(offset);
+      segments.add({
+        generatedLine: at.line,
+        generatedColumn: at.column,
+        sourceLine: record.source.start.line,
+        sourceColumn: record.source.start.column - 1,
+      });
+    }
+  }
+  push('');
+  pushDerivedBlock(`const __compiledProperties = ${propertiesJson};`, classNode.name!);
+  push('');
+  pushDerivedBlock(`const __elementMetadata = ${metadataJson};`, classNode.name!);
+  push('');
+  pushDerivedBlock(`const __observedAttributes = ${observedJson};`, classNode.name!);
+  push('');
+
+  pushDerivedBlock('const __compiledProps = {', classNode.name!);
+  for (const field of fields) {
+    if (field.computed) {
+      const computedLine = codeLines.length + 1;
+      push(
+        `  ${field.name}: { type: Object, default: undefined, reflect: false, attribute: false },`,
+      );
+      mapLineAt(computedLine, 2, field.node.name, field.name);
+      continue;
+    }
+    const attribute = field.attribute === null ? 'false' : JSON.stringify(field.attribute);
+    pushDerivedLine(
+      `  ${field.name}: { type: ${field.typeConstructor}, default: `,
+      field.initializerText,
+      `, reflect: ${field.reflect}, attribute: ${attribute} },`,
+      field.node.name,
+      2,
+      field.name,
+      field.node.initializer,
+    );
+  }
+  push('};');
+  push('');
+
+  const classLine = `export ${
+    isDefaultExport ? 'default ' : ''
+  }class ${className} extends ${openElementLocalName} {`;
+  push(classLine);
+  mapLineAt(codeLines.length, classLine.indexOf(className), classNode.name!, className);
+  push(
+    [
+      '  static __partProgram = __partProgram;',
+      '  static __compiledProperties = __compiledProperties;',
+      '  static __elementMetadata = __elementMetadata;',
+      '  static props = __compiledProps;',
+      '  static observedAttributes = __observedAttributes;',
+    ].join('\n'),
+  );
+  if (delegatesFocus) push('  static delegatesFocus = true;');
+  if (formAssociated) push('  static formAssociated = true;');
   const computedFields = fields.filter((field) => field.computed);
   if (computedFields.length > 0) {
     // Derived-signal factories: each builds the field's read-only computed
     // over the instance's plain property signals (facade + renderDsd run the
     // same factories, so server output and client claim read one value set).
-    memberLines.push('  static __computedFields = {');
+    push('  static __computedFields = {');
     for (const field of computedFields) {
-      memberLines.push(`    ${field.name}: ${field.computed!.factoryText},`);
+      const factoryLine = codeLines.length + 1;
+      push(`    ${field.name}: ${field.computed!.factoryText},`);
+      mapLineAt(factoryLine, 4, field.node.name, field.name);
+      mapLineAt(factoryLine, 4 + field.name.length + 2, field.node.initializer!);
+      mapContinuationLines(field.computed!.factoryText, factoryLine, field.computed!.body, 0);
     }
-    memberLines.push('  };');
+    push('  };');
   }
-  if (stylesText !== undefined) {
+  if (stylesText !== undefined && stylesNode !== undefined) {
     // Copied verbatim: the facade reads static styles into the compiled style
     // scope (adoptedStyleSheets on shadow roots, a document-head sink on light
     // roots); the serializer inlines them as the marked DSD <style> element.
-    memberLines.push(`  static styles = ${stylesText};`);
+    const stylesLine = codeLines.length + 1;
+    push(`  static styles = ${stylesText};`);
+    mapLineAt(stylesLine, '  static styles = '.length, stylesNode);
+    mapContinuationLines(stylesText, stylesLine, stylesNode, 0);
   }
   for (const field of fields) {
     // Computed fields carry no initializer on the generated class: the
@@ -2009,67 +2185,45 @@ export function compileElementProgram(source: string, fileName: string): Compile
     // would shadow it.
     if (field.computed) continue;
     const accessibility = field.accessibility ? `${field.accessibility} ` : '';
-    memberLines.push(
-      `  ${accessibility}${field.name}${field.typeText} = ${field.initializerText};`,
+    pushDerivedLine(
+      `  ${accessibility}${field.name}${field.typeText} = `,
+      field.initializerText,
+      ';',
+      field.node.name,
+      2 + accessibility.length,
+      field.name,
+      field.node.initializer,
     );
   }
   for (const method of methods) {
-    memberLines.push(...method.getText(sf).split('\n').map((line) => `  ${line}`));
+    pushVerbatim(method.getText(sf), method, '  ', (method.name as ts.Identifier).text);
   }
-  for (const handler of lowering.generatedHandlers) memberLines.push(generatedHandlerText(handler));
-  memberLines.push(
-    '  render(): never {',
-    '    throw new Error(',
-    `      '[open:compiled-element] ${tag} is compiled to a Part Program; ` +
-      "the runtime JSX render path is not available in 0.44.',",
-    '    );',
-    '  }',
+  for (const handler of lowering.generatedHandlers) {
+    // Synthesized forwarding method; its whole line traces to the authored
+    // arrow function, so identical handler bodies never collapse onto the
+    // first matching source line.
+    const handlerLine = codeLines.length + 1;
+    push(generatedHandlerText(handler));
+    mapLineAt(handlerLine, 2, handler.node);
+  }
+  push('  render(): never {');
+  mapLineAt(codeLines.length, 2, render, 'render');
+  push(
+    '    throw new Error(\n' +
+      `      '[open:compiled-element] ${tag} is compiled to a Part Program; ` +
+      "the runtime JSX render path is not available in 0.44.',\n" +
+      '    );\n' +
+      '  }',
   );
+  push('}');
+  push('');
+  push('export { __partProgram, __elementMetadata };');
 
-  const imports: string[] = [];
-  for (const statement of sf.statements) {
-    if (!ts.isImportDeclaration(statement)) continue;
-    const rewritten = rewriteImportForGeneratedModule(sf, statement);
-    if (rewritten !== null) imports.push(rewritten);
-  }
-  // No OpenElement import injection (#1209): heritage provenance is required,
-  // so the canonical binding (possibly aliased) always exists in the source
-  // and is carried by the copied imports above.
-  const codeLines = [
-    '// <auto-generated by open:compiled-element; v0.44.0-alpha.1 - do not edit>',
-    ...imports,
-    '',
-    ...passthroughStatements,
-    ...(passthroughStatements.length > 0 ? [''] : []),
-    `const __partProgram = ${programJson};`,
-    '',
-    `const __compiledProperties = ${propertiesJson};`,
-    '',
-    `const __elementMetadata = ${metadataJson};`,
-    '',
-    `const __observedAttributes = ${observedJson};`,
-    '',
-    ...runtimePropsText(fields),
-    '',
-    `export ${
-      isDefaultExport ? 'default ' : ''
-    }class ${className} extends ${openElementLocalName} {`,
-    ...memberLines,
-    '}',
-    '',
-    'export { __partProgram, __elementMetadata };',
-  ];
-  const sourceMap = {
-    version: 3,
-    file: fileName,
-    sources: [fileName],
-    names: [],
-    mappings: '',
-    sourcesContent: [source],
-    x_openElement: program.sourceMap,
-  };
-  codeLines.push(
-    `//# sourceMappingURL=data:application/json;base64,${encodeBase64(JSON.stringify(sourceMap))}`,
+  // The one map story at this boundary: real v3 segments, with the Part
+  // Program provenance records carried as supplementary metadata only.
+  const map = segments.build(fileName, source, program.sourceMap);
+  push(
+    `//# sourceMappingURL=data:application/json;base64,${encodeBase64(JSON.stringify(map))}`,
   );
-  return { code: codeLines.join('\n') + '\n', program };
+  return { code: codeLines.join('\n') + '\n', map, program };
 }

@@ -1,10 +1,7 @@
 import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { join } from 'node:path';
 import { buildCriticalHeadExtras } from '../../src/internal/ssg/critical-assets.ts';
-import {
-  compiledElementPlugin,
-  createCompiledElementSourceMap,
-} from '../../src/internal/compiler/plugin.ts';
+import { compiledElementPlugin, compileElementModule } from '../../src/internal/compiler/plugin.ts';
 import { generateClientEntry } from '../../src/internal/ssg/entry-client-codegen.ts';
 import { createIslandScheduler } from '../../src/internal/ssg/island-scheduler.ts';
 import { readIslandConfig } from '../../src/internal/ssg/island-scanner.ts';
@@ -204,22 +201,21 @@ Deno.test('v0.44 SSR admission expands one capability declaration per delivered 
 });
 
 Deno.test('v0.44 compiler source records pass through the Vite source map', () => {
-  const records = {
-    version: 1,
-    file: '/src/clock.tsx',
-    records: [{
-      id: 'root',
-      kind: 'root',
-      source: { start: { offset: 0, line: 1, column: 1 }, end: { offset: 1, line: 1, column: 2 } },
-    }],
-  };
-  const map = createCompiledElementSourceMap(
-    'const source = true;',
-    'const generated = true;',
-    '/src/clock.tsx',
-    { sourceMap: records },
-  );
-  assertEquals(map.x_openElement, records);
+  // A10.2 (#1210): the map returned for Vite composition is the core's real
+  // Source Map v3; the program's v1 provenance records ride along only as
+  // supplementary x_openElement metadata.
+  const source = [
+    "import { element, OpenElement, property } from '@openelement/element';",
+    "@element('oe-clock')",
+    'export class Clock extends OpenElement {',
+    '  @property({ reflect: true }) count = 0;',
+    '  render() { return <div>{this.count}</div>; }',
+    '}',
+  ].join('\n');
+  const result = compileElementModule(source, '/src/clock.tsx');
+  assertEquals(result?.map.x_openElement, result?.program.sourceMap);
+  assertEquals(result?.map.sources, ['/src/clock.tsx']);
+  assertEquals(result?.map.sourcesContent, [source]);
 });
 
 Deno.test('v0.44 compiler hook transforms once and classifies HMR shape changes', async () => {
