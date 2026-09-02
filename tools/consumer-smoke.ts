@@ -6,6 +6,16 @@
  * verifies @openelement/element can be consumed from npm in Deno and Node.
  * Also checks the jsDelivr CDN browser-safe export and Nitro build output.
  *
+ * This script is a RELEASE GATE (#1216, A10.8): it is wired into the
+ * post-publish release plan (tools/autoflow/release.ts) and the published
+ * consumer workflow (.github/workflows/published-consumers.yml), so its
+ * availability probes use the canonical verdict contract
+ * (tools/gate-verdict.ts) and fail closed. Only a CONFIRMED registry 200
+ * whose payload confirms the exact version admits the release; a confirmed
+ * 404 is FAIL; timeout, DNS/network failure, 5xx and malformed responses are
+ * UNKNOWN — all non-PASS verdicts exit non-zero. There is no skip path:
+ * infra uncertainty can never green a release.
+ *
  * Usage:
  *   deno run -A tools/consumer-smoke.ts
  *   deno run -A tools/consumer-smoke.ts --local
@@ -13,6 +23,8 @@
  *   deno run -A tools/consumer-smoke.ts --version <x.y.z> --jsdelivr --nitro
  */
 
+import { formatError } from '@openelement/element';
+import { admitsRelease, fail, type GateDecision, pass, unknown } from './gate-verdict.ts';
 import { getArg, runWithOutput } from './lib/process.ts';
 import { readJson } from './lib/fs.ts';
 import { normalizeSlashes } from './lib/path.ts';
@@ -247,25 +259,125 @@ async function exactVersionStarterSmoke(version: string): Promise<void> {
   }
 }
 
-async function jsdelivrSmoke(version: string): Promise<void> {
+/** Injectable HTTP probe shape: status code plus raw body text. */
+export interface RegistryFetchResponse {
+  status: number;
+  body: string;
+}
+
+export type RegistryFetcher = (url: string) => Promise<RegistryFetchResponse>;
+
+const PROBE_TIMEOUT_MS = 15_000;
+
+/** Real network probe; the only IO behind the availability decisions. */
+async function httpProbe(url: string): Promise<RegistryFetchResponse> {
+  const response = await fetch(url, { signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
+  return { status: response.status, body: await response.text() };
+}
+
+/**
+ * Classify a registry `GET /{name}/{version}` response. PASS requires a 200
+ * whose JSON payload confirms the exact requested version; a 404 is confirmed
+ * absence (FAIL); every other status, a malformed body, or a payload that
+ * does not confirm the version is UNKNOWN — infra uncertainty, fail closed.
+ */
+export function classifyRegistryResponse(
+  name: string,
+  version: string,
+  status: number,
+  body: string,
+): GateDecision {
+  if (status === 404) {
+    return fail(`confirmed absence: ${name}@${version} is not published on npm (registry 404)`);
+  }
+  if (status !== 200) {
+    return unknown(
+      `registry returned HTTP ${status} for ${name}@${version}; availability cannot be confirmed`,
+    );
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body) as unknown;
+  } catch {
+    return unknown(`malformed registry response for ${name}@${version}; not valid JSON`);
+  }
+  if (
+    typeof parsed !== 'object' || parsed === null || Array.isArray(parsed) ||
+    (parsed as { version?: unknown }).version !== version
+  ) {
+    return unknown(
+      `registry response for ${name}@${version} does not confirm version ${version}`,
+    );
+  }
+  return pass(`${name}@${version} confirmed on npm (registry 200, version payload match)`);
+}
+
+/**
+ * npm availability verdict for the release gate. Network exceptions
+ * (DNS failure, timeout, reset) are UNKNOWN, never "absent".
+ */
+export async function npmAvailabilityDecision(
+  name: string,
+  version: string,
+  fetcher: RegistryFetcher = httpProbe,
+): Promise<GateDecision> {
+  const url = `https://registry.npmjs.org/${name}/${version}`;
+  let response: RegistryFetchResponse;
+  try {
+    response = await fetcher(url);
+  } catch (error) {
+    return unknown(`registry probe for ${name}@${version} failed: ${formatError(error)}`);
+  }
+  return classifyRegistryResponse(name, version, response.status, response.body);
+}
+
+/**
+ * Classify a jsDelivr CDN response for the browser-safe export. PASS requires
+ * a 200 with a non-empty body; a 404 means the CDN artifact for a published
+ * package is missing (FAIL); anything else is UNKNOWN.
+ */
+export function classifyCdnResponse(version: string, status: number, body: string): GateDecision {
+  if (status === 404) {
+    return fail(`CDN artifact missing: jsDelivr 404 for @openelement/element@${version}/+esm`);
+  }
+  if (status !== 200) {
+    return unknown(
+      `jsDelivr returned HTTP ${status} for @openelement/element@${version}; CDN availability cannot be confirmed`,
+    );
+  }
+  if (body.trim().length === 0) {
+    return fail(
+      `jsDelivr returned an empty browser-safe export for @openelement/element@${version}`,
+    );
+  }
+  return pass(`jsDelivr browser-safe export confirmed for @openelement/element@${version}`);
+}
+
+/** jsDelivr CDN availability verdict for the release gate. */
+export async function cdnAvailabilityDecision(
+  version: string,
+  fetcher: RegistryFetcher = httpProbe,
+): Promise<GateDecision> {
   const url = `https://cdn.jsdelivr.net/npm/@openelement/element@${version}/+esm`;
-  console.log(`\n[jsDelivr CDN browser-safe export] ${url}`);
+  let response: RegistryFetchResponse;
+  try {
+    response = await fetcher(url);
+  } catch (error) {
+    return unknown(
+      `jsDelivr probe for @openelement/element@${version} failed: ${formatError(error)}`,
+    );
+  }
+  return classifyCdnResponse(version, response.status, response.body);
+}
 
-  const response = await fetch(url);
-  const text = await response.text();
-
-  if (response.status !== 200) {
-    console.error(`  failed: status ${response.status}`);
-    console.error(text.slice(0, 500));
+async function jsdelivrSmoke(version: string): Promise<void> {
+  console.log(`\n[jsDelivr CDN browser-safe export] @openelement/element@${version}/+esm`);
+  const decision = await cdnAvailabilityDecision(version);
+  if (!admitsRelease(decision)) {
+    console.error(`  ${decision.verdict}: ${decision.reason}`);
     Deno.exit(1);
   }
-
-  if (text.trim().length === 0) {
-    console.error('  failed: empty response');
-    Deno.exit(1);
-  }
-
-  console.log(`  ok: ${text.length} bytes`);
+  console.log(`  ok: ${decision.reason}`);
 }
 
 async function nitroSmoke(): Promise<void> {
@@ -288,15 +400,6 @@ async function nitroSmoke(): Promise<void> {
   }
 }
 
-async function npmPackageExists(name: string, version: string): Promise<boolean> {
-  try {
-    const response = await fetch(`https://registry.npmjs.org/${name}/${version}`);
-    return response.status === 200;
-  } catch {
-    return false;
-  }
-}
-
 async function main(): Promise<void> {
   const { PACKAGE_VERSION } = await import('./project-constants.ts');
   const local = getArgFlag('--local');
@@ -316,14 +419,17 @@ async function main(): Promise<void> {
   if (runNitro) console.log('  + Nitro output smoke');
 
   if (!local) {
-    const exists = await npmPackageExists('@openelement/element', version);
-    if (!exists) {
-      console.log(
-        `\n@openelement/element@${version} is not yet available on npm; skipping npm consumer smoke.`,
-      );
-      console.log('Run again after publish, or use --local to test against workspace sources.');
-      return;
+    // Release gate, fail closed (#1216): only a confirmed registry 200 with a
+    // matching version payload admits the smoke. A confirmed 404 is FAIL;
+    // timeout/DNS/5xx/malformed responses are UNKNOWN. Both exit non-zero —
+    // infra uncertainty can no longer skip this gate green.
+    const availability = await npmAvailabilityDecision('@openelement/element', version);
+    if (!admitsRelease(availability)) {
+      console.error(`\nnpm availability gate: ${availability.verdict}: ${availability.reason}`);
+      console.error('Use --local to smoke against workspace sources instead.');
+      Deno.exit(1);
     }
+    console.log(`  npm availability: ${availability.reason}`);
   }
 
   await denoNpmSmoke(version, projectRoot, local);
