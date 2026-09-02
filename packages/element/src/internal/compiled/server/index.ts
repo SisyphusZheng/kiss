@@ -460,7 +460,11 @@ function serializeNode(
     const active = whenIsActive(part, value);
     const branch = active ? part.on : part.off;
     const end = `<!--${partAnchorEndMarker(part.index)}-->`;
-    return `${start}${serializeNodes(ctx, branch, [])}${end}`;
+    // Branch content keeps the anchor's canonical path prefix: Region
+    // subtrees hold no value sinks (the validator rejects fixed paths
+    // crossing or preceded by an anchor), and resetting to [] would collide
+    // with template-level sink paths and emit their values here.
+    return `${start}${serializeNodes(ctx, branch, nodePath)}${end}`;
   }
   if (part.k === 'each') {
     const end = `<!--${partAnchorEndMarker(part.index)}-->`;
