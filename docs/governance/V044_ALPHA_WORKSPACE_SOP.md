@@ -2,6 +2,11 @@
 
 > Status: Mandatory for Alpha.0 through Alpha.8. The three-role release SOP does not
 > apply during this phase.
+>
+> Scope note (2026-09-02): Alpha.9 semantic convergence completed under the same
+> internal authority. Alpha.10 (internal Truth Closure, unpublished) is governed
+> by ADR-0151 through umbrella issue #1155 and does not reopen this SOP's
+> Alpha.0-through-Alpha.8 workspace topology.
 
 ## Purpose
 

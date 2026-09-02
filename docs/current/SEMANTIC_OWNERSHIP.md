@@ -1,10 +1,16 @@
 # Semantic ownership
 
-Current truth for the v0.44 internal Alpha.9 checkpoint. One concept has one
+This table is the Alpha.9 semantic-ownership record: current truth for the
+v0.44 internal Alpha.9 checkpoint. One concept has one
 semantic owner. Other implementations are executors, adapters, conforming
 polyfills, or derived indexes; they may optimize the canonical meaning but may
 not redefine it. "Closed" means no known divergence remains after the cited
 tests; Alpha.9 remains internal and unpublished.
+
+Alpha.10 — the current internal checkpoint, governed by umbrella issue #1155 —
+evolves specific rows of this table through its issue tree (#1209-#1220). The
+table remains the Alpha.9 baseline until it is re-baselined at Alpha.10
+closure.
 
 | Concept                                                        | Canonical owner and representation                                                                                                     | Executors, alternatives, and accepted decision                                                      | Parity evidence and known divergence                                                                                                                                                                                 | Forbidden duplicate ownership; issue                                                          |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |

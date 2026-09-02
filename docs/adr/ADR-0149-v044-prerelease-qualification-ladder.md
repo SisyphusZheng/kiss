@@ -7,6 +7,12 @@
 - Preserves: ADR-0148 compiler semantic-core/Vite integration boundary, the
   three-role Beta closure protocol, exact-SHA evidence, and human RC authority
 
+> Supersession note (2026-09-02): the Beta topology of this ADR — the five-Beta
+> mapping in section 2 and the downstream phase assignments that depend on it —
+> is withdrawn by ADR-0151. Everything else in this ADR that is not about Beta
+> topology (branch convergence mechanics, immutable-candidate discipline, human
+> RC authority) is unaffected.
+
 ## Context
 
 The internal Alpha workspaces now produce one coherent framework substrate, but the
