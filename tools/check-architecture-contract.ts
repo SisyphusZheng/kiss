@@ -161,13 +161,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/element/src/open-element-implementation.ts',
-    fragment: 'as { childNodes: ArrayLike<unknown> }',
-    reason:
-      'Claim-vs-fresh probe: the element/shadow root is read structurally for existing content before the kernel resolves its root.',
-    revisitBy: '0.44.0',
-  },
-  {
     file: 'packages/element/src/internal/compiled/facade-host.ts',
     fragment: 'element as unknown as Record<string, unknown>',
     reason:

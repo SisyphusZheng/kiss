@@ -18,6 +18,20 @@ import type { StyleSheetLike } from '../../../internal/protocol/style-sheet.ts';
 
 export type CompiledRootMode = 'light' | 'open' | 'closed';
 
+/**
+ * Which executor ran for one activation: the canonical claim of existing
+ * (SSR/DSD) content, or fresh DOM creation. The kernel decides from the
+ * resolved root's actual content and reports it here — the semantic owner of
+ * the mode is the execution itself, never a pre-connect guess (#1213).
+ */
+export type CompiledActivationMode = 'claim' | 'fresh';
+
+/** Truth of one successful kernel activation: the mode and the root it ran against. */
+export interface CompiledKernelActivation {
+  readonly mode: CompiledActivationMode;
+  readonly root: CompiledStyleRoot;
+}
+
 export interface CompiledElementKernelOptions extends CompiledRuntimeHost {
   rootMode?: CompiledRootMode;
   /** A previously created closed root may be supplied on re-entry. */
@@ -46,6 +60,7 @@ export class CompiledElementKernel {
   #styleScope = new CompiledStyleScope();
   #root?: CompiledStyleRoot;
   #instance?: CompiledProgramInstance;
+  #activation?: CompiledKernelActivation;
   #active = false;
   #destroyed = false;
 
@@ -73,9 +88,14 @@ export class CompiledElementKernel {
     return this.#active;
   }
 
-  connect(): void {
+  /**
+   * Resolve the root, run exactly one executor (claim of existing content or
+   * fresh creation), and return the activation truth. The facade derives its
+   * lifecycle hooks from this result; a thrown connect never produces a mode.
+   */
+  connect(): CompiledKernelActivation {
     if (this.#destroyed) throw new Error('[compiled-kernel] kernel is disposed');
-    if (this.#active) return;
+    if (this.#active) return this.#activation as CompiledKernelActivation;
 
     if (this.#element.tagName.toLowerCase() !== this.#program.tag) {
       throw new Error(
@@ -86,21 +106,27 @@ export class CompiledElementKernel {
     this.lifecycle.connect();
     let themeConnected = false;
     try {
+      // Form internals attach first: for a form-associated host they are the
+      // one channel through which a declaratively attached closed root is
+      // reachable (ElementInternals.shadowRoot) during root resolution.
+      this.form.attach(this.#element, { formAssociated: this.#options.formAssociated });
       const root = this.#resolveRoot();
       this.#styleScope.connect(root, this.#options.styles);
       themeManager.connect(this.#element);
       themeConnected = true;
-      this.form.attach(this.#element, { formAssociated: this.#options.formAssociated });
       const styles = this.#options.styles;
       const styleCount = Array.isArray(styles) ? styles.length : styles ? 1 : 0;
-      this.#instance = root.childNodes.length > 0
+      const mode: CompiledActivationMode = root.childNodes.length > 0 ? 'claim' : 'fresh';
+      this.#instance = mode === 'claim'
         ? claimExistingDom(this.#program, this.#options, root, {
           expectStaticStyle: styleCount > 0,
         })
         : createFreshDom(this.#program, this.#options, root);
       this.context.connect();
       if (this.errors.hasError) this.errors.reset();
+      this.#activation = { mode, root };
       this.#active = true;
+      return this.#activation;
     } catch (error) {
       try {
         this.context.disconnect();
@@ -124,6 +150,7 @@ export class CompiledElementKernel {
   disconnect(): void {
     if (!this.#active) return;
     this.#active = false;
+    this.#activation = undefined;
     try {
       this.#instance?.dispose();
     } finally {
@@ -164,7 +191,7 @@ export class CompiledElementKernel {
       this.#root = this.#options.root;
       return this.#root;
     }
-    const existing = mode === 'open' ? this.#element.shadowRoot : undefined;
+    const existing = mode === 'open' ? this.#element.shadowRoot : this.#existingClosedRoot();
     if (existing) {
       this.#root = existing;
       return existing;
@@ -177,5 +204,25 @@ export class CompiledElementKernel {
       delegatesFocus: this.#options.delegatesFocus ?? false,
     });
     return this.#root;
+  }
+
+  /**
+   * A declaratively attached (DSD) closed root is reachable only through the
+   * host's own ElementInternals — `attachShadow()` on such a host would wipe
+   * the declarative content, so it can never serve the claim. Form-associated
+   * hosts already attached their internals via the form controller (a second
+   * `attachInternals()` would throw), so direct discovery skips them.
+   */
+  #existingClosedRoot(): CompiledStyleRoot | undefined {
+    const viaForm = this.form.internals?.shadowRoot;
+    if (viaForm) return viaForm;
+    if (this.#options.formAssociated === true) return undefined;
+    if (typeof this.#element.attachInternals !== 'function') return undefined;
+    try {
+      return this.#element.attachInternals().shadowRoot ?? undefined;
+    } catch {
+      // Internals were attached elsewhere; no discovery channel remains.
+      return undefined;
+    }
   }
 }

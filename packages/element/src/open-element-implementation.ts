@@ -16,8 +16,10 @@
  * At construction the facade builds the kernel host: one engine-backed signal
  * per compiled property, the program-referenced handlers bound to instance
  * methods, and an empty refs record (internal/compiled/facade-host.ts owns
- * the property contract). Claim-vs-fresh activation is decided by the kernel
- * from the existing root content (`root.childNodes`).
+ * the property contract). Claim-vs-fresh activation is owned by the kernel:
+ * `kernel.connect()` returns the activation result (`mode: 'claim' | 'fresh'`
+ * plus the resolved root) and the facade derives its hooks from that result —
+ * never from a pre-connect guess.
  *
  * There is no fallback render path: an OpenElement subclass that reaches
  * `connectedCallback()` without a `__partProgram` fails closed with an
@@ -26,9 +28,10 @@
  * Lifecycle:
  *   Server: renderDsd() -> serializeCompiledProgram() -> deterministic HTML
  *   Client (SSR DOM present): connectedCallback -> kernel.connect() claims
- *     the existing tree -> onDsdHydrated()
+ *     the existing tree (mode 'claim') -> pre-upgrade replay -> onDsdHydrated()
  *   Client (no SSR DOM): connectedCallback -> kernel.connect() creates fresh
- *     DOM -> onCsrRendered()
+ *     DOM (mode 'fresh') -> onCsrRendered()
+ *   Either way the pre-upgrade capture is torn down with the decision.
  *
  * @module @openelement/element/open-element
  */
@@ -48,6 +51,7 @@ import {
 } from './internal/compiled/facade-host.ts';
 import {
   capturePreUpgradeEvents,
+  type PreUpgradeEvent,
   type PreUpgradeEventCapture,
   replayPreUpgradeEvents,
 } from './internal/compiled/runtime.ts';
@@ -88,6 +92,20 @@ function replayPreUpgradeCaptures(root: Node): void {
   for (const capture of preUpgradeCaptures.values()) {
     replayPreUpgradeEvents(root, capture.events);
   }
+}
+
+/**
+ * Tear down every pre-upgrade capture after the kernel's activation decision —
+ * success or failure: stop its listeners, release the retained event records
+ * (which hold event targets, including detached DOM), and drop the strong map
+ * entries. No capture may outlive an activation decision (#1213, M1).
+ */
+function releasePreUpgradeCaptures(): void {
+  for (const capture of preUpgradeCaptures.values()) {
+    capture.stop();
+    (capture.events as PreUpgradeEvent[]).length = 0;
+  }
+  preUpgradeCaptures.clear();
 }
 
 function failMissingProgram(ctor: object): never {
@@ -226,28 +244,22 @@ export class OpenElement extends OpenElementConfiguration {
     syncAttributesToSignals(this, state);
     applyPendingOwnValues(state);
 
-    const willClaim = this.#rootContent().childNodes.length > 0;
-    kernel.connect();
-    if (willClaim) {
-      const root = kernel.root;
-      if (root) replayPreUpgradeCaptures(root as unknown as Node);
-      this.onDsdHydrated();
-    } else {
-      this.onCsrRendered();
+    // The kernel's connect result owns the claim-vs-fresh truth; the facade
+    // derives its hooks from it and never guesses from pre-connect state.
+    try {
+      const activation = kernel.connect();
+      if (activation.mode === 'claim') {
+        replayPreUpgradeCaptures(activation.root as unknown as Node);
+        this.onDsdHydrated();
+      } else {
+        this.onCsrRendered();
+      }
+    } finally {
+      // The activation decision is final, win or lose: no pre-upgrade
+      // listener or retained event record outlives it.
+      releasePreUpgradeCaptures();
     }
     this.clientActivate();
-  }
-
-  /** Root whose existing content decides claim-vs-fresh at connect time. */
-  #rootContent(): { childNodes: ArrayLike<unknown> } {
-    const kernel = this.#kernel;
-    if (!kernel) return { childNodes: [] };
-    const mode = kernel.program.root.kind;
-    if (mode === 'light') return this as unknown as { childNodes: ArrayLike<unknown> };
-    if (mode === 'shadow-open') {
-      return (this.shadowRoot ?? { childNodes: [] }) as { childNodes: ArrayLike<unknown> };
-    }
-    return (kernel.root ?? { childNodes: [] }) as { childNodes: ArrayLike<unknown> };
   }
 
   /**
