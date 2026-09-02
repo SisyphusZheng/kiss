@@ -1,5 +1,5 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@openelement/ui/open-code-block';
 import '../islands/open-cinematic-scroll.tsx';
 import '../islands/open-dragon-live-gaze.tsx';
@@ -27,11 +27,6 @@ interface ReferenceItem {
   href: string;
   copy: string;
 }
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('index-index')
 export default class PageHome extends OpenElement {

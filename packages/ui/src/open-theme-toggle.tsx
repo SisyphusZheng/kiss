@@ -19,8 +19,7 @@
  * <open-theme-toggle theme="light"></open-theme-toggle>
  * ```
  */
-import { OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { element, OpenElement, property } from '@openelement/element';
 import { log, recipe } from './component-recipes.ts';
 import { readInstanceState, writeInstanceState } from './instance-state.ts';
 

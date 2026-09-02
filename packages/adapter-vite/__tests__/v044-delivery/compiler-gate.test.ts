@@ -87,9 +87,7 @@ Deno.test('v0.44 compiler gate - real @element modules still compile or fail clo
 
   await t.step('a genuinely decorated module compiles in the default pipeline', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-gate-counter')",
       'export class GateCounter extends OpenElement {',
       '  @property({ reflect: true }) count = 0;',
@@ -103,8 +101,7 @@ Deno.test('v0.44 compiler gate - real @element modules still compile or fail clo
 
   await t.step('a real but invalid @element module fails closed with located diagnostics', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-gate-invalid')",
       'export class GateInvalid extends OpenElement {',
       '  render() { return <div {...{ id: "x" }}>bad</div>; }',

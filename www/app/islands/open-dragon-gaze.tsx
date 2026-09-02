@@ -1,10 +1,8 @@
 /** @jsxImportSource @openelement/element */
 /** Native-media mascot admitted through the v0.44 compiled island contract. */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import { compiledStyle } from '../site-ui/compiled-style.ts';
-
-declare function element(tag: string): ClassDecorator;
 
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 

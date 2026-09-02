@@ -2,12 +2,7 @@
  * request-time home page — static prerendered page (compiled, v0.44).
  * The route module (app/routes/index.tsx) attaches the page descriptor.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('index-page', { root: 'shadow-open' })
 export default class HomePage extends OpenElement {

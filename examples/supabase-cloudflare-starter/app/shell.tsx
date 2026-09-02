@@ -4,12 +4,7 @@
  * server entry registers and renders the class; the static <slot> projects
  * the page host. No `static styles` — the shell never hydrates client-side.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('ref-layout', { root: 'shadow-open' })
 export default class RefLayout extends OpenElement {

@@ -16,9 +16,8 @@
  * Reduced motion → the layer stays inert. Coarse pointers → no cursor, no
  * magnetism (scroll-out still runs; it is scroll-driven, not animation).
  */
-declare function element(tag: string): ClassDecorator;
 
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import { compiledStyle, HERO_CURSOR_CSS } from '../site-ui/compiled-style.ts';
 import { readIslandState, writeIslandState } from '../site-ui/island-state.ts';

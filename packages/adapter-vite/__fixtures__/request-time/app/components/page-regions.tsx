@@ -4,13 +4,7 @@
  * `hasError` properties are projected from request + action data by the
  * route module's page descriptor.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('regions-page', { root: 'shadow-open' })
 export default class RegionsPage extends OpenElement {

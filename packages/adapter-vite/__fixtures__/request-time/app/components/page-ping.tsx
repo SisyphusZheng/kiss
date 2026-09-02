@@ -3,13 +3,7 @@
  * compiled v0.44. `movedText` carries the ?moved= echo; `hasError` drives the
  * static-text intent-error Region.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('ping-page', { root: 'shadow-open' })
 export default class PingPage extends OpenElement {

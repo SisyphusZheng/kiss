@@ -18,8 +18,7 @@
  * @slot tab - Tab label element (one per panel)
  * @slot panel - Panel shown while its tab is active
  */
-import { effect, OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { effect, element, OpenElement, property } from '@openelement/element';
 import { nextInstanceId, recipe } from './component-recipes.ts';
 import { readInstanceState, writeInstanceState } from './instance-state.ts';
 

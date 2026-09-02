@@ -1,10 +1,5 @@
 /** Home page element — public, prerendered at build time (default static intent). */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('index-page', { root: 'shadow-open' })
 export default class HomePage extends OpenElement {

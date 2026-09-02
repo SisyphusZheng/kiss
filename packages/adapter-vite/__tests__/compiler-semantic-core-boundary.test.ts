@@ -64,10 +64,7 @@ Deno.test('ADR-0148 semantic core imports stay bundler-neutral and inside the co
 
 Deno.test('ADR-0148 semantic output and diagnostics are stable for canonical inputs', () => {
   const source = `
-import { OpenElement } from '@openelement/element';
-declare function element(tag: string): ClassDecorator;
-declare function property(options: { reflect: boolean }):
-  (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 @element('oe-deterministic')
 export default class DeterministicElement extends OpenElement {
   @property({ reflect: false }) count = 0;

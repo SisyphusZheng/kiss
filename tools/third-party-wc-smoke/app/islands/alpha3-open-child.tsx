@@ -9,12 +9,7 @@
  * content fresh from the compiled Part Program.
  */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: false, dsd: false });
 

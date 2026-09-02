@@ -4,7 +4,7 @@
  * The route projects locale, version data, and list records onto declared
  * properties; this module owns only the compiled element and its markup.
  */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '../site-ui/open-standards-visual.tsx';
@@ -42,11 +42,6 @@ interface RoadmapRailItem {
   label: string;
   depth: string;
 }
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('roadmap-page')
 export default class RoadmapPage extends OpenElement {

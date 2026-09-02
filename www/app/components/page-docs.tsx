@@ -1,10 +1,5 @@
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { pageDocsStyles } from './page-docs-styles.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('docs-index')
 export default class PageDocs extends OpenElement {

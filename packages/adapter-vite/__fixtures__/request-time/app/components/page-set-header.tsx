@@ -3,13 +3,7 @@
  * (compiled, v0.44). `doneText` echoes the ?done= marker; loader/action live
  * in the route module.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('set-header', { root: 'shadow-open' })
 export default class SetHeaderPage extends OpenElement {

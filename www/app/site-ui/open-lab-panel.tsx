@@ -5,12 +5,7 @@
  * Standards-lab panel for specs, artifact frames, and reference desks.
  */
 
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
-
-import { computed, OpenElement } from '@openelement/element';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 
 @element('open-lab-panel')

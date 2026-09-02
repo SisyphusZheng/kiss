@@ -16,11 +16,13 @@ Deno.test('v0.44 migration converts literal legacy registration and is idempoten
   assertEquals(result.diagnostics, []);
   assertEquals(result.changed, true);
   assertStringIncludes(result.code, "@element('oe-legacy-counter')");
-  assertStringIncludes(result.code, 'declare function element(tag: string): ClassDecorator;');
+  // The decorator is a compile-time-only intrinsic bound by a real named
+  // import (#1209); the compiler strips it from the emitted module.
   assertStringIncludes(
     result.code,
-    "import { OpenElement } from '@openelement/element';",
+    "import { element, OpenElement } from '@openelement/element';",
   );
+  assert(!result.code.includes('declare function element'));
   assert(!result.code.includes('defineCustomElement'));
   assert(!result.code.includes('customElements.define'));
 
@@ -44,14 +46,14 @@ Deno.test('v0.44 migration lowers a prop-free defineElement object deterministic
   assertEquals(result.diagnostics, []);
   assertEquals(result.changed, true);
   assertStringIncludes(result.code, "@element('oe-legacy-card')");
-  assertStringIncludes(result.code, 'declare function element(tag: string): ClassDecorator;');
+  assertStringIncludes(
+    result.code,
+    "import { element, OpenElement } from '@openelement/element';",
+  );
+  assert(!result.code.includes('declare function element'));
   assertStringIncludes(result.code, 'export class LegacyCard extends OpenElement');
   assertStringIncludes(result.code, 'static styles = styles;');
   assertStringIncludes(result.code, 'render() { return <article>Card</article>; }');
-  assertStringIncludes(
-    result.code,
-    "import { OpenElement } from '@openelement/element';",
-  );
   assert(!result.code.includes('defineElement'));
 });
 

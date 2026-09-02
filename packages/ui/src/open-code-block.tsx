@@ -25,8 +25,7 @@
  * </open-code-block>
  * ```
  */
-import { OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { element, OpenElement, property } from '@openelement/element';
 import { CODE_BLOCK_CONSTANTS, log, recipe } from './component-recipes.ts';
 import { readInstanceState, writeInstanceState } from './instance-state.ts';
 

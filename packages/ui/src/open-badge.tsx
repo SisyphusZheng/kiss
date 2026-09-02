@@ -7,8 +7,7 @@
  *
  * @csspart badge - The badge span
  */
-import { OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { element, OpenElement, property } from '@openelement/element';
 import { recipe } from './component-recipes.ts';
 
 @element('open-badge', { root: 'shadow-open' })

@@ -2,12 +2,7 @@
  * /fail-unserializable page element — static markup; the fail()-payload
  * protocol cases live in the route module's action (#1146 area 4).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('fail-unserializable', { root: 'shadow-open' })
 export default class FailUnserializablePage extends OpenElement {

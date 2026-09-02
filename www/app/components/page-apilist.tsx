@@ -6,16 +6,11 @@
  * render grammar. Package rows are a keyed list Region so server output,
  * browser creation and existing-DOM claim share one identity model.
  */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '../site-ui/open-section-frame.tsx';
 import '../islands/open-page-rail.tsx';
 import { pageApiListStyles } from './page-apilist-styles.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 export interface ApiPackageItem {
   id: string;

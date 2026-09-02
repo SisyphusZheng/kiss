@@ -5,15 +5,7 @@
  * per-item attributes, so the 0.43 per-row download links/delete forms are
  * outside v1); deletion posts the object key from the section-level form.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('upload-page', { root: 'shadow-open' })
 export default class UploadPage extends OpenElement {

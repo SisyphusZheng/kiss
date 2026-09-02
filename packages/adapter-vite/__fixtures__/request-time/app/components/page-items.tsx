@@ -9,13 +9,7 @@
  * asserts island state survival and fresh-row hydration rather than id-keyed
  * identity until the Region schema gains item attribute slots.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('items-page', { root: 'shadow-open' })
 export default class ItemsPage extends OpenElement {

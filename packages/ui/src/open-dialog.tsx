@@ -29,8 +29,7 @@
  * - `label` - Title text and aria-label of the dialog
  * - `mode` - `modal` (default, showModal()) or `non-modal` (show()); read at open time
  */
-import { effect, OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { effect, element, OpenElement, property } from '@openelement/element';
 import { overlayRecipe, recipe } from './component-recipes.ts';
 import { readInstanceState, writeInstanceState } from './instance-state.ts';
 

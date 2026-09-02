@@ -401,13 +401,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 930,
-            "line": 32,
+            "offset": 870,
+            "line": 30,
             "column": 3
           },
           "end": {
-            "offset": 1310,
-            "line": 42,
+            "offset": 1250,
+            "line": 40,
             "column": 4
           }
         }
@@ -418,13 +418,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 640,
-            "line": 16,
+            "offset": 580,
+            "line": 14,
             "column": 3
           },
           "end": {
-            "offset": 681,
-            "line": 17,
+            "offset": 621,
+            "line": 15,
             "column": 13
           }
         }
@@ -435,13 +435,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 685,
-            "line": 19,
+            "offset": 625,
+            "line": 17,
             "column": 3
           },
           "end": {
-            "offset": 733,
-            "line": 20,
+            "offset": 673,
+            "line": 18,
             "column": 19
           }
         }
@@ -452,13 +452,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 737,
-            "line": 22,
+            "offset": 677,
+            "line": 20,
             "column": 3
           },
           "end": {
-            "offset": 881,
-            "line": 26,
+            "offset": 821,
+            "line": 24,
             "column": 6
           }
         }
@@ -469,13 +469,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 960,
-            "line": 34,
+            "offset": 900,
+            "line": 32,
             "column": 7
           },
           "end": {
-            "offset": 1299,
-            "line": 40,
+            "offset": 1239,
+            "line": 38,
             "column": 13
           }
         }
@@ -486,13 +486,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 988,
-            "line": 35,
+            "offset": 928,
+            "line": 33,
             "column": 9
           },
           "end": {
-            "offset": 1016,
-            "line": 35,
+            "offset": 956,
+            "line": 33,
             "column": 37
           }
         }
@@ -503,13 +503,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 999,
-            "line": 35,
+            "offset": 939,
+            "line": 33,
             "column": 20
           },
           "end": {
-            "offset": 1011,
-            "line": 35,
+            "offset": 951,
+            "line": 33,
             "column": 32
           }
         }
@@ -520,13 +520,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1025,
-            "line": 36,
+            "offset": 965,
+            "line": 34,
             "column": 9
           },
           "end": {
-            "offset": 1053,
-            "line": 36,
+            "offset": 993,
+            "line": 34,
             "column": 37
           }
         }
@@ -537,13 +537,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1032,
-            "line": 36,
+            "offset": 972,
+            "line": 34,
             "column": 16
           },
           "end": {
-            "offset": 1050,
-            "line": 36,
+            "offset": 990,
+            "line": 34,
             "column": 34
           }
         }
@@ -554,13 +554,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1062,
-            "line": 37,
+            "offset": 1002,
+            "line": 35,
             "column": 9
           },
           "end": {
-            "offset": 1119,
-            "line": 37,
+            "offset": 1059,
+            "line": 35,
             "column": 66
           }
         }
@@ -571,13 +571,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1084,
-            "line": 37,
+            "offset": 1024,
+            "line": 35,
             "column": 31
           },
           "end": {
-            "offset": 1108,
-            "line": 37,
+            "offset": 1048,
+            "line": 35,
             "column": 55
           }
         }
@@ -588,13 +588,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1146,
-            "line": 38,
+            "offset": 1086,
+            "line": 36,
             "column": 27
           },
           "end": {
-            "offset": 1176,
-            "line": 38,
+            "offset": 1116,
+            "line": 36,
             "column": 57
           }
         }
@@ -605,13 +605,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1179,
-            "line": 38,
+            "offset": 1119,
+            "line": 36,
             "column": 60
           },
           "end": {
-            "offset": 1205,
-            "line": 38,
+            "offset": 1145,
+            "line": 36,
             "column": 86
           }
         }
@@ -622,13 +622,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1128,
-            "line": 38,
+            "offset": 1068,
+            "line": 36,
             "column": 9
           },
           "end": {
-            "offset": 1206,
-            "line": 38,
+            "offset": 1146,
+            "line": 36,
             "column": 87
           }
         }
@@ -639,13 +639,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1128,
-            "line": 38,
+            "offset": 1068,
+            "line": 36,
             "column": 9
           },
           "end": {
-            "offset": 1206,
-            "line": 38,
+            "offset": 1146,
+            "line": 36,
             "column": 87
           }
         }
@@ -656,13 +656,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1215,
-            "line": 39,
+            "offset": 1155,
+            "line": 37,
             "column": 9
           },
           "end": {
-            "offset": 1286,
-            "line": 39,
+            "offset": 1226,
+            "line": 37,
             "column": 80
           }
         }
@@ -673,13 +673,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1245,
-            "line": 39,
+            "offset": 1185,
+            "line": 37,
             "column": 39
           },
           "end": {
-            "offset": 1279,
-            "line": 39,
+            "offset": 1219,
+            "line": 37,
             "column": 73
           }
         }
@@ -690,13 +690,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1219,
-            "line": 39,
+            "offset": 1159,
+            "line": 37,
             "column": 13
           },
           "end": {
-            "offset": 1281,
-            "line": 39,
+            "offset": 1221,
+            "line": 37,
             "column": 75
           }
         }
@@ -707,13 +707,13 @@
         "source": {
           "file": "/project/app/islands/counter.tsx",
           "start": {
-            "offset": 1219,
-            "line": 39,
+            "offset": 1159,
+            "line": 37,
             "column": 13
           },
           "end": {
-            "offset": 1281,
-            "line": 39,
+            "offset": 1221,
+            "line": 37,
             "column": 75
           }
         }

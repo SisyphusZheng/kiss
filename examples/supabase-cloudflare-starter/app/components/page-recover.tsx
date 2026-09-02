@@ -4,15 +4,7 @@
  * onto the compiled properties. The sent confirmation is a fully static
  * conditional Region branch; the action error rides the text Part.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('recover-page', { root: 'shadow-open' })
 export default class RecoverPage extends OpenElement {

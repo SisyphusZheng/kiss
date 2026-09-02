@@ -16,6 +16,11 @@ import {
   diagnosticMessage,
 } from './diagnostics/index.ts';
 import {
+  createModuleIntrinsicBindings,
+  isCompileTimeOnlyImport,
+  type ModuleIntrinsicBindings,
+} from './module-analysis.ts';
+import {
   type CompiledElementMetadata,
   type PartProgramV1,
   type ProgramCondition,
@@ -226,14 +231,34 @@ function literalValue(expr: ts.Expression, sf: ts.SourceFile): SerializableValue
  * The one non-serializable field default admitted by the compiled grammar.
  * The wrapper is the runtime capability; limiting the argument to a literal
  * keeps compiled metadata deterministic and prevents arbitrary initializer
- * execution from entering the property schema.
+ * execution from entering the property schema. Provenance (#1209): the callee
+ * must bind the canonical `trustedHtml` import; a same-name spelling bound to
+ * anything else fails closed (OEC9026) instead of being silently admitted.
  */
-function isTrustedHtmlInitializer(expr: ts.Expression): boolean {
+function isTrustedHtmlInitializer(
+  expr: ts.Expression,
+  intrinsics: ModuleIntrinsicBindings,
+  fail: (node: ts.Node, code: string, message: string) => never,
+): boolean {
   const value = unwrapExpression(expr);
-  if (
-    !ts.isCallExpression(value) || value.expression.getText() !== 'trustedHtml' ||
-    value.arguments.length !== 1
-  ) return false;
+  if (!ts.isCallExpression(value)) return false;
+  const resolution = intrinsics.resolveIntrinsic(value.expression, 'trustedHtml');
+  if (!resolution.canonical) {
+    if (
+      resolution.unsupported ||
+      (ts.isIdentifier(value.expression) && value.expression.text === 'trustedHtml')
+    ) {
+      fail(
+        value,
+        'OEC9026',
+        'trustedHtml field defaults require the canonical trustedHtml import: a runtime named ' +
+          "import of trustedHtml from '@openelement/element'" +
+          (resolution.unsupported ? ` (${resolution.unsupported})` : ''),
+      );
+    }
+    return false;
+  }
+  if (value.arguments.length !== 1) return false;
   const html = unwrapExpression(value.arguments[0]);
   return ts.isStringLiteral(html) || ts.isNoSubstitutionTemplateLiteral(html);
 }
@@ -278,21 +303,40 @@ function propertyTypeFromConstructor(
 
 /**
  * Parse a computed field initializer (alpha.8, ADR-0143): `computed(() => ...)`
- * behind optional `as`-casts. The arrow body may read `this.<field>` of any
- * NON-computed declared field (rewritten to the signal-record read) and use
- * any module-scope values; `this` in any other position, reads of computed
+ * behind optional `as`-casts, where the callee binds the canonical `computed`
+ * import (#1209 — a same-name spelling bound to anything else fails closed
+ * with OEC9025). The arrow body may read `this.<field>` of any NON-computed
+ * declared field (rewritten to the signal-record read) and use any
+ * module-scope values; `this` in any other position, reads of computed
  * fields, and nested non-arrow functions fail closed (OEC9024). Returns null
  * for non-computed initializers.
  */
 function parseComputedInitializer(
   initializer: ts.Expression,
   sf: ts.SourceFile,
+  intrinsics: ModuleIntrinsicBindings,
   plainFieldNames: ReadonlySet<string>,
   computedFieldNames: ReadonlySet<string>,
   fail: (node: ts.Node, code: string, message: string) => never,
 ): { deps: string[]; factoryText: string } | null {
   const value = unwrapExpression(initializer);
-  if (!ts.isCallExpression(value) || value.expression.getText(sf) !== 'computed') return null;
+  if (!ts.isCallExpression(value)) return null;
+  const resolution = intrinsics.resolveIntrinsic(value.expression, 'computed');
+  if (!resolution.canonical) {
+    if (
+      resolution.unsupported ||
+      (ts.isIdentifier(value.expression) && value.expression.text === 'computed')
+    ) {
+      fail(
+        value,
+        'OEC9025',
+        'computed fields require the canonical computed import: a runtime named import of ' +
+          "computed from '@openelement/element'" +
+          (resolution.unsupported ? ` (${resolution.unsupported})` : ''),
+      );
+    }
+    return null;
+  }
   if (value.arguments.length !== 1 || !ts.isArrowFunction(value.arguments[0])) {
     fail(value, 'OEC9024', 'computed fields take exactly one zero-argument arrow function');
   }
@@ -350,7 +394,7 @@ function parseComputedInitializer(
       `__s.${replacement.name}.value` +
       bodyText.slice(replacement.end - offset);
   }
-  return { deps, factoryText: `(__s) => computed(() => ${bodyText})` };
+  return { deps, factoryText: `(__s) => ${resolution.localName}(() => ${bodyText})` };
 }
 
 function inferPropertyType(
@@ -1217,6 +1261,7 @@ class Lowering {
 function propertyFields(
   sf: ts.SourceFile,
   classNode: ts.ClassDeclaration,
+  intrinsics: ModuleIntrinsicBindings,
   fail: (node: ts.Node, code: string, message: string) => never,
 ): {
   fields: CompiledField[];
@@ -1280,11 +1325,27 @@ function propertyFields(
       }
       const decorator = decorators[0];
       const call = decorator.expression;
-      if (!ts.isCallExpression(call) || call.expression.getText(sf) !== 'property') {
+      if (!ts.isCallExpression(call)) {
         fail(
           decorator,
           'OEC9004',
           'unknown decorator on an OpenElement member; use only @property',
+        );
+      }
+      const decoratorResolution = intrinsics.resolveIntrinsic(call.expression, 'property');
+      if (!decoratorResolution.canonical) {
+        if (decoratorResolution.unsupported) {
+          fail(
+            decorator,
+            'OEC9027',
+            `unsupported @property provenance: ${decoratorResolution.unsupported}`,
+          );
+        }
+        fail(
+          decorator,
+          'OEC9004',
+          'unknown decorator on an OpenElement member; use only @property imported from ' +
+            "'@openelement/element'",
         );
       }
       if (!ts.isIdentifier(member.name)) {
@@ -1304,11 +1365,13 @@ function propertyFields(
       const computedInit = parseComputedInitializer(
         member.initializer,
         sf,
+        intrinsics,
         new Set(fields.filter((f) => !f.computed).map((f) => f.name)),
         computedFieldNames,
         fail,
       );
-      const trustedHtmlInit = !computedInit && isTrustedHtmlInitializer(member.initializer);
+      const trustedHtmlInit = !computedInit &&
+        isTrustedHtmlInitializer(member.initializer, intrinsics, fail);
       const defaultValue = computedInit || trustedHtmlInit
         ? null
         : literalValue(member.initializer, sf);
@@ -1481,12 +1544,19 @@ function isDeclareStatement(statement: ts.Statement): boolean {
 /**
  * The one extra runtime statement a compiled module may carry: the island
  * delivery policy colocated with the class
- * (`export const openElement = defineIslandConfig({ ... })`). The statement is
- * validated here and copied verbatim into the generated module; the runtime
- * defineIslandConfig() validates the descriptor itself at module evaluation.
- * Anything else stays outside the compiled module grammar (OEC9008).
+ * (`export const openElement = defineIslandConfig({ ... })`). The callee must
+ * bind the canonical `defineIslandConfig` import from '@openelement/app'
+ * (#1209); a same-name spelling bound to anything else is not the policy
+ * statement and falls through to the OEC9008 runtime-statement rejection.
+ * The statement is validated here and copied verbatim into the generated
+ * module; the runtime defineIslandConfig() validates the descriptor itself at
+ * module evaluation. Anything else stays outside the compiled module grammar
+ * (OEC9008).
  */
-function isIslandConfigStatement(sf: ts.SourceFile, statement: ts.Statement): boolean {
+function isIslandConfigStatement(
+  statement: ts.Statement,
+  intrinsics: ModuleIntrinsicBindings,
+): boolean {
   if (!ts.isVariableStatement(statement)) return false;
   const modifiers = ts.getModifiers(statement) ?? [];
   if (
@@ -1502,7 +1572,9 @@ function isIslandConfigStatement(sf: ts.SourceFile, statement: ts.Statement): bo
   }
   const initializer = declaration.initializer;
   if (!initializer || !ts.isCallExpression(initializer)) return false;
-  if (initializer.expression.getText(sf) !== 'defineIslandConfig') return false;
+  if (!intrinsics.resolveIntrinsic(initializer.expression, 'defineIslandConfig').canonical) {
+    return false;
+  }
   if (
     initializer.arguments.length !== 1 || !ts.isObjectLiteralExpression(initializer.arguments[0])
   ) {
@@ -1511,31 +1583,38 @@ function isIslandConfigStatement(sf: ts.SourceFile, statement: ts.Statement): bo
   return true;
 }
 
-function hasRuntimeOpenElementImport(sf: ts.SourceFile): boolean {
-  return sf.statements.some((statement) => {
-    if (
-      !ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) ||
-      statement.moduleSpecifier.text !== '@openelement/element'
-    ) {
-      return false;
-    }
-    if (statement.importClause?.isTypeOnly) return false;
-    const bindings = statement.importClause?.namedBindings;
-    if (!bindings || !ts.isNamedImports(bindings)) return false;
-    return bindings.elements.some((element) =>
-      (element.propertyName?.text ?? element.name.text) === 'OpenElement'
+/**
+ * Copy one source import statement into the generated module. Compile-time-
+ * only intrinsic bindings (element/property from '@openelement/element') are
+ * stripped: the decorators they powered are erased by compilation and the
+ * runtime package exports neither, so keeping them would emit an unresolvable
+ * runtime import. A statement whose entire clause stripped away is dropped.
+ */
+function rewriteImportForGeneratedModule(
+  sf: ts.SourceFile,
+  statement: ts.ImportDeclaration,
+): string | null {
+  if (!ts.isStringLiteral(statement.moduleSpecifier)) return statement.getText(sf);
+  const module = statement.moduleSpecifier.text;
+  const clause = statement.importClause;
+  if (!clause) return statement.getText(sf);
+  const bindings = clause.namedBindings;
+  if (!bindings || !ts.isNamedImports(bindings)) return statement.getText(sf);
+  const kept = bindings.elements.filter((element) =>
+    !isCompileTimeOnlyImport(module, element.propertyName?.text ?? element.name.text)
+  );
+  if (kept.length === bindings.elements.length) return statement.getText(sf);
+  const parts: string[] = [];
+  if (clause.name) parts.push(clause.name.text);
+  if (kept.length > 0) {
+    const specifiers = kept.map((element) =>
+      `${element.isTypeOnly ? 'type ' : ''}` +
+      `${element.propertyName ? `${element.propertyName.text} as ` : ''}${element.name.text}`
     );
-  });
-}
-
-/** True when the module has a runtime (non-type-only) named import of `name`. */
-function hasRuntimeNamedImport(sf: ts.SourceFile, name: string): boolean {
-  return sf.statements.some((statement) => {
-    if (!ts.isImportDeclaration(statement) || statement.importClause?.isTypeOnly) return false;
-    const bindings = statement.importClause?.namedBindings;
-    if (!bindings || !ts.isNamedImports(bindings)) return false;
-    return bindings.elements.some((element) => element.name.text === name);
-  });
+    parts.push(`{ ${specifiers.join(', ')} }`);
+  }
+  if (parts.length === 0) return null;
+  return `import ${clause.isTypeOnly ? 'type ' : ''}${parts.join(', ')} from '${module}';`;
 }
 
 /**
@@ -1632,6 +1711,11 @@ export function compileElementProgram(source: string, fileName: string): Compile
     throw new CompiledElementError([diagnosticAt(sf, node, code, message)]);
   }
 
+  // #1209: every intrinsic use site below (decorators, heritage, factories)
+  // resolves through the one canonical binding model shared with module
+  // analysis — no spelling-based recognizer survives in the compiler.
+  const intrinsics = createModuleIntrinsicBindings(sf);
+
   const passthroughStatements: string[] = [];
   for (const statement of sf.statements) {
     if (
@@ -1641,7 +1725,7 @@ export function compileElementProgram(source: string, fileName: string): Compile
     ) continue;
     // alpha.8: the island delivery policy is the one runtime statement a
     // compiled module may carry; it is validated and copied verbatim below.
-    if (isIslandConfigStatement(sf, statement)) {
+    if (isIslandConfigStatement(statement, intrinsics)) {
       passthroughStatements.push(statement.getText(sf));
       continue;
     }
@@ -1656,11 +1740,33 @@ export function compileElementProgram(source: string, fileName: string): Compile
   const decorated = classes.filter((node) =>
     (ts.getDecorators(node) ?? []).some((decorator) => {
       const expr = decorator.expression;
-      return ts.isCallExpression(expr) && expr.expression.getText(sf) === 'element';
+      return ts.isCallExpression(expr) &&
+        intrinsics.resolveIntrinsic(expr.expression, 'element').canonical;
     })
   );
   if (classes.length !== 1 || decorated.length !== 1) {
-    fail(sf, 'OEC9001', 'expected exactly one @element(...) class per compiled module');
+    // Unsupported/ambiguous provenance on an @element-spelled decorator fails
+    // closed with its own diagnostic instead of the generic shape error.
+    for (const node of classes) {
+      for (const decorator of ts.getDecorators(node) ?? []) {
+        const expr = decorator.expression;
+        if (!ts.isCallExpression(expr)) continue;
+        const resolution = intrinsics.resolveIntrinsic(expr.expression, 'element');
+        if (resolution.unsupported) {
+          fail(
+            decorator,
+            'OEC9027',
+            `unsupported @element provenance: ${resolution.unsupported}`,
+          );
+        }
+      }
+    }
+    fail(
+      sf,
+      'OEC9001',
+      'expected exactly one @element(...) class per compiled module (the decorator must bind ' +
+        "the canonical element import from '@openelement/element')",
+    );
   }
   const classNode = decorated[0];
   const classDecorators = ts.getDecorators(classNode) ?? [];
@@ -1691,7 +1797,9 @@ export function compileElementProgram(source: string, fileName: string): Compile
   let tag = '';
   const decorator = classDecorators[0];
   const expr = decorator.expression;
-  if (!ts.isCallExpression(expr) || expr.expression.getText(sf) !== 'element') {
+  if (
+    !ts.isCallExpression(expr) || !intrinsics.resolveIntrinsic(expr.expression, 'element').canonical
+  ) {
     fail(decorator, 'OEC9004', 'unknown decorator on an OpenElement class; use only @element');
   }
   if (
@@ -1769,29 +1877,29 @@ export function compileElementProgram(source: string, fileName: string): Compile
   const heritage = classNode.heritageClauses?.find((clause) =>
     clause.token === ts.SyntaxKind.ExtendsKeyword
   );
-  if (heritage?.types.length !== 1 || heritage.types[0].expression.getText(sf) !== 'OpenElement') {
+  // Provenance (#1209): the base class must bind the canonical OpenElement
+  // import (aliases followed); a same-name local class, a foreign import or a
+  // namespace-qualified reference never enters the grammar.
+  const heritageExpression = heritage?.types.length === 1
+    ? unwrapExpression(heritage.types[0].expression)
+    : undefined;
+  const heritageResolution = heritageExpression
+    ? intrinsics.resolveIntrinsic(heritageExpression, 'OpenElement')
+    : undefined;
+  if (!heritageResolution?.canonical) {
     fail(
       classNode.name ?? classNode,
       'OEC9003',
-      `compiled classes must extend OpenElement (found ${
-        heritage?.types[0]?.expression.getText(sf) ?? 'no base class'
-      })`,
+      `compiled classes must extend the canonical OpenElement import from '@openelement/element' ` +
+        `(found ${heritage?.types[0]?.expression.getText(sf) ?? 'no base class'}` +
+        (heritageResolution?.unsupported ? `; ${heritageResolution.unsupported}` : '') + ')',
     );
   }
+  const openElementLocalName = heritageResolution.localName!;
   if (!classNode.name) fail(classNode, 'OEC9003', 'compiled classes must be named');
   const className = classNode.name.text;
-  const { fields, methods, render, stylesText } = propertyFields(sf, classNode, fail);
+  const { fields, methods, render, stylesText } = propertyFields(sf, classNode, intrinsics, fail);
   const methodNames = methods.map((method) => (method.name as ts.Identifier).text);
-  if (
-    fields.some((field) => field.computed) && !hasRuntimeNamedImport(sf, 'computed')
-  ) {
-    fail(
-      classNode,
-      'OEC9025',
-      'computed fields require a runtime import of `computed` (e.g. ' +
-        "import { computed } from '@openelement/element')",
-    );
-  }
   const lowering = new Lowering(sf, fields, methodNames);
   const renderStatements = render.body?.statements ?? [];
   if (
@@ -1918,12 +2026,15 @@ export function compileElementProgram(source: string, fileName: string): Compile
     '  }',
   );
 
-  const imports = sf.statements.filter(ts.isImportDeclaration).map((statement) =>
-    statement.getText(sf)
-  );
-  if (!hasRuntimeOpenElementImport(sf)) {
-    imports.unshift("import { OpenElement } from '@openelement/element';");
+  const imports: string[] = [];
+  for (const statement of sf.statements) {
+    if (!ts.isImportDeclaration(statement)) continue;
+    const rewritten = rewriteImportForGeneratedModule(sf, statement);
+    if (rewritten !== null) imports.push(rewritten);
   }
+  // No OpenElement import injection (#1209): heritage provenance is required,
+  // so the canonical binding (possibly aliased) always exists in the source
+  // and is carried by the copied imports above.
   const codeLines = [
     '// <auto-generated by open:compiled-element; v0.44.0-alpha.1 - do not edit>',
     ...imports,
@@ -1940,7 +2051,9 @@ export function compileElementProgram(source: string, fileName: string): Compile
     '',
     ...runtimePropsText(fields),
     '',
-    `export ${isDefaultExport ? 'default ' : ''}class ${className} extends OpenElement {`,
+    `export ${
+      isDefaultExport ? 'default ' : ''
+    }class ${className} extends ${openElementLocalName} {`,
     ...memberLines,
     '}',
     '',

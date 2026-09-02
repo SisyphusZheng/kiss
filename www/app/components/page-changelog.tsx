@@ -1,13 +1,14 @@
-import { OpenElement, type TrustedHtml, trustedHtml } from '@openelement/element';
+import {
+  element,
+  OpenElement,
+  property,
+  type TrustedHtml,
+  trustedHtml,
+} from '@openelement/element';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '../islands/open-page-rail.tsx';
 import { pageChangelogStyles } from './page-changelog-styles.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false; type?: ObjectConstructor },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 interface ChangelogRailItem {
   id: string;

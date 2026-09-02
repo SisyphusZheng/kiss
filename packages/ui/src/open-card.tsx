@@ -22,8 +22,7 @@
  * </open-card>
  * ```
  */
-import { OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { element, OpenElement, property } from '@openelement/element';
 import { recipe, surfaceRecipe } from './component-recipes.ts';
 
 @element('open-card', { root: 'shadow-open' })

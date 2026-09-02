@@ -1,8 +1,3 @@
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-
 // E2E probe route for #1148 / ADR-0142 (light-mode in-place activation).
 //
 // Deliberate deviations from content routes like roadmap.tsx:
@@ -21,7 +16,7 @@ declare function element(
 //   wraps the route — the light page element is slotted into open-layout
 //   like any other page.
 
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 
 @element('probe-light', { root: 'light' })
 export default class ProbeLightPage extends OpenElement {

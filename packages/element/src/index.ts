@@ -47,6 +47,17 @@ export { ERROR_PREFIX, reportError, setErrorTelemetryHook } from './public-runti
 export { computed, effect, signal } from './public-runtime.ts';
 export type { Signal } from './public-runtime.ts';
 
+/**
+ * @experimental Compile-time-only decorator intrinsics (#1209): the compiler
+ * admits these by binding provenance (a runtime named import from this
+ * module) and erases them from generated code — they carry no runtime
+ * semantics and are not a second recognizer. When a module is evaluated
+ * WITHOUT the compiler (unit tests, config evaluation), these are inert
+ * no-op decorators so module evaluation and class definition stay safe.
+ * May move to a dedicated authoring subpath at the B1.2 surface freeze.
+ */
+export { element, property } from './public-runtime.ts';
+
 // ─── HTML utilities (re-export from core) ────────────────
 
 export { escapeAttr, escapeHtml, wrapInDocument } from './public-runtime.ts';

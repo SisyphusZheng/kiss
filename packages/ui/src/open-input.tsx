@@ -35,8 +35,7 @@
  * </form>
  * ```
  */
-import { computed, OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { controlRecipe, nextInstanceId, recipe, syncDisabledState } from './component-recipes.ts';
 
 @element('open-input', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })

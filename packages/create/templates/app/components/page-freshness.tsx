@@ -4,12 +4,7 @@
  * semantics (ISR was removed, see issue #1217). Light root: the page rules
  * live in the global baseline (vite.config.ts).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('freshness-page', { root: 'light' })
 export default class FreshnessPage extends OpenElement {

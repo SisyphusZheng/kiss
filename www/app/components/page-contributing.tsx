@@ -2,18 +2,10 @@
  * Contributing page element. The route owns request/locale projection; this
  * module owns only the compiled page structure and its declared properties.
  */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@openelement/ui/open-code-block';
 import '@openelement/ui/open-button';
 import { pageContributingStyles } from './page-contributing-styles.ts';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 interface ReleaseItem {
   id: string;

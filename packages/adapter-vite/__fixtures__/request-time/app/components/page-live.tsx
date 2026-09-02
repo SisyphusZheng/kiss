@@ -8,13 +8,7 @@
  * this.<property>. A live-counter island verifies hydration behaves the same
  * as on static pages.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('live-page', { root: 'shadow-open' })
 export default class LivePage extends OpenElement {

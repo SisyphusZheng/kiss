@@ -11,13 +11,7 @@
  *   POST body carries the selected fruit);
  * - a #move-target container used by the e2e spec for same-turn DOM moves.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('combobox-page', { root: 'shadow-open' })
 export default class ComboboxPage extends OpenElement {

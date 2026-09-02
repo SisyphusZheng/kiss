@@ -6,12 +6,7 @@
  * a data-driven link list is a known v1 boundary.) Light root: the page rules
  * live in the global baseline (vite.config.ts).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('blog-index', { root: 'light' })
 export default class BlogIndexPage extends OpenElement {

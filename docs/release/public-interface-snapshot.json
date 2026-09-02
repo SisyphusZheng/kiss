@@ -12,7 +12,7 @@
       },
       "declarations": {
         ".": {
-          "publicShapeSha256": "3334cfeb124b5ad4d7f22fc6647ed8170fd087fc65412a46852a1d26b670b1bb",
+          "publicShapeSha256": "91ae10b67582b58198720342b1d5e7065af882d94215f04bac7f1adea002c671",
           "publicSymbols": [
             "ACTION_FETCH_HEADER=value:\"x-openelement-action\"",
             "Action=type:{call:(ctx:{env:Env;formData:FormData;params:Record<string, string>;platform:union(Platform|undefined);request:Request;responseHeaders:Headers;route:Route})=>union(Promise<T>|T)}",
@@ -72,6 +72,7 @@
             "createLogger=value:{call:(tag:string)=>{debug:{call:(msg:string,...args:array(unknown))=>void};error:{call:(msg:string,...args:array(unknown))=>void};info:{call:(msg:string,...args:array(unknown))=>void};warn:{call:(msg:string,...args:array(unknown))=>void}}}",
             "deepGetElementById=value:{call:(id:string,root:union(Document|ShadowRoot))=>union(HTMLElement|null)}",
             "effect=value:{call:(fn:{call:()=>union(void|{call:()=>void})})=>{call:()=>void}}",
+            "element=value:{call:(_tag:string,_options:union(undefined|{delegatesFocus?:union(false|true|undefined);formAssociated?:union(false|true|undefined);root?:union(\"light\"|\"shadow-closed\"|\"shadow-open\"|undefined)}))=>{call:(target:unknown,context:unknown)=>void}}",
             "ensureDeepFragmentNavigation=value:{call:(options:{enabled?:union(false|true|undefined)})=>void}",
             "ensurePreHydrationClickCapture=value:{call:(root:union(EventTarget|undefined))=>void}",
             "escapeAttr=value:{call:(value:string)=>string}",
@@ -81,6 +82,7 @@
             "isDangerousKey=value:{call:(key:string)=>union(false|true)}",
             "isSafeAttributeName=value:{call:(name:string)=>union(false|true)}",
             "isValidTagName=value:{call:(tagName:string)=>union(false|true)}",
+            "property=value:{call:(_options:{attribute?:union(false|string|undefined);converter?:unknown;reflect:union(false|true);type?:unknown})=>{call:(target:unknown,context:unknown)=>void}}",
             "provideContext=value:{call:<T>(host:HTMLElement,context:{readonly defaultValue:T;readonly key:symbol},value:T)=>{call:()=>void}}",
             "renderDsd=value:{call:(input:union(CustomElementConstructor|string),options:{componentClass?:union(CustomElementConstructor|undefined);projectedChildren?:union(ReadonlyMap<string, TrustedHtml>|undefined);props?:union(Record<string, unknown>|undefined);sourceInfo?:union(undefined|{route?:union(string|undefined);source?:union(string|undefined)});ssrRenderableTags?:union(array(string)|undefined)})=>{errors:array({code:string;message:string;phase:string;recoverable:union(false|true);severity:union(\"error\"|\"warning\");tagName:string});html:string;hydrationHints:array({hydrate?:union(\"idle\"|\"load\"|\"only\"|\"visible\"|undefined);layer:union(\"dsd-interactive\"|\"dsd-static\"|\"light-dom\"|\"pure-island\");tagName:string});metrics:{hasError:union(false|true);layer:union(\"dsd-interactive\"|\"dsd-static\"|\"light-dom\"|\"pure-island\");nestingDepth:number;renderTimeMs:number;tagName:string;templateSize:number}}}",
             "reportError=value:{call:(error:{readonly code:string;readonly phase:union(\"build\"|\"csr\"|\"navigation\"|\"render\"|\"ssr\"|\"unknown\"|\"validation\");readonly recoverable:union(false|true);readonly severity:union(\"error\"|\"warning\");readonly statusCode?:union(number|undefined);toJSON:{call:()=>Record<string, unknown>}})=>void}",

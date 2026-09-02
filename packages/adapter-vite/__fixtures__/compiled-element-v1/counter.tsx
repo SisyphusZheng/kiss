@@ -3,13 +3,11 @@
  *
  * This is the exact TSX grammar recognized by the open:compiled-element v1
  * transform. The file is transformed through the Vite plugin hook; it is never
- * executed directly. The local decorator declarations exist only so the fixture
- * is self-contained - the canonical decorator contract is owned by #1162.
+ * executed directly. The intrinsics are canonical named imports - the
+ * compile-time-only element/property bindings are stripped from generated
+ * output (the canonical decorator contract is owned by #1162).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(options: { reflect: boolean }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('oe-program-counter')
 export class ProgramCounter extends OpenElement {

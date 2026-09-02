@@ -2,15 +2,7 @@
  * /magic-link page element (v0.44 compiled). Request-time rendered; the props
  * projector lives in app/route-logic/magic-link.ts.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('magic-link-page', { root: 'shadow-open' })
 export default class MagicLinkPage extends OpenElement {

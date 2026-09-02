@@ -1,8 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW section frame for headings and evidence. */
-declare function element(tag: string): ClassDecorator;
 
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 
 @element('open-section-frame')

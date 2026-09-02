@@ -21,8 +21,7 @@
  * </open-callout>
  * ```
  */
-import { computed, OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { CALLOUT_TYPE_ICONS, recipe } from './component-recipes.ts';
 
 @element('open-callout', { root: 'shadow-open' })

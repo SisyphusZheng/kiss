@@ -6,14 +6,8 @@
  * hydration is identical to static pages. The shadow root keeps the island
  * a DSD citizen (nested-DSD morph tests assert shadowRoot presence).
  */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 

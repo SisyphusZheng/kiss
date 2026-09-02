@@ -1,11 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW hero: a short technical, editorial, timeline, or error scene. */
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-import { computed, OpenElement } from '@openelement/element';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 
 @element('open-page-hero')

@@ -5,15 +5,7 @@
  * inputs ride property Parts (dynamic intrinsic attributes are outside the
  * SSR part schema in grammar v1) so the active filters survive paging.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('workspace-records-page', { root: 'shadow-open' })
 export default class WorkspaceRecordsPage extends OpenElement {
