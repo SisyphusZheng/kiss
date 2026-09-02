@@ -54,7 +54,7 @@ function heapUsed() {
     return -1;
   }
 }
-export function matchRequestTimeRoute() { return null; }
+export function isRequestTimePath() { return false; }
 export default async function openElementRequestTimeServer({ req }) {
   const url = new URL(req.url);
   stats.requests++;

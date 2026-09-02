@@ -5,7 +5,7 @@
  * generated request-time server module contract. These were previously
  * copy-pasted between cli/start.ts and the request-time fixture e2e server
  * and drifted (#732: start.ts lacked .xml/.ico/.mjs, the candidate rules
- * differed, and matchRequestTimeRoute was typed twice).
+ * differed, and the request-time dispatch contract was typed twice).
  *
  * Cross-runtime (#622): node:fs/node:path/node:url work under Node 18+,
  * Deno, and Bun, so both the Node CLI and the Deno fixture server can share
@@ -118,18 +118,19 @@ export function tryStatic(distDir: string, pathname: string): Response | null {
   return null;
 }
 
-/** A request-time route hit: the route pattern path plus decoded params (#556). */
-export type RequestTimeRouteMatch = { path: string; params: Record<string, string> };
-
 /**
- * Contract of the generated dist/server/index.js entry (#556): the default
- * export takes a Nitro v3 event ({ req, env? }) and resolves to the
- * Response; the named matchRequestTimeRoute export maps a concrete pathname
- * ('/item/42') to a request-time route pattern ('/item/:id'), or null.
+ * Contract of the generated dist/server/index.js entry (#556, narrowed by
+ * #1215): the default export takes a Nitro v3 event ({ req, env? }) and
+ * resolves to the Response; the named isRequestTimePath export is a DERIVED
+ * admission predicate answering only whether a concrete pathname ('/item/42')
+ * could belong to request-time handling. Winner selection, precedence,
+ * params, methods, query, basePath and trailing slash stay with the
+ * canonical path (the entry's Hono app / app RouteTable) — the predicate is
+ * a conservative superset and never excludes a request-time path.
  */
 export interface RequestTimeServerModule {
   default?: (event: { req: Request; env?: Record<string, string> }) => Promise<Response>;
-  matchRequestTimeRoute?: (pathname: string) => RequestTimeRouteMatch | null;
+  isRequestTimePath?: (pathname: string) => boolean;
 }
 
 export interface DispatchRequestOptions {
@@ -140,10 +141,13 @@ export interface DispatchRequestOptions {
 }
 
 /**
- * Canonical production request dispatch (#1100): request-time route hits and
- * every mutating method reach the server first; GET/HEAD may use a static
+ * Canonical production request dispatch (#1100): admitted request-time paths
+ * and every mutating method reach the server first; GET/HEAD may use a static
  * artifact; a static miss falls through to the server so its styled 404/error
- * boundary is preserved.
+ * boundary is preserved. Admission is a derived boolean predicate (#1215) —
+ * it never decodes params, so it cannot throw on malformed escapes; a
+ * malformed pathname that no request-time pattern admits still gets its 400
+ * from tryStatic (#823).
  */
 export async function dispatchRequest(
   request: Request,
@@ -162,14 +166,8 @@ export async function dispatchRequest(
   };
 
   if (serverMod?.default) {
-    let match: RequestTimeRouteMatch | null | undefined;
-    try {
-      match = serverMod.matchRequestTimeRoute?.(url.pathname);
-    } catch (error) {
-      if (isMalformedUrlError(error)) return new Response('Bad Request', { status: 400 });
-      throw error;
-    }
-    if (match || (request.method !== 'GET' && request.method !== 'HEAD')) {
+    const admitted = serverMod.isRequestTimePath?.(url.pathname) === true;
+    if (admitted || (request.method !== 'GET' && request.method !== 'HEAD')) {
       return await invokeServer();
     }
   }

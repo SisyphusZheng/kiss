@@ -21,8 +21,7 @@ Deno.test('dispatchRequest shares mutating and styled-fallback production semant
   try {
     await Deno.writeTextFile(join(root, 'index.html'), '<h1>static home</h1>');
     const serverMod = {
-      matchRequestTimeRoute: (pathname: string) =>
-        pathname === '/live' ? { path: '/live', params: {} } : null,
+      isRequestTimePath: (pathname: string) => pathname === '/live',
       default: ({ req }: { req: Request }) => {
         seen.push(`${req.method} ${new URL(req.url).pathname}`);
         if (new URL(req.url).pathname === '/missing') {
