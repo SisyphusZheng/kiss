@@ -107,7 +107,6 @@ export interface RouteEntry {
    */
   hasEnhancedForms?: boolean;
   special?: SpecialFileType;
-  revalidate?: number;
   params?: string[];
 }
 
@@ -216,19 +215,7 @@ export interface FrameworkOptions {
   };
 }
 
-// --- ISR / Compatibility types ------------------------------------
-
-/**
- * @experimental ISR route record written to isr-manifest.json at build time.
- * Emitted for forward-compatibility only — ISR is not served in 0.42, so this
- * manifest is currently inert (targeting 0.44).
- */
-export interface IsrManifestEntry {
-  path: string;
-  revalidate: number;
-  cacheKey: string;
-  params: Record<string, string>;
-}
+// --- Compatibility types ------------------------------------------
 
 export type CompatibilityTier = 'ssr-capable' | 'client-only' | 'rejected' | 'experimental-dom';
 

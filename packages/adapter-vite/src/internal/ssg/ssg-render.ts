@@ -26,7 +26,6 @@ import type {
 import { createLogger } from '@openelement/element';
 import { expandDynamicRoutes, expandI18nLocales } from './ssg-dynamic.ts';
 import {
-  buildIsrManifestEntries,
   findHtmlFiles,
   renderRequestTimeServerModule,
   renderStandaloneServerModule,
@@ -103,7 +102,7 @@ export async function ssgRender(
         : ''),
   );
 
-  const staticPathParamsByRoute = await expandDynamicRoutes(
+  await expandDynamicRoutes(
     dynamicRoutes,
     renderRoute,
     getStaticPaths,
@@ -248,18 +247,6 @@ export async function ssgRender(
     throw new Error(
       `SSG failed: ${pageNon200.length} static route(s) returned non-200 ` +
         `(pages not written): ${detail}`,
-    );
-  }
-
-  const isrRoutes = buildIsrManifestEntries(routeInfo, staticPathParamsByRoute);
-  if (isrRoutes.length > 0) {
-    writeFileSync(
-      join(outputDir, 'isr-manifest.json'),
-      formatJson(isrRoutes),
-      'utf-8',
-    );
-    log.info(
-      `ISR manifest -> ${join(outputDir, 'isr-manifest.json')} (${isrRoutes.length} route(s))`,
     );
   }
 

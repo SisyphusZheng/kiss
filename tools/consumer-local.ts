@@ -215,7 +215,9 @@ if (!existsSync(indexHtmlPath)) {
 
 const freshnessHtmlPath = join(appDir, 'dist', 'freshness', 'index.html');
 if (!existsSync(freshnessHtmlPath)) {
-  console.error('dist/freshness/index.html not found; ISR intent route was not generated');
+  console.error(
+    'dist/freshness/index.html not found; static prerender proof route was not generated',
+  );
   console.error(stdout);
   console.error(stderr);
   cleanup();
@@ -248,7 +250,7 @@ if (!indexHtml.includes('data-open-layout="app-shell"')) {
 
 const freshnessHtml = Deno.readTextFileSync(freshnessHtmlPath);
 if (!freshnessHtml.includes('Freshness proof')) {
-  console.error('dist/freshness/index.html does not contain expected ISR intent content');
+  console.error('dist/freshness/index.html does not contain expected freshness proof content');
   console.error('Last 300 chars:', freshnessHtml.substring(freshnessHtml.length - 300));
   cleanup();
   Deno.exit(1);
@@ -294,7 +296,7 @@ if (packagedImportMapCheckOnly) {
 }
 
 console.log(
-  'Local consumer build passed; pages, app shell, island, API route, asset, and ISR intent surface verified.',
+  'Local consumer build passed; pages, app shell, island, API route, asset, and static prerender surface verified.',
 );
 
 // Step 7: Mount the generated server entry in a real Nitro node output.

@@ -33,12 +33,6 @@ import type { HydrationStrategy } from '@openelement/element';
  * behavior — an unset or `'auto'` mode always meant prerender-at-build.
  */
 type PageRenderingMode = 'static' | 'dynamic';
-/**
- * @experimental ISR is not active in 0.42 (see `docs/current/VERSION_PLAN.md`).
- * `revalidate` is recorded on the route but does NOT enable caching in this
- * release line; it is reserved for the 0.44 ISR work. Treat it as unstable.
- */
-type PageRevalidate = false | number | `${number}s` | `${number}m` | `${number}h`;
 export type PageMeta = Record<string, unknown>;
 
 interface PageRouteIntent {
@@ -49,14 +43,10 @@ interface PageRouteIntent {
 
 interface PageRenderIntent {
   mode?: PageRenderingMode;
-  /** @experimental ISR is not wired in 0.42; recorded but inactive (0.44 target). */
-  revalidate?: PageRevalidate;
 }
 
 interface NormalizedPageRenderIntent {
   mode: PageRenderingMode;
-  /** @experimental ISR is not wired in 0.42; recorded but inactive (0.44 target). */
-  revalidate: PageRevalidate;
 }
 
 export interface PageRouteContext {
@@ -372,7 +362,6 @@ export function definePage<
     ...(descriptor?.head !== undefined ? { head: descriptor.head } : {}),
     renderIntent: {
       mode: renderMode,
-      revalidate: descriptor?.renderIntent?.revalidate ?? false,
     },
     ...(descriptor?.props !== undefined ? { props: descriptor.props } : {}),
     ...(descriptor?.error !== undefined ? { error: descriptor.error } : {}),

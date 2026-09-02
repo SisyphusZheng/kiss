@@ -6,7 +6,6 @@ export type {
   ComponentLayer,
   FrameworkOptions,
   HydrationStrategy,
-  IsrManifestEntry,
   OpenElementBlogOptions,
   OpenElementBuildContextLike,
   OpenElementHeaderNavLink,

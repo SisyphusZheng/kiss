@@ -1,6 +1,12 @@
 # ADR-0093: SSR / ISR Runtime Contract
 
-Status: Accepted
+Status: Superseded — the ISR half of this contract was removed in v0.44
+(issue #1217, ADR-0151 release train): no `IsrCache`, no ISR manifest, no
+request-time ISR runtime. SSR remains core. Retained as historical record;
+any future ISR capability must be re-earned from real evidence (#1221) and
+must not assume the contract below.
+
+Former status: Accepted
 
 Date: 2026-06-09
 

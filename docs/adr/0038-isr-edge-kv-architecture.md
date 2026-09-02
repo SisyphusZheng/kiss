@@ -1,6 +1,12 @@
 # ADR-0038: ISR + Edge KV Architecture
 
-> **Status**: ACCEPTED
+> **Status**: SUPERSEDED — ISR was removed from the codebase in v0.44
+> (issue #1217, ADR-0151 release train). This ADR is retained as historical
+> record only; none of the contracts named below exist anymore. Any future
+> ISR/cache capability must be re-earned from real evidence (#1221) and must
+> not assume this API.
+>
+> **Former status**: ACCEPTED
 > **Date**: 2026-05-23
 > **Supersedes**: ADR-0033 (renderer timing independence — confirmed)
 > **Applies to**: v0.21 (contract) → v0.22 (production implementation)

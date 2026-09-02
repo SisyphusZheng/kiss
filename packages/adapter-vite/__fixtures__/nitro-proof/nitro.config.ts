@@ -8,7 +8,7 @@ export default defineNitroConfig({
   preset,
   publicAssets: [{ dir: '../public' }],
   routeRules: {
-    '/isr': {
+    '/cached': {
       cache: {
         maxAge: 60,
         swr: true,

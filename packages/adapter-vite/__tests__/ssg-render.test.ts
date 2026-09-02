@@ -92,26 +92,18 @@ Deno.test('ssgRender - throws when routeInfo is empty', async () => {
   );
 });
 
-Deno.test('ssgRender - writes ISR manifest for revalidate routes', async () => {
-  const outDir = './dist-test-ssg-render-isr';
+Deno.test('ssgRender - never emits an ISR manifest (#1217: ISR removed in v0.44)', async () => {
+  const outDir = './dist-test-ssg-render-no-isr';
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
   const bundle = createMockBundle({
     routeInfo: [
-      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [], revalidate: 60 },
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
     ],
   });
 
   await ssgRender(bundle, { ...defaultOptions, outDir });
 
-  const manifest = JSON.parse(await Deno.readTextFile(`${outDir}/isr-manifest.json`));
-  assertEquals(manifest, [
-    {
-      path: '/',
-      revalidate: 60,
-      cacheKey: 'openelement:isr:/',
-      params: {},
-    },
-  ]);
+  assertEquals(await pathExists(`${outDir}/isr-manifest.json`), false);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 
@@ -269,7 +261,6 @@ Deno.test('ssgRender - dynamic-route defined 500 output fails the pipeline and w
         tagName: 'blog-page',
         isDynamic: true,
         paramNames: ['slug'],
-        revalidate: 60,
       },
     ],
     renderRoute: (() =>
@@ -296,12 +287,10 @@ Deno.test('ssgRender - dynamic-route defined 500 output fails the pipeline and w
     '/blog/a',
   );
   assertEquals(await pathExists(`${outDir}/blog/a/index.html`), false);
-  // The ISR manifest must not register the failed page.
-  assertEquals(await pathExists(`${outDir}/isr-manifest.json`), false);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 
-Deno.test('ssgRender - dynamic-route failure in warn mode skips the page and the ISR entry', async () => {
+Deno.test('ssgRender - dynamic-route failure in warn mode skips the failed page', async () => {
   const outDir = './dist-test-ssg-render-dynwarn';
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
   const bundle = createMockBundle({
@@ -312,7 +301,6 @@ Deno.test('ssgRender - dynamic-route failure in warn mode skips the page and the
         tagName: 'blog-page',
         isDynamic: true,
         paramNames: ['slug'],
-        revalidate: 60,
       },
     ],
     renderRoute: ((_path: string, opts?: Record<string, unknown>) => {
@@ -348,18 +336,6 @@ Deno.test('ssgRender - dynamic-route failure in warn mode skips the page and the
   await ssgRender(bundle, { ...defaultOptions, outDir, dynamicRouteFailure: 'warn' });
   assertEquals(await pathExists(`${outDir}/blog/a/index.html`), true);
   assertEquals(await pathExists(`${outDir}/blog/b/index.html`), false);
-  // The ISR manifest registers only the successfully rendered page.
-  const manifest = JSON.parse(await Deno.readTextFile(`${outDir}/isr-manifest.json`)) as Array<
-    { path: string; revalidate: number; cacheKey: string; params: Record<string, string> }
-  >;
-  assertEquals(manifest, [
-    {
-      path: '/blog/:slug',
-      revalidate: 60,
-      cacheKey: 'openelement:isr:/blog/%3Aslug?slug=a',
-      params: { slug: 'a' },
-    },
-  ]);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 

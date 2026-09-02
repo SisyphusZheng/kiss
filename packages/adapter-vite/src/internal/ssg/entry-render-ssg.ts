@@ -11,7 +11,6 @@ import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
   renderMatchingRenderersFn,
-  routeRevalidateExpr,
   routeTagNameExpr,
 } from './entry-route-helpers.ts';
 
@@ -47,9 +46,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
       }, tagName: ${tagNameExpr}, module: ${r.varName}, isDynamic: ${!!r
         .isDynamic}, paramNames: [${
         (r.paramNames || []).map(quoteGeneratedJavaScriptValue).join(', ')
-      }], revalidate: ${
-        routeRevalidateExpr(r.varName)
-      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "static"), hasAction: (typeof ${r.varName}.action === "function" || (typeof ${r.varName}.actions === "object" && ${r.varName}.actions !== null)) },`,
+      }], rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "static"), hasAction: (typeof ${r.varName}.action === "function" || (typeof ${r.varName}.actions === "object" && ${r.varName}.actions !== null)) },`,
     );
   }
   lines.push('];');

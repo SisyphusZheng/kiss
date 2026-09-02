@@ -134,7 +134,7 @@ Deno.test('malformed percent-encoding is a defined 400, never a crash (#823)', a
   }
 });
 
-Deno.test('tryStatic cache-control: content-hashed assets immutable, HTML revalidates (#1039)', async () => {
+Deno.test('tryStatic cache-control: content-hashed assets immutable, HTML rechecked on deploy (#1039)', async () => {
   const root = await Deno.makeTempDir();
   try {
     await Deno.mkdir(join(root, 'assets'));

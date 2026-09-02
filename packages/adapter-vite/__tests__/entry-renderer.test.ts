@@ -410,7 +410,7 @@ Deno.test('renderEntry: route meta layout can select named layouts', () => {
   assertStringIncludes(code, 'module: $pageIndex');
 });
 
-Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalidate wiring', () => {
+Deno.test('renderEntry: definePage descriptor feeds load and metadata wiring', () => {
   const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
   const code = renderEntry(desc);
 
@@ -460,10 +460,9 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
     'rendering: (__pageDefinition($pageIndex).renderIntent?.mode || "static")',
   );
   assertStringIncludes(code, 'title: title || page.head?.title || "openElement"');
-  assertStringIncludes(
-    code,
-    'revalidate: (__pageDefinition($pageIndex).renderIntent?.revalidate ?? false)',
-  );
+  // #1217: ISR semantics were removed in v0.44 — generated route metadata
+  // must not carry a revalidate field.
+  assertFalse(code.includes('revalidate'));
 });
 
 Deno.test('renderEntry: lifecycle control produces redirect and not-found responses', () => {

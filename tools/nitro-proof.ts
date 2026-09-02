@@ -131,21 +131,24 @@ async function assertRuntimeRoutes(fetchRuntime: FetchLike): Promise<void> {
   assertIncludes(clientOnlyHtml, 'open-element-client-only.js', 'client-only route');
   assertNotIncludes(clientOnlyHtml, 'open-element-island-visible.js', 'client-only route');
 
-  const isr = await fetchRuntime(new Request('http://127.0.0.1/isr'));
-  const isrText = await isr.text();
+  // Host-level cache route rule (Nitro routeRules) passthrough proof. This is
+  // the host platform's cache feature, not a framework capability — v0.44
+  // ships no framework ISR semantics (#1217).
+  const cached = await fetchRuntime(new Request('http://127.0.0.1/cached'));
+  const cachedText = await cached.text();
   if (
-    isr.status !== 200 ||
-    !isrText.includes('data-route="isr"') ||
-    isr.headers.get('x-open-element-cache-intent') !== 'isr; revalidate=60' ||
-    isr.headers.get('cache-control') !== 'public, max-age=60, s-maxage=60'
+    cached.status !== 200 ||
+    !cachedText.includes('data-route="cached"') ||
+    cached.headers.get('x-open-element-cache-intent') !== 'host-cache; max-age=60' ||
+    cached.headers.get('cache-control') !== 'public, max-age=60, s-maxage=60'
   ) {
     console.error(
       JSON.stringify(
         {
-          status: isr.status,
-          cacheIntent: isr.headers.get('x-open-element-cache-intent'),
-          cacheControl: isr.headers.get('cache-control'),
-          body: isrText,
+          status: cached.status,
+          cacheIntent: cached.headers.get('x-open-element-cache-intent'),
+          cacheControl: cached.headers.get('cache-control'),
+          body: cachedText,
         },
         null,
         2,
@@ -344,7 +347,7 @@ const buildLog = await run([
 });
 assertNotIncludes(buildLog, 'Node.js compatibility is not enabled', 'Nitro build log');
 const serializationWarning =
-  'Runtime config option `nitro.routeRules./isr.cache` may not be able to be serialized.';
+  'Runtime config option `nitro.routeRules./cached.cache` may not be able to be serialized.';
 if (buildLog.includes(serializationWarning)) {
   console.log(
     'Nitro emitted the known cache serialization warning; generated route-rule markers will be asserted.',
@@ -385,7 +388,7 @@ const outputServerCode = (await readTextFiles(new URL('server/', output), '.mjs'
   '\\"',
   '"',
 );
-assertNitroIsrRouteRule(outputServerCode);
+assertNitroCacheRouteRule(outputServerCode);
 
 if (preset === 'node') {
   await smokeNode(serverEntry);
@@ -399,17 +402,17 @@ if (preset === 'node') {
 
 console.log(`nitro proof ${preset}: real Nitro ${expectedPreset} output passed`);
 
-function assertNitroIsrRouteRule(serverCode: string): void {
+function assertNitroCacheRouteRule(serverCode: string): void {
   for (
     const [label, pattern] of [
-      ['route', /["']\/isr["']/],
+      ['route', /["']\/cached["']/],
       ['cache middleware', /["']cache["']/],
       ['maxAge', /["']?maxAge["']?\s*:\s*60/],
       ['swr', /["']?swr["']?\s*:\s*(?:true|!0)/],
     ] as const
   ) {
     if (!pattern.test(serverCode)) {
-      console.error(`Nitro ISR route rule missing ${label}: ${pattern}`);
+      console.error(`Nitro cache route rule missing ${label}: ${pattern}`);
       Deno.exit(1);
     }
   }

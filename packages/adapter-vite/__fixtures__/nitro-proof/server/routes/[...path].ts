@@ -65,10 +65,10 @@ const openElementHandler = createOpenElementNitroHandler({
           ].join(''),
           headers,
         );
-      case '/isr':
+      case '/cached':
         headers.set('cache-control', 's-maxage=60, stale-while-revalidate=300');
-        headers.set('x-open-element-cache-intent', 'isr; revalidate=60');
-        return html('<main data-route="isr"><h1>ISR route</h1></main>', headers);
+        headers.set('x-open-element-cache-intent', 'host-cache; max-age=60');
+        return html('<main data-route="cached"><h1>Host-cached route</h1></main>', headers);
       default:
         return html(
           '<main data-route="fallback-not-found"><h1>Not found</h1></main>',

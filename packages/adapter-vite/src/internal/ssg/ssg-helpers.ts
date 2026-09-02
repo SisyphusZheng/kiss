@@ -5,12 +5,7 @@
  * This module sits at the bottom of the dependency graph.
  */
 
-import type { IsrManifestEntry } from '../protocol/framework.ts';
-import type { RouteInfoEntry } from '../protocol/ssg.ts';
-import {
-  createIsrCacheKey,
-  normalizeRoutePatternForURLPattern,
-} from '@openelement/element/build-utils';
+import { normalizeRoutePatternForURLPattern } from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../html-files.ts';
 import { NODE_BRIDGE_EMBEDDED_FUNCTIONS } from '../node-bridge.ts';
 
@@ -91,35 +86,6 @@ export async function stableHash(str: string): Promise<string> {
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-}
-
-// ─── ISR manifest builder ──────────────────────────────────────
-
-export function buildIsrManifestEntries(
-  routeInfo: RouteInfoEntry[],
-  staticPathParamsByRoute: Map<string, Array<Record<string, string>>>,
-): IsrManifestEntry[] {
-  const entries: IsrManifestEntry[] = [];
-  for (const route of routeInfo) {
-    const revalidate = typeof route.revalidate === 'number' && route.revalidate > 0
-      ? route.revalidate
-      : undefined;
-    if (!revalidate) continue;
-
-    const paramsList = route.isDynamic
-      ? staticPathParamsByRoute.get(route.path) ?? []
-      : [route.params ?? {}];
-
-    for (const params of paramsList) {
-      entries.push({
-        path: route.path,
-        revalidate,
-        cacheKey: createIsrCacheKey(route.path, params),
-        params,
-      });
-    }
-  }
-  return entries;
 }
 
 // ─── Request-time server entry module (0.42.0-alpha.1, ADR-0120) ──────────
@@ -411,7 +377,8 @@ const MIME = {
 // Keep these rules in parity with cacheControlFor in
 // internal/static-serve.ts (pinned by __tests__/ssg-helpers.test.ts) — same
 // drift class as the MIME table above: content-hashed build assets are
-// immutable; HTML is the deployment boundary and must revalidate (#1039).
+// immutable; HTML is the deployment boundary and must be rechecked against
+// the origin on each deploy (#1039).
 const CONTENT_HASHED_ASSET_RE = /(?:^|[/])assets[/][^/]*-[0-9a-zA-Z_-]{8,}[.][^/]+$/;
 
 function cacheControlFor(filePath) {
