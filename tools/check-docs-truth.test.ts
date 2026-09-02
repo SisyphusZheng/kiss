@@ -47,6 +47,27 @@ Deno.test('docs-truth current: VNode is flagged on prose surfaces but not in doc
   );
 });
 
+Deno.test('docs-truth current: www/app code surfaces are in removed-vocabulary scope (#1260)', () => {
+  // www/app route data and component code samples must not present removed
+  // v0.43 authoring vocabulary as current.
+  const sampleDrift = "import { defineElement } from '@openelement/element';\n" +
+    'const list = `<For each={items}>`;\n';
+  const componentNames = findRemovedAuthoringVocabulary(
+    'www/app/components/page-home.tsx',
+    sampleDrift,
+  );
+  assert(
+    componentNames.includes('removed defineElement authoring helper'),
+    componentNames.join(','),
+  );
+  assert(componentNames.includes('removed For control-flow factory'), componentNames.join(','));
+  const routeNames = findRemovedAuthoringVocabulary(
+    'www/app/routes/apilist.tsx',
+    "defineIsland('x-island', () => null);",
+  );
+  assert(routeNames.includes('removed defineIsland() authoring helper'), routeNames.join(','));
+});
+
 Deno.test('docs-truth current: lookalikes and out-of-scope surfaces are not flagged', () => {
   // defineIslandConfig stays: only the removed defineIsland( call is matched.
   assertEquals(
@@ -64,9 +85,17 @@ Deno.test('docs-truth current: lookalikes and out-of-scope surfaces are not flag
     ),
     [],
   );
-  // www/app sources carry their own www gate and are out of scope here.
   assertEquals(
-    findRemovedAuthoringVocabulary('www/app/routes/apilist.tsx', 'defineElement'),
+    findRemovedAuthoringVocabulary(
+      'www/app/components/page-home.tsx',
+      "@element('index-index') class PageHome extends OpenElement",
+    ),
+    [],
+  );
+  // Generated www/app content-data mirrors are build artifacts of the gated
+  // www/content sources and stay out of scope (#1260).
+  assertEquals(
+    findRemovedAuthoringVocabulary('www/app/data/_generated-guide-data.ts', 'defineElement'),
     [],
   );
 });

@@ -1,10 +1,9 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import type { MastodonAccount, MastodonStatus } from '../app/types.ts';
 import { getProfile, getProfileStatuses } from '../app/api-client.ts';
 import { formatCount, stripHtml } from '../app/format.ts';
 import StatusCard from '../components/StatusCard.tsx';
-import { element } from '../compile-decorators.ts';
 
 export interface ProfileData {
   account?: MastodonAccount;

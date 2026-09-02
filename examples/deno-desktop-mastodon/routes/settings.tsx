@@ -1,6 +1,5 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
-import { element } from '../compile-decorators.ts';
+import { element, OpenElement } from '@openelement/element';
 
 export const tagName = 'mastodon-settings';
 

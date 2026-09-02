@@ -23,13 +23,21 @@ try {
 
 import './app/styles.css';
 
-// Import route modules for side-effect: customElements.define + exports.
+// Import route modules to bind their loader/tagName exports for the route
+// table below. The @element page classes are compiled by the adapter's
+// open:compiled-element transform; v0.44 compiled modules never self-register
+// — in adapter-generated SSR/client entries the entry owns every
+// customElements.define, so this custom SPA bootstrap must not rely on module
+// side effects for page-element registration.
 import TimelinePage, { loader as timelineLoader, tagName as timelineTag } from './routes/index.tsx';
 import ProfilePage, { loader as profileLoader, tagName as profileTag } from './routes/profile.tsx';
 import StatusPage, { loader as statusLoader, tagName as statusTag } from './routes/status.tsx';
 import SettingsPage, { tagName as settingsTag } from './routes/settings.tsx';
 
-// Import islands for side-effect: customElements.define registers custom elements.
+// Import islands for side effect: definePreactIsland() registers each
+// island's custom element at module evaluation. This app ships its own
+// index.html client entry, so no adapter-generated entry imports the islands
+// — the bootstrap import is what runs that registration.
 import './islands/settings-island.tsx';
 
 void TimelinePage;

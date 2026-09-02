@@ -1,7 +1,6 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
-import { element, property } from '../compile-decorators.ts';
 
 // Validates @openelement/ui CE coexistence: open-button / open-card / open-input
 // + Preact island all render in shadow DOM.

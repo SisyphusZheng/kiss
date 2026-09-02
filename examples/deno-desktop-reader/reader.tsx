@@ -931,7 +931,13 @@ try {
   // CSSStyleSheet constructor may not be available in older browsers
 }
 
-// Import route modules for side-effect: customElements.define + exports
+// Import route modules to bind their loader/action/tagName exports for the
+// route table below. The @element page classes are compiled by the adapter's
+// open:compiled-element transform; v0.44 compiled modules never self-register
+// — in adapter-generated SSR/client entries the entry owns every
+// customElements.define (packages/adapter-vite entry-orchestrator). This
+// custom SPA bootstrap therefore must not rely on module side effects for
+// page-element registration.
 import BookshelfPage, {
   action as bookshelfAction,
   loader as bookshelfLoader,
@@ -954,9 +960,10 @@ import SettingsPage, {
 } from './routes/settings.tsx';
 import WcInteropPage, { tagName as wcInteropTag } from './routes/wc-interop.tsx';
 
-// Import islands for side-effect: definePreactIsland registers custom elements.
-// In SPA mode the adapter does not inject an islands bundle, so islands must
-// be imported by the bootstrap to ensure their customElements.define() runs.
+// Import islands for side effect: definePreactIsland() registers each
+// island's custom element at module evaluation. This app ships its own
+// index.html client entry, so no adapter-generated entry imports the islands
+// — the bootstrap import is what runs that registration.
 import './islands/pdf-reader-island.tsx';
 import './islands/search-box-island.tsx';
 import './islands/sync-status-island.tsx';

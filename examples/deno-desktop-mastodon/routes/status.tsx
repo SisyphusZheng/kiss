@@ -1,9 +1,8 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import type { MastodonStatus } from '../app/types.ts';
 import { getStatus, getStatusContext } from '../app/api-client.ts';
 import StatusCard from '../components/StatusCard.tsx';
-import { element } from '../compile-decorators.ts';
 
 export interface StatusData {
   status?: MastodonStatus;
