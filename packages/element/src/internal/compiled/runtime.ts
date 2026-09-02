@@ -39,15 +39,42 @@ type ProgramFixedPart = Extract<
   { k: 'attr' | 'prop' | 'bool' | 'class' | 'style' | 'html' | 'event' | 'ref' }
 >;
 
-/** Structured diagnostic for claim-time structure/identity drift. */
+/** Owning range a claim mismatch is attributed to: the root or one bounded Region. */
+export interface RootClaimOwner {
+  kind: 'root';
+  root: Node;
+}
+
+export interface RegionClaimOwner {
+  kind: 'region';
+  parent: Node;
+  anchor: Comment;
+  end: Comment;
+  part: ProgramWhenPart | ProgramEachPart;
+}
+
+export type ClaimOwner = RootClaimOwner | RegionClaimOwner;
+
+/**
+ * Structured diagnostic for claim-time structure/identity drift. The canonical
+ * constructor contract is `(path, message, owner)`: every mismatch carries the
+ * exact owning range (root or one bounded Region) so bounded `owning`
+ * recovery can rebuild exactly that range — and nothing outside it.
+ */
 export class PartProgramClaimError extends Error {
   readonly code = 'OPEN_ELEMENT_COMPILED_CLAIM_MISMATCH';
   readonly path: string;
+  readonly detail: string;
+  readonly ownerKind: ClaimOwner['kind'];
+  readonly owner: ClaimOwner;
 
-  constructor(path: string, message: string) {
+  constructor(path: string, message: string, owner: ClaimOwner) {
     super(`[compiled-claim] ${path}: ${message}`);
     this.name = 'PartProgramClaimError';
     this.path = path;
+    this.detail = message;
+    this.ownerKind = owner.kind;
+    this.owner = owner;
   }
 }
 
@@ -524,7 +551,9 @@ function updateWhen(region: WhenRegion, value: unknown): void {
   const next = whenActive(region.part, value);
   if (next === region.current) return;
   const parent = region.end.parentNode;
-  if (!parent) return;
+  // A detached anchor/end pair means the Region's owning boundary is gone;
+  // updates stop rather than rebuilding outside the owned range.
+  if (!parent || region.anchor.parentNode !== parent) return;
   try {
     region.branchScope.dispose(true);
   } finally {
@@ -770,7 +799,9 @@ function updateEach(region: EachRegion, value: unknown): void {
     throw new Error(`[compiled-runtime] each part ${region.part.index} expects an array signal`);
   }
   const parent = region.end.parentNode;
-  if (!parent) return;
+  // A detached anchor/end pair means the Region's owning boundary is gone;
+  // updates stop rather than rebuilding outside the owned range.
+  if (!parent || region.anchor.parentNode !== parent) return;
 
   const descriptors: Array<{ key: string; item: unknown; existing?: EachEntry }> = [];
   const seen = new Set<string>();
@@ -1238,13 +1269,13 @@ export function serializeToHtml(program: PartProgramV1, host: CompiledRuntimeHos
 
 // ─── Existing-DOM claim ─────────────────────────────────────────────
 
-function claimFailure(path: string, message: string): never {
-  throw new PartProgramClaimError(path, message);
+function claimFailure(path: string, message: string, owner: ClaimOwner): never {
+  throw new PartProgramClaimError(path, message, owner);
 }
 
-function expectComment(node: Node, marker: string, path: string): Comment {
+function expectComment(node: Node, marker: string, path: string, owner: ClaimOwner): Comment {
   if (!isComment(node) || node.data !== marker) {
-    claimFailure(path, `expected <!--${marker}--> anchor`);
+    claimFailure(path, `expected <!--${marker}--> anchor`, owner);
   }
   return node;
 }
@@ -1265,6 +1296,7 @@ function claimElementAttributes(
   node: ProgramElementNode,
   path: string,
   programPath: number[],
+  owner: ClaimOwner,
 ): void {
   const dynamic = dynamicAttributeNames(ctx, programPath);
   // Per-item attribute slots are verified with their item context by the
@@ -1273,21 +1305,125 @@ function claimElementAttributes(
   for (const [name, value] of node.attrs) {
     if (dynamic.has(name)) continue;
     if (element.getAttribute(name) !== value) {
-      claimFailure(path, `attribute drift on "${name}": expected ${JSON.stringify(value)}`);
+      claimFailure(path, `attribute drift on "${name}": expected ${JSON.stringify(value)}`, owner);
     }
   }
   const getNames = (element as Element & { getAttributeNames?: () => string[] }).getAttributeNames;
   if (getNames) {
+    const actualNames = getNames.call(element);
     const expected = new Set(node.attrs.map(([name]) => name));
     for (const name of dynamic) expected.add(name);
-    for (const name of getNames.call(element)) {
+    for (const name of actualNames) {
       if (
         name.toLowerCase() === 'data-oe-light' && node.children.length === 0 &&
         node.tag.includes('-') && element.getAttribute('data-oe-light') !== null
       ) continue;
-      if (!expected.has(name)) claimFailure(path, `unexpected attribute "${name}"`);
+      if (!expected.has(name)) claimFailure(path, `unexpected attribute "${name}"`, owner);
+    }
+    for (const name of expected) {
+      // A dynamic sink may legitimately have no serialized attribute; its live
+      // value is deliberately not read or overwritten by claim.
+      if (dynamic.has(name)) continue;
+      if (!actualNames.includes(name)) claimFailure(path, `missing attribute "${name}"`, owner);
     }
   }
+}
+
+function findRegionEnd(
+  parent: Node,
+  start: number,
+  marker: string,
+): Comment | undefined {
+  for (let index = start; index < parent.childNodes.length; index++) {
+    const node = parent.childNodes[index];
+    if (isComment(node) && node.data === marker) return node;
+  }
+  return undefined;
+}
+
+/** Attribute a Region-internal mismatch to its bounded anchor/end range. */
+function regionClaimOwner(
+  parent: Node,
+  start: number,
+  part: ProgramWhenPart | ProgramEachPart,
+  anchor: Comment,
+  fallback: ClaimOwner,
+): ClaimOwner {
+  const end = findRegionEnd(parent, start, partAnchorEndMarker(part.index));
+  return end ? { kind: 'region', parent, anchor, end, part } : fallback;
+}
+
+function isRecordValue(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Item fields referenced by an each Region's template (ival + iattr slots). */
+function itemTemplateFields(
+  nodes: readonly ProgramTreeNode[],
+  out = new Set<string>(),
+): Set<string> {
+  for (const node of nodes) {
+    if (node.k === 'ival') {
+      if (node.field !== undefined) out.add(node.field);
+      continue;
+    }
+    if (node.k === 'el') {
+      for (const [, field] of node.iattrs ?? []) out.add(field);
+      itemTemplateFields(node.children, out);
+    }
+  }
+  return out;
+}
+
+/**
+ * Claim-time validation of one each Region's items: records with own key and
+ * own template fields, no duplicate keys. Failures are structured claim
+ * mismatches owned by the Region, so `owning` recovery can rebuild exactly
+ * that range.
+ */
+function claimItemRecords(
+  part: ProgramEachPart,
+  value: unknown,
+  path: string,
+  owner: ClaimOwner,
+): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) {
+    claimFailure(path, 'each Region dependency must contain an array', owner);
+  }
+  const requiredFields = itemTemplateFields(part.item);
+  const seen = new Set<string>();
+  const items: Array<Record<string, unknown>> = [];
+  for (let index = 0; index < value.length; index++) {
+    const item: unknown = value[index];
+    const itemPath = `${path}[${index}]`;
+    if (!isRecordValue(item)) claimFailure(itemPath, 'item must be a record', owner);
+    if (!Object.prototype.hasOwnProperty.call(item, part.key)) {
+      claimFailure(itemPath, `item needs ${JSON.stringify(part.key)}`, owner);
+    }
+    for (const field of requiredFields) {
+      if (!Object.prototype.hasOwnProperty.call(item, field)) {
+        claimFailure(itemPath, `item needs ${JSON.stringify(field)}`, owner);
+      }
+    }
+    const key = itemKey(part, item, index);
+    if (seen.has(key)) {
+      claimFailure(path, `duplicate key ${JSON.stringify(item[part.key])}`, owner);
+    }
+    seen.add(key);
+    items.push(item);
+  }
+  return items;
+}
+
+/**
+ * One signal subscription deferred to the attach phase. Claim is staged: the
+ * complete owned structure is validated before any subscription, listener, or
+ * ref attaches, so a failed claim leaves zero live resources behind.
+ */
+interface DeferredSubscription {
+  scope: ResourceScope;
+  signal: string;
+  fn: (value: unknown) => void;
 }
 
 function claimNodes(
@@ -1298,6 +1434,8 @@ function claimNodes(
   path: string,
   programPath: number[],
   scope: ResourceScope,
+  owner: ClaimOwner,
+  pending: DeferredSubscription[],
   item: unknown = NO_ITEM,
   itemPart?: ProgramEachPart,
   itemValueSlots?: ItemValueSlot[],
@@ -1305,7 +1443,7 @@ function claimNodes(
 ): number {
   const at = (index: number): Node => {
     const node = parent.childNodes[index];
-    if (!node) claimFailure(path, `missing child at DOM index ${index}`);
+    if (!node) claimFailure(path, `missing child at DOM index ${index}`, owner);
     return node;
   };
 
@@ -1315,24 +1453,25 @@ function claimNodes(
     const nodeProgramPath = [...programPath, index];
     if (node.k === 'text') {
       const dom = at(cursor++);
-      if (!isText(dom)) claimFailure(nodePath, 'expected a text node');
+      if (!isText(dom)) claimFailure(nodePath, 'expected a text node', owner);
       if (dom.data !== node.value) {
         claimFailure(
           nodePath,
           `text drift: expected ${JSON.stringify(node.value)}, found ${JSON.stringify(dom.data)}`,
+          owner,
         );
       }
       continue;
     }
     if (node.k === 'ival') {
-      if (item === NO_ITEM) claimFailure(nodePath, 'item value slot outside an each Region');
-      if (!itemPart) claimFailure(nodePath, 'item value slot has no item Region');
+      if (item === NO_ITEM) claimFailure(nodePath, 'item value slot outside an each Region', owner);
+      if (!itemPart) claimFailure(nodePath, 'item value slot has no item Region', owner);
       const expected = displayValue(itemValue(itemPart, item, node.field));
       if (expected.length > 0) {
         const dom = at(cursor++);
-        if (!isText(dom)) claimFailure(nodePath, 'expected item value text');
+        if (!isText(dom)) claimFailure(nodePath, 'expected item value text', owner);
         if (dom.data !== expected) {
-          claimFailure(nodePath, `item text drift: expected ${JSON.stringify(expected)}`);
+          claimFailure(nodePath, `item text drift: expected ${JSON.stringify(expected)}`, owner);
         }
         itemValueSlots?.push({
           text: dom,
@@ -1351,16 +1490,20 @@ function claimNodes(
     }
     if (node.k === 'el') {
       const dom = at(cursor++);
-      if (!isElement(dom)) claimFailure(nodePath, 'expected an element');
+      if (!isElement(dom)) claimFailure(nodePath, 'expected an element', owner);
       if (dom.tagName.toLowerCase() !== node.tag) {
-        claimFailure(nodePath, `expected <${node.tag}>, found <${dom.tagName.toLowerCase()}>`);
+        claimFailure(
+          nodePath,
+          `expected <${node.tag}>, found <${dom.tagName.toLowerCase()}>`,
+          owner,
+        );
       }
-      claimElementAttributes(ctx, dom, node, nodePath, nodeProgramPath);
+      claimElementAttributes(ctx, dom, node, nodePath, nodeProgramPath, owner);
       if (node.iattrs !== undefined) {
         // Per-item attribute slots carry the item context: values are verified
         // against the item (deterministic) and tracked for keyed-reuse updates.
         if (item === NO_ITEM || !itemPart) {
-          claimFailure(nodePath, 'item attribute slot outside an each Region');
+          claimFailure(nodePath, 'item attribute slot outside an each Region', owner);
         }
         for (const [name, field] of node.iattrs) {
           const expected = itemAttrValue(item, field);
@@ -1369,6 +1512,7 @@ function claimNodes(
             claimFailure(
               nodePath,
               `item attribute drift on "${name}": expected ${JSON.stringify(expected)}`,
+              owner,
             );
           }
           itemAttrSlots?.push({ element: dom, name, field });
@@ -1392,29 +1536,33 @@ function claimNodes(
           `${nodePath}.children`,
           nodeProgramPath,
           scope,
+          owner,
+          pending,
           item,
           itemPart,
           itemValueSlots,
           itemAttrSlots,
         );
       if (consumed !== dom.childNodes.length) {
-        claimFailure(`${nodePath}.children`, 'unexpected trailing nodes');
+        claimFailure(`${nodePath}.children`, 'unexpected trailing nodes', owner);
       }
       continue;
     }
 
     const part = ctx.program.parts[node.index];
-    if (!part) claimFailure(nodePath, `missing Part ${node.index}`);
+    if (!part) claimFailure(nodePath, `missing Part ${node.index}`, owner);
     if (part.k === 'text') {
-      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath, owner);
       const expected = displayValue(signalOf(ctx, part.signal).value);
       let text: Text | undefined;
       if (expected.length > 0) {
         const next = at(cursor++);
-        if (!isText(next)) claimFailure(nodePath, 'expected a text node after the part anchor');
+        if (!isText(next)) {
+          claimFailure(nodePath, 'expected a text node after the part anchor', owner);
+        }
         text = next;
         if (text.data !== expected) {
-          claimFailure(nodePath, `part text drift: expected ${JSON.stringify(expected)}`);
+          claimFailure(nodePath, `part text drift: expected ${JSON.stringify(expected)}`, owner);
         }
       }
       const partScope = scope.child();
@@ -1423,13 +1571,16 @@ function claimNodes(
         slot.text?.parentNode?.removeChild(slot.text);
         slot.text = undefined;
       });
-      subscribeWrites(ctx, partScope, part.signal, (value) => {
-        updateTextPart(slot, value);
+      pending.push({
+        scope: partScope,
+        signal: part.signal,
+        fn: (value) => updateTextPart(slot, value),
       });
       continue;
     }
     if (part.k === 'when') {
-      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath, owner);
+      const scopedOwner = regionClaimOwner(parent, cursor, part, anchor, owner);
       const active = whenActive(part, signalOf(ctx, part.signal).value);
       const partScope = scope.child();
       const branchScope = partScope.child();
@@ -1442,11 +1593,18 @@ function claimNodes(
         `${nodePath}.branch`,
         [],
         branchScope,
+        scopedOwner,
+        pending,
         item,
         itemPart,
         itemValueSlots,
       );
-      const end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
+      const end = expectComment(
+        at(cursor++),
+        partAnchorEndMarker(part.index),
+        nodePath,
+        scopedOwner,
+      );
       const region: WhenRegion = {
         ctx,
         part,
@@ -1459,13 +1617,17 @@ function claimNodes(
         item,
       };
       partScope.addRangeCleanup(() => removeNodes(region.nodes));
-      subscribeWrites(ctx, partScope, part.signal, (value) => updateWhen(region, value));
+      pending.push({
+        scope: partScope,
+        signal: part.signal,
+        fn: (value) => updateWhen(region, value),
+      });
       continue;
     }
     if (part.k === 'each') {
-      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath);
-      const value = signalOf(ctx, part.signal).value;
-      if (!Array.isArray(value)) claimFailure(nodePath, 'each Part signal is not an array');
+      const anchor = expectComment(at(cursor++), partAnchorMarker(part.index), nodePath, owner);
+      const scopedOwner = regionClaimOwner(parent, cursor, part, anchor, owner);
+      const items = claimItemRecords(part, signalOf(ctx, part.signal).value, nodePath, scopedOwner);
       const partScope = scope.child();
       const region: EachRegion = {
         ctx,
@@ -1480,12 +1642,9 @@ function claimNodes(
       partScope.addRangeCleanup(() => {
         for (const entry of region.entries) removeNodes(entry.nodes);
       });
-      const seen = new Set<string>();
-      for (let itemIndex = 0; itemIndex < value.length; itemIndex++) {
-        const currentItem = value[itemIndex];
+      for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+        const currentItem = items[itemIndex];
         const key = itemKey(part, currentItem, itemIndex);
-        if (seen.has(key)) claimFailure(`${nodePath}.item[${itemIndex}]`, 'duplicate item key');
-        seen.add(key);
         const itemScope = partScope.child();
         const itemSlots: ItemValueSlot[] = [];
         const itemAttrs: ItemAttrSlot[] = [];
@@ -1498,6 +1657,8 @@ function claimNodes(
           `${nodePath}.item[${itemIndex}]`,
           [],
           itemScope,
+          scopedOwner,
+          pending,
           currentItem,
           part,
           itemSlots,
@@ -1513,16 +1674,166 @@ function claimNodes(
         region.entries.push(entry);
         region.byKey.set(key, entry);
       }
-      region.end = expectComment(at(cursor++), partAnchorEndMarker(part.index), nodePath);
-      subscribeWrites(ctx, partScope, part.signal, (next) => updateEach(region, next));
+      region.end = expectComment(
+        at(cursor++),
+        partAnchorEndMarker(part.index),
+        nodePath,
+        scopedOwner,
+      );
+      pending.push({
+        scope: partScope,
+        signal: part.signal,
+        fn: (next) => updateEach(region, next),
+      });
       continue;
     }
-    claimFailure(nodePath, `Part ${node.index} has no claimable anchor`);
+    claimFailure(nodePath, `Part ${node.index} has no claimable anchor`, owner);
   }
   return cursor;
 }
 
-/** Claim-time options for the owning root's serialized static style sink. */
+// ─── Pre-upgrade event capture/replay (claim-activation helpers) ──────
+
+export interface PreUpgradeEvent {
+  readonly target: EventTarget;
+  readonly type: string;
+  readonly event?: Event;
+  readonly init?: EventInit;
+}
+
+export interface PreUpgradeEventCapture {
+  readonly events: readonly PreUpgradeEvent[];
+  stop(): void;
+}
+
+const SUPPORTED_PRE_UPGRADE_EVENTS = new Set([
+  'change',
+  'click',
+  'input',
+  'keydown',
+  'keyup',
+  'pointerdown',
+  'pointerup',
+  'submit',
+]);
+
+const consumedEventRecords = new WeakSet<object>();
+const consumedEventObjects = new WeakSet<object>();
+
+/**
+ * Capture the bounded pre-upgrade interaction set on an owning root. One
+ * latest event per target/type is retained, matching the one-click-per-host
+ * queue contract while keeping replay deterministic and finite.
+ */
+export function capturePreUpgradeEvents(
+  root: EventTarget,
+  eventTypes: readonly string[] = [...SUPPORTED_PRE_UPGRADE_EVENTS],
+): PreUpgradeEventCapture {
+  const events: PreUpgradeEvent[] = [];
+  const listeners: Array<{ type: string; listener: EventListener }> = [];
+  const replaceFor = (record: PreUpgradeEvent): void => {
+    const existing = events.findIndex((candidate) =>
+      candidate.target === record.target && candidate.type === record.type
+    );
+    if (existing >= 0) events[existing] = record;
+    else events.push(record);
+  };
+  for (const type of eventTypes) {
+    if (!SUPPORTED_PRE_UPGRADE_EVENTS.has(type)) continue;
+    const listener: EventListener = (event) => {
+      const target = event.target;
+      if (!target) return;
+      replaceFor({ target, type, event });
+    };
+    root.addEventListener(type, listener, { capture: true });
+    listeners.push({ type, listener });
+  }
+  let stopped = false;
+  return {
+    events,
+    stop(): void {
+      if (stopped) return;
+      stopped = true;
+      for (const { type, listener } of listeners) {
+        root.removeEventListener(type, listener, {
+          capture: true,
+        });
+      }
+    },
+  };
+}
+
+function isNodeValue(value: unknown): value is Node {
+  return typeof value === 'object' && value !== null && 'nodeType' in value &&
+    'childNodes' in value;
+}
+
+function isInsideRoot(root: Node, target: EventTarget): target is Node {
+  if (!isNodeValue(target)) return false;
+  let current: Node | null = target;
+  while (current) {
+    if (current === root) return true;
+    current = current.parentNode;
+  }
+  return false;
+}
+
+function preUpgradeEventList(
+  source: CompiledClaimOptions['preUpgradeEvents'],
+): readonly PreUpgradeEvent[] {
+  if (!source) return [];
+  if (Array.isArray(source)) return source;
+  if (typeof source === 'object' && 'stop' in source) {
+    source.stop();
+    return source.events;
+  }
+  throw new Error('[compiled-claim] preUpgradeEvents: expected an event array or capture object');
+}
+
+/** Replay each captured record at most once, and only while its target remains owned. */
+export function replayPreUpgradeEvents(
+  root: Node,
+  captured: readonly PreUpgradeEvent[],
+): number {
+  let replayed = 0;
+  for (const record of captured) {
+    if (consumedEventRecords.has(record)) continue;
+    if (!SUPPORTED_PRE_UPGRADE_EVENTS.has(record.type) || !isInsideRoot(root, record.target)) {
+      consumedEventRecords.add(record);
+      continue;
+    }
+    const target = record.target;
+    if (record.event && typeof record.event === 'object') {
+      if (consumedEventObjects.has(record.event)) {
+        consumedEventRecords.add(record);
+        continue;
+      }
+      consumedEventObjects.add(record.event);
+    }
+    consumedEventRecords.add(record);
+    if (typeof target.dispatchEvent !== 'function') continue;
+    const event = record.event ?? (
+      typeof globalThis.Event === 'function'
+        ? new Event(record.type, {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          ...record.init,
+        })
+        : undefined
+    );
+    if (!event) continue;
+    target.dispatchEvent(event);
+    replayed++;
+  }
+  return replayed;
+}
+
+// ─── Claim options, staged scan, and bounded recovery ─────────────────
+
+export type ClaimRecoveryMode = 'throw' | 'owning';
+
+/** Claim-time options for the owning root. */
 export interface CompiledClaimOptions {
   /**
    * True when the claiming class carries static styles. The server serializer
@@ -1531,6 +1842,12 @@ export interface CompiledClaimOptions {
    * style node on a style-less class is drift and fails closed.
    */
   expectStaticStyle?: boolean;
+  /** Default is `throw`; `owning` enables one bounded recovery attempt. */
+  recovery?: ClaimRecoveryMode;
+  /** Observe the exact structured mismatch before optional recovery. */
+  onMismatch?: (error: PartProgramClaimError) => void;
+  /** Events captured before upgrade and replayed after a successful attach. */
+  preUpgradeEvents?: readonly PreUpgradeEvent[] | PreUpgradeEventCapture;
 }
 
 function isStaticStyleNode(node: Node | undefined): boolean {
@@ -1540,7 +1857,259 @@ function isStaticStyleNode(node: Node | undefined): boolean {
   );
 }
 
-/** Claim existing SSR DOM without allocating or overwriting live values. */
+/**
+ * Resolve every fixed-Part target and read every dependency during the scan
+ * phase. Unresolved paths are structural drift (a claim mismatch owned by the
+ * root); missing signals/handlers/refs fail before any subscription or
+ * listener can attach.
+ */
+function validateFixedPartTargets(
+  ctx: MountContext,
+  root: Node,
+  rootOffset: number,
+  owner: ClaimOwner,
+): void {
+  for (const part of ctx.program.parts) {
+    if (!isFixedPart(part)) continue;
+    try {
+      resolvePath(root, part.path, `${part.k} Part`, rootOffset);
+    } catch {
+      claimFailure(
+        `parts[${part.index}].path`,
+        `path [${part.path.join(',')}] is unresolved`,
+        owner,
+      );
+    }
+    if (part.k === 'event') {
+      if (typeof ctx.host.handlers?.[part.handler] !== 'function') {
+        throw new Error(`[compiled-runtime] missing host handler "${part.handler}"`);
+      }
+    } else if (part.k === 'ref') {
+      if (!ctx.host.refs?.[part.ref]) {
+        throw new Error(`[compiled-runtime] missing host ref "${part.ref}"`);
+      }
+    } else {
+      signalOf(ctx, part.signal);
+    }
+  }
+}
+
+/**
+ * Scan phase: validate the complete owned structure against the existing DOM
+ * and collect deferred subscriptions. No subscription, listener, or ref
+ * attaches here, and no node is allocated or replaced.
+ */
+function scanClaim(
+  ctx: MountContext,
+  root: Node,
+  options: CompiledClaimOptions,
+  pending: DeferredSubscription[],
+): number {
+  const owner: RootClaimOwner = { kind: 'root', root };
+  const styleNode = root.childNodes[0];
+  const hasStaticStyle = isStaticStyleNode(styleNode);
+  if (hasStaticStyle && !options.expectStaticStyle) {
+    claimFailure('template', 'unexpected static style element', owner);
+  }
+  const cursorStart = hasStaticStyle ? 1 : 0;
+  const consumed = claimNodes(
+    ctx,
+    root,
+    cursorStart,
+    ctx.program.template,
+    'template',
+    [],
+    ctx.rootScope,
+    owner,
+    pending,
+  );
+  if (consumed !== root.childNodes.length) {
+    claimFailure('template', 'unexpected trailing nodes', owner);
+  }
+  validateFixedPartTargets(ctx, root, cursorStart, owner);
+  return cursorStart;
+}
+
+/** Static recovery build: Region branches and item templates hold no anchors. */
+function buildStaticRecoveryNodes(doc: Document, nodes: ProgramTreeNode[]): Node[] {
+  const out: Node[] = [];
+  for (const node of nodes) {
+    if (node.k === 'text') {
+      out.push(doc.createTextNode(node.value));
+      continue;
+    }
+    if (node.k === 'el') {
+      const element = doc.createElement(node.tag);
+      for (const [name, value] of node.attrs) element.setAttribute(name, value);
+      for (const child of buildStaticRecoveryNodes(doc, node.children)) {
+        element.appendChild(child);
+      }
+      out.push(element);
+      continue;
+    }
+    throw new Error('[compiled-claim] recovery build met a dynamic node in a static Region');
+  }
+  return out;
+}
+
+/** Recovery build of one each-Region item (static template, live item values). */
+function buildRecoveryItemNodes(
+  doc: Document,
+  part: ProgramEachPart,
+  item: Record<string, unknown>,
+): Node[] {
+  const build = (nodes: ProgramTreeNode[]): Node[] => {
+    const out: Node[] = [];
+    for (const node of nodes) {
+      if (node.k === 'text') {
+        out.push(doc.createTextNode(node.value));
+        continue;
+      }
+      if (node.k === 'ival') {
+        const value = displayValue(itemValue(part, item, node.field));
+        if (value.length > 0) out.push(doc.createTextNode(value));
+        continue;
+      }
+      if (node.k === 'el') {
+        const element = doc.createElement(node.tag);
+        for (const [name, value] of node.attrs) element.setAttribute(name, value);
+        for (const [name, field] of node.iattrs ?? []) {
+          const value = itemAttrValue(item, field);
+          if (value !== null) element.setAttribute(name, value);
+        }
+        for (const child of build(node.children)) element.appendChild(child);
+        out.push(element);
+        continue;
+      }
+      throw new Error('[compiled-claim] item templates may not contain Part anchors');
+    }
+    return out;
+  };
+  return build(part.item);
+}
+
+/** Recovery build of one Region's current content (no subscriptions). */
+function buildRecoveryRegionContent(
+  ctx: MountContext,
+  doc: Document,
+  part: ProgramWhenPart | ProgramEachPart,
+): Node[] {
+  if (part.k === 'when') {
+    const active = whenActive(part, signalOf(ctx, part.signal).value);
+    return buildStaticRecoveryNodes(doc, active ? part.on : part.off);
+  }
+  const items = claimItemRecords(part, signalOf(ctx, part.signal).value, `parts[${part.index}]`, {
+    kind: 'root',
+    root: doc,
+  });
+  return items.flatMap((item) => buildRecoveryItemNodes(doc, part, item));
+}
+
+/**
+ * Recovery build of the full template (anchors emitted, no subscriptions).
+ * Dynamic fixed-Part values are applied by the attach phase in `fresh` mode;
+ * a trusted-HTML sink's subtree is likewise rewritten there.
+ */
+function buildRecoveryTemplateNodes(
+  ctx: MountContext,
+  doc: Document,
+  nodes: ProgramTreeNode[],
+  path: number[],
+): Node[] {
+  const out: Node[] = [];
+  for (let index = 0; index < nodes.length; index++) {
+    const node = nodes[index];
+    const nodePath = [...path, index];
+    if (node.k === 'text') {
+      out.push(doc.createTextNode(node.value));
+      continue;
+    }
+    if (node.k === 'ival') {
+      throw new Error('[compiled-claim] item value slot outside an each Region');
+    }
+    if (node.k === 'el') {
+      const element = doc.createElement(node.tag);
+      for (const [name, value] of node.attrs) element.setAttribute(name, value);
+      const hasHtmlSink = fixedPartsAtPath(ctx, nodePath).some((part) => part.k === 'html');
+      if (!hasHtmlSink) {
+        for (const child of buildRecoveryTemplateNodes(ctx, doc, node.children, nodePath)) {
+          element.appendChild(child);
+        }
+      }
+      out.push(element);
+      continue;
+    }
+    const part = ctx.program.parts[node.index];
+    if (!part) throw new Error(`[compiled-runtime] missing Part ${node.index}`);
+    if (part.k === 'text') {
+      out.push(doc.createComment(partAnchorMarker(part.index)));
+      const current = displayValue(signalOf(ctx, part.signal).value);
+      if (current.length > 0) out.push(doc.createTextNode(current));
+      continue;
+    }
+    if (part.k === 'when' || part.k === 'each') {
+      out.push(doc.createComment(partAnchorMarker(part.index)));
+      out.push(...buildRecoveryRegionContent(ctx, doc, part));
+      out.push(doc.createComment(partAnchorEndMarker(part.index)));
+      continue;
+    }
+    throw new Error(`[compiled-runtime] fixed Part ${part.index} cannot be used as an anchor`);
+  }
+  return out;
+}
+
+function removeAllChildren(parent: Node): void {
+  while (parent.childNodes.length > 0) {
+    const child = parent.childNodes[0];
+    if (!child) break;
+    parent.removeChild(child);
+  }
+}
+
+/**
+ * Bounded `owning` recovery: replace only the mismatching owner — one Region
+ * range between its anchors, or the owning root's children (the marked static
+ * style node is serializer-owned and preserved). Nothing outside the compiled
+ * location identity is searched or touched.
+ */
+function recoverClaimOwner(error: PartProgramClaimError, ctx: MountContext): boolean {
+  if (error.owner.kind === 'region') {
+    const { parent, anchor, end, part } = error.owner;
+    if (anchor.parentNode !== parent || end.parentNode !== parent) return false;
+    const doc = parent.ownerDocument;
+    if (!doc) return false;
+    const replacement = buildRecoveryRegionContent(ctx, doc, part);
+    let current = anchor.nextSibling;
+    while (current && current !== end) {
+      const next = current.nextSibling;
+      parent.removeChild(current);
+      current = next;
+    }
+    for (const node of replacement) parent.insertBefore(node, end);
+    return true;
+  }
+  const root = error.owner.root;
+  const doc = root.ownerDocument;
+  if (!doc) return false;
+  const replacement = buildRecoveryTemplateNodes(ctx, doc, ctx.program.template, []);
+  const firstChild = root.childNodes[0];
+  const keepStyle = isStaticStyleNode(firstChild);
+  removeAllChildren(root);
+  if (keepStyle && firstChild) root.appendChild(firstChild);
+  for (const node of replacement) root.appendChild(node);
+  return true;
+}
+
+/**
+ * Claim existing SSR DOM without allocating or overwriting live values.
+ *
+ * Claim is staged: the complete owned structure is validated first, then
+ * subscriptions, listeners, and refs attach. A successful claim performs no
+ * node allocation or replacement (browser node identity is preserved). A
+ * mismatch fails closed with a structured PartProgramClaimError unless
+ * `recovery: 'owning'` was explicitly requested, which grants exactly one
+ * bounded rebuild of the mismatching owner.
+ */
 export function claimExistingDom(
   program: PartProgramV1,
   host: CompiledRuntimeHost,
@@ -1548,33 +2117,39 @@ export function claimExistingDom(
   options: CompiledClaimOptions = {},
 ): CompiledProgramInstance {
   noteCompiledProgramActivated();
-  const ctx = createContext(normalizePartProgram(program), host);
-  const styleNode = root.childNodes[0];
-  const hasStaticStyle = isStaticStyleNode(styleNode);
-  if (hasStaticStyle && !options.expectStaticStyle) {
-    claimFailure('template', 'unexpected static style element');
-  }
-  const cursorStart = hasStaticStyle ? 1 : 0;
-  try {
-    const consumed = claimNodes(
-      ctx,
-      root,
-      cursorStart,
-      ctx.program.template,
-      'template',
-      [],
-      ctx.rootScope,
-    );
-    if (consumed !== root.childNodes.length) claimFailure('template', 'unexpected trailing nodes');
-    attachFixedParts(ctx, root, 'claim', cursorStart);
-    return instance(ctx);
-  } catch (error) {
+  // Stop a live capture before staged validation so a failed claim cannot
+  // leave its root listener installed. The captured records are replayed only
+  // after the complete plan has attached successfully.
+  const capturedEvents = preUpgradeEventList(options.preUpgradeEvents);
+  const recovery = options.recovery ?? 'throw';
+  let recovered = false;
+  let rootRebuilt = false;
+  for (;;) {
+    const ctx = createContext(normalizePartProgram(program), host);
+    const pending: DeferredSubscription[] = [];
     try {
-      ctx.rootScope.dispose();
-    } catch {
-      // Keep the structural diagnostic while still attempting every cleanup.
+      const cursorStart = scanClaim(ctx, root, options, pending);
+      for (const deferred of pending) {
+        subscribeWrites(ctx, deferred.scope, deferred.signal, deferred.fn);
+      }
+      // A rebuilt root carries no live values yet: fixed Parts apply their
+      // initial values exactly as fresh creation would. A Region-range
+      // recovery never contains fixed-Part targets, so `claim` mode stands.
+      attachFixedParts(ctx, root, rootRebuilt ? 'fresh' : 'claim', cursorStart);
+      replayPreUpgradeEvents(root, capturedEvents);
+      return instance(ctx);
+    } catch (error) {
+      try {
+        ctx.rootScope.dispose();
+      } catch {
+        // Keep the structural diagnostic while still attempting every cleanup.
+      }
+      if (!(error instanceof PartProgramClaimError)) throw error;
+      options.onMismatch?.(error);
+      if (recovery !== 'owning' || recovered || !recoverClaimOwner(error, ctx)) throw error;
+      recovered = true;
+      rootRebuilt = error.owner.kind === 'root';
     }
-    throw error;
   }
 }
 
