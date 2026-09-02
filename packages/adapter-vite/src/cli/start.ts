@@ -31,18 +31,17 @@
  * are never trusted by default).
  */
 
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import process from 'node:process';
 import { formatError } from '@openelement/element';
 import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 import {
-  dispatchRequest,
+  createStartRequestHandler,
   importRequestTimeServer,
   type RequestTimeServerModule,
 } from '../internal/static-serve.ts';
-import { nodeRequestToWeb, writeWebResponse } from '../internal/node-bridge.ts';
 
 const root = process.cwd();
 const distDir = join(root, DEFAULT_OUT_DIR);
@@ -161,17 +160,14 @@ async function runStart(): Promise<void> {
   }
 
   const trustProxy = process.env.OPEN_ELEMENT_TRUST_PROXY === '1';
-  const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    const request = nodeRequestToWeb(req, { host: hostname, port, trustProxy });
-    const response = await dispatchRequest(request, {
-      distDir,
-      serverMod,
-      env: processEnv,
-      onHandlerError: (error) =>
-        console.error('[openElement start] request-time handler error:', error),
-    });
-    writeWebResponse(response, res, request);
-  });
+  const server = createServer(createStartRequestHandler({
+    distDir,
+    serverMod,
+    env: processEnv,
+    host: hostname,
+    port,
+    trustProxy,
+  }));
 
   server.listen(port, hostname, () => {
     console.log(

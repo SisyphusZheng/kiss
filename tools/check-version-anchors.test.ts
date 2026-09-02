@@ -43,6 +43,9 @@ function goodFiles(): Record<string, string> {
       `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\`\nLatest landed train: \`${LATEST_LANDED_TRAIN}\`\nActive internal target: ${ACTIVE_INTERNAL_CHECKPOINT}\nNext planned public train: \`${NEXT_PUBLIC_PRERELEASE}\``,
     'examples/open-element-in-fresh/README.md':
       `Maintained against the current framework source line (\`${PACKAGE_VERSION}\`).`,
+    'packages/create/src/version.ts': `export const CREATE_VERSION = '${PACKAGE_VERSION}';`,
+    'www/app/data/version.ts':
+      `export const OPENELEMENT_VERSION = '${PACKAGE_VERSION_TAG}';\nexport const PUBLISHED_PACKAGE_VERSION = '${PACKAGE_VERSION_TAG}';`,
   };
 }
 

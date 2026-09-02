@@ -12,6 +12,9 @@
 
 import type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
 import { trustedHtmlValue } from '../core/security.ts';
+// Canonical void-element set and attribute-escape contract (issue #1220,
+// M4/L1) — single source of truth, shared with the server serializer.
+import { escapeAttr, VOID_TAGS } from '../core/html-escape.ts';
 import { noteCompiledProgramActivated } from '../signal/selection.ts';
 import {
   partAnchorEndMarker,
@@ -1131,28 +1134,8 @@ export function createFreshDom(
 
 // ─── Server serialization ──────────────────────────────────────────
 
-const VOID_TAGS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'source',
-  'track',
-  'wbr',
-]);
-
 function escapeText(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-}
-
-function escapeAttr(value: string): string {
-  return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
 }
 
 function serializedFixedAttributes(

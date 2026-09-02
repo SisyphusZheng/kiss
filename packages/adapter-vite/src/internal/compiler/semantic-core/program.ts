@@ -373,7 +373,13 @@ function isAttributeName(value: unknown): value is string {
     !/^on/i.test(value);
 }
 
-const VOID_TAGS = new Set([
+// Mechanical mirror of the canonical VOID_TAGS in @openelement/element
+// src/internal/core/html-escape.ts (issue #1220, M4): this exchange artifact
+// intentionally has no import edge (ADR-0148: the semantic core stays
+// bundler-neutral and inside the core), so the tag list is duplicated here
+// and must stay byte-identical to the canonical definition (the convergence
+// guard test enforces that). Exported for compile.ts.
+export const VOID_TAGS = new Set([
   'area',
   'base',
   'br',
@@ -384,6 +390,7 @@ const VOID_TAGS = new Set([
   'input',
   'link',
   'meta',
+  'param',
   'source',
   'track',
   'wbr',

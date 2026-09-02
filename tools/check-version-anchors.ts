@@ -161,6 +161,24 @@ export function versionAnchors(): VersionAnchor[] {
       // (same lag allowance as the registry-line anchors).
       alternatives: [`current framework source line (\`${PREVIOUS_PACKAGE_VERSION}\`)`],
     },
+    // Version-truth data files (#1220 item 6): the values, not just the symbol
+    // names, are pinned to project-constants. PUBLISHED_STABLE_VERSION is
+    // deliberately unanchored — on prerelease trains it legitimately names an
+    // older stable line with no project-constants counterpart.
+    {
+      path: 'packages/create/src/version.ts',
+      snippet: `export const CREATE_VERSION = '${PACKAGE_VERSION}';`,
+    },
+    {
+      path: 'www/app/data/version.ts',
+      snippet: `export const OPENELEMENT_VERSION = '${PACKAGE_VERSION_TAG}';`,
+    },
+    {
+      path: 'www/app/data/version.ts',
+      snippet: `export const PUBLISHED_PACKAGE_VERSION = '${PACKAGE_VERSION_TAG}';`,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`export const PUBLISHED_PACKAGE_VERSION = '${PREVIOUS_PACKAGE_VERSION_TAG}';`],
+    },
   ];
 }
 

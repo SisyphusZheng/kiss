@@ -30,6 +30,10 @@ import {
   voidElement,
 } from './shared.ts';
 import { trustedHtmlValue } from '../../core/security.ts';
+// Canonical attribute-escape contract (issue #1220, L1): the server output is
+// the wire truth for claim parity, so both serializers share this one
+// implementation (escapes & < > " ').
+import { escapeAttr } from '../../core/html-escape.ts';
 
 export type { CompiledProgramHost, CompiledSignalLike } from './shared.ts';
 export { assertCompiledProgram, CompiledProgramValidationError } from './shared.ts';
@@ -105,15 +109,6 @@ function escapeText(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-function escapeAttribute(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll("'", '&#39;');
-}
-
 function pathKey(path: readonly number[]): string {
   return path.join(PROPERTY_PATH_SEPARATOR);
 }
@@ -166,7 +161,7 @@ function createSerializeContext(
 }
 
 function serializeAttribute(name: string, value: string): string {
-  return ` ${name}="${escapeAttribute(value)}"`;
+  return ` ${name}="${escapeAttr(value)}"`;
 }
 
 function serializeHostAttributes(
