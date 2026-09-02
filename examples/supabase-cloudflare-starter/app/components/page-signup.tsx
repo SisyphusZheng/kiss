@@ -4,15 +4,7 @@
  * fully static conditional Region branch; the action error and the email echo
  * ride text/property Parts.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('signup-page', { root: 'shadow-open' })
 export default class SignupPage extends OpenElement {

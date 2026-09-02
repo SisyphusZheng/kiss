@@ -227,9 +227,7 @@ Deno.test('v0.44 compiler hook transforms once and classifies HMR shape changes'
   try {
     const file = join(root, 'counter.tsx');
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-hmr-counter')",
       'export class HmrCounter extends OpenElement {',
       '  @property({ reflect: true }) count = 0;',
@@ -430,8 +428,7 @@ Deno.test('v0.44 client delivery keeps an explicitly imported island capability'
     );
     await Deno.writeTextFile(
       join(islandsDir, 'late-child.tsx'),
-      "import { OpenElement } from '@openelement/element';\n" +
-        'declare function element(tag: string): ClassDecorator;\n' +
+      "import { element, OpenElement, property } from '@openelement/element';\n" +
         "@element('oe-late-child')\n" +
         'export default class LateChild extends OpenElement { render() { return <span />; } }',
     );

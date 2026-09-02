@@ -36,6 +36,7 @@ export {
 export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';
 export { computed, effect, signal } from './internal/signal/index.ts';
 export type { Signal } from './internal/protocol/signal.ts';
+export { element, property } from './internal/core/compile-decorators.ts';
 export {
   DANGEROUS_KEYS,
   isDangerousKey,

@@ -6,15 +6,7 @@
  * placeholder keeps "no provider configured" an explicit page state that
  * Tier-2 evidence can assert on.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('login-page', { root: 'shadow-open' })
 export default class LoginPage extends OpenElement {

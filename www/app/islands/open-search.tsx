@@ -1,8 +1,7 @@
 /** Compiler-owned search view; browser behavior lives in open-search-controller.ts. */
-declare function element(tag: string): ClassDecorator;
 
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import {
   closeSearchOnBackdrop,
   installSearch,

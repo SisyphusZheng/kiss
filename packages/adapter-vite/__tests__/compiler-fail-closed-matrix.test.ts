@@ -5,9 +5,7 @@ import {
 } from '../src/internal/compiler/semantic-core/compile.ts';
 
 const PRELUDE = `
-  import { computed, OpenElement } from '@openelement/element';
-  declare function element(tag: string): ClassDecorator;
-  declare function property(options: { type?: unknown; reflect?: boolean; attribute?: false }): PropertyDecorator;
+  import { computed, element, OpenElement, property } from '@openelement/element';
 `;
 
 function component(fields: string, render: string, methods = ''): string {

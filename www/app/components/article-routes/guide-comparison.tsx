@@ -1,11 +1,6 @@
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '../../site-ui/open-article-view.tsx';
 import type { ArticlePageModel } from '../../site-ui/article-page-model.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('guide-comparison')
 export default class GuideComparisonPage extends OpenElement {

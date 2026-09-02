@@ -18,16 +18,8 @@
  * the spec delay the upgrade by holding that chunk's response.
  */
 
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: string | false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
-
 import '@openelement/element';
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true });

@@ -684,6 +684,7 @@ function addImportEdits(
   sf: ts.SourceFile,
   bindings: ImportBinding[],
   transformedAliases: Set<string>,
+  needsElementDecorator: boolean,
   needsOpenElementBase: boolean,
   diagnostics: MigrationDiagnostic[],
 ): TextEdit[] {
@@ -705,6 +706,9 @@ function addImportEdits(
   ];
   let addedToElementImport = false;
   const requiredNames = [
+    // Compile-time-only intrinsics first: the @element decorator binds a real
+    // named import (#1209); the compiler strips it from the emitted module.
+    ...(needsElementDecorator ? ['element'] : []),
     ...(needsOpenElementBase ? ['OpenElement'] : []),
   ];
 
@@ -951,23 +955,16 @@ export function migrateV043Source(source: string, fileName = 'source.tsx'): Migr
       sf,
       bindings,
       plan.transformedAliases,
+      // The @element decorator is a compile-time-only intrinsic bound by a
+      // real named import (#1209): add `element` to the canonical
+      // '@openelement/element' import unless the source already declares a
+      // top-level binding for the name.
+      plan.needsElementDecorator && !hasTopLevelBinding(sf, 'element'),
       plan.needsOpenElementBase,
       diagnostics,
     ),
   );
   if (diagnostics.length > 0) return { code: source, changed: false, diagnostics };
-
-  // Decorators are compiler input, not runtime registration machinery. Keep a
-  // local type-only declaration when the source does not already provide one;
-  // the compiler erases it together with @element before the module ships.
-  if (plan.needsElementDecorator && !hasTopLevelBinding(sf, 'element')) {
-    const insertionPoint = sf.statements[0]?.getStart(sf) ?? 0;
-    plan.edits.push({
-      start: insertionPoint,
-      end: insertionPoint,
-      text: 'declare function element(tag: string): ClassDecorator;\n\n',
-    });
-  }
 
   const code = applyEdits(source, plan.edits);
   return { code, changed: code !== source, diagnostics: [] };

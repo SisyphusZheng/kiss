@@ -16,15 +16,7 @@
  * dashed dynamic host attributes); the island's attribute-backed @property
  * fields receive them through the SSR expansion and the client claim.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('notes-page', { root: 'shadow-open' })
 export default class NotesPage extends OpenElement {

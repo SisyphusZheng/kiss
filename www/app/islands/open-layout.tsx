@@ -1,7 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** Compiler-owned WWW app shell (v0.44, ADR-0143). */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@openelement/ui/open-theme-toggle';
 import { compiledStyle } from '../site-ui/compiled-style.ts';
 import './open-search.tsx';
@@ -10,11 +10,6 @@ interface HeaderNavLink {
   href: string;
   label: string;
 }
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 

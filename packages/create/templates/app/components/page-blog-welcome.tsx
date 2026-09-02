@@ -6,12 +6,7 @@
  * grammar v1 (no raw-HTML sink — see the v0.44 migration guide), so unknown
  * slugs fall through to the styled 404 (#922).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('blog-welcome', { root: 'light' })
 export default class BlogWelcomePage extends OpenElement {

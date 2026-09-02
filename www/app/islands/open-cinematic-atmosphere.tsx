@@ -5,9 +5,8 @@
  * when the browser and motion preference allow it, and otherwise leaves the
  * CSS backdrop intact.
  */
-declare function element(tag: string): ClassDecorator;
 
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import { compiledStyle } from '../site-ui/compiled-style.ts';
 import { readIslandState } from '../site-ui/island-state.ts';
 import { defineIslandConfig } from '@openelement/app';

@@ -1,13 +1,8 @@
-import { computed, OpenElement, trustedHtml } from '@openelement/element';
+import { computed, element, OpenElement, property, trustedHtml } from '@openelement/element';
 import '../islands/open-page-rail.tsx';
 import './open-reading-shell.tsx';
 import type { ArticlePageModel } from './article-page-model.ts';
 import { openArticleViewStyles } from './open-article-view-styles.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false; type?: ObjectConstructor },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('open-article-view')
 export default class OpenArticleView extends OpenElement {

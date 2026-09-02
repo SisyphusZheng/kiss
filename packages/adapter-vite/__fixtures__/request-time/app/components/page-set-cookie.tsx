@@ -2,12 +2,7 @@
  * /set-cookie page element — edge-case probe page (compiled, v0.44). The
  * action lives in the route module.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('set-cookie', { root: 'shadow-open' })
 export default class SetCookiePage extends OpenElement {

@@ -9,12 +9,7 @@
  * custom-element hosts that the generated server entry expands through the
  * islands' own compiled classes.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('index-page', { root: 'light' })
 export default class HomePage extends OpenElement {

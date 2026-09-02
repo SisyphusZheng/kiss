@@ -9,12 +9,7 @@
  * error/redirect response keeps the no-store baseline because the loader
  * throws before the render succeeds.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('unstable-page', { root: 'shadow-open' })
 export default class UnstablePage extends OpenElement {

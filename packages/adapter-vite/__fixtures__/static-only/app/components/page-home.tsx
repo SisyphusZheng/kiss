@@ -3,16 +3,11 @@
  *
  * The route module (app/routes/index.tsx) default-exports this class wrapped
  * in definePage(); the compiled Part Program is the render — there is no
- * runtime JSX path. The ambient decorator declarations exist only so the
- * module typechecks standalone (the open:compiled-element transform erases
- * them); see __fixtures__/compiled-element-v1/counter.tsx.
+ * runtime JSX path. The compile-time-only element binding is a canonical
+ * named import (the open:compiled-element transform strips it from the
+ * generated module); see __fixtures__/compiled-element-v1/counter.tsx.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('index-page', { root: 'shadow-open' })
 export default class HomePage extends OpenElement {

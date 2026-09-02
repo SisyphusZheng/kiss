@@ -5,12 +5,7 @@
  * Product-art diagrams for the openElement standards lab website.
  */
 
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false; type?: NumberConstructor },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
-
-import { computed, OpenElement } from '@openelement/element';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { openStandardsVisualStyles } from './open-standards-visual-styles.ts';
 
 /** Compiled computed fields expose their derived value through the class facade. */

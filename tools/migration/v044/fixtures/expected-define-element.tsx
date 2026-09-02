@@ -1,6 +1,4 @@
-declare function element(tag: string): ClassDecorator;
-
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 
 const styles = new StyleSheet();
 

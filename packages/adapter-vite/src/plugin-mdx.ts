@@ -205,8 +205,7 @@ export function mdxToCompiledPageSource(
 
   const className = pascalCase(tag);
   return [
-    "import { OpenElement } from '@openelement/element';",
-    'declare function element(tag: string, options?: { root: string }): ClassDecorator;',
+    "import { element, OpenElement } from '@openelement/element';",
     '',
     `// Static MDX pages render with the same page contract as compiled pages:`,
     `// page content lives in the host's DSD shadow root.`,

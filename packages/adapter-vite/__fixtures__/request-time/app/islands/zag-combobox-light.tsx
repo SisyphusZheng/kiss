@@ -13,7 +13,7 @@
  * Light mode has no shadow style scope, so the Open Props / --oe-* sheet is
  * SSR'd as a compiled static <style> node scoped to the component root class.
  */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import {
   resetZagComboboxDom,
@@ -24,9 +24,6 @@ import {
   type ZagComboboxSnapshot,
   zagComboboxSnapshot,
 } from '../components/zag-combobox-shared.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true });
 

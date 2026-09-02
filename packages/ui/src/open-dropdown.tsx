@@ -14,8 +14,7 @@
  * @csspart trigger - Trigger wrapper
  * @csspart content - Popover content
  */
-import { computed, OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { nextInstanceId, overlayRecipe, recipe } from './component-recipes.ts';
 import { readInstanceState, writeInstanceState } from './instance-state.ts';
 

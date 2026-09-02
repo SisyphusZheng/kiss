@@ -4,15 +4,7 @@
  * fully static conditional Regions; the attempt id rides a property Part on
  * the hidden input (the form stays no-JS capable).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('checkout-page', { root: 'shadow-open' })
 export default class CheckoutPage extends OpenElement {

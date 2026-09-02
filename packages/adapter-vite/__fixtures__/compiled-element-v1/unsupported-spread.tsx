@@ -5,9 +5,7 @@
  * closed with a source-located diagnostic and must never fall back to the
  * legacy runtime path.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(tag: string): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('oe-proof-unsupported')
 export class UnsupportedProgram extends OpenElement {

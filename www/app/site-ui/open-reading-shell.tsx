@@ -1,11 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW long-form reading shell. */
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false; type?: ArrayConstructor },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
-import { computed, OpenElement } from '@openelement/element';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 import type { ReadingMetadata, ReadingNavigation } from './page-contract.ts';
 

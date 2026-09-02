@@ -6,11 +6,8 @@
  * through the admission plan. The request-scoped marker reaches it as the
  * `marker` property (the page binds it as a host attribute).
  */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(options: { reflect: boolean }): PropertyDecorator;
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 

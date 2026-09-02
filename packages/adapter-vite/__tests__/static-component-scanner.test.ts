@@ -18,22 +18,22 @@ Deno.test('scanStaticComponents follows the local route graph deterministically'
     await write(
       root,
       'app/routes/index.tsx',
-      `import '../components/article.tsx';\nimport '../islands/counter.tsx';\nexport default class Route extends OpenElement {}`,
+      `import { OpenElement } from '@openelement/element';\nimport '../components/article.tsx';\nimport '../islands/counter.tsx';\nexport default class Route extends OpenElement {}`,
     );
     await write(
       root,
       'app/components/article.tsx',
-      `import './reading-shell.tsx';\n@element('open-article-view')\nexport default class Article extends OpenElement {}`,
+      `import { element, OpenElement } from '@openelement/element';\nimport './reading-shell.tsx';\n@element('open-article-view')\nexport default class Article extends OpenElement {}`,
     );
     await write(
       root,
       'app/components/reading-shell.tsx',
-      `@element('open-reading-shell')\nexport default class ReadingShell extends OpenElement { render() { return <button onClick={() => this.open()}>Open</button>; } open() {} }`,
+      `import { element, OpenElement } from '@openelement/element';\n@element('open-reading-shell')\nexport default class ReadingShell extends OpenElement { render() { return <button onClick={() => this.open()}>Open</button>; } open() {} }`,
     );
     await write(
       root,
       'app/islands/counter.tsx',
-      `@element('open-counter')\nexport default class Counter extends OpenElement {}`,
+      `import { element, OpenElement } from '@openelement/element';\n@element('open-counter')\nexport default class Counter extends OpenElement {}`,
     );
 
     assertEquals(
@@ -73,7 +73,7 @@ Deno.test('scanStaticComponents fails closed on duplicate reachable tags', async
       await write(
         root,
         `app/components/${file}.tsx`,
-        `@element('open-duplicate')\nexport default class Duplicate extends OpenElement {}`,
+        `import { element, OpenElement } from '@openelement/element';\n@element('open-duplicate')\nexport default class Duplicate extends OpenElement {}`,
       );
     }
 

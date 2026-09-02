@@ -1,11 +1,6 @@
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import '@openelement/ui/open-button';
 import { page404Styles } from './page-404-styles.ts';
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('el-404')
 export default class Page404 extends OpenElement {

@@ -13,16 +13,8 @@
  * (the vite.config content.nav headerNav indirection of 0.43 is gone).
  */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { shellStyles } from '../components/page-styles.ts';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 

@@ -5,6 +5,16 @@ import ts from 'typescript';
 export interface ModuleSemanticFacts {
   relativeImports: string[];
   compiledElementDecorator: boolean;
+  /**
+   * Set when a class decorator spells the `element` intrinsic through
+   * unsupported or ambiguous provenance (type-only import, namespace access,
+   * default import, conflicting duplicate bindings, or a relative-module
+   * re-export). Never set for clearly foreign bindings (third-party packages,
+   * local declarations, bare/global spellings) — those modules are simply not
+   * OpenElement modules. The plugin gate compiles such modules so the
+   * compiler boundary fails closed with the OEC9027 provenance diagnostic.
+   */
+  unsupportedElementDecorator?: string;
   exportedTagName?: string;
   definePage: boolean;
   usesExportedTagName: boolean;
@@ -15,51 +25,234 @@ export interface ModuleSemanticFacts {
   compilerInteractionEvents: string[];
 }
 
-function importedNames(
-  sourceFile: ts.SourceFile,
-): Map<string, { module: string; imported: string }> {
-  const names = new Map<string, { module: string; imported: string }>();
+/**
+ * The canonical intrinsic-binding model (#1209, A10.1): compiler intrinsics
+ * are binding identities (module specifier + imported name, aliases
+ * followed), never identifier spellings. A bare/global spelling NEVER admits
+ * an intrinsic. `@openelement/app` re-exports neither `OpenElement` nor the
+ * compile-time-only decorator intrinsics, so the canonical specifier for
+ * those is `@openelement/element` only.
+ */
+export type IntrinsicName =
+  | 'element'
+  | 'property'
+  | 'OpenElement'
+  | 'computed'
+  | 'trustedHtml'
+  | 'defineIslandConfig';
+
+const INTRINSIC_MODULES: Readonly<Record<IntrinsicName, readonly string[]>> = {
+  element: ['@openelement/element'],
+  property: ['@openelement/element'],
+  OpenElement: ['@openelement/element'],
+  computed: ['@openelement/element'],
+  trustedHtml: ['@openelement/element'],
+  defineIslandConfig: ['@openelement/app'],
+};
+
+/**
+ * Intrinsics that exist only at compile time: the compiler erases the
+ * decorator applications they power, and the runtime packages export no such
+ * bindings, so the generated module must not keep importing them.
+ */
+const COMPILE_TIME_ONLY_IMPORTS: Readonly<Record<string, readonly string[]>> = {
+  '@openelement/element': ['element', 'property'],
+};
+
+/** True when `imported` from `module` is a compile-time-only intrinsic binding. */
+export function isCompileTimeOnlyImport(module: string, imported: string): boolean {
+  return COMPILE_TIME_ONLY_IMPORTS[module]?.includes(imported) ?? false;
+}
+
+interface ImportBinding {
+  form: 'named' | 'namespace' | 'default';
+  module: string;
+  /** Exported name for named imports; '*' for namespace; 'default' for default. */
+  imported: string;
+  typeOnly: boolean;
+}
+
+export interface IntrinsicResolution {
+  /** True only for a runtime named import of the intrinsic from its canonical module. */
+  readonly canonical: boolean;
+  /** The local identifier at the use site (present only when canonical). */
+  readonly localName?: string;
+  /**
+   * Why the provenance is unsupported/ambiguous (type-only, namespace,
+   * default import, conflicting duplicates, relative re-export). Callers must
+   * fail closed with this reason; absent for clearly foreign or unbound
+   * spellings.
+   */
+  readonly unsupported?: string;
+}
+
+export interface ModuleIntrinsicBindings {
+  resolveIntrinsic(expression: ts.Expression, intrinsic: IntrinsicName): IntrinsicResolution;
+  /** True for a runtime (non-type-only) named import, aliases followed. */
+  isRuntimeNamedImport(
+    localName: string,
+    module: string | readonly string[],
+    imported: string,
+  ): boolean;
+}
+
+/**
+ * Resolve the module-scope import/declaration bindings of one source file
+ * once, so decorator, heritage and factory use sites all answer provenance
+ * from the same table. The semantic core analyzes a single module and stays
+ * bundler-neutral (ADR-0148): it never follows re-exports across files.
+ */
+export function createModuleIntrinsicBindings(sourceFile: ts.SourceFile): ModuleIntrinsicBindings {
+  const imports = new Map<string, ImportBinding[]>();
+  const locals = new Set<string>();
   for (const statement of sourceFile.statements) {
-    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
-      continue;
-    }
-    const module = statement.moduleSpecifier.text;
-    const clause = statement.importClause;
-    if (!clause) continue;
-    if (clause.name) names.set(clause.name.text, { module, imported: 'default' });
-    const bindings = clause.namedBindings;
-    if (bindings && ts.isNamedImports(bindings)) {
-      for (const binding of bindings.elements) {
-        names.set(binding.name.text, {
+    if (ts.isImportDeclaration(statement)) {
+      if (!ts.isStringLiteral(statement.moduleSpecifier)) continue;
+      const module = statement.moduleSpecifier.text;
+      const clause = statement.importClause;
+      if (!clause) continue;
+      const clauseTypeOnly = clause.isTypeOnly ?? false;
+      const add = (local: string, binding: ImportBinding): void => {
+        const list = imports.get(local) ?? [];
+        list.push(binding);
+        imports.set(local, list);
+      };
+      if (clause.name) {
+        add(clause.name.text, {
+          form: 'default',
           module,
-          imported: binding.propertyName?.text ?? binding.name.text,
+          imported: 'default',
+          typeOnly: clauseTypeOnly,
         });
       }
-    } else if (bindings && ts.isNamespaceImport(bindings)) {
-      names.set(bindings.name.text, { module, imported: '*' });
+      const namedBindings = clause.namedBindings;
+      if (namedBindings && ts.isNamedImports(namedBindings)) {
+        for (const element of namedBindings.elements) {
+          add(element.name.text, {
+            form: 'named',
+            module,
+            imported: element.propertyName?.text ?? element.name.text,
+            typeOnly: clauseTypeOnly || (element.isTypeOnly ?? false),
+          });
+        }
+      } else if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+        add(namedBindings.name.text, {
+          form: 'namespace',
+          module,
+          imported: '*',
+          typeOnly: clauseTypeOnly,
+        });
+      }
+      continue;
+    }
+    // Top-level local value declarations (including ambient `declare` forms)
+    // shadow any import for intrinsic resolution: a local binding is never an
+    // intrinsic, which is what keeps lexical shadowing and same-name local
+    // functions/classes out of the grammar.
+    if (
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) ||
+        ts.isEnumDeclaration(statement)) &&
+      statement.name
+    ) {
+      locals.add(statement.name.text);
+      continue;
+    }
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (ts.isIdentifier(declaration.name)) locals.add(declaration.name.text);
+      }
     }
   }
-  return names;
-}
 
-function isImported(
-  names: Map<string, { module: string; imported: string }>,
-  local: string,
-  module: string,
-  imported: string,
-): boolean {
-  const binding = names.get(local);
-  return binding?.module === module && binding.imported === imported;
-}
+  const describe = (binding: ImportBinding): string => {
+    if (binding.form === 'namespace') return `namespace import of '${binding.module}'`;
+    if (binding.form === 'default') return `default import of '${binding.module}'`;
+    return `import of ${binding.imported} from '${binding.module}'`;
+  };
 
-function isOpenElementImport(
-  names: Map<string, { module: string; imported: string }>,
-  local: string,
-  imported: string,
-): boolean {
-  const binding = names.get(local);
-  return (binding?.module === '@openelement/element' || binding?.module === '@openelement/app') &&
-    binding.imported === imported;
+  const resolveIdentifier = (name: string, intrinsic: IntrinsicName): IntrinsicResolution => {
+    const modules = INTRINSIC_MODULES[intrinsic];
+    if (locals.has(name)) return { canonical: false };
+    const bindings = imports.get(name) ?? [];
+    if (bindings.length === 0) return { canonical: false };
+    if (bindings.length > 1) {
+      return {
+        canonical: false,
+        unsupported:
+          `conflicting module-scope bindings for "${name}" (${
+            bindings.map(describe).join('; ')
+          }); ` +
+          `import ${intrinsic} once from its canonical module '${modules.join("' or '")}'`,
+      };
+    }
+    const binding = bindings[0];
+    if (binding.form !== 'named') {
+      if (modules.includes(binding.module)) {
+        return {
+          canonical: false,
+          unsupported: `"${name}" is a ${
+            describe(binding)
+          }; ${intrinsic} requires a runtime named import`,
+        };
+      }
+      return { canonical: false };
+    }
+    if (modules.includes(binding.module)) {
+      if (binding.imported !== intrinsic) return { canonical: false };
+      if (binding.typeOnly) {
+        return {
+          canonical: false,
+          unsupported:
+            `"${name}" is a type-only import of ${intrinsic} from '${binding.module}'; ` +
+            'intrinsics are runtime named imports',
+        };
+      }
+      return { canonical: true, localName: name };
+    }
+    if (binding.imported === intrinsic && binding.module.startsWith('.')) {
+      return {
+        canonical: false,
+        unsupported:
+          `"${name}" imports ${intrinsic} from '${binding.module}'; re-export provenance is not ` +
+          `resolved across modules — import ${intrinsic} from its canonical module ` +
+          `'${modules.join("' or '")}'`,
+      };
+    }
+    return { canonical: false };
+  };
+
+  return {
+    resolveIntrinsic(expression, intrinsic) {
+      if (ts.isIdentifier(expression)) return resolveIdentifier(expression.text, intrinsic);
+      if (
+        ts.isPropertyAccessExpression(expression) && ts.isIdentifier(expression.expression) &&
+        expression.name.text === intrinsic
+      ) {
+        const namespace = expression.expression.text;
+        const bindings = imports.get(namespace) ?? [];
+        if (
+          !locals.has(namespace) && bindings.length === 1 && bindings[0].form === 'namespace' &&
+          INTRINSIC_MODULES[intrinsic].includes(bindings[0].module)
+        ) {
+          return {
+            canonical: false,
+            unsupported:
+              `namespace-qualified intrinsic "${namespace}.${intrinsic}" is unsupported; ` +
+              `import ${intrinsic} from '${bindings[0].module}' by name`,
+          };
+        }
+      }
+      return { canonical: false };
+    },
+    isRuntimeNamedImport(localName, module, imported) {
+      if (locals.has(localName)) return false;
+      const modules = typeof module === 'string' ? [module] : module;
+      const bindings = imports.get(localName) ?? [];
+      return bindings.length === 1 && bindings[0].form === 'named' &&
+        modules.includes(bindings[0].module) && bindings[0].imported === imported &&
+        !bindings[0].typeOnly;
+    },
+  };
 }
 
 function isCustomElementTag(value: string): boolean {
@@ -81,7 +274,7 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
     true,
     fileName.endsWith('.tsx') || fileName.endsWith('.jsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
-  const imports = importedNames(sourceFile);
+  const imports = createModuleIntrinsicBindings(sourceFile);
   const relativeImports = new Set<string>();
   for (const statement of sourceFile.statements) {
     if (
@@ -93,6 +286,7 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
 
   let exportedTagName: string | undefined;
   let compiledElementDecorator = false;
+  let unsupportedElementDecorator: string | undefined;
   let definePage = fileName.endsWith('.mdx');
   let usesExportedTagName = false;
   let enhancedForm = false;
@@ -118,7 +312,11 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
     if (
       ts.isExportAssignment(statement) && ts.isCallExpression(statement.expression) &&
       ts.isIdentifier(statement.expression.expression) &&
-      isImported(imports, statement.expression.expression.text, '@openelement/app', 'definePage')
+      imports.isRuntimeNamedImport(
+        statement.expression.expression.text,
+        '@openelement/app',
+        'definePage',
+      )
     ) definePage = true;
 
     if (!ts.isClassDeclaration(statement)) continue;
@@ -128,20 +326,26 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
     const heritage = statement.heritageClauses?.find((clause) =>
       clause.token === ts.SyntaxKind.ExtendsKeyword
     )?.types[0]?.expression;
-    const extendsOpenElement = heritage && ts.isIdentifier(heritage) &&
-      (heritage.text === 'OpenElement' ||
-        isOpenElementImport(imports, heritage.text, 'OpenElement'));
+    // Provenance-only (#1209): a bare `OpenElement` spelling never counts; the
+    // heritage identifier must bind the canonical import (aliases followed).
+    const extendsOpenElement = heritage !== undefined &&
+      imports.resolveIntrinsic(heritage, 'OpenElement').canonical;
     for (const decorator of ts.getDecorators(statement) ?? []) {
       if (
-        !ts.isCallExpression(decorator.expression) ||
-        !ts.isIdentifier(decorator.expression.expression)
+        !ts.isCallExpression(decorator.expression)
       ) {
         continue;
       }
-      if (
-        decorator.expression.expression.text !== 'element' &&
-        !isOpenElementImport(imports, decorator.expression.expression.text, 'element')
-      ) continue;
+      const resolution = imports.resolveIntrinsic(decorator.expression.expression, 'element');
+      if (!resolution.canonical) {
+        // Unsupported/ambiguous provenance surfaces so the plugin gate can
+        // route the module to the compiler, which fails closed (OEC9027);
+        // clearly foreign bindings stay silent pass-throughs.
+        if (resolution.unsupported && unsupportedElementDecorator === undefined) {
+          unsupportedElementDecorator = resolution.unsupported;
+        }
+        continue;
+      }
       compiledElementDecorator = true;
       const tag = stringArgument(decorator.expression);
       if (!tag || !isCustomElementTag(tag)) continue;
@@ -160,11 +364,20 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
         relativeImports.add(node.arguments[0].text);
       }
       if (ts.isIdentifier(expression)) {
-        const binding = imports.get(expression.text);
+        // Provenance-only (#1209): the legacy registration factories count
+        // only when bound to a real runtime named import from an OpenElement
+        // package; a bare same-name spelling records nothing.
         if (
-          (expression.text === 'defineElement' || expression.text === 'defineIsland') ||
-          ((binding?.module === '@openelement/element' || binding?.module === '@openelement/app') &&
-            (binding.imported === 'defineElement' || binding.imported === 'defineIsland'))
+          imports.isRuntimeNamedImport(
+            expression.text,
+            ['@openelement/element', '@openelement/app'],
+            'defineElement',
+          ) ||
+          imports.isRuntimeNamedImport(
+            expression.text,
+            ['@openelement/element', '@openelement/app'],
+            'defineIsland',
+          )
         ) {
           const tag = stringArgument(node);
           if (tag && isCustomElementTag(tag)) defined.add(tag);
@@ -174,10 +387,21 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
             node.arguments[0].text === 'tagName'
           ) usesExportedTagName = true;
         }
-        const isElementJsxFactory =
-          isImported(imports, expression.text, '@openelement/element/jsx-runtime', 'jsx') ||
-          isImported(imports, expression.text, '@openelement/element/jsx-runtime', 'jsxs') ||
-          isImported(imports, expression.text, '@openelement/element/jsx-runtime', 'jsxDEV');
+        const isElementJsxFactory = imports.isRuntimeNamedImport(
+          expression.text,
+          '@openelement/element/jsx-runtime',
+          'jsx',
+        ) ||
+          imports.isRuntimeNamedImport(
+            expression.text,
+            '@openelement/element/jsx-runtime',
+            'jsxs',
+          ) ||
+          imports.isRuntimeNamedImport(
+            expression.text,
+            '@openelement/element/jsx-runtime',
+            'jsxDEV',
+          );
         if (isElementJsxFactory) {
           const tag = stringArgument(node);
           if (tag && isCustomElementTag(tag)) referenced.add(tag);
@@ -216,6 +440,7 @@ export function analyzeModuleSemantics(source: string, fileName: string): Module
   return {
     relativeImports: [...relativeImports],
     compiledElementDecorator,
+    ...(unsupportedElementDecorator === undefined ? {} : { unsupportedElementDecorator }),
     ...(exportedTagName === undefined ? {} : { exportedTagName }),
     definePage,
     usesExportedTagName,

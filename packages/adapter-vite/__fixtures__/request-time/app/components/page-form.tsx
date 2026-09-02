@@ -9,13 +9,7 @@
  * - `echoText` carries the PRG echo as one dynamic text Part so the raw HTML
  *   keeps the assertion-contiguous 'echo=<value>' string.
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('form-page', { root: 'shadow-open' })
 export default class FormPage extends OpenElement {

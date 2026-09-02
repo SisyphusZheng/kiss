@@ -1,8 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** A private WWW frame for inspectable product evidence, never a UI export. */
-declare function element(tag: string): ClassDecorator;
 
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 
 @element('open-artifact-panel')

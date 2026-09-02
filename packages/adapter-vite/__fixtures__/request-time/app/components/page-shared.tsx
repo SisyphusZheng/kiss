@@ -5,12 +5,7 @@
  * to ship the enhancement layer. (v0.44: the imported module is the compiled
  * page element itself.)
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('shared-page', { root: 'shadow-open' })
 export default class SharedPage extends OpenElement {

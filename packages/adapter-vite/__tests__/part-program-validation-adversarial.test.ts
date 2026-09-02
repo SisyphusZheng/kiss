@@ -299,9 +299,7 @@ Deno.test('Part Program validators independently fail closed across the artifact
 
 Deno.test('Part Program sink validators reject corrupted class, style, bool, html, ref and attr records', () => {
   const source = `
-    import { OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';
-    declare function element(tag: string): ClassDecorator;
-    declare function property(options: { type?: unknown; reflect?: boolean; attribute?: false }): PropertyDecorator;
+    import { element, OpenElement, property, trustedHtml, type TrustedHtml } from '@openelement/element';
     @element('oe-sink-matrix')
     export class SinkMatrix extends OpenElement {
       @property({ reflect: false }) className = 'ready';
@@ -379,9 +377,7 @@ Deno.test('Part Program sink validators reject corrupted class, style, bool, htm
 
 Deno.test('Part Program event-action and item-slot grammars fail closed independently', () => {
   const source = `
-    import { OpenElement } from '@openelement/element';
-    declare function element(tag: string): ClassDecorator;
-    declare function property(options: { type?: unknown; reflect?: boolean }): PropertyDecorator;
+    import { element, OpenElement, property } from '@openelement/element';
     @element('oe-action-matrix')
     export class ActionMatrix extends OpenElement {
       @property({ type: Number, reflect: false }) count = 0;

@@ -179,12 +179,17 @@ Deno.test('starter templates use the compiled element authoring surface (v0.44)'
     ]
   ) {
     const source = readTemplate(path);
-    // Compiled modules: @element decorator on an OpenElement subclass, with
-    // the ambient compile-time decorator declarations (erased by the
-    // adapter's open:compiled-element transform).
+    // Compiled modules: @element decorator on an OpenElement subclass, bound
+    // by a canonical named import of the compile-time-only intrinsic from
+    // '@openelement/element' (the compiler strips it from generated output).
     assert(source.includes("@element('"), path);
-    assert(source.includes("from '@openelement/element'"), path);
-    assert(source.includes('declare function element('), path);
+    assert(
+      /import \{[^}]*\belement\b[^}]*\bOpenElement\b[^}]*\} from '@openelement\/element'/.test(
+        source,
+      ),
+      path,
+    );
+    assertFalse(source.includes('declare function element('), path);
     assertFalse(source.includes('@openelement/core'), path);
     // Legacy authoring APIs were removed in v0.44 (ADR-0143).
     assertFalse(source.includes('defineElement'), path);

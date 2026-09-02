@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /** Compiler-owned WWW table of contents. */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { compiledStyle } from './compiled-style.ts';
 
 interface RailItem {
@@ -9,11 +9,6 @@ interface RailItem {
   label: string;
   depth: string;
 }
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('open-page-rail')
 export default class OpenPageRail extends OpenElement {

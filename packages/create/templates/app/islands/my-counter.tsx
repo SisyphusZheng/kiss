@@ -6,16 +6,8 @@
  * shadow root keeps the island a DSD citizen.
  */
 import { defineIslandConfig } from '@openelement/app';
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { counterStyles } from '../components/page-styles.ts';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 

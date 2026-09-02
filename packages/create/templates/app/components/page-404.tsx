@@ -4,12 +4,7 @@
  * 404.html. The path-derived tag is 'el-404'. Light root: the page rules live
  * in the global baseline (vite.config.ts).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
+import { element, OpenElement } from '@openelement/element';
 
 @element('el-404', { root: 'light' })
 export default class NotFoundPage extends OpenElement {

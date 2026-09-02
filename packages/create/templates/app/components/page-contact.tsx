@@ -7,15 +7,7 @@
  * action supplies text. Light root: the page rules live in the global
  * baseline (vite.config.ts).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('contact-page', { root: 'light' })
 export default class ContactPage extends OpenElement {

@@ -24,8 +24,7 @@
  * <open-button href="/guide">Navigate</open-button>
  * ```
  */
-import { computed, OpenElement } from '@openelement/element';
-import { element, property } from './compile-decorators.ts';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import { closestFormOf, controlRecipe, recipe, syncDisabledState } from './component-recipes.ts';
 
 @element('open-button', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })

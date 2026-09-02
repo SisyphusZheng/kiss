@@ -9,13 +9,7 @@
  * host attribute at SSR, expanded into the island's own render by the
  * generated entry).
  */
-import { OpenElement } from '@openelement/element';
-
-declare function element(
-  tag: string,
-  options?: { root: 'light' | 'shadow-open' | 'shadow-closed' },
-): ClassDecorator;
-declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;
+import { element, OpenElement, property } from '@openelement/element';
 
 @element('decoupled-page', { root: 'shadow-open' })
 export default class DecoupledPage extends OpenElement {

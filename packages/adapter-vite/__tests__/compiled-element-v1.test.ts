@@ -242,8 +242,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('unknown decorators on an OpenElement class fail closed', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       'declare function mystery(): ClassDecorator;',
       "@element('oe-proof-mystery')",
       '@mystery()',
@@ -265,7 +264,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('classes not extending OpenElement fail closed', () => {
     const source = [
-      'declare function element(tag: string): ClassDecorator;',
+      "import { element } from '@openelement/element';",
       "@element('oe-proof-alien')",
       'export class Alien extends HTMLElement {',
       '  render() { return null; }',
@@ -284,9 +283,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('path-addressed fixed sinks after dynamic anchors fail closed', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-proof-unsafe-path')",
       'export class UnsafePath extends OpenElement {',
       '  @property({ reflect: false }) count = 0;',
@@ -307,9 +304,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('duplicate static and dynamic attribute sinks fail closed', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-proof-duplicate-attribute')",
       'export class DuplicateAttribute extends OpenElement {',
       "  @property({ reflect: false }) label = 'ready';",
@@ -327,8 +322,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('void elements with children fail closed', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-proof-void-children')",
       'export class VoidChildren extends OpenElement {',
       '  render() { return <input>not supported</input>; }',
@@ -345,9 +339,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('event-looking attribute sinks fail closed', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-proof-unsafe-attribute')",
       'export class UnsafeAttribute extends OpenElement {',
       "  @property({ reflect: false }) label = 'ready';",
@@ -365,9 +357,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
   await t.step('conditions outside the seed operator fail closed', () => {
     const source = [
-      "import { OpenElement } from '@openelement/element';",
-      'declare function element(tag: string): ClassDecorator;',
-      'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+      "import { element, OpenElement, property } from '@openelement/element';",
       "@element('oe-proof-unsupported-condition')",
       'export class UnsupportedCondition extends OpenElement {',
       '  @property({ reflect: false }) count = 0;',
@@ -392,9 +382,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
       // alpha.8: item templates carry one ival/iattr slot per item field — a row
       // may bind {item.text} twice and per-item attributes (id, href, ...).
       const source = [
-        "import { OpenElement } from '@openelement/element';",
-        'declare function element(tag: string): ClassDecorator;',
-        'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+        "import { element, OpenElement, property } from '@openelement/element';",
         "@element('oe-proof-multi-field')",
         'export class MultiField extends OpenElement {',
         "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha', link: '/a' }];",
@@ -418,9 +406,7 @@ Deno.test('compiled-element v1 - unsupported syntax fails closed with located di
 
       // Expressions that are not item field slots still fail closed.
       const bad = [
-        "import { OpenElement } from '@openelement/element';",
-        'declare function element(tag: string): ClassDecorator;',
-        'declare function property(options: { reflect: boolean }): PropertyDecorator;',
+        "import { element, OpenElement, property } from '@openelement/element';",
         "@element('oe-proof-bad-item')",
         'export class BadItem extends OpenElement {',
         "  @property({ reflect: false }) items = [{ id: 'a', text: 'alpha' }];",
@@ -444,9 +430,7 @@ Deno.test('compiled-element alpha.1 - canonical program records and decorator lo
   const { compiledElementPlugin } = await loadPluginModule();
   const transform = transformOf(compiledElementPlugin());
   const source = [
-    "import { OpenElement } from '@openelement/element';",
-    'declare function element(tag: string): ClassDecorator;',
-    'declare function property(options: { type?: unknown; attribute?: string | false; reflect?: boolean }): PropertyDecorator;',
+    "import { element, OpenElement, property } from '@openelement/element';",
     "@element('oe-alpha-one')",
     'export class AlphaOne extends OpenElement {',
     '  @property({ type: Number, reflect: true })',
@@ -579,10 +563,8 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
   );
 
   const prelude = [
-    "import { OpenElement } from '@openelement/element';",
+    "import { element, OpenElement, property } from '@openelement/element';",
     "import { defineIslandConfig } from '@openelement/app';",
-    'declare function element(tag: string, options?: { root: string }): ClassDecorator;',
-    'declare function property(options: { reflect: boolean }): PropertyDecorator;',
   ].join('\n');
 
   await t.step('default-exported class with a shadow root and the island policy statement', () => {
@@ -730,9 +712,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       // Positive: computed field drives a bool sink; innerHTML sink; element
       // options emit the facade statics.
       const source = [
-        "import { computed, OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';",
-        'declare function element(tag: string, options?: { root: string; delegatesFocus?: boolean; formAssociated?: boolean }): ClassDecorator;',
-        'declare function property(options: { type?: unknown; reflect: boolean; attribute?: false }): PropertyDecorator;',
+        "import { computed, element, OpenElement, property, trustedHtml, type TrustedHtml } from '@openelement/element';",
         "@element('oe-alpha8-computed', { root: 'shadow-open', delegatesFocus: true, formAssociated: true })",
         'export default class Alpha8Computed extends OpenElement {',
         "  @property({ reflect: false }) label = '';",
@@ -777,9 +757,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
         assertStringIncludes(text, fragment);
       };
       const badPrelude = [
-        "import { computed, OpenElement } from '@openelement/element';",
-        'declare function element(tag: string): ClassDecorator;',
-        'declare function property(options: { reflect: boolean; attribute?: false }): PropertyDecorator;',
+        "import { computed, element, OpenElement, property } from '@openelement/element';",
         "@element('oe-alpha8-bad-computed')",
         'export class BadComputed extends OpenElement {',
         "  @property({ reflect: false }) label = '';",
@@ -810,9 +788,7 @@ Deno.test('compiled-element alpha.8 - canonical page/island authoring grammar', 
       // An html sink with element children fails closed (the sink owns content).
       expectFailure(
         [
-          "import { OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';",
-          'declare function element(tag: string): ClassDecorator;',
-          'declare function property(options: { type?: unknown; reflect: boolean; attribute?: false }): PropertyDecorator;',
+          "import { element, OpenElement, property, trustedHtml, type TrustedHtml } from '@openelement/element';",
           "@element('oe-alpha8-bad-html')",
           'export class BadHtml extends OpenElement {',
           "  @property({ type: Object, reflect: false, attribute: false }) bodyHtml: TrustedHtml = trustedHtml('');",
@@ -832,9 +808,7 @@ Deno.test('compiled-element alpha.9 - trusted HTML sink admission matrix', async
   );
 
   const validPrelude = [
-    "import { OpenElement, trustedHtml, type TrustedHtml } from '@openelement/element';",
-    'declare function element(tag: string): ClassDecorator;',
-    'declare function property(options: { type?: unknown; reflect: boolean; attribute?: string | false }): PropertyDecorator;',
+    "import { element, OpenElement, property, trustedHtml, type TrustedHtml } from '@openelement/element';",
     "@element('oe-alpha9-trusted-html')",
     'export class Alpha9TrustedHtml extends OpenElement {',
   ];

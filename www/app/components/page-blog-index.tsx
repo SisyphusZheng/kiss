@@ -1,4 +1,4 @@
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { pageBlogIndexStyles } from './page-blog-index-styles.ts';
 
 interface BlogIndexRow {
@@ -9,11 +9,6 @@ interface BlogIndexRow {
   excerpt: string;
   date: string;
 }
-
-declare function element(tag: string): ClassDecorator;
-declare function property(
-  options: { reflect: boolean; attribute?: false },
-): (target: undefined, context: ClassFieldDecoratorContext) => void;
 
 @element('blog-index')
 export default class BlogIndexPage extends OpenElement {
