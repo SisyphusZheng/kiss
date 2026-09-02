@@ -31,17 +31,6 @@ import { analyzeModuleSemantics } from './semantic-core/module-analysis.ts';
 
 export const COMPILED_ELEMENT_MARKER = '@element(';
 
-interface CompiledElementSourceMap {
-  version: 3;
-  file: string;
-  sources: string[];
-  sourcesContent: string[];
-  names: string[];
-  mappings: string;
-  /** Compiler-owned Part Program source records carried through Vite. */
-  x_openElement?: unknown;
-}
-
 /**
  * Cheap first stage only — NOT a recognizer. The substring match exists to
  * keep plain modules off the AST path and may false-positive (string literals
@@ -84,56 +73,15 @@ export function compileElementModule(code: string, id: string): CompileElementRe
   return compileElementProgram(code, id);
 }
 
-function encodeVlq(value: number): string {
-  const base64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let current = value < 0 ? ((-value) << 1) | 1 : value << 1;
-  let encoded = '';
-  do {
-    let digit = current & 31;
-    current >>>= 5;
-    if (current > 0) digit |= 32;
-    encoded += base64[digit];
-  } while (current > 0);
-  return encoded;
-}
-
 /**
- * Emit a small source map for generated compiler modules. Generated program
- * data has no source position of its own, while copied fields/methods can be
- * mapped back to their source line. Unmapped scaffolding points at line 1 so
- * Vite and stack consumers still have a valid, named source rather than an
- * absent map.
+ * Strip the inline map comment from a compiled module at the Vite boundary.
+ * The core artifact embeds its real Source Map v3 inline for standalone
+ * consumers; the Vite transform returns that same map as its `map` output so
+ * Vite composes it with the rest of the pipeline — leaving the comment in the
+ * served code would create a second, conflicting map story (#1210).
  */
-export function createCompiledElementSourceMap(
-  source: string,
-  generated: string,
-  id: string,
-  program?: unknown,
-): CompiledElementSourceMap {
-  const sourceLines = source.split(/\r?\n/);
-  let previousOriginalLine = 0;
-  const mappings = generated.split('\n').map((line) => {
-    const text = line.trim();
-    const match = text.length > 0
-      ? sourceLines.findIndex((sourceLine) => sourceLine.trim() === text)
-      : -1;
-    const originalLine = match >= 0 ? match : 0;
-    const mapping = `AA${encodeVlq(originalLine - previousOriginalLine)}A`;
-    previousOriginalLine = originalLine;
-    return mapping;
-  }).join(';');
-  const artifactSourceMap = program && typeof program === 'object'
-    ? (program as { sourceMap?: unknown }).sourceMap
-    : undefined;
-  return {
-    version: 3,
-    file: id,
-    sources: [id],
-    sourcesContent: [source],
-    names: [],
-    mappings,
-    ...(artifactSourceMap === undefined ? {} : { x_openElement: artifactSourceMap }),
-  };
+export function stripInlineSourceMapComment(code: string): string {
+  return code.replace(/\n\/\/# sourceMappingURL=data:application\/json;base64,[^\n]*(?=\n?$)/, '');
 }
 
 export function compiledElementPlugin(): Plugin {

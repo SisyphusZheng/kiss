@@ -41,10 +41,7 @@ import {
   minifyCriticalStyleBlocks,
 } from './internal/ssg/critical-assets.ts';
 import { islandTransformPlugin } from './island-transform.ts';
-import {
-  compileElementModule,
-  createCompiledElementSourceMap,
-} from './internal/compiler/plugin.ts';
+import { compileElementModule, stripInlineSourceMapComment } from './internal/compiler/plugin.ts';
 import { devIslandClientPlugin, RESOLVED_CLIENT_ENTRY_ID } from './dev-island-client.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
@@ -361,9 +358,13 @@ export function createOpenPlugin(
         if (!result) return null;
         const key = id.split('?', 1)[0];
         compiledProgramShapes.set(key, programShape(result.program));
+        // The semantic core emits the real Source Map v3 (#1210): return it as
+        // this hook's `map` output so Vite composes it downstream, and strip
+        // the inline comment the standalone artifact carries so the served
+        // module has exactly one map story.
         return {
-          code: result.code,
-          map: createCompiledElementSourceMap(code, result.code, id, result.program),
+          code: stripInlineSourceMapComment(result.code),
+          map: result.map,
         };
       } catch (error) {
         if (error instanceof Error) this.error(error.message);
