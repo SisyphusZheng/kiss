@@ -117,13 +117,13 @@ published.
 
 ADR-0151 defines the public train. Each phase answers one question:
 
-| Phase       | Question                                            | Responsibility                                                                                  |
-| ----------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Beta.1      | Is the framework itself trustworthy?                | Framework qualification and governance freeze; first public v0.44 prerelease; three-role loop on |
-| Beta.2      | Can external users really use and maintain it?      | Productization and governance offload                                                            |
-| Beta.3      | Can real workloads break the architecture?          | Final hardening, formal benchmark and real SaaS qualification                                    |
-| RC1         | Did we misjudge the candidate?                      | Frozen candidate and soak                                                                        |
-| Stable/1.0  | —                                                   | Decided on Beta.3 evidence only; never pre-declared                                              |
+| Phase      | Question                                       | Responsibility                                                                                   |
+| ---------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Beta.1     | Is the framework itself trustworthy?           | Framework qualification and governance freeze; first public v0.44 prerelease; three-role loop on |
+| Beta.2     | Can external users really use and maintain it? | Productization and governance offload                                                            |
+| Beta.3     | Can real workloads break the architecture?     | Final hardening, formal benchmark and real SaaS qualification                                    |
+| RC1        | Did we misjudge the candidate?                 | Frozen candidate and soak                                                                        |
+| Stable/1.0 | —                                              | Decided on Beta.3 evidence only; never pre-declared                                              |
 
 The RC1 version string is `v1.0.0-rc.1` when the Beta.3 v1-admission assessment
 passes, otherwise `v0.44.0-rc.1`. An unproven surface is never relabeled as 1.0.

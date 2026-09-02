@@ -62,12 +62,12 @@ promotion. No Alpha.10 artifact is published.
 
 ### 3. Each Beta answers one question
 
-| Phase  | Responsibility                                            | Question                                            |
-| ------ | --------------------------------------------------------- | --------------------------------------------------- |
-| Beta.1 | Framework Qualification + Governance Freeze               | Is the framework itself trustworthy?                |
-| Beta.2 | Productization + Governance Offload                       | Can external users really use and maintain it?      |
-| Beta.3 | Final Hardening + Formal Benchmark + Real SaaS Qualification | Can real workloads break the architecture?       |
-| RC1    | Frozen Candidate / Soak                                   | Did we misjudge the candidate?                      |
+| Phase  | Responsibility                                               | Question                                       |
+| ------ | ------------------------------------------------------------ | ---------------------------------------------- |
+| Beta.1 | Framework Qualification + Governance Freeze                  | Is the framework itself trustworthy?           |
+| Beta.2 | Productization + Governance Offload                          | Can external users really use and maintain it? |
+| Beta.3 | Final Hardening + Formal Benchmark + Real SaaS Qualification | Can real workloads break the architecture?     |
+| RC1    | Frozen Candidate / Soak                                      | Did we misjudge the candidate?                 |
 
 Beta.1 remains the first intended public v0.44 prerelease
 (`v0.44.0-beta.1`) and the first phase that activates the three-role release
