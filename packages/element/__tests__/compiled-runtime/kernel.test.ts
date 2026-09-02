@@ -62,6 +62,62 @@ Deno.test('compiled kernel owns root, claim reconnect, and lifecycle disposal', 
   assertThrows(() => kernel.connect(), Error, 'kernel is disposed');
 });
 
+Deno.test('compiled kernel connect returns the activation mode truth', () => {
+  const document = new TestDocument();
+  const element = document.createElement('oe-kernel-test');
+  const message = signal('truth');
+  const kernel = new CompiledElementKernel(element as unknown as HTMLElement, KERNEL_PROGRAM, {
+    signals: { message },
+    handlers: {},
+    rootMode: 'open',
+  });
+
+  // connect() owns the claim-vs-fresh truth (#1213).
+  const fresh = kernel.connect() as unknown as { mode: string; root: unknown };
+  assertEquals(fresh.mode, 'fresh');
+  assertStrictEquals(fresh.root, kernel.root);
+
+  // A redundant connect while active reports the same activation.
+  const again = kernel.connect() as unknown as { mode: string; root: unknown };
+  assertEquals(again.mode, 'fresh');
+  assertStrictEquals(again.root, fresh.root);
+
+  kernel.disconnect();
+
+  // Reconnect into the retained content is a claim.
+  const reclaimed = kernel.connect() as unknown as { mode: string; root: unknown };
+  assertEquals(reclaimed.mode, 'claim');
+  assertStrictEquals(reclaimed.root, fresh.root);
+  kernel.dispose();
+});
+
+Deno.test('compiled kernel claims a supplied existing closed root and reports claim mode', () => {
+  const document = new TestDocument();
+  const element = document.createElement('oe-kernel-test');
+  const message = signal('supplied');
+  const closedRoot = element.attachShadow({ mode: 'closed' });
+  // Pre-existing content, as a declarative closed root would carry it.
+  createFreshDom(
+    KERNEL_PROGRAM,
+    { signals: { message }, handlers: {} },
+    closedRoot as unknown as Node,
+  )
+    .dispose();
+  const claimedDiv = closedRoot.childNodes[0];
+
+  const kernel = new CompiledElementKernel(element as unknown as HTMLElement, KERNEL_PROGRAM, {
+    signals: { message },
+    handlers: {},
+    rootMode: 'closed',
+    root: closedRoot as unknown as ShadowRoot,
+  });
+  const activation = kernel.connect() as unknown as { mode: string; root: unknown };
+  assertEquals(activation.mode, 'claim');
+  assertStrictEquals(activation.root, closedRoot);
+  assertStrictEquals(closedRoot.childNodes[0], claimedDiv, 'claim preserves node identity');
+  kernel.dispose();
+});
+
 Deno.test('compiled kernel keeps light-DOM styles outside the claimed template', () => {
   const document = new TestDocument();
   const element = document.createElement('oe-kernel-test');

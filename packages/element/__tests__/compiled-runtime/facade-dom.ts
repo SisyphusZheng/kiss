@@ -173,6 +173,7 @@ export class FacadeElement extends FacadeNodeBase {
   readonly listeners = new Map<string, FacadeListener[]>();
   shadowRoot: FacadeShadowRoot | null = null;
   adoptedStyleSheets: unknown[] = [];
+  #closedShadowRoot: FacadeShadowRoot | null = null;
 
   constructor(tagName?: string, ownerDocument?: FacadeDocument) {
     const doc = ownerDocument ?? installedDocument;
@@ -246,11 +247,17 @@ export class FacadeElement extends FacadeNodeBase {
     if (this.shadowRoot) throw new Error('shadow root already exists');
     const root = new FacadeShadowRoot(this.ownerDocument, this);
     if (init.mode === 'open') this.shadowRoot = root;
+    else this.#closedShadowRoot = root;
     return root;
   }
 
   attachInternals(): ElementInternals {
+    // Real browsers expose the host's own shadow root through its internals,
+    // including a closed root attached declaratively (DSD) — the only standard
+    // channel through which a closed DSD root is reachable for a claim.
+    const shadowRoot = this.shadowRoot ?? this.#closedShadowRoot;
     return {
+      shadowRoot,
       setFormValue: () => {},
       setValidity: () => {},
     } as unknown as ElementInternals;

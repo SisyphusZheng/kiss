@@ -16,8 +16,10 @@
  * At construction the facade builds the kernel host: one engine-backed signal
  * per compiled property, the program-referenced handlers bound to instance
  * methods, and an empty refs record (internal/compiled/facade-host.ts owns
- * the property contract). Claim-vs-fresh activation is decided by the kernel
- * from the existing root content (`root.childNodes`).
+ * the property contract). Claim-vs-fresh activation is owned by the kernel:
+ * `kernel.connect()` returns the activation result (`mode: 'claim' | 'fresh'`
+ * plus the resolved root) and the facade derives its hooks from that result —
+ * never from a pre-connect guess.
  *
  * There is no fallback render path: an OpenElement subclass that reaches
  * `connectedCallback()` without a `__partProgram` fails closed with an
@@ -26,9 +28,12 @@
  * Lifecycle:
  *   Server: renderDsd() -> serializeCompiledProgram() -> deterministic HTML
  *   Client (SSR DOM present): connectedCallback -> kernel.connect() claims
- *     the existing tree -> onDsdHydrated()
+ *     the existing tree (mode 'claim') -> pre-upgrade replay -> onDsdHydrated()
  *   Client (no SSR DOM): connectedCallback -> kernel.connect() creates fresh
- *     DOM -> onCsrRendered()
+ *     DOM (mode 'fresh') -> onCsrRendered()
+ *   Either way the element's own pre-upgrade capture records are released
+ *   with the decision; the shared page-level capture stays for pending
+ *   elements (#1170).
  *
  * @module @openelement/element/open-element
  */
@@ -49,6 +54,7 @@ import {
 import {
   capturePreUpgradeEvents,
   type PreUpgradeEventCapture,
+  releasePreUpgradeEvents,
   replayPreUpgradeEvents,
 } from './internal/compiled/runtime.ts';
 import { CompiledErrorBoundary } from './internal/compiled/runtime/error-boundary.ts';
@@ -74,6 +80,13 @@ const preUpgradeCaptures = new Map<EventTarget, PreUpgradeEventCapture>();
  * captured events whose targets live inside its root (compiled claim
  * capture/replay, internal/compiled/runtime.ts). Idempotent per root and a no-op
  * where no DOM exists (SSR).
+ *
+ * Invariant: the capture itself — one fixed listener set per owning root,
+ * installed once per page — is page-lifetime by design and is NOT the leak.
+ * The M1 leak was retained event-target records; each element releases exactly
+ * its own records at its activation decision (success or failure), while
+ * records owned by still-pending elements survive for their delayed/lazy
+ * upgrade (#1170).
  */
 export function ensurePreHydrationClickCapture(root?: EventTarget): void {
   const target = root ??
@@ -87,6 +100,18 @@ export function ensurePreHydrationClickCapture(root?: EventTarget): void {
 function replayPreUpgradeCaptures(root: Node): void {
   for (const capture of preUpgradeCaptures.values()) {
     replayPreUpgradeEvents(root, capture.events);
+  }
+}
+
+/**
+ * Per-element release at the activation decision — success or failure: drop
+ * exactly this root's captured records (the strong event-target references)
+ * from every shared capture. The shared listener set stays installed for
+ * elements that have not yet activated; their records are left pending.
+ */
+function releasePreUpgradeCapturesFor(root: Node): void {
+  for (const capture of preUpgradeCaptures.values()) {
+    releasePreUpgradeEvents(root, capture.events);
   }
 }
 
@@ -226,28 +251,25 @@ export class OpenElement extends OpenElementConfiguration {
     syncAttributesToSignals(this, state);
     applyPendingOwnValues(state);
 
-    const willClaim = this.#rootContent().childNodes.length > 0;
-    kernel.connect();
-    if (willClaim) {
+    // The kernel's connect result owns the claim-vs-fresh truth; the facade
+    // derives its hooks from it and never guesses from pre-connect state.
+    try {
+      const activation = kernel.connect();
+      if (activation.mode === 'claim') {
+        replayPreUpgradeCaptures(activation.root as unknown as Node);
+        this.onDsdHydrated();
+      } else {
+        this.onCsrRendered();
+      }
+    } finally {
+      // Per-element release, win or lose: this element's captured records
+      // (strong event-target references) never outlive its activation
+      // decision. The shared page-level capture stays installed for elements
+      // still awaiting their delayed/lazy upgrade (#1170).
       const root = kernel.root;
-      if (root) replayPreUpgradeCaptures(root as unknown as Node);
-      this.onDsdHydrated();
-    } else {
-      this.onCsrRendered();
+      if (root) releasePreUpgradeCapturesFor(root as unknown as Node);
     }
     this.clientActivate();
-  }
-
-  /** Root whose existing content decides claim-vs-fresh at connect time. */
-  #rootContent(): { childNodes: ArrayLike<unknown> } {
-    const kernel = this.#kernel;
-    if (!kernel) return { childNodes: [] };
-    const mode = kernel.program.root.kind;
-    if (mode === 'light') return this as unknown as { childNodes: ArrayLike<unknown> };
-    if (mode === 'shadow-open') {
-      return (this.shadowRoot ?? { childNodes: [] }) as { childNodes: ArrayLike<unknown> };
-    }
-    return (kernel.root ?? { childNodes: [] }) as { childNodes: ArrayLike<unknown> };
   }
 
   /**

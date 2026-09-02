@@ -1790,7 +1790,13 @@ function preUpgradeEventList(
   throw new Error('[compiled-claim] preUpgradeEvents: expected an event array or capture object');
 }
 
-/** Replay each captured record at most once, and only while its target remains owned. */
+/**
+ * Replay each captured record at most once, and only while its target remains
+ * owned by this root. Records owned by OTHER roots stay pending: an element
+ * that upgrades late (delayed/lazy island) must still receive its replay when
+ * its own activation arrives (#1170), so an outside-root record is neither
+ * replayed nor consumed here.
+ */
 export function replayPreUpgradeEvents(
   root: Node,
   captured: readonly PreUpgradeEvent[],
@@ -1798,10 +1804,11 @@ export function replayPreUpgradeEvents(
   let replayed = 0;
   for (const record of captured) {
     if (consumedEventRecords.has(record)) continue;
-    if (!SUPPORTED_PRE_UPGRADE_EVENTS.has(record.type) || !isInsideRoot(root, record.target)) {
+    if (!SUPPORTED_PRE_UPGRADE_EVENTS.has(record.type)) {
       consumedEventRecords.add(record);
       continue;
     }
+    if (!isInsideRoot(root, record.target)) continue;
     const target = record.target;
     if (record.event && typeof record.event === 'object') {
       if (consumedEventObjects.has(record.event)) {
@@ -1827,6 +1834,22 @@ export function replayPreUpgradeEvents(
     replayed++;
   }
   return replayed;
+}
+
+/**
+ * Release the captured records owned by one activated root, dropping the
+ * strong references to their event targets (including detached DOM). Runs at
+ * that element's activation decision — success or failure — so retained
+ * records never outlive it (the M1 leak). Records owned by other roots stay
+ * pending for their own activation. The capture's listener set is untouched:
+ * one fixed listener set per page is installed once by the generated entry
+ * and is not the leak.
+ */
+export function releasePreUpgradeEvents(root: Node, captured: readonly PreUpgradeEvent[]): void {
+  const events = captured as PreUpgradeEvent[];
+  for (let index = events.length - 1; index >= 0; index--) {
+    if (isInsideRoot(root, events[index].target)) events.splice(index, 1);
+  }
 }
 
 // ─── Claim options, staged scan, and bounded recovery ─────────────────
