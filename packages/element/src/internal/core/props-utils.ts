@@ -7,10 +7,11 @@
  * for safe access to inherited getters.
  *
  * v0.42.0-alpha.15 (#903): normalizePublicProps is the shared
- * prop-normalization core. DANGEROUS_KEYS filtering now applies on every
- * path (SSR serialization via collectPublicProps, SSR injection via
- * injectPropsSafe, CSR element binding via collectPropBindings) through the
- * single isDangerousKey predicate in security.ts.
+ * prop-normalization core. DANGEROUS_KEYS filtering applies on every
+ * projection path (host prop collection / SSR serialization here, page
+ * projection via injectPropsSafe and projectPageProps, and the adapter-vite
+ * generated server runtime — #1214) through the single isDangerousKey
+ * predicate in security.ts.
  *
  * @module ./props-utils.ts
  */

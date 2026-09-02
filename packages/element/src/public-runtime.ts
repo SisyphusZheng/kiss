@@ -36,7 +36,13 @@ export {
 export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';
 export { computed, effect, signal } from './internal/signal/index.ts';
 export type { Signal } from './internal/protocol/signal.ts';
-export { isSafeAttributeName, trustedHtml } from './internal/core/security.ts';
+export {
+  DANGEROUS_KEYS,
+  isDangerousKey,
+  isSafeAttributeName,
+  trustedHtml,
+} from './internal/core/security.ts';
+export { injectPropsSafe } from './internal/core/security.ts';
 export type { TrustedHtml } from './internal/core/security.ts';
 export { escapeAttr, escapeHtml, wrapInDocument } from './internal/core/html-escape.ts';
 export type { IslandOptions } from './internal/protocol/island.ts';

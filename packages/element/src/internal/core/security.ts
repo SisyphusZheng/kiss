@@ -1,12 +1,19 @@
 /**
  * security.ts - SSR Security Guards.
  *
- * Properties that MUST NOT be injected from untrusted SSR props.
+ * Properties that MUST NOT be injected from untrusted props.
  * These are Object.prototype internals and dangerous overrides that
  * could be exploited via arbitrary property assignment.
  *
- * Shared by island.ts (client-side SSR prop restoration) and render-dsd.ts
- * (SSR injectProps).
+ * The one canonical dangerous-key rule (constitution 4.2, #903, #1214).
+ * Consumers: props-utils.ts (host prop collection / SSR serialization via
+ * collectPublicProps and normalizePublicProps), the guarded assigner
+ * injectPropsSafe below (employed by the SPA bootstrap page-projection write
+ * boundary in @openelement/app), and the page projectors in @openelement/app
+ * (authoring.ts projectPageProps) and the adapter-vite generated server
+ * runtime (which serializes DANGEROUS_KEYS into generated code at build
+ * time — generated modules cannot import this internal module, so the
+ * canonical list is the single source they copy from).
  *
  * @module ./security.ts
  */
@@ -14,8 +21,8 @@
 import { createLogger, warnOnce } from './logger.ts';
 import { formatError, OpenElementError } from './errors.ts';
 
-/** Object prototype keys that must never be injected as SSR props. */
-const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
+/** Object prototype keys that must never be injected from untrusted props. */
+export const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
   '__proto__',
   'constructor',
   'prototype',
@@ -32,10 +39,13 @@ const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Shared dangerous-key predicate (#903). Prototype-internal keys must never
- * be injected from untrusted props on ANY path: SSR injection
- * (injectPropsSafe), SSR serialization (collectPublicProps), and CSR element
- * binding (collectPropBindings) all filter through this single source so a
+ * Shared dangerous-key predicate (#903, #1214). Prototype-internal keys must
+ * never be injected from untrusted props on ANY path: host prop collection
+ * (collectPublicProps / normalizePublicProps in props-utils.ts), guarded
+ * assignment (injectPropsSafe below — the SPA bootstrap page-projection
+ * write boundary in @openelement/app), and page projection (authoring.ts
+ * projectPageProps; the adapter-vite generated server runtime via the
+ * serialized DANGEROUS_KEYS list) all filter through this single source so a
  * new dangerous pattern cannot be missed on one path.
  */
 export function isDangerousKey(key: string): boolean {
@@ -101,10 +111,12 @@ export function trustRenderHtml(html: string): TrustedHtml {
  * Safely assign caller-supplied props onto a target object, skipping keys that
  * could enable prototype pollution and tolerating read-only properties.
  *
- * Consolidates the previously duplicated guarded-assignment loop from
- * island.ts (`bindSsrProps`) and render-dsd.ts (`injectProps`). Callers pass
- * their own logger so existing log channels are preserved; a security logger is
- * used when none is supplied.
+ * The canonical guarded assigner for the canonical dangerous-key rule (#903,
+ * #1214): the @openelement/app SPA bootstrap employs it at the page-property
+ * projection write boundary so descriptor projector output, default
+ * projection, and error projection can never re-prototype the live page host.
+ * Callers pass their own logger so existing log channels are preserved; a
+ * security logger is used when none is supplied.
  *
  * @param target - Object that receives the props (element instance or record).
  * @param props - Caller-supplied prop map.

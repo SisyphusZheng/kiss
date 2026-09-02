@@ -20,7 +20,12 @@ import {
 import type { OpenElementPageDescriptor, PagePropsContext } from './authoring.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
 import { isDevMode } from './internal/dev-mode.ts';
-import { assertValidTagName, createLogger, ERROR_PREFIX } from '@openelement/element';
+import {
+  assertValidTagName,
+  createLogger,
+  ERROR_PREFIX,
+  injectPropsSafe,
+} from '@openelement/element';
 
 const log = createLogger('spa');
 
@@ -43,6 +48,11 @@ function pageDescriptorOf(tagName: string): OpenElementPageDescriptor | undefine
  * (params + loader-data record entries); the error projector, when declared,
  * wins on the loader/action failure channel so the page's error variant
  * renders — mirroring the server entry chain.
+ *
+ * The write boundary is the canonical guarded assigner injectPropsSafe
+ * (#1214): dangerous keys from any projector (default, props, or error) are
+ * dropped with a warning, so projected data can never re-prototype the live
+ * page host (e.g. JSON.parse('{"__proto__": ...}') loader payloads).
  */
 function applyCompiledPageProps(
   el: HTMLElement,
@@ -56,10 +66,12 @@ function applyCompiledPageProps(
     : typeof descriptor?.props === 'function'
     ? descriptor.props(context)
     : projectPageProps(context);
-  const host = el as HTMLElement & Record<string, unknown>;
-  for (const [key, value] of Object.entries(projected ?? {})) {
-    host[key] = value;
-  }
+  injectPropsSafe(
+    el as HTMLElement & Record<string, unknown>,
+    (projected ?? {}) as Record<string, unknown>,
+    route.tagName,
+    log,
+  );
 }
 
 // ─── Public types ──────────────────────────────────────────────
