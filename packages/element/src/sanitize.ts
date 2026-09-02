@@ -148,7 +148,13 @@ const DANGEROUS_TAGS = new Set([
 /** Raw-text elements: their content is consumed to the matching close tag. */
 const RAW_TEXT_TAGS = new Set(['script', 'style', 'textarea', 'title']);
 
-/** Elements that never have a close tag. */
+/**
+ * Elements that never have a close tag. Mechanical mirror of the canonical
+ * VOID_TAGS in ./internal/core/html-escape.ts (issue #1220, M4): this module
+ * is dependency-free by contract (ADR-0126), so the list is duplicated here
+ * and must stay byte-identical to the canonical definition; the convergence
+ * guard test enforces that.
+ */
 const VOID_TAGS = new Set([
   'area',
   'base',

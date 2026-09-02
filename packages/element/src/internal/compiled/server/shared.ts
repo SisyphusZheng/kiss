@@ -12,6 +12,8 @@
 
 import { type PartProgramV1, type ProgramPart, type ProgramTreeNode } from '../program.ts';
 import { normalizePartProgram, type RuntimeProgramIR } from '../runtime-program.ts';
+// Canonical void-element set (issue #1220, M4) — single source of truth.
+import { VOID_TAGS } from '../../core/html-escape.ts';
 
 export interface CompiledSignalLike<T = unknown> {
   readonly value: T;
@@ -41,22 +43,6 @@ const EVENT_NAME_RE = /^[a-z][a-z0-9:.-]*$/;
 const FORBIDDEN_ATTRIBUTE_NAMES = new Set(['srcdoc']);
 const FORBIDDEN_PROPERTY_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
 const RAW_TEXT_TAGS = new Set(['script', 'style']);
-const VOID_TAGS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'param',
-  'source',
-  'track',
-  'wbr',
-]);
 
 function fail(path: string, message: string): never {
   throw new CompiledProgramValidationError(path, message);

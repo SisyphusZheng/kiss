@@ -15,6 +15,7 @@
  */
 
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { normalizePath } from 'vite';
@@ -38,7 +39,7 @@ import {
   scanStaticComponents,
   ssgRender,
 } from '../internal/ssg/index.ts';
-import { normalizeSeparators, SsrRenderError } from '@openelement/element/build-utils';
+import { SsrRenderError } from '@openelement/element/build-utils';
 import { createLogger, formatError } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import {
@@ -65,6 +66,16 @@ import {
 } from '../internal/paths.ts';
 
 const log = createLogger('build-ssg');
+
+/**
+ * file:// URL for the dynamic import of the built SSR bundle (issue #1220,
+ * M13). pathToFileURL percent-encodes spaces, `#`, `?`, and non-ASCII bytes
+ * and handles Windows drive letters; string concatenation mis-resolved such
+ * project paths. Same correct usage as internal/static-serve.ts.
+ */
+export function ssrBundleImportUrl(ssrBundlePath: string): string {
+  return pathToFileURL(ssrBundlePath).href;
+}
 
 const VIRTUAL_SSG_ENTRY_ID = 'virtual:open-ssg-entry';
 const RESOLVED_SSG_ENTRY_ID = '\0' + VIRTUAL_SSG_ENTRY_ID;
@@ -450,12 +461,7 @@ async function buildSSG(
 
     // Load the SSR bundle and run SSG rendering pipeline
     const ssrBundlePath = resolve(ssrOutDir, 'entry.js');
-    // M-18 fix: Use process.platform instead of Deno.build.os for Node.js compat
-    const isWindows = typeof process !== 'undefined' && process.platform === 'win32';
-    const ssrBundleUrl = isWindows
-      ? 'file:///' + normalizeSeparators(ssrBundlePath)
-      : 'file://' + ssrBundlePath;
-    const module = await import(ssrBundleUrl) as Record<string, unknown>;
+    const module = await import(ssrBundleImportUrl(ssrBundlePath)) as Record<string, unknown>;
 
     if (!module.default) {
       throw new SsrRenderError('virtual:open-ssg-entry', new Error('Failed to load Hono app'));

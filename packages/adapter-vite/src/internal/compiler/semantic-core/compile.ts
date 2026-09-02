@@ -36,6 +36,7 @@ import {
   type PropertyValueType,
   type SerializableValue,
   validatePartProgram,
+  VOID_TAGS,
 } from './program.ts';
 
 export interface ElementCompilerDiagnostic extends CompilerDiagnostic {}
@@ -150,22 +151,6 @@ const DOM_PROPERTY_NAMES = new Set([
   'scrollTop',
   'selected',
   'value',
-]);
-
-const VOID_TAGS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'source',
-  'track',
-  'wbr',
 ]);
 
 function camelToKebab(value: string): string {

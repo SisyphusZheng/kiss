@@ -61,6 +61,35 @@ export function escapeAttrValue(value: unknown): string {
 }
 
 /**
+ * HTML void elements — the ONE canonical tag set for every serializer,
+ * sanitizer, validator, and compiler in the workspace (issue #1220, M4).
+ * Content is the full HTML Standard void-element list, `param` included.
+ *
+ * The mirrored Part Program exchange artifacts (`internal/compiled/program.ts`
+ * and its semantic-core copy) intentionally have no import edge, so each
+ * carries a mechanical mirror of this list that must stay byte-identical to
+ * the tags here; the convergence guard test (adapter-vite
+ * __tests__/void-tags-convergence.test.ts) enforces that. Every other
+ * consumer imports this definition.
+ */
+export const VOID_TAGS: ReadonlySet<string> = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
+
+/**
  * Wrap rendered HTML in a full HTML document.
  * Adds DOCTYPE, head (title, meta, preload), and body.
  * Supports CSP nonce and dev scripts (e.g. Vite client, route module registration).

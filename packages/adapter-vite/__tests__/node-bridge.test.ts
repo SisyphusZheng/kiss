@@ -302,9 +302,17 @@ Deno.test('cli/start.ts uses the shared bridge — no local copy left', async ()
   const source = await Deno.readTextFile(
     new URL('../src/cli/start.ts', import.meta.url),
   );
-  assertStringIncludes(source, "from '../internal/node-bridge.ts'");
-  assertStringIncludes(source, 'nodeRequestToWeb(req, { host: hostname, port, trustProxy })');
+  // #1220 M8: the request callback (with its contained-500 wiring) lives in
+  // the shared internal/static-serve.ts; start.ts only delegates to it.
+  assertStringIncludes(source, 'createStartRequestHandler');
+  assertStringIncludes(source, "from '../internal/static-serve.ts'");
   assertStringIncludes(source, "process.env.OPEN_ELEMENT_TRUST_PROXY === '1'");
   assertEquals(source.includes('response.headers.forEach'), false);
   assertEquals(source.includes('function toWebRequest'), false);
+  const serveSource = await Deno.readTextFile(
+    new URL('../src/internal/static-serve.ts', import.meta.url),
+  );
+  assertStringIncludes(serveSource, "from './node-bridge.ts'");
+  assertStringIncludes(serveSource, 'nodeRequestToWeb(req, {');
+  assertStringIncludes(serveSource, 'writeWebResponse(response, res, request)');
 });

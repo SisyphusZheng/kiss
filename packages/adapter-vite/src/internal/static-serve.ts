@@ -15,6 +15,8 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { nodeRequestToWeb, writeWebResponse } from './node-bridge.ts';
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -181,4 +183,60 @@ export async function dispatchRequest(
 /** Import the generated request-time server entry from an absolute file path. */
 export function importRequestTimeServer(entryPath: string): Promise<RequestTimeServerModule> {
   return import(pathToFileURL(entryPath).href) as Promise<RequestTimeServerModule>;
+}
+
+export interface StartRequestHandlerOptions {
+  distDir: string;
+  serverMod: RequestTimeServerModule | null;
+  env: Record<string, string>;
+  host: string;
+  port: number;
+  trustProxy: boolean;
+  /** Test seam; production always uses the canonical dispatchRequest. */
+  dispatch?: typeof dispatchRequest;
+}
+
+/**
+ * node:http request callback for `cli/start` (issue #1220, M8). Parity with
+ * the generated standalone server (ssg/ssg-helpers.ts): an escaping dispatch
+ * or response-write failure is contained as a 500 — never an unhandled
+ * rejection in the callback, which would crash the process under Node's
+ * default unhandled-rejection behavior.
+ */
+export function createStartRequestHandler(
+  options: StartRequestHandlerOptions,
+): (req: IncomingMessage, res: ServerResponse) => void {
+  const dispatch = options.dispatch ?? dispatchRequest;
+  return (req: IncomingMessage, res: ServerResponse) => {
+    let request: Request;
+    try {
+      request = nodeRequestToWeb(req, {
+        host: options.host,
+        port: options.port,
+        trustProxy: options.trustProxy,
+      });
+    } catch (error) {
+      console.error('[openElement start] failed to read request:', error);
+      res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+      res.end('Internal Server Error');
+      return;
+    }
+    Promise.resolve()
+      .then(() =>
+        dispatch(request, {
+          distDir: options.distDir,
+          serverMod: options.serverMod,
+          env: options.env,
+          onHandlerError: (error) =>
+            console.error('[openElement start] request-time handler error:', error),
+        })
+      )
+      .then((response) => {
+        writeWebResponse(response, res, request);
+      })
+      .catch((error) => {
+        console.error('[openElement start] fatal request error:', error);
+        writeWebResponse(new Response('Internal Server Error', { status: 500 }), res, request);
+      });
+  };
 }
