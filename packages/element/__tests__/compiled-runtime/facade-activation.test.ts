@@ -7,17 +7,20 @@
  *   - light / open-shadow / closed-shadow roots, DSD claim vs CSR fresh
  *   - closed-root DSD claim fires onDsdHydrated (H3 regression)
  *   - reconnect reclaims and re-fires onDsdHydrated without fresh labeling
- *   - failed claim fires neither hook and still tears down pre-upgrade capture
- *   - pre-upgrade replay fires exactly once, then listeners and the strong
- *     capture map are released (M1)
+ *   - failed claim fires neither hook and releases only its own records
+ *   - pre-upgrade replay fires exactly once per element; the element's captured
+ *     records are released at its activation decision (M1) while the shared
+ *     page-level capture stays installed for pending (delayed/lazy) elements
+ *     (#1170), so a late upgrader still receives its replay
  */
 
-import { assertEquals, assertStrictEquals, assertThrows } from '@std/assert';
+import { assert, assertEquals, assertStrictEquals, assertThrows } from '@std/assert';
 import {
   FacadeElement,
   FacadeEvent,
   installFacadeDom,
   mountSerialized,
+  parseHtml,
   toHtml,
 } from './facade-dom.ts';
 import { testProgram } from './test-program.ts';
@@ -118,6 +121,39 @@ function captureListenerCount(target: AnyElement): number {
     .length;
 }
 
+/**
+ * An un-upgraded SSR host: same tag, attributes, and content nodes as the
+ * serialized markup, but constructed as a plain element (the harness runs the
+ * real constructor at document.createElement, so 'in the document but not yet
+ * upgraded' is modeled explicitly — the delayed-upgrade e2e contract #1170).
+ */
+function ssrMarkupHost(tag: string): FacadeElement {
+  const serialized = renderDsd(tag, {
+    componentClass: dom.registry.get(tag) as CustomElementConstructor,
+  }).html;
+  const parsedHost = parseHtml(dom.document, serialized).childNodes[0] as FacadeElement;
+  const host = new FacadeElement(tag, dom.document);
+  for (const [name, value] of parsedHost.attributes) host.setAttribute(name, value);
+  for (const child of [...parsedHost.childNodes]) host.appendChild(child);
+  return host;
+}
+
+/**
+ * Delayed upgrade: the very content nodes the capture recorded move into the
+ * real element (node identity preserved, as browser upgrade keeps them), then
+ * the element replaces the un-upgraded host and connects.
+ */
+function upgradeInPlace(ssrHost: FacadeElement): TrackedElement {
+  const element = dom.document.createElement(ssrHost.localName) as unknown as TrackedElement;
+  for (const [name, value] of ssrHost.attributes) element.setAttribute(name, value);
+  for (const child of [...ssrHost.childNodes]) {
+    (element as unknown as FacadeElement).appendChild(child);
+  }
+  dom.document.body.insertBefore(element as unknown as FacadeElement, ssrHost);
+  dom.document.body.removeChild(ssrHost);
+  return element;
+}
+
 // ─── Mode truth per root kind ────────────────────────────────────────
 
 Deno.test('activation: light DSD claim fires onDsdHydrated only', () => {
@@ -131,7 +167,7 @@ Deno.test('activation: light DSD claim fires onDsdHydrated only', () => {
   assertStrictEquals(element.childNodes[0], claimedButton, 'claim preserves node identity');
 });
 
-Deno.test('activation: light CSR fires onCsrRendered only and tears down capture', () => {
+Deno.test('activation: fresh activation keeps the shared capture alive for pending elements', () => {
   defineTracked({ tag: 'oe-activation-light-csr', rootMode: 'light' });
   // The generated entry installs capture on the document before upgrade.
   ensurePreHydrationClickCapture();
@@ -145,9 +181,39 @@ Deno.test('activation: light CSR fires onCsrRendered only and tears down capture
   );
   assertEquals(
     captureListenerCount(dom.document),
-    0,
-    'a fresh activation still tears the pre-upgrade capture down',
+    1,
+    "the fixed listener set is page-lifetime by design; only this element's records are released",
   );
+});
+
+Deno.test('activation: a late upgrader still replays its pre-upgrade click after another activation', () => {
+  defineTracked({ tag: 'oe-activation-early', rootMode: 'light' });
+  defineTracked({ tag: 'oe-activation-late', rootMode: 'light' });
+  ensurePreHydrationClickCapture();
+
+  // The early island activates while the late island's chunk is still held
+  // (the /probe-light e2e shape): its decision must neither disarm the shared
+  // capture nor consume records owned by the pending island (#1170).
+  connectFresh('oe-activation-early');
+  assertEquals(captureListenerCount(dom.document), 1, 'shared capture survives the decision');
+
+  // Un-upgraded SSR markup sits in the connected document; the document-level
+  // capture records the pre-upgrade click.
+  const ssrHost = ssrMarkupHost('oe-activation-late');
+  dom.document.body.appendChild(ssrHost);
+  const button = ssrHost.childNodes[0] as AnyElement;
+  button.dispatchEvent(new FacadeEvent('click', { bubbles: true }));
+
+  // The chunk arrives: delayed upgrade claims the same nodes and replays once.
+  const element = upgradeInPlace(ssrHost);
+  assertEquals(element.hydrated, 1);
+  assertEquals(element.rendered, 0);
+  assertEquals(
+    element.count,
+    1,
+    "the pre-upgrade click survives another element's activation and replays exactly once",
+  );
+  assertStrictEquals(element.childNodes[0], button, 'in-place activation keeps node identity');
 });
 
 Deno.test('activation: open shadow DSD claim fires onDsdHydrated only', () => {
@@ -217,7 +283,7 @@ Deno.test('activation: reconnect reclaims and re-fires onDsdHydrated without rel
 
 // ─── Pre-upgrade capture lifecycle (M1) ──────────────────────────────
 
-Deno.test('activation: pre-upgrade replay fires exactly once, then capture is released', () => {
+Deno.test('activation: pre-upgrade replay fires exactly once, then the element releases its records', () => {
   defineTracked({ tag: 'oe-activation-replay', rootMode: 'light' });
   let button: AnyElement | undefined;
   const element = mountDsd('oe-activation-replay', (host) => {
@@ -232,26 +298,29 @@ Deno.test('activation: pre-upgrade replay fires exactly once, then capture is re
   assertEquals(element.count, 1, 'the pre-upgrade click replays exactly once into the claim');
   assertEquals(
     captureListenerCount(element),
-    0,
-    'the capture listeners are stopped after the activation decision',
+    1,
+    'the listener set is not the leak: it stays installed; the retained records are released',
   );
 
-  // The strong map released the entry: re-ensuring installs a fresh capture.
-  ensurePreHydrationClickCapture(element as unknown as EventTarget);
-  assertEquals(captureListenerCount(element), 1);
-
-  // Reconnect reclaims; the fresh capture is torn down and nothing replays.
+  // Reconnect reclaims; the released (and consumed) record never replays again.
   dom.document.body.removeChild(element);
   dom.document.body.appendChild(element);
-  assertEquals(element.count, 1, 'no second replay after release');
+  assertEquals(element.count, 1, 'no second replay after the element released its records');
   assertEquals(element.hydrated, 2);
-  assertEquals(captureListenerCount(element), 0, 'the reconnect decision tears down again');
+  assert(button !== undefined);
 });
 
-Deno.test('activation: failed claim fires neither hook and still tears down capture', () => {
+Deno.test('activation: failed claim fires neither hook and releases only its own records', () => {
   defineTracked({ tag: 'oe-activation-failing', rootMode: 'light' });
+  defineTracked({ tag: 'oe-activation-recovering', rootMode: 'light' });
   ensurePreHydrationClickCapture();
   assertEquals(captureListenerCount(dom.document), 1);
+
+  // A pending sibling island records a click before the failing activation.
+  const ssrHost = ssrMarkupHost('oe-activation-recovering');
+  dom.document.body.appendChild(ssrHost);
+  const pendingButton = ssrHost.childNodes[0] as AnyElement;
+  pendingButton.dispatchEvent(new FacadeEvent('click', { bubbles: true }));
 
   // Drifted content: the program expects a <button>, the DOM carries a <span>.
   const element = dom.document.createElement('oe-activation-failing') as unknown as TrackedElement;
@@ -262,16 +331,17 @@ Deno.test('activation: failed claim fires neither hook and still tears down capt
   assertEquals(element.rendered, 0, 'a failed claim is never relabeled as fresh');
   assertEquals(
     captureListenerCount(dom.document),
-    0,
-    'capture listeners are stopped even when the claim fails',
+    1,
+    'the shared capture survives a failed activation for pending elements',
   );
 
-  // The strong map entry was released: re-ensuring installs a fresh capture.
-  ensurePreHydrationClickCapture();
-  assertEquals(captureListenerCount(dom.document), 1);
-  // Leave no harness listeners behind for other test files: one fresh connect
-  // runs the activation teardown again.
-  defineTracked({ tag: 'oe-activation-cleanup', rootMode: 'light' });
-  connectFresh('oe-activation-cleanup');
-  assertEquals(captureListenerCount(dom.document), 0);
+  // The pending sibling's record was not released or consumed by the failed
+  // activation: it upgrades later and replays exactly once.
+  const recovered = upgradeInPlace(ssrHost);
+  assertEquals(recovered.hydrated, 1);
+  assertEquals(
+    recovered.count,
+    1,
+    'the pending record survived the failed activation and replays exactly once',
+  );
 });

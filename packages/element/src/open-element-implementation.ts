@@ -31,7 +31,9 @@
  *     the existing tree (mode 'claim') -> pre-upgrade replay -> onDsdHydrated()
  *   Client (no SSR DOM): connectedCallback -> kernel.connect() creates fresh
  *     DOM (mode 'fresh') -> onCsrRendered()
- *   Either way the pre-upgrade capture is torn down with the decision.
+ *   Either way the element's own pre-upgrade capture records are released
+ *   with the decision; the shared page-level capture stays for pending
+ *   elements (#1170).
  *
  * @module @openelement/element/open-element
  */
@@ -51,8 +53,8 @@ import {
 } from './internal/compiled/facade-host.ts';
 import {
   capturePreUpgradeEvents,
-  type PreUpgradeEvent,
   type PreUpgradeEventCapture,
+  releasePreUpgradeEvents,
   replayPreUpgradeEvents,
 } from './internal/compiled/runtime.ts';
 import { CompiledErrorBoundary } from './internal/compiled/runtime/error-boundary.ts';
@@ -78,6 +80,13 @@ const preUpgradeCaptures = new Map<EventTarget, PreUpgradeEventCapture>();
  * captured events whose targets live inside its root (compiled claim
  * capture/replay, internal/compiled/runtime.ts). Idempotent per root and a no-op
  * where no DOM exists (SSR).
+ *
+ * Invariant: the capture itself — one fixed listener set per owning root,
+ * installed once per page — is page-lifetime by design and is NOT the leak.
+ * The M1 leak was retained event-target records; each element releases exactly
+ * its own records at its activation decision (success or failure), while
+ * records owned by still-pending elements survive for their delayed/lazy
+ * upgrade (#1170).
  */
 export function ensurePreHydrationClickCapture(root?: EventTarget): void {
   const target = root ??
@@ -95,17 +104,15 @@ function replayPreUpgradeCaptures(root: Node): void {
 }
 
 /**
- * Tear down every pre-upgrade capture after the kernel's activation decision —
- * success or failure: stop its listeners, release the retained event records
- * (which hold event targets, including detached DOM), and drop the strong map
- * entries. No capture may outlive an activation decision (#1213, M1).
+ * Per-element release at the activation decision — success or failure: drop
+ * exactly this root's captured records (the strong event-target references)
+ * from every shared capture. The shared listener set stays installed for
+ * elements that have not yet activated; their records are left pending.
  */
-function releasePreUpgradeCaptures(): void {
+function releasePreUpgradeCapturesFor(root: Node): void {
   for (const capture of preUpgradeCaptures.values()) {
-    capture.stop();
-    (capture.events as PreUpgradeEvent[]).length = 0;
+    releasePreUpgradeEvents(root, capture.events);
   }
-  preUpgradeCaptures.clear();
 }
 
 function failMissingProgram(ctor: object): never {
@@ -255,9 +262,12 @@ export class OpenElement extends OpenElementConfiguration {
         this.onCsrRendered();
       }
     } finally {
-      // The activation decision is final, win or lose: no pre-upgrade
-      // listener or retained event record outlives it.
-      releasePreUpgradeCaptures();
+      // Per-element release, win or lose: this element's captured records
+      // (strong event-target references) never outlive its activation
+      // decision. The shared page-level capture stays installed for elements
+      // still awaiting their delayed/lazy upgrade (#1170).
+      const root = kernel.root;
+      if (root) releasePreUpgradeCapturesFor(root as unknown as Node);
     }
     this.clientActivate();
   }
