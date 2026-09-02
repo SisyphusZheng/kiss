@@ -298,21 +298,25 @@ function metricSet(value: Record<string, number>): DomMetricSet {
   };
 }
 
-interface DomCounts {
+export interface DomCounts {
   elements: number;
   texts: number;
   comments: number;
   textWrites: number;
   valueWrites: number;
+  /** Attribute writes (setAttribute/removeAttribute) — micro diagnostics (#1219). */
+  attrWrites: number;
+  /** appendChild/insertBefore calls — Region move diagnostics (#1219). */
+  insertions: number;
   listenerAdds: number;
   listenerRemoves: number;
   removals: number;
   walkVisits: number;
 }
 
-type FNode = FElement | FText | FComment;
+export type FNode = FElement | FText | FComment;
 
-abstract class FNodeBase {
+export abstract class FNodeBase {
   readonly ownerDocument: FDocument;
   parentNode: FElement | null = null;
   childNodes: FNode[] = [];
@@ -332,6 +336,7 @@ abstract class FNodeBase {
     this.detachForMove(node);
     node.parentNode = this as unknown as FElement;
     this.childNodes.push(node);
+    this.ownerDocument.counts.insertions++;
     return node;
   }
 
@@ -341,6 +346,7 @@ abstract class FNodeBase {
     if (index < 0) throw new Error('[v044-performance] insertBefore reference is missing');
     node.parentNode = this as unknown as FElement;
     this.childNodes.splice(index, 0, node);
+    this.ownerDocument.counts.insertions++;
     return node;
   }
 
@@ -362,7 +368,7 @@ abstract class FNodeBase {
   }
 }
 
-class FText extends FNodeBase {
+export class FText extends FNodeBase {
   readonly nodeType = 3;
   #data: string;
 
@@ -381,7 +387,7 @@ class FText extends FNodeBase {
   }
 }
 
-class FComment extends FNodeBase {
+export class FComment extends FNodeBase {
   readonly nodeType = 8;
 
   constructor(ownerDocument: FDocument, readonly data: string) {
@@ -389,7 +395,7 @@ class FComment extends FNodeBase {
   }
 }
 
-class FElement extends FNodeBase {
+export class FElement extends FNodeBase {
   readonly nodeType = 1;
   readonly tagName: string;
   readonly attributes = new Map<string, string>();
@@ -416,6 +422,15 @@ class FElement extends FNodeBase {
 
   setAttribute(name: string, value: string): void {
     this.attributes.set(name, value);
+    this.ownerDocument.counts.attrWrites++;
+  }
+
+  removeAttribute(name: string): void {
+    if (this.attributes.delete(name)) this.ownerDocument.counts.attrWrites++;
+  }
+
+  hasAttribute(name: string): boolean {
+    return this.attributes.has(name);
   }
 
   getAttribute(name: string): string | null {
@@ -446,13 +461,15 @@ class FElement extends FNodeBase {
   }
 }
 
-class FDocument {
+export class FDocument {
   readonly counts: DomCounts = {
     elements: 0,
     texts: 0,
     comments: 0,
     textWrites: 0,
     valueWrites: 0,
+    attrWrites: 0,
+    insertions: 0,
     listenerAdds: 0,
     listenerRemoves: 0,
     removals: 0,
@@ -510,7 +527,7 @@ function unescapeText(value: string): string {
   );
 }
 
-function toHtml(node: FNode): string {
+export function toHtml(node: FNode): string {
   if (node instanceof FText) return escapeText(node.data);
   if (node instanceof FComment) return `<!--${node.data}-->`;
   const tag = node.tagName.toLowerCase();
@@ -521,7 +538,7 @@ function toHtml(node: FNode): string {
   return `<${tag}${attrs}>${node.childNodes.map(toHtml).join('')}</${tag}>`;
 }
 
-function parseHtml(doc: FDocument, html: string): FElement {
+export function parseHtml(doc: FDocument, html: string): FElement {
   const host = doc.createElement('host');
   const stack: FElement[] = [host];
   for (const match of html.matchAll(/<!--[\s\S]*?-->|<[^>]+>|[^<]+/g)) {
@@ -538,8 +555,9 @@ function parseHtml(doc: FDocument, html: string): FElement {
       const tag = (space < 0 ? inner : inner.slice(0, space)).toLowerCase();
       const element = doc.createElement(tag);
       const attrSource = space < 0 ? '' : inner.slice(space);
-      for (const attr of attrSource.matchAll(/([\w-]+)="([^"]*)"/g)) {
-        element.setAttribute(attr[1], unescapeText(attr[2]));
+      for (const attr of attrSource.matchAll(/([\w-]+)(?:="([^"]*)")?/g)) {
+        // Bare attributes parse as present-with-empty-value, matching HTML.
+        element.setAttribute(attr[1], unescapeText(attr[2] ?? ''));
       }
       parent.appendChild(element);
       if (!voidTags.has(tag)) stack.push(element);
@@ -556,7 +574,7 @@ function walk(node: FNode): void {
   for (const child of node.childNodes) walk(child);
 }
 
-function allocationCount(counts: DomCounts): number {
+export function allocationCount(counts: DomCounts): number {
   return counts.elements + counts.texts + counts.comments;
 }
 
