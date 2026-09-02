@@ -1591,7 +1591,11 @@ function claimNodes(
         cursor,
         active ? part.on : part.off,
         `${nodePath}.branch`,
-        [],
+        // Region subtrees hold no fixed-Part targets (the validator rejects
+        // fixed paths crossing or preceded by an anchor), so the recursion
+        // keeps the anchor's canonical path: resetting to [] would collide
+        // with template-level sink paths and misidentify dynamic attributes.
+        nodeProgramPath,
         branchScope,
         scopedOwner,
         pending,
@@ -1655,7 +1659,10 @@ function claimNodes(
           cursor,
           part.item,
           `${nodePath}.item[${itemIndex}]`,
-          [],
+          // Same canonical-path rule as the when branch above: item templates
+          // hold no fixed-Part targets, so the anchor path is preserved
+          // instead of resetting to a colliding [].
+          nodeProgramPath,
           itemScope,
           scopedOwner,
           pending,

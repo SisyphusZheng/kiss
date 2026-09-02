@@ -22,6 +22,8 @@ export interface TestNodeSpec {
   k: 'el' | 'text' | 'part' | 'ival';
   tag?: string;
   attrs?: Array<[string, string]>;
+  /** Per-item attribute slots; valid only inside an `each` item template. */
+  iattrs?: Array<[string, string]>;
   children?: TestNodeSpec[];
   value?: string;
   index?: number;
@@ -90,6 +92,7 @@ interface BuiltNode {
   id?: string;
   tag?: string;
   attrs?: Array<[string, string]>;
+  iattrs?: Array<[string, string]>;
   children?: BuiltNode[];
   value?: string;
   index?: number;
@@ -120,6 +123,7 @@ function buildNodes(
         id,
         tag: node.tag,
         attrs: node.attrs ?? [],
+        ...(node.iattrs === undefined ? {} : { iattrs: node.iattrs }),
         children: buildNodes(node.children ?? [], plainPath, elementPath, false, state),
       };
     }
