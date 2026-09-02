@@ -35,15 +35,17 @@ and `create`; `ui` is optional.
 - **Activation** — framework takeover: marker activation, event binding and
   state restoration performed by the runtime after upgrade.
 
-The Element/App root surface exposes one functional element authoring helper:
-`defineElement`. The alpha-only `defineLayout` alias was removed in alpha.13;
-layouts use `defineElement` with the same definition object. The signal
-control-flow factory `For` (`<For each={items} key={...}>`, ADR-0059/
-ADR-0124) is exported from the element root since 0.42.0-alpha.16 (#941);
-`Show` stays internal (jsx-runtime) — open an issue if a public consumer
-surface is needed. Keyed reconciliation is Solid-style: a surviving key
-keeps its DOM node and its content is frozen per key (item content must be
-signal-driven to update; see ADR-0124 Consequences, #915).
+The Element/App root surface exposes the compiled-class authoring model: the
+`OpenElement` base class plus the `@element`/`@property` compile-time
+decorator intrinsics (experimental, #1209 — see the v0.44 experimental table
+below). The v0.43 functional element-authoring helper, its alpha-only layout
+alias, and the signal control-flow list factory were removed in v0.44 with no
+alias; the before/after mapping lives in
+[`v0.44.0-MIGRATION.md`](./v0.44.0-MIGRATION.md). `Show` stays internal
+(jsx-runtime) — open an issue if a public consumer surface is needed. Keyed
+list reconciliation is compiler-owned in v0.44: the compiler emits list
+Regions for keyed collections, with the v1 grammar boundaries recorded in the
+migration guide (ADR-0124 Consequences, #915).
 
 ## Subpath inventory
 
@@ -135,7 +137,7 @@ promise and are not application-authoring surface.
 
 ## 0.41.0 interface freeze boundary (ADR-0119)
 
-Frozen at 0.41.0: `defineElement`, `definePage`, `buildApp`, the five-package
+Frozen at 0.41.0: the element authoring helper, `definePage`, `buildApp`, the five-package
 graph, the supported subpaths above, and the static/SPA semantics of
 `defineApp` as shipped — file routes, `tagName` route elements, island
 configuration (`ssr`/`dsd`/`hydrate`), DSD output, and the SPA-mode
@@ -151,7 +153,7 @@ Frozen-surface change on the alpha line (ADR-0127, #920): element's
 `IslandOptions.strategy` was renamed to `hydrate` in 0.42.0-alpha.16,
 matching the app-side `defineIslandConfig({ hydrate })` name; the old name
 was deleted with no alias. Migration: rename the option at each
-`defineIsland()` call site (`strategy` → `hydrate`).
+island-definition call site (`strategy` → `hydrate`).
 
 Frozen wording narrowed on the alpha line (ADR-0128, #960): "`tagName` route
 elements" now means two distinct things by route kind. On a route whose
@@ -195,6 +197,14 @@ unaffected: their `tagName` export remains the registration tag.
 | ----------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `isDangerousKey`, `injectPropsSafe`, `DANGEROUS_KEYS` | experimental (#1214) | The one canonical prototype-pollution guard shared by page projection (SPA bootstrap, `projectPageProps`) and adapter codegen, which serializes `DANGEROUS_KEYS` into generated server runtimes at build time                                                                                                                           | May move to a dedicated security subpath at the B1.2 surface freeze  |
 | `element`, `property`                                 | experimental (#1209) | Compile-time-only decorator intrinsics: the compiler admits them by binding provenance (a runtime named import from `@openelement/element`) and erases them from generated code; evaluated without the compiler (unit tests, config evaluation) they are inert no-ops, carrying no runtime semantics and acting as no second recognizer | May move to a dedicated authoring subpath at the B1.2 surface freeze |
+
+v0.44 (ADR-0143) also re-shapes existing entries without adding names:
+`definePage` takes the compiled page element class as its first argument
+(`definePage(CompiledPageClass, { route?, head?, renderIntent?, props?, error? })`)
+— the object-descriptor form with a `render` function field is removed, and
+the render-scope loader/action data hooks with it; island authoring is a
+single-module compiled class plus the scanned `defineIslandConfig` export.
+The full mapping is in [`v0.44.0-MIGRATION.md`](./v0.44.0-MIGRATION.md).
 
 ## Removed from current graph
 

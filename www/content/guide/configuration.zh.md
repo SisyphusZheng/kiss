@@ -88,33 +88,47 @@ export default defineConfig({
 
 ### app/routes/blog/[slug].tsx —— 使用模式（#924）
 
+```tsx
+// app/components/page-blog-post.tsx —— 由 open:compiled-element transform 编译
+import { element, OpenElement, property } from '@openelement/element';
+
+@element('blog-post-page', { root: 'shadow-open' })
+export default class BlogPostPage extends OpenElement {
+  @property({ reflect: false, attribute: false })
+  title = '';
+
+  @property({ reflect: false, attribute: false })
+  html = '';
+
+  render() {
+    return (
+      <>
+        <h1>{this.title}</h1>
+        {/* post.html is markdown authored in this repo — explicit trust boundary */}
+        <article class='post-body' innerHTML={this.html} trustedHtml></article>
+      </>
+    );
+  }
+}
+```
+
 ```ts
-import { defineElement, definePage, notFound } from '@openelement/app';
+// app/routes/blog/[slug].tsx —— scanner 发现的路由模块
+import { definePage, notFound } from '@openelement/app';
 import { getPostBySlug, posts } from '@openelement/generated/blog-data';
+import BlogPostPage from '../../components/page-blog-post.tsx';
 
 export function getStaticPaths(): Array<Record<string, string>> {
   return posts.map((post) => ({ slug: post.slug }));
 }
 
-defineElement('blog-post-page', {
-  render(props: { slug: string }) {
-    const post = getPostBySlug(props.slug);
-    if (!post) notFound(`Post not found: ${props.slug}`);
-    return (
-      <>
-        <h1>{post.frontmatter.title}</h1>
-        {/* post.html is markdown authored in this repo — explicit trust boundary */}
-        <article class='post-body' innerHTML={post.html} trustedHtml></article>
-      </>
-    );
-  },
-});
-
-export default definePage({
+export default definePage(BlogPostPage, {
   route: { path: '/blog/:slug' },
   renderIntent: { mode: 'static' },
-  render({ params }) {
-    return <blog-post-page slug={params.slug} />;
+  props({ params }) {
+    const post = getPostBySlug(params.slug);
+    if (!post) notFound(`Post not found: ${params.slug}`);
+    return { title: post.frontmatter.title, html: post.html };
   },
 });
 ```
@@ -196,21 +210,30 @@ export default defineConfig({
 
 ## mode: 'spa'
 
-`openPipeline({ mode: 'spa' })` 产出纯客户端应用（无 SSR）。用 `@openelement/app` 的 `defineApp({ mode: 'spa', routes })` 启动：每条路由是 `{ path, tagName, loader?, action?, guard? }`，路径支持 `:id` 参数与 `:path{.+}` 多段 catch-all（Hono 风格）。`mount(selector)` 挂载 client router；页面用 `useLoaderData()` / `useActionData()` 读取数据。
+`openPipeline({ mode: 'spa' })` 产出纯客户端应用（无 SSR）。用 `@openelement/app` 的 `defineApp({ mode: 'spa', routes })` 启动：每条路由是 `{ path, tagName, loader?, action?, guard? }`，路径支持 `:id` 参数与 `:path{.+}` 多段 catch-all（Hono 风格）。`mount(selector)` 挂载 client router。页面类是编译的 `@element` 类，loader 数据由其 `@property` 字段承载；bootstrap 需导入每个页面模块，使其类在 `mount` 前完成注册。
 
 ### app/main.ts —— SPA 启动
 
-```ts
-import { defineApp, definePage, useLoaderData } from '@openelement/app';
+```tsx
+// app/components/page-home.tsx —— 由 open:compiled-element transform 编译
+import { element, OpenElement, property } from '@openelement/element';
 
-const HomePage = definePage({
+@element('page-home', { root: 'shadow-open' })
+export default class HomePage extends OpenElement {
+  @property({ reflect: false, attribute: false })
+  now = '';
+
   render() {
-    const data = useLoaderData() as { now: string } | undefined;
-    return <main><h1>home</h1><p>{data?.now ?? ''}</p></main>;
-  },
-});
-customElements.define('page-home', HomePage);
-// register 'page-doc' the same way
+    return <main><h1>home</h1><p>{this.now}</p></main>;
+  }
+}
+```
+
+```ts
+// app/main.ts
+import { defineApp } from '@openelement/app';
+import './components/page-home.tsx';
+// 'page-doc' 以同样方式导入
 
 const app = defineApp({
   mode: 'spa',
@@ -228,7 +251,7 @@ const app = defineApp({
 app.mount('#app');
 ```
 
-SPA 链上 `redirect()`/`notFound()` 仍然有效：redirect 交给 client router 导航，notFound 走页面 error 定义；其余 throw 会被规整为 action 数据。
+SPA 链上 `redirect()`/`notFound()` 仍然有效：redirect 交给 client router 导航，notFound 走页面 error 投影器；其余 throw 会被规整为 action 数据。
 
 ## SPA 与 SSG 两链
 

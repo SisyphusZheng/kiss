@@ -18,7 +18,7 @@ CSS 自定义属性会穿透 shadow 边界继承：在 `:root` 上定义的 `--t
 
 ## 两种受支持的写法
 
-其一：scoped `StyleSheet`——`const s = new StyleSheet(); s.replaceSync(...);` 再通过 `defineElement({ styles: [s] })` 或 `definePage(component)` 传入，使其进入 shadow root。其二：在渲染标记中内联 `<style>` 标签。文档级 `<link rel="stylesheet">` 与 head 里的 `<style>` 不会作用于 shadow 内容。
+其一：scoped `StyleSheet`——`const s = new StyleSheet(); s.replaceSync(...);` 再赋值为组件的 `static styles`，使其进入 shadow root（shadow root 上走 adoptedStyleSheets，light root 上落入 document head）。其二：在 `:root` 上定义 CSS 自定义属性——它们会穿透 shadow 边界继承。文档级 `<link rel="stylesheet">` 与 head 里的 `<style>` 不会作用于 shadow 内容；编译模板中的裸 `<style>` 标签会被拒绝。
 
 ### 文档全局样式表（不会生效）
 
@@ -29,9 +29,9 @@ CSS 自定义属性会穿透 shadow 边界继承：在 `:root` 上定义的 `--t
 
 ### Scoped StyleSheet（生效）
 
-```ts
+```tsx
+// app/components/page-example.styles.ts — 样式表放在编译组件模块之外
 import { StyleSheet } from '@openelement/element';
-import { defineElement } from '@openelement/app';
 
 const styles = new StyleSheet();
 styles.replaceSync(`
@@ -44,12 +44,22 @@ styles.replaceSync(`
   }
 `);
 
-defineElement('page-example', {
-  styles,
+export default styles;
+```
+
+```tsx
+// app/components/page-example.tsx — 由 open:compiled-element transform 编译
+import { element, OpenElement } from '@openelement/element';
+import styles from './page-example.styles.ts';
+
+@element('page-example', { root: 'shadow-open' })
+export default class ExamplePage extends OpenElement {
+  static override styles = styles;
+
   render() {
     return <section class='card'>Themed through custom properties.</section>;
-  },
-});
+  }
+}
 ```
 
 ## 自定义属性实战

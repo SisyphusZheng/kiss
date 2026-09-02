@@ -16,17 +16,18 @@ helpers for adapters live behind `@openelement/element/build-utils`.
 | Pages, routes, loaders, actions and SPA bootstrap | `@openelement/app`                 |
 | Vite, content, SSG and Nitro build integration    | `@openelement/adapter-vite`        |
 
-`OpenElement` detects a pre-existing Declarative Shadow DOM root and activates
-its markers in place. When no server-rendered root exists, the same authoring
-contract renders through the client DOM path. Authors do not select separate
+`OpenElement` detects a pre-existing Declarative Shadow DOM root and the
+compiled claim artifact takes over the existing DOM in place. When no
+server-rendered root exists, the same authoring contract renders through the
+client DOM path. Authors do not select separate
 static, hydrate, or CSR implementation packages.
 
 ## Boundary rules
 
 - Declarative Shadow DOM is the static-first default.
 - Client JavaScript is emitted only for declared islands.
-- Marker activation, event hydration, binding scopes and DOM rendering are
-  internal Element implementation details.
+- Part/Region claim, event binding and DOM rendering are internal Element
+  implementation details of the compiled pipeline.
 - Starter, docs, dogfood and application code may import only supported product
   entries.
 - Third-party custom elements are hydrated only according to validated package
@@ -34,11 +35,10 @@ static, hydrate, or CSR implementation packages.
 - `render()` (and nested component branches reachable from it) must be a pure
   function of declared props, attributes, and declared signals — no
   `Date.now()`/`Math.random()`/async-init state in the render path
-  (ADR-0125). The SSR and hydration passes each construct their own
+  (ADR-0125). The SSR and claim passes each construct their own
   component instances; the DSD DOM serializes the SSR result, so render
-  impurity is the one thing the mismatch guard cannot reconcile. Violations
-  degrade the shadow root to a client-side re-render (correct, but hydration
-  is lost for that component).
+  impurity surfaces as a structured claim mismatch
+  (`PartProgramClaimError`), attributed to the exact owning root or Region.
 
 ## Island scheduling events
 
@@ -55,11 +55,6 @@ morph-replaced island is a new element and receives a fresh observer, so
   `/@fs/` absolute-path specifier convention. That branch is covered by unit
   tests (`module-specifier.test.ts`) but has not been verified on a real
   Windows build; the regular root-relative path is exercised on every change.
-- `For` list tokens carry no per-item identity: objects without an `id`/`key`
-  field are replaced in place at the same position rather than matched and
-  moved. This is an accepted limitation of the current binding. (The token
-  wire signature itself has switched to a length-prefixed encoding; parsers
-  must not assume the old fixed-width format.)
 - `reflect` attribute mirroring normalizes values at the boundary: `NaN`
   becomes `0`, `-0` becomes `0`, objects are mirrored as `String(value)`, a
   failed `Number` parse falls back to `0`, and `removeAttribute` restores the

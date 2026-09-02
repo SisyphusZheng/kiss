@@ -1,22 +1,44 @@
 # @openelement/app
 
-JSX-first application authoring API for openElement.
+Application authoring API for openElement: pages, routes, loaders, actions,
+islands and the SPA bootstrap.
 
-> 0.42.0 stable surface (frozen under ADR-0122):
-> Framework product. Use this package for first-run pages,
-> layouts, islands, route metadata, and the Vite facade.
+> Stable surface frozen under ADR-0122 (request-time application loop);
+> v0.44 re-compiles page authoring onto compiled element classes (ADR-0143).
 
-Use the package root in route, island, and component modules:
+Use the package root in route, island, and component modules. A route module
+default-exports the compiled page class wrapped in `definePage()`:
 
 ```tsx
-import { definePage } from '@openelement/app';
+// app/components/page-home.tsx — compiled by the open:compiled-element transform
+import { element, OpenElement, property } from '@openelement/element';
 
-export default definePage({
-  route: { path: '/' },
-  head: { title: 'Home' },
+@element('home-page', { root: 'shadow-open' })
+export default class HomePage extends OpenElement {
+  @property({ reflect: false, attribute: false })
+  heading = '';
+
   render() {
-    return <main>Hello openElement</main>;
-  },
+    return (
+      <main>
+        <h1>{this.heading}</h1>
+      </main>
+    );
+  }
+}
+```
+
+```ts
+// app/routes/index.tsx — the route module the scanner discovers
+import { definePage } from '@openelement/app';
+import HomePage from '../components/page-home.tsx';
+
+export async function loader() {
+  return { heading: 'Hello openElement' };
+}
+
+export default definePage(HomePage, {
+  head: { title: 'Home' },
 });
 ```
 
@@ -42,13 +64,21 @@ export default defineConfig({
 ## Authoring API
 
 ```tsx
-import { defineElement, defineIsland, definePage } from '@openelement/app';
+import { defineIslandConfig, definePage } from '@openelement/app';
 ```
 
-- `definePage({ route, head, renderIntent, render, error })` creates a file-route page from a canonical object descriptor.
-- `defineIslandConfig({ ssr, dsd, hydrate })` defines static island metadata for adapter scanning.
-- `defineIsland(tagName, render, { hydrate, dsd, ssr })` creates a browser-upgraded island.
-- `defineElement(tagName, render)` creates a DSD component, including layout elements.
+- `definePage(CompiledPageClass, { route?, head?, renderIntent?, props?, error? })`
+  attaches the page descriptor to a compiled page element class. The class
+  owns the render program; the descriptor carries metadata plus the optional
+  `props`/`error` projectors (pure context → props mappings) — there is no
+  render function field and no render-scope data hooks.
+- `defineIslandConfig({ ssr, dsd, hydrate })` defines static island metadata
+  for adapter scanning; the island itself is a single-module compiled
+  `@element` class.
+- `defineApp({ mode: 'spa', routes })` bootstraps the client-only SPA chain
+  (`@openelement/app/spa`); each route is `{ path, tagName, loader?, action?, guard? }`.
+- `fail(status, data)` / `redirect(location)` / `notFound(message)` implement
+  the ADR-0120 action protocol; `isActionFailure()` is the duck-typed guard.
 
 SPA action failures expose `{ error: 'Action failed' }` to page renderers. Raw
 exceptions are logged only in development. Route matching preserves declaration

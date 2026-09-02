@@ -18,7 +18,7 @@ Class, id, and tag selectors from a document stylesheet never match inside the s
 
 ## The two supported patterns
 
-One: a scoped `StyleSheet` — `const s = new StyleSheet(); s.replaceSync(...);` and pass it in `defineElement({ styles: [s] })` or `definePage(component)` so it lands in the shadow root. Two: an inline `<style>` tag inside the rendered markup. Document-level `<link rel="stylesheet">` and `<style>` in the head do not apply to shadow content.
+One: a scoped `StyleSheet` — `const s = new StyleSheet(); s.replaceSync(...);` and assign it as the component's `static styles` so it lands in the shadow root (adoptedStyleSheets on shadow roots, a document-head sink on light roots). Two: CSS custom properties defined on `:root`, which inherit through the shadow boundary. Document-level `<link rel="stylesheet">` and `<style>` in the head do not apply to shadow content, and raw-text `<style>` tags are rejected from compiled templates.
 
 ### A document-level stylesheet (does not apply)
 
@@ -29,9 +29,9 @@ One: a scoped `StyleSheet` — `const s = new StyleSheet(); s.replaceSync(...);`
 
 ### A scoped StyleSheet (applies)
 
-```ts
+```tsx
+// app/components/page-example.styles.ts — sheets live outside compiled modules
 import { StyleSheet } from '@openelement/element';
-import { defineElement } from '@openelement/app';
 
 const styles = new StyleSheet();
 styles.replaceSync(`
@@ -44,12 +44,22 @@ styles.replaceSync(`
   }
 `);
 
-defineElement('page-example', {
-  styles,
+export default styles;
+```
+
+```tsx
+// app/components/page-example.tsx — compiled by the open:compiled-element transform
+import { element, OpenElement } from '@openelement/element';
+import styles from './page-example.styles.ts';
+
+@element('page-example', { root: 'shadow-open' })
+export default class ExamplePage extends OpenElement {
+  static override styles = styles;
+
   render() {
     return <section class='card'>Themed through custom properties.</section>;
-  },
-});
+  }
+}
 ```
 
 ## Custom properties in practice

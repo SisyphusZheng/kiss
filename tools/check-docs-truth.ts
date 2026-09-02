@@ -191,10 +191,12 @@ const STALE_CURRENT_CONTRACT: Array<{ re: RegExp; name: string }> = [
 
 const CURRENT_DOC_ALLOWED = [
   'migration',
+  'MIGRATION',
   'changelog',
   'release/',
   'legacy',
   'archive',
+  'audit/',
   'sop/',
   'adr/',
   'conversation/',
@@ -215,6 +217,61 @@ const CURRENT_DOC_ALLOWED = [
   'docs/status/',
 ];
 
+/**
+ * Removed v0.43 authoring vocabulary (A10.10/#1218). These names must not
+ * appear in current documentation surfaces: the v0.44 authoring model is the
+ * compiled `@element`/`@property` class (migration mapping lives in the
+ * allow-listed docs/current/v0.44.0-MIGRATION.md). Explicitly historical
+ * records (release/, adr/, audit/, evidence/, migration guides) are
+ * allow-listed above.
+ */
+const REMOVED_AUTHORING: Array<{ re: RegExp; name: string }> = [
+  { re: /\bdefineElement\b/u, name: 'removed defineElement authoring helper' },
+  { re: /\bdefineIsland\(/u, name: 'removed defineIsland() authoring helper' },
+  { re: /\buseLoaderData\b/u, name: 'removed render-scope useLoaderData() hook' },
+  { re: /\buseActionData\b/u, name: 'removed render-scope useActionData() hook' },
+  { re: /\bbindSsrProps\b/u, name: 'removed bindSsrProps() SSR-props helper' },
+  { re: /\bregisterSignal\b/u, name: 'removed registerSignal() marker API' },
+  { re: /`<For\s|`For`/u, name: 'removed For control-flow factory' },
+];
+const REMOVED_VNODE = { re: /\bVNode\b/u, name: 'removed VNode runtime vocabulary' };
+
+/**
+ * The removed-authoring scan covers the current-truth docs set plus the
+ * website content collections and package/root READMEs. www/app sources are
+ * deliberately out of scope here (they carry their own www gate).
+ */
+export function removedAuthoringApplies(file: string): boolean {
+  return file.startsWith('docs/') ||
+    file.startsWith('www/content/guide/') ||
+    file.startsWith('www/content/architecture/') ||
+    /^packages\/[^/]+\/README\.md$/u.test(file) ||
+    file === 'README.md' ||
+    file === 'README.zh.md';
+}
+
+/**
+ * docs/current contract documents may name the removed renderer only inside
+ * negated contract statements ("there is no VNode … fallback"); website
+ * content and READMEs have no legitimate reason to name it at all.
+ */
+export function removedVnodeApplies(file: string): boolean {
+  return removedAuthoringApplies(file) && !file.startsWith('docs/');
+}
+
+/** Names of removed-vocabulary rules matched by `text` for `file`. */
+export function findRemovedAuthoringVocabulary(file: string, text: string): string[] {
+  if (!removedAuthoringApplies(file)) return [];
+  const matches: string[] = [];
+  for (const { re, name } of REMOVED_AUTHORING) {
+    if (re.test(text)) matches.push(name);
+  }
+  if (removedVnodeApplies(file) && REMOVED_VNODE.re.test(text)) {
+    matches.push(REMOVED_VNODE.name);
+  }
+  return matches;
+}
+
 function legacyCss(line: string): boolean {
   return /grid-template|repeat\(.*,\s*\d/.test(line);
 }
@@ -229,10 +286,20 @@ const currentCheck: DocsTruthCheck = {
         return;
       }
       const text = await Deno.readTextFile(file);
+      const removedVocab = removedAuthoringApplies(file);
+      const removedVnode = removedVnodeApplies(file);
       for (const [index, line] of text.split('\n').entries()) {
         if (legacyCss(line)) continue;
         for (const { re, name } of LEGACY) {
           if (re.test(line)) issues.push({ file, line: index + 1, text: name });
+        }
+        if (removedVocab) {
+          for (const { re, name } of REMOVED_AUTHORING) {
+            if (re.test(line)) issues.push({ file, line: index + 1, text: name });
+          }
+          if (removedVnode && REMOVED_VNODE.re.test(line)) {
+            issues.push({ file, line: index + 1, text: REMOVED_VNODE.name });
+          }
         }
         if (file.startsWith('docs/current/')) {
           for (const { re, name } of STALE_CURRENT_CONTRACT) {
@@ -242,7 +309,14 @@ const currentCheck: DocsTruthCheck = {
       }
     }
 
-    for (const dir of ['www/app/routes', 'docs']) {
+    for (
+      const dir of [
+        'www/app/routes',
+        'docs',
+        'www/content/guide',
+        'www/content/architecture',
+      ]
+    ) {
       for await (
         const { path: file } of walk(dir, {
           includeDirs: false,
