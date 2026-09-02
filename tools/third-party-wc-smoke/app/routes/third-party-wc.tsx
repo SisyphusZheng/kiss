@@ -7,5 +7,5 @@ export default definePage(ThirdPartyWcPage, {
     title: 'alpha3 Web Components interop',
     description: 'Lit, Shoelace, and Material Web Components inside openElement',
   },
-  renderIntent: { mode: 'static', revalidate: false },
+  renderIntent: { mode: 'static' },
 });

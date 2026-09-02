@@ -1,19 +1,13 @@
 # ISR KV Adapter — self-build contract (multi-instance / edge)
 
-> Status: **dormant experimental design note.** ISR is not wired into the
-> current request-time server entry and is not part of the 0.43.x public
-> runtime contract. No delivery version is assigned. The in-box
-> `MemoryIsrCache` is intentionally single-instance only.
->
-> **Not importable on the current line:** the ISR runtime named below
-> (`renderIsrResponse`, `findIsrManifestEntry`, `IsrRuntimeCache`,
-> `MemoryIsrCache`, `isIsrRouteConfig`) lives in
-> `packages/element/src/internal/` and is **not** forwarded by any public
-> export entry of `@openelement/element`, so application
-> code cannot import it. Only the `IsrCacheEntry` / `IsrCacheResult` /
-> `CacheEntry` **types** are public (`@experimental`). The runtime is
-> not scheduled for exposure. Treat the `renderIsrResponse` wiring below as
-> design exploration, not a supported how-to or future-version promise.
+> Status: **SUPERSEDED — removed in v0.44** (issue #1217, ADR-0151 release
+> train). ISR was decided-removed: the `IsrCacheEntry` / `IsrCacheResult` /
+> `CacheEntry` / `CacheAdapter` types, `createIsrCacheKey`, the ISR modules
+> under `packages/element/src/internal/`, and `isr-manifest.json` generation
+> no longer exist. This document is retained as a historical design note only
+> — nothing named here is importable or planned. Any future ISR/cache
+> capability must be re-earned from real evidence under the follow-up feature
+> issue (#1221), with no commitment to the API sketched below.
 
 ## Why a KV adapter is required
 
@@ -137,5 +131,6 @@ Two responsibilities stay with the host, not the runtime:
 
 Treat a KV adapter as a **deployment prerequisite** for ISR, not an optional
 extra: without `purgeTag`, a published action can leave every edge node serving
-stale HTML indefinitely. The current public runtime keeps ISR inert; do not
-infer production support from these internal types or examples.
+stale HTML indefinitely. The v0.44 runtime ships no ISR at all (the surface
+was removed, #1217); this closing note survives only as design guidance for
+any future evidence-gated proposal (#1221).

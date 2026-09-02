@@ -337,8 +337,9 @@ async function buildSSG(
         chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KB,
         rollupOptions: {
           input: { entry: VIRTUAL_SSG_ENTRY_ID },
-          // v0.21: Suppress IMPORT_IS_UNDEFINED for revalidate; the generated
-          // code uses typeof check which correctly handles undefined exports.
+          // Suppress IMPORT_IS_UNDEFINED for optional route-module exports;
+          // the generated code uses typeof checks which correctly handle
+          // undefined exports.
           onwarn(warning, warn) {
             if (warning.code === 'IMPORT_IS_UNDEFINED') return;
             warn(warning);

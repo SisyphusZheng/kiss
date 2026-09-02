@@ -112,7 +112,7 @@ defineElement('blog-post-page', {
 
 export default definePage({
   route: { path: '/blog/:slug' },
-  renderIntent: { mode: 'static', revalidate: false },
+  renderIntent: { mode: 'static' },
   render({ params }) {
     return <blog-post-page slug={params.slug} />;
   },

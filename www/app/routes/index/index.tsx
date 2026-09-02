@@ -96,7 +96,7 @@ const outputs = [
     className: 'output-row active',
     name: 'NODE',
     description:
-      'Nitro server output. ISR manifests are forward-compat only — active caching is outside the current contract.',
+      'Nitro server output. Static-first delivery with a generated request-time entry for dynamic routes.',
   },
   {
     key: 'workers',

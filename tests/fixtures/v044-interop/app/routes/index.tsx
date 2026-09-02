@@ -6,7 +6,7 @@ export default definePage({
   head: {
     title: 'OpenElement v0.44 interoperability corpus',
   },
-  renderIntent: { mode: 'static', streaming: 'auto', revalidate: false },
+  renderIntent: { mode: 'static', streaming: 'auto' },
   render() {
     return <v044-interop-fixture />;
   },

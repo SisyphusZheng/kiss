@@ -48,8 +48,9 @@ const CONTENT_HASHED_ASSET_RE = /(?:^|\/)assets\/[^/]*-[0-9a-zA-Z_-]{8,}\.[^/]+$
 
 /**
  * Cache-Control baseline for static output (#1039): content-hashed build
- * assets are immutable; HTML is the deployment boundary and must revalidate
- * so a fresh deploy is picked up. Everything else stays unpinned.
+ * assets are immutable; HTML is the deployment boundary and must be rechecked
+ * against the origin so a fresh deploy is picked up. Everything else stays
+ * unpinned.
  *
  * Exported for the serve.mjs parity pin: the generated standalone server
  * inlines these rules (renderStandaloneServerModule, #1058) and

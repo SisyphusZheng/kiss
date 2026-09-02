@@ -20,11 +20,6 @@ export function routeMetaExpr(varName: string): string {
   return `__routeMeta(${varName})`;
 }
 
-export function routeRevalidateExpr(varName: string): string {
-  const pageDef = pageDefinitionExpr(varName);
-  return `(${pageDef}.renderIntent?.revalidate ?? false)`;
-}
-
 /**
  * Renderer scope matching, case-sensitive (URL paths are case-sensitive and
  * Hono routes match case-sensitively). Used at codegen time by

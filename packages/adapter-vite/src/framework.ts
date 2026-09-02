@@ -8,7 +8,6 @@ export type {
   CompatibilityTier,
   ComponentLayer,
   HydrationStrategy,
-  IsrManifestEntry,
   RenderError,
   RouteEntry,
   SpecialFileType,

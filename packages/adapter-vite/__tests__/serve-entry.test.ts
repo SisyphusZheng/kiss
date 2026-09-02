@@ -103,8 +103,8 @@ Deno.test({
       assertStringIncludes(await home.text(), 'request-time fixture home');
 
       // #1058: Cache-Control parity with internal/static-serve.ts — HTML is
-      // the deployment boundary and must revalidate; content-hashed build
-      // assets are immutable.
+      // the deployment boundary and must be rechecked against the origin;
+      // content-hashed build assets are immutable.
       assertEquals(home.headers.get('cache-control'), 'no-cache');
       let hashedAsset: string | undefined;
       for await (const entry of Deno.readDir(join(fixtureDir, 'dist/assets'))) {

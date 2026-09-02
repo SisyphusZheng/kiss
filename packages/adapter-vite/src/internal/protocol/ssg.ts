@@ -309,12 +309,6 @@ export interface RouteInfoEntry {
   module?: unknown;
   isDynamic: boolean;
   paramNames: string[];
-  /**
-   * ISR revalidate window in seconds, or `false` when the route declared no
-   * revalidate intent. The emitted entry code uses `?? false`, so the value
-   * is never a bare `undefined` at runtime.
-   */
-  revalidate?: number | false;
   /** Rendering mode declared via renderIntent.mode ("static" when unset; the former "auto" alias was removed in alpha.13, #609). */
   rendering?: string;
   /** True when the route module exports an action (request-time form POST). */

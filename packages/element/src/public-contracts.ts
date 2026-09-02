@@ -21,7 +21,6 @@ export type {
   ComponentLayer,
   FrameworkOptions,
   HydrationStrategy,
-  IsrManifestEntry,
   LocalePath,
   Middleware,
   RouteEntry,
@@ -29,7 +28,6 @@ export type {
 } from './internal/protocol/framework.ts';
 export { HYDRATION_STRATEGIES } from './internal/protocol/framework.ts';
 export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';
-export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';
 export type {
   OpenElementAttribute,
   OpenElementCssPart,

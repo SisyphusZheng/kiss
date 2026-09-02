@@ -11,7 +11,6 @@
 
 export { formatJson } from './public-build-runtime.ts';
 export { normalizeSeparators, pathToTagName } from './public-build-runtime.ts';
-export { createIsrCacheKey } from './public-build-runtime.ts';
 export { SsrRenderError } from './public-build-runtime.ts';
 export { transformIslandSource } from './public-build-runtime.ts';
 export {

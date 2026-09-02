@@ -111,7 +111,7 @@ Deno.test('definePage() attaches the descriptor to the compiled class and return
       meta: [{ name: 'robots', content: 'index' }],
       dangerouslyHeadFragments: ['<link rel="canonical" href="https://example.test/">'],
     },
-    renderIntent: { mode: 'static', revalidate: 60 },
+    renderIntent: { mode: 'static' },
     props,
     error,
   });
@@ -127,7 +127,7 @@ Deno.test('definePage() attaches the descriptor to the compiled class and return
     meta: [{ name: 'robots', content: 'index' }],
     dangerouslyHeadFragments: ['<link rel="canonical" href="https://example.test/">'],
   });
-  assertEquals(descriptor.renderIntent, { mode: 'static', revalidate: 60 });
+  assertEquals(descriptor.renderIntent, { mode: 'static' });
   assertEquals(descriptor.props, props);
   assertEquals(descriptor.error, error);
 });
@@ -138,7 +138,7 @@ Deno.test('definePage(Class) without a descriptor defaults renderIntent to stati
   const descriptor = (Page as unknown as { openElementPage: Record<string, unknown> })
     .openElementPage;
   assertEquals(descriptor.kind, 'page');
-  assertEquals(descriptor.renderIntent, { mode: 'static', revalidate: false });
+  assertEquals(descriptor.renderIntent, { mode: 'static' });
   assertEquals(descriptor.props, undefined);
   assertEquals(descriptor.error, undefined);
 });

@@ -6,12 +6,9 @@
  * concrete server engines outside this package.
  */
 
-import type { CacheAdapter } from './isr.ts';
-
 export interface RuntimeContext<Env extends Record<string, unknown> = Record<string, unknown>> {
   env?: Env;
   platform?: unknown;
-  cache?: CacheAdapter<Response>;
   params?: Record<string, string>;
 }
 

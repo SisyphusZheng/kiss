@@ -79,7 +79,7 @@ promise and are not application-authoring surface.
 -->
 
 - `@openelement/element/build-utils` (alpha.17): build-time helpers
-  (`transformIslandSource`, `createIsrCacheKey`, `formatJson`,
+  (`transformIslandSource`, `formatJson`,
   `pathToTagName`, `normalizeSeparators`, `SsrRenderError`,
   `createRuntimeAdapter` and the runtime handler types) for build adapters.
   They were removed from the element root export; application code must not
@@ -164,12 +164,11 @@ unaffected: their `tagName` export remains the registration tag.
 
 - `definePage({ renderIntent: { mode } })`: `'static'` (default, prerendered) / `'dynamic'` (per-request; the `'auto'` alias was removed in alpha.13, #609)
   rendering modes; `'dynamic'` routes render per request through the
-  generated `dist/server/index.js` (0.42.0-alpha.1). `renderIntent.revalidate`
-  declares the ISR revalidate window in seconds for static routes — on the
-  0.42 line the value is **recorded in the build manifest but inert** (no ISR
-  caching is wired into the request-time server entry, so the route behaves
-  like a plain dynamic/static route). No public ISR delivery version is
-  assigned.
+  generated `dist/server/index.js` (0.42.0-alpha.1). The former
+  `renderIntent.revalidate` field and all ISR semantics were removed in v0.44
+  (issue #1217): no ISR manifest is emitted and no route-level cache
+  revalidation exists. Any future ISR capability must be re-earned from real
+  evidence (#1221).
 - Route-module `loader`/`action`/`actions` exports with the ADR-0120
   protocol: `fail(status, data)` 422 re-render, 303 PRG, named actions via
   `formaction='?/name'` (0.42.0-alpha.2).

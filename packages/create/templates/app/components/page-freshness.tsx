@@ -1,10 +1,8 @@
 /**
- * /freshness page element — records ISR/cache intent with a 300 second
- * revalidate window. In 0.44 the revalidate value is a forward-compatible
- * record only — no cache is wired to it (ISR is not wired into the 0.44
- * request-time server entry), so this page renders statically at build time
- * like any other static route. Light root: the page rules live in the global
- * baseline (vite.config.ts).
+ * /freshness page element — prerendered statically at build time like any
+ * other static route. v0.44 ships no route-level cache revalidation
+ * semantics (ISR was removed, see issue #1217). Light root: the page rules
+ * live in the global baseline (vite.config.ts).
  */
 import { OpenElement } from '@openelement/element';
 
@@ -20,9 +18,8 @@ export default class FreshnessPage extends OpenElement {
       <main>
         <h1>Freshness proof</h1>
         <p>
-          This page records ISR/cache intent with a 300 second revalidate window. In 0.44 the
-          revalidate value is a forward-compatible record only — no cache is wired to it — so this
-          page renders statically at build time like any other static route.
+          This page is prerendered statically at build time like any other static route. The
+          framework ships no route-level cache revalidation in v0.44.
         </p>
       </main>
     );
