@@ -13,7 +13,10 @@
 import { assertEquals } from '@std/assert';
 import { createServer } from 'node:http';
 import process from 'node:process';
-import { createStartRequestHandler } from '../src/internal/static-serve.ts';
+import {
+  createStartRequestHandler,
+  type StartRequestHandlerOptions,
+} from '../src/internal/static-serve.ts';
 
 async function withServer(
   handler: ReturnType<typeof createStartRequestHandler>,
@@ -31,7 +34,7 @@ async function withServer(
 }
 
 async function assertContained500(
-  dispatch: (...args: unknown[]) => Promise<Response>,
+  dispatch: NonNullable<StartRequestHandlerOptions['dispatch']>,
 ): Promise<void> {
   const handler = createStartRequestHandler({
     distDir: '/nonexistent-dist',
@@ -40,8 +43,7 @@ async function assertContained500(
     host: '127.0.0.1',
     port: 0,
     trustProxy: false,
-    // deno-lint-ignore no-explicit-any
-    dispatch: dispatch as any,
+    dispatch,
   });
   const unhandled: unknown[] = [];
   const onUnhandled = (reason: unknown) => {
