@@ -237,14 +237,26 @@ const REMOVED_AUTHORING: Array<{ re: RegExp; name: string }> = [
 const REMOVED_VNODE = { re: /\bVNode\b/u, name: 'removed VNode runtime vocabulary' };
 
 /**
- * The removed-authoring scan covers the current-truth docs set plus the
- * website content collections and package/root READMEs. www/app sources are
- * deliberately out of scope here (they carry their own www gate).
+ * www/app hand-authored code surfaces (#1260): route data and component code
+ * samples must not present removed v0.43 vocabulary as current. Generated
+ * content-data mirrors (www/app/data/_generated-*) are excluded — they are
+ * build artifacts of the gated www/content sources and carry allow-listed
+ * migration history verbatim.
+ */
+function isWwwAppCodeSurface(file: string): boolean {
+  return file.startsWith('www/app/') && !file.includes('/data/_generated-');
+}
+
+/**
+ * The removed-authoring scan covers the current-truth docs set, the website
+ * content collections, hand-authored www/app code surfaces and package/root
+ * READMEs.
  */
 export function removedAuthoringApplies(file: string): boolean {
   return file.startsWith('docs/') ||
     file.startsWith('www/content/guide/') ||
     file.startsWith('www/content/architecture/') ||
+    isWwwAppCodeSurface(file) ||
     /^packages\/[^/]+\/README\.md$/u.test(file) ||
     file === 'README.md' ||
     file === 'README.zh.md';
@@ -285,6 +297,9 @@ const currentCheck: DocsTruthCheck = {
       if (!/\.(ts|tsx|md)$/.test(file) || CURRENT_DOC_ALLOWED.some((a) => file.includes(a))) {
         return;
       }
+      // Generated www/app content-data mirrors are build artifacts of the
+      // gated www/content sources; scan the sources, not the mirrors (#1260).
+      if (file.includes('www/app/data/_generated-')) return;
       const text = await Deno.readTextFile(file);
       const removedVocab = removedAuthoringApplies(file);
       const removedVnode = removedVnodeApplies(file);
@@ -311,7 +326,7 @@ const currentCheck: DocsTruthCheck = {
 
     for (
       const dir of [
-        'www/app/routes',
+        'www/app',
         'docs',
         'www/content/guide',
         'www/content/architecture',

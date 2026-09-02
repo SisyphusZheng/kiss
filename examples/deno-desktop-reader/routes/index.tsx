@@ -1,11 +1,10 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import type { ReaderProgress, ReaderSource } from '../app/types.ts';
 import { getBookDetails, listBooks, listSources, syncSource } from '../app/api.ts';
 import { navigate } from '../router.ts';
 import BookCard from '../components/BookCard.tsx';
 import type { LibraryBook } from '../app/types.ts';
-import { element, property } from '../compile-decorators.ts';
 
 export interface BookshelfData {
   books: LibraryBook[];

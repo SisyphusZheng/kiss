@@ -39,13 +39,13 @@ const packages: ApiPackage[] = [
     notes: {
       en: [
         'Start here for standalone element authoring.',
-        'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.',
-        'Keyed lists: `<For each={items} key={fn}>{(item) => ...}</For>` is exported from the root.',
+        'Author compiled elements as `@element`-decorated `OpenElement` classes with `@property` state; `StyleSheet` and signal helpers come from the same root.',
+        '@experimental additions: the `element`/`property` decorator intrinsics (#1209) and the dangerous-key guards `isDangerousKey`, `injectPropsSafe`, `DANGEROUS_KEYS` (#1214).',
       ],
       zh: [
         '独立的元素创作从这里开始。',
-        '直接使用 `defineElement`、`OpenElement`、`StyleSheet` 与 signal 辅助函数，无需引入 renderer 内部实现。',
-        '键控列表：`<For each={items} key={fn}>{(item) => ...}</For>` 从包根导出。',
+        '以 `@element` 装饰的 `OpenElement` 类和 `@property` 状态创作编译元素；`StyleSheet` 与 signal 辅助函数同出包根。',
+        '@experimental 新增：`element`/`property` 装饰器内在量（#1209）与危险键守卫 `isDangerousKey`、`injectPropsSafe`、`DANGEROUS_KEYS`（#1214）。',
       ],
     },
     kind: 'core',
@@ -62,11 +62,11 @@ const packages: ApiPackage[] = [
     internalExports: ['i18n'],
     notes: {
       en: [
-        'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
+        'Use `definePage`, `defineIslandConfig` and `defineApp` for application authoring.',
         'The router and request-driver implementation are internal product knowledge.',
       ],
       zh: [
-        '用 `definePage`、`defineIsland` 与 `defineApp` 进行应用创作。',
+        '用 `definePage`、`defineIslandConfig` 与 `defineApp` 进行应用创作。',
         'router 与请求驱动的实现属于产品内部知识。',
       ],
     },

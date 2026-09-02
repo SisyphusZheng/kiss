@@ -1,10 +1,9 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import { addSource, listSources, syncSource } from '../app/api.ts';
 import { loadSettings, saveSettings } from '../app/storage.ts';
 import { pdfMaxWidth } from '../app/pdf-measure.ts';
 import type { ReaderSettings, ReaderSource } from '../app/types.ts';
-import { element, property } from '../compile-decorators.ts';
 
 function applyTheme(theme: string): void {
   if (theme === 'dark' || theme === 'sepia') {

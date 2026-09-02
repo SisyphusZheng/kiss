@@ -1,9 +1,8 @@
 /** @jsxImportSource @openelement/element */
-import { OpenElement } from '@openelement/element';
+import { element, OpenElement, property } from '@openelement/element';
 import type { LibraryBook, ReaderNote, ReaderProgress } from '../../app/types.ts';
 import { getBookDetails, listBooks, saveNote } from '../../app/api.ts';
 import { navigate } from '../../router.ts';
-import { element, property } from '../../compile-decorators.ts';
 
 export interface ReadingData {
   book: LibraryBook | null;
