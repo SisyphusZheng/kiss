@@ -8,7 +8,9 @@ provenance, and version-exit checks.
 A release requires machine-readable evidence bound to the version, repository,
 candidate SHA, authoritative workflow and run, and explicit implementer,
 release-verifier, and thinker GO. Invalid, stale, mismatched, weakened, or
-non-unanimous evidence fails closed.
+non-unanimous evidence fails closed. The exact-SHA binding, immutable-evidence
+fields, three-role GO and NO-GO semantics behind this paragraph are specified
+in `docs/governance/RELEASE_CONTRACT.md`.
 
 Published packages use npm Trusted Publishing/OIDC and provenance. Protected branches
 and GitHub Rulesets hold merge authority. Tags, Releases, assets, attestations, and npm
