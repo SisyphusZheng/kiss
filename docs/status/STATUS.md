@@ -2,9 +2,9 @@
 
 Updated: 2026-09-02
 
-- Repository package line: `v0.43.3`
-- npm registry line: `v0.43.3` (dist-tag `latest`)
-- Latest landed train: `v0.43.3`
+- Repository package line: `v0.44.0-beta.1`
+- npm registry line: `v0.44.0-beta.1` (dist-tag `latest`)
+- Latest landed train: `v0.44.0-beta.1`
 - Active release target: `v0.44.0-beta.1`
 - Next planned train: `v0.44.0-beta.2`
 - Next public prerelease: `v0.44.0-beta.1`

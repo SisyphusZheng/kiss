@@ -13,9 +13,9 @@ Beta.1.
 
 - Repository package line: `v0.43.3`
 - npm registry line: `v0.43.3`
-- Current source package line: `v0.43.3`
-- Current npm registry line: `v0.43.3`
-- Latest landed train: `v0.43.3`
+- Current source package line: `v0.44.0-beta.1`
+- Current npm registry line: `v0.44.0-beta.1`
+- Latest landed train: `v0.44.0-beta.1`
 - Active internal target: Alpha.10 Truth Closure (internal, unpublished; umbrella #1155)
 - Active release target: `v0.44.0-beta.1`
 - Next planned public train: `v0.44.0-beta.1`

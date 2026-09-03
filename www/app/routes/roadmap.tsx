@@ -34,7 +34,7 @@ interface RoadmapListItem {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.43.3',
+      version: 'v0.44.0-beta.1',
       theme: 'renderer-owned light DOM hydration — robustness audit closure',
       copy:
         'The published stable line remains available while 0.44 is prerelease. It proves Universal WC SSR, in-place light-DOM activation and the application delivery baseline that the compiled architecture must preserve.',

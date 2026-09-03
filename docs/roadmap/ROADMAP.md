@@ -2,11 +2,11 @@
 
 OpenElement = Web Components-native fullstack application framework.
 
-Source package line: `v0.43.3`.
-npm registry line: `v0.43.3` (dist-tag `latest`).
+Source package line: `v0.44.0-beta.1`.
+npm registry line: `v0.44.0-beta.1` (dist-tag `latest`).
 `0.43.3` is both the current source package line and the npm `latest` line.
 Active execution target: `v0.44.0-beta.1`.
-Latest landed train: `v0.43.3`.
+Latest landed train: `v0.44.0-beta.1`.
 Next planned train: `v0.44.0-beta.2`.
 Next public prerelease: `v0.44.0-beta.1`.
 Long-term stable product target: `1.0.0` (unscheduled).

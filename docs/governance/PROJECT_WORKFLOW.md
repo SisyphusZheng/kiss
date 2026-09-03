@@ -13,8 +13,8 @@ the implementation, and the gates that prove the claim.
 
 Current execution anchor:
 
-- source package line `v0.43.3`;
-- npm registry line `v0.43.3` (published);
+- source package line `v0.44.0-beta.1`;
+- npm registry line `v0.44.0-beta.1` (published);
 - active target `v0.44.0-beta.1`;
 - current internal checkpoint: Alpha.10 (Truth Closure, unpublished; umbrella
   issue #1155);
