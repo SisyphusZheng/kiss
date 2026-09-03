@@ -96,7 +96,7 @@ const NORMALIZERS: Array<{ match: RegExp; description: string; apply: (text: str
     },
   ];
 
-function normalize(relPath: string, bytes: Uint8Array): Uint8Array {
+export function normalize(relPath: string, bytes: Uint8Array): Uint8Array {
   for (const normalizer of NORMALIZERS) {
     if (normalizer.match.test(relPath)) {
       const text = new TextDecoder().decode(bytes);
@@ -108,14 +108,14 @@ function normalize(relPath: string, bytes: Uint8Array): Uint8Array {
 
 const SITE = { dir: 'www', outDir: 'www/dist', buildTask: 'build' } as const;
 
-function parseArgs(): { baseline: string; selfCheck: boolean } {
+export function parseArgs(argv: string[]): { baseline: string; selfCheck: boolean } {
   const args: Record<string, string> = {};
   const flags = new Set<string>();
-  for (let i = 0; i < Deno.args.length; i++) {
-    const arg = Deno.args[i];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
     if (arg.startsWith('--')) {
       const key = arg.slice(2);
-      const next = Deno.args[i + 1];
+      const next = argv[i + 1];
       if (next !== undefined && !next.startsWith('--')) {
         args[key] = next;
         i++;
@@ -166,7 +166,7 @@ async function buildAndSnapshot(root: string, site: { outDir: string; buildTask:
 }
 
 /** Byte-compare two snapshots; returns a list of human-readable diffs. */
-function diffSnapshots(a: Snapshot, b: Snapshot, labelA: string, labelB: string): string[] {
+export function diffSnapshots(a: Snapshot, b: Snapshot, labelA: string, labelB: string): string[] {
   const diffs: string[] = [];
   for (const [path, bytesA] of a) {
     const bytesB = b.get(path);
@@ -189,99 +189,105 @@ function fail(message: string): never {
   Deno.exit(1);
 }
 
-const { baseline, selfCheck } = parseArgs();
+async function main(): Promise<void> {
+  const { baseline, selfCheck } = parseArgs(Deno.args);
 
-const root = Deno.cwd();
+  const root = Deno.cwd();
 
-// Phase 1: determinism self-check — build the current tree twice.
-for (const n of NORMALIZERS) console.log(`static-output-freeze: normalizing — ${n.description}`);
-console.log('static-output-freeze: building current tree (www) — run 1/2');
-const run1 = await buildAndSnapshot(root, SITE);
-if (run1.error) fail(`current-tree build (run 1) failed:\n${run1.error}`);
-console.log('static-output-freeze: building current tree — run 2/2');
-const run2 = await buildAndSnapshot(root, SITE);
-if (run2.error) fail(`current-tree build (run 2) failed:\n${run2.error}`);
+  // Phase 1: determinism self-check — build the current tree twice.
+  for (const n of NORMALIZERS) console.log(`static-output-freeze: normalizing — ${n.description}`);
+  console.log('static-output-freeze: building current tree (www) — run 1/2');
+  const run1 = await buildAndSnapshot(root, SITE);
+  if (run1.error) fail(`current-tree build (run 1) failed:\n${run1.error}`);
+  console.log('static-output-freeze: building current tree — run 2/2');
+  const run2 = await buildAndSnapshot(root, SITE);
+  if (run2.error) fail(`current-tree build (run 2) failed:\n${run2.error}`);
 
-const selfDiffs = diffSnapshots(run1.snapshot!, run2.snapshot!, 'run 1', 'run 2');
-if (selfDiffs.length > 0) {
-  console.error(
-    `static-output-freeze: the current build is NOT self-deterministic — ${selfDiffs.length} file(s) differ across two runs:`,
-  );
-  for (const d of selfDiffs.slice(0, 50)) console.error(`  ${d}`);
-  fail(
-    'freeze proof against a baseline is meaningless until the build is deterministic. ' +
-      'Fix the nondeterminism (embedded timestamps, unstable ordering) or add normalization here.',
-  );
-}
-console.log(
-  `static-output-freeze: determinism OK (${run1.snapshot!.size} files byte-identical across runs)`,
-);
-
-if (selfCheck) {
-  console.log('static-output-freeze: PASS (self-check only)');
-  Deno.exit(0);
-}
-
-// Phase 2: baseline worktree build + comparison.
-const tmp = await Deno.makeTempDir({ prefix: 'static-output-freeze-' });
-const worktreeDir = `${tmp}/baseline`;
-try {
-  const add = await run(['git', 'worktree', 'add', '--detach', worktreeDir, baseline], root);
-  if (!add.ok) {
-    fail(
-      `could not create worktree of '${baseline}':\n${tail(add.output)}\n` +
-        `Reproduce: git worktree add --detach <dir> ${baseline}`,
-    );
-  }
-
-  // node_modules/ is gitignored: symlink it from the current tree so the
-  // baseline build resolves npm dependencies offline. vendor/ is partially
-  // tracked (license attribution), so it already exists in the worktree —
-  // merge-copy the current tree's vendored sources over it instead.
-  try {
-    await Deno.symlink(`${root}/node_modules`, `${worktreeDir}/node_modules`);
-  } catch (err) {
-    fail(
-      `could not symlink node_modules into the baseline worktree: ${err}\n` +
-        `Manual fallback: cd <worktree of ${baseline}> && deno install (needs network).`,
-    );
-  }
-  const vendorCopy = await run(['cp', '-R', `${root}/vendor/`, `${worktreeDir}/vendor/`], root);
-  if (!vendorCopy.ok) {
-    fail(`could not copy vendor/ into the baseline worktree:\n${tail(vendorCopy.output)}`);
-  }
-
-  console.log(`static-output-freeze: building baseline ${baseline} in ${worktreeDir}`);
-  const base = await buildAndSnapshot(worktreeDir, SITE);
-  if (base.error) {
-    fail(
-      `baseline build failed at '${baseline}' (environmental — old toolchain or missing deps):\n${base.error}\n` +
-        `Reproduce: cd <worktree of ${baseline}> && deno task build. ` +
-        `Until this is fixed, gate on: deno task check:static-output-freeze -- --self-check`,
-    );
-  }
-
-  const diffs = diffSnapshots(base.snapshot!, run2.snapshot!, baseline, 'current');
-  if (diffs.length > 0) {
+  const selfDiffs = diffSnapshots(run1.snapshot!, run2.snapshot!, 'run 1', 'run 2');
+  if (selfDiffs.length > 0) {
     console.error(
-      `static-output-freeze: ${diffs.length} file(s) differ between ${baseline} and the current tree:`,
+      `static-output-freeze: the current build is NOT self-deterministic — ${selfDiffs.length} file(s) differ across two runs:`,
     );
-    for (const d of diffs.slice(0, 50)) console.error(`  ${d}`);
-    if (diffs.length > 50) console.error(`  ... and ${diffs.length - 50} more`);
-    fail(`static output is not byte-identical to ${baseline}`);
+    for (const d of selfDiffs.slice(0, 50)) console.error(`  ${d}`);
+    fail(
+      'freeze proof against a baseline is meaningless until the build is deterministic. ' +
+        'Fix the nondeterminism (embedded timestamps, unstable ordering) or add normalization here.',
+    );
   }
   console.log(
-    `static-output-freeze: PASS — ${
-      base.snapshot!.size
-    } files byte-identical between ${baseline} and current tree`,
+    `static-output-freeze: determinism OK (${
+      run1.snapshot!.size
+    } files byte-identical across runs)`,
   );
-} finally {
-  // Best-effort cleanup; report but do not mask the result.
-  const remove = await run(['git', 'worktree', 'remove', '--force', worktreeDir], root);
-  if (!remove.ok) {
-    console.error(
-      `static-output-freeze: warning — worktree cleanup failed: ${tail(remove.output, 5)}`,
-    );
+
+  if (selfCheck) {
+    console.log('static-output-freeze: PASS (self-check only)');
+    Deno.exit(0);
   }
-  await Deno.remove(tmp, { recursive: true }).catch(() => {});
+
+  // Phase 2: baseline worktree build + comparison.
+  const tmp = await Deno.makeTempDir({ prefix: 'static-output-freeze-' });
+  const worktreeDir = `${tmp}/baseline`;
+  try {
+    const add = await run(['git', 'worktree', 'add', '--detach', worktreeDir, baseline], root);
+    if (!add.ok) {
+      fail(
+        `could not create worktree of '${baseline}':\n${tail(add.output)}\n` +
+          `Reproduce: git worktree add --detach <dir> ${baseline}`,
+      );
+    }
+
+    // node_modules/ is gitignored: symlink it from the current tree so the
+    // baseline build resolves npm dependencies offline. vendor/ is partially
+    // tracked (license attribution), so it already exists in the worktree —
+    // merge-copy the current tree's vendored sources over it instead.
+    try {
+      await Deno.symlink(`${root}/node_modules`, `${worktreeDir}/node_modules`);
+    } catch (err) {
+      fail(
+        `could not symlink node_modules into the baseline worktree: ${err}\n` +
+          `Manual fallback: cd <worktree of ${baseline}> && deno install (needs network).`,
+      );
+    }
+    const vendorCopy = await run(['cp', '-R', `${root}/vendor/`, `${worktreeDir}/vendor/`], root);
+    if (!vendorCopy.ok) {
+      fail(`could not copy vendor/ into the baseline worktree:\n${tail(vendorCopy.output)}`);
+    }
+
+    console.log(`static-output-freeze: building baseline ${baseline} in ${worktreeDir}`);
+    const base = await buildAndSnapshot(worktreeDir, SITE);
+    if (base.error) {
+      fail(
+        `baseline build failed at '${baseline}' (environmental — old toolchain or missing deps):\n${base.error}\n` +
+          `Reproduce: cd <worktree of ${baseline}> && deno task build. ` +
+          `Until this is fixed, gate on: deno task check:static-output-freeze -- --self-check`,
+      );
+    }
+
+    const diffs = diffSnapshots(base.snapshot!, run2.snapshot!, baseline, 'current');
+    if (diffs.length > 0) {
+      console.error(
+        `static-output-freeze: ${diffs.length} file(s) differ between ${baseline} and the current tree:`,
+      );
+      for (const d of diffs.slice(0, 50)) console.error(`  ${d}`);
+      if (diffs.length > 50) console.error(`  ... and ${diffs.length - 50} more`);
+      fail(`static output is not byte-identical to ${baseline}`);
+    }
+    console.log(
+      `static-output-freeze: PASS — ${
+        base.snapshot!.size
+      } files byte-identical between ${baseline} and current tree`,
+    );
+  } finally {
+    // Best-effort cleanup; report but do not mask the result.
+    const remove = await run(['git', 'worktree', 'remove', '--force', worktreeDir], root);
+    if (!remove.ok) {
+      console.error(
+        `static-output-freeze: warning — worktree cleanup failed: ${tail(remove.output, 5)}`,
+      );
+    }
+    await Deno.remove(tmp, { recursive: true }).catch(() => {});
+  }
 }
+
+if (import.meta.main) await main();

@@ -76,7 +76,7 @@
     "lint:markdown": "deno run -A npm:markdownlint-cli2@0.23.2 \"**/*.md\"",
     "deno-api:check": "deno run --allow-read --allow-env tools/check-deno-api-free.ts",
     "text-integrity:check": "deno run --allow-read --allow-run=git tools/check-docs-truth.ts --check=text",
-    "audit:citations:check": "deno run -A tools/check-audit-citations.ts",
+    "audit:citations:check": "deno run --allow-read --allow-run=git tools/check-audit-citations.ts",
     "graph:check": "deno run --allow-read --allow-env tools/check-package-graph.ts",
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
     "consumer:packaged": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",

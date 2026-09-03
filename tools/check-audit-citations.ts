@@ -12,9 +12,10 @@
  * `packages/adapter-vite/src/internal/ssg/ssg-render.ts`). Ambiguous
  * basenames (e.g. `index.ts`) are flagged rather than guessed.
  *
- * Usage:
- *   deno run -A tools/check-audit-citations.ts [files...] [--sha=<commit>]
- *   deno run -A tools/check-audit-citations.ts --write   # append a verification appendix
+ * Usage (least privilege — L12/#1230; the `audit:citations:check` task runs
+ * without --write, so it needs no write permission):
+ *   deno run --allow-read --allow-run=git tools/check-audit-citations.ts [files...] [--sha=<commit>]
+ *   deno run --allow-read --allow-write --allow-run=git tools/check-audit-citations.ts --write
  *
  * With no file arguments the tool scans docs/audit/ for reports archived under
  * the YYYY-MM-DD-* naming convention. Archived reports are verified against

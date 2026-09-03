@@ -466,7 +466,7 @@ const GATES: readonly GateDefinition[] = [
     triggers: [
       /^www\/e2e\/visual-baselines\.spec\.ts$/,
       /^www\/e2e\/visual-baselines\.spec\.ts-snapshots\//,
-      /^tools\/check-visual-baseline-duplicates\.ts$/,
+      /^tools\/check-visual-baseline-duplicates(?:\.test)?\.ts$/,
       /^deno\.json$/,
     ],
   },
