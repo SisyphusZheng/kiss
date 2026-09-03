@@ -68,6 +68,18 @@ export function closestFormOf(element: Element): HTMLFormElement | null {
 }
 
 /**
+ * Deepest focused element, descending through open shadow roots (OEC9008:
+ * shared helpers live in plain .ts modules, not compiled component modules).
+ */
+export function deepActiveElement(): HTMLElement | null {
+  let active: Element | null = document.activeElement;
+  while (active?.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement;
+  }
+  return (active as HTMLElement | null) ?? null;
+}
+
+/**
  * open-callout's type → icon map. Compiled modules may not carry runtime
  * top-level statements (OEC9008), so shared lookup tables live in plain .ts
  * modules like this one.
