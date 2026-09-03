@@ -255,7 +255,6 @@ export function isProductionSource(path: string): boolean {
   // Test files that exercise the architecture contract necessarily contain
   // escape tokens, so they are excluded from production scanning.
   if (path === 'tools/check-architecture-contract.test.ts') return false;
-  if (path === 'tools/check-type-safety.test.ts') return false;
   if (path.startsWith('packages/') && path.includes('/src/') && /\.(ts|tsx)$/.test(path)) {
     return true;
   }

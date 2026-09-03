@@ -1,0 +1,20 @@
+# Gitleaks configuration for OpenElement (#1156 B2.6).
+# Extends the default rule set; the allowlist below covers deliberate
+# placeholder credentials used in tests and documentation. Real credential
+# material must never appear here — fix the leak, do not allowlist it.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Deliberate non-secret placeholders"
+regexTarget = "line"
+regexes = [
+  # Test fixtures: intentionally invalid Stripe-shaped placeholders used to
+  # assert checkoutConfiguration mode validation (never real credentials).
+  '''sk_live_wrong''',
+  '''rk_(?:test|live)_restricted''',
+  # Runbook example (git history): a shell variable reference, not a
+  # credential value.
+  '''-u\s+["']?\$STRIPE_SECRET_KEY''',
+]

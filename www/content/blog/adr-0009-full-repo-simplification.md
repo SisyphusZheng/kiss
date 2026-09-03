@@ -61,7 +61,7 @@ return renderEntry(descriptor);
 
 同时该文件 re-export 了 `buildEntryDescriptor`、`renderEntry`、`EntryDescriptor`——三者已各自在原文件中独立导出。
 
-**方案**: 
+**方案**:
 - 将 `generateHonoEntryCode` + `HonoEntryOptions` 移到 `entry-renderer.ts` 底部
 - 删除 `hono-entry.ts`
 - 所有导入点改为从 `entry-renderer.ts` 导入
@@ -223,7 +223,7 @@ export {
 
 **问题**: 这是历史遗留。`render-dsd.ts` 的核心职责是 DSD 渲染，不应承担 escape 工具的导出。
 
-**方案**: 
+**方案**:
 - 保留 `deno.json` 中 `./html-escape` 导出路径
 - 在 `render-dsd.ts` 的 re-export 块上方添加 `@deprecated` 注释
 - 下一个大版本移除 re-export
@@ -369,7 +369,7 @@ export { wrapInDocument } from './ssr-handler.js';
 
 这些都是 CLI 工具的内部函数，不应通过公共 API 暴露。
 
-**方案**: 
+**方案**:
 - 将 CLI 专用函数标记为 `@internal`（在 deno.json 的 exports 中不导出）
 - 或将其移到 `@openelement/core/cli/*` 导出路径下
 
@@ -453,7 +453,7 @@ Layer 0: ADR 0008 (Phase C+B → A → D)
   └─→ Layer 3.1-3.4: 导出精简与拆分            (Layer 1 完成后)
 ```
 
-**关键约束**: 
+**关键约束**:
 - Layer 1.1–1.6 和 1.8 **全部互相独立**，可以并行执行
 - Layer 1.7 和 1.9 **依赖 ADR 0008 Phase C**
 - Layer 3 的导出变更 **依赖 Layer 1 完成后**（避免中途改导出路径两次）

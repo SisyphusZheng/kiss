@@ -37,7 +37,7 @@ jobs:
       actions: read
     steps:
       # v7.0.1
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # zizmor: ignore[artipacked] the release lane pushes the immutable release tag with this credential (tools/autoflow/release.ts); every other workflow sets persist-credentials: false
         with:
           ref: main
           fetch-depth: 0
@@ -57,7 +57,7 @@ jobs:
         # and switching the whole release lane to Node 24 would still leave
         # the floor to whatever npm that image bundles, so the floor is
         # pinned explicitly here and verified before publish runs.
-        run: |
+        run: | # zizmor: ignore[adhoc-packages] the npm floor is pinned and asserted immediately below; trusted publishing requires it
           npm install -g "npm@^11.5.1"
           actual="$(npm --version)"
           minimum="11.5.1"

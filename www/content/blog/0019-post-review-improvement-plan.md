@@ -11,7 +11,7 @@ draft: false
 **PARTIALLY IMPLEMENTED** (v0.12.0–v0.14.0) — See implementation notes below.
 
 > 2026-05-13 更新：ADR 0022 (ESM-Native SSG pipeline) + ADR 0023 (Phase reordering) 在 v0.14.0 中落地。Phase 3 从 Vite closeBundle 中抽出为独立模块，URLPattern 替换手写路由解析。
-> 
+>
 > 2026-05-12 更新：ADR 0021 (API surface convergence) 在 v0.13.0 中落地，解决了 `ssr-handler.ts` 删除、导出收敛等问题。`@openelement/app` 测试从 0 增加到 16 个。
 
 ## Context

@@ -40,6 +40,33 @@ jobs:
           # never checkout's default synthetic merge ref.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+          persist-credentials: false
+      # #1156 (B2.6): mature OSS governance gates (ADR-0144) — fail fast,
+      # before the heavy matrix. Binaries pinned by version + SHA-256;
+      # zizmor-action pinned in tools/check-action-pins.ts.
+      - name: actionlint (workflow lint)
+        run: |
+          curl -sSfL -o /tmp/actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  /tmp/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
+          /tmp/actionlint -color
+      # v0.6.3
+      - uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99
+        with:
+          # Offline audits only: this gate must be deterministic and
+          # reproducible locally (`zizmor --offline .github/workflows
+          # .github/actions`); network-dependent audits stay out of CI.
+          online-audits: false
+          advanced-security: false
+          version: '1.30.0'
+      - name: gitleaks (secret scan)
+        run: |
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks git --redact --verbose .
       - uses: ./.github/actions/setup-deno-workspace
       - name: Install Playwright browsers
         # All three engines up front: the gate's fixture:request-time:gate
@@ -66,6 +93,7 @@ jobs:
         with:
           # #1156 R11: same exact-SHA expression as every required job.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: ./.github/actions/setup-deno-workspace
       # v7.0.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -127,6 +155,7 @@ jobs:
         with:
           # #1156 R11: same exact-SHA expression as every required job.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: ./.github/actions/setup-deno-workspace
       # v7.0.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -156,6 +185,7 @@ jobs:
         with:
           # #1156 R11: the aggregation job checks out the exact SHA it attests.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: ./.github/actions/setup-deno-workspace
       - name: Write exact-SHA PR CI evidence record
         env:
