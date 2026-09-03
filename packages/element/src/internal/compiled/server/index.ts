@@ -34,6 +34,9 @@ import { trustedHtmlValue } from '../../core/security.ts';
 // the wire truth for claim parity, so both serializers share this one
 // implementation (escapes & < > " ').
 import { escapeAttr } from '../../core/html-escape.ts';
+// Canonical text-node escape contract (#1272): shared with the runtime seed
+// serializer; do not reintroduce a private copy.
+import { escapeText } from '../escape-text.ts';
 
 export type { CompiledProgramHost, CompiledSignalLike } from './shared.ts';
 export { assertCompiledProgram, CompiledProgramValidationError } from './shared.ts';
@@ -103,10 +106,6 @@ interface SerializeContext {
   readonly htmlSinksByPath: Map<string, { signal: string }>;
   readonly options: CompiledServerOptions;
   readonly consumedProjections: Set<string>;
-}
-
-function escapeText(value: string): string {
-  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
 function pathKey(path: readonly number[]): string {

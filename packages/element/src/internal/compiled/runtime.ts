@@ -15,6 +15,9 @@ import { trustedHtmlValue } from '../core/security.ts';
 // Canonical void-element set and attribute-escape contract (issue #1220,
 // M4/L1) — single source of truth, shared with the server serializer.
 import { escapeAttr, VOID_TAGS } from '../core/html-escape.ts';
+// Canonical text-node escape contract (#1272) — shared with the server
+// serializer; do not reintroduce a private copy.
+import { escapeText } from './escape-text.ts';
 import { noteCompiledProgramActivated } from '../signal/selection.ts';
 import {
   partAnchorEndMarker,
@@ -1133,10 +1136,6 @@ export function createFreshDom(
 }
 
 // ─── Server serialization ──────────────────────────────────────────
-
-function escapeText(value: string): string {
-  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-}
 
 function serializedFixedAttributes(
   ctx: MountContext,
