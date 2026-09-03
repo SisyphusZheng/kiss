@@ -10,7 +10,7 @@
  *   deno run -A server.ts --port 4190 --dir ../dist
  */
 
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { dispatchRequest } from '../../../src/internal/static-serve.ts';
 
 const args: Record<string, string> = {};

@@ -92,9 +92,7 @@ test.describe('open-tabs', () => {
     await expect(page.locator('#main-tabs [slot="panel"]', { hasText: 'Alpha' })).toBeHidden();
   });
 
-  test('keyboard: ArrowRight/ArrowLeft wrap, Home/End jump, focus follows selection', async ({
-    page,
-  }) => {
+  test('keyboard: ArrowRight/ArrowLeft wrap, Home/End jump, focus follows selection', async ({ page }) => {
     await page.locator('#main-tabs [slot="tab"]', { hasText: 'Alpha' }).focus();
     await page.keyboard.press('ArrowRight');
     expect((await page.evaluate(readTabStateExpr))?.selected).toEqual(['false', 'true', 'false']);
@@ -115,9 +113,7 @@ test.describe('open-tabs', () => {
     expect(await page.evaluate(deepActiveTabIs, 2)).toBe(true);
   });
 
-  test('reconnect/dispose: effects switch off while detached and re-sync on reconnect', async ({
-    page,
-  }) => {
+  test('reconnect/dispose: effects switch off while detached and re-sync on reconnect', async ({ page }) => {
     // Detach, write the selection while the decorate effect is disposed, and
     // observe the ARIA wiring stay stale; reconnect must re-sync exactly once.
     const stale = await page.evaluate(`(() => {
