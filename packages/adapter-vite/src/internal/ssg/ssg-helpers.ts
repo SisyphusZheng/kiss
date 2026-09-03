@@ -311,7 +311,7 @@ export function renderStandaloneServerModule(): string {
 //   reverse proxy: honor X-Forwarded-Proto/Host for the request URL — never
 //   trusted by default)
 import { createServer } from 'node:http';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -405,13 +405,21 @@ function tryStatic(pathname) {
   for (const candidate of new Set(candidates)) {
     const filePath = resolve(join(root, candidate));
     if (!filePath.startsWith(root + sep)) continue;
-    if (!existsSync(filePath) || !statSync(filePath).isFile()) continue;
+    // Read-and-fallback, mirroring internal/static-serve.ts (#1281): no
+    // existsSync/statSync guard-then-read TOCTOU race; a vanished or
+    // non-regular candidate fails the read and falls through like a miss.
+    let body;
+    try {
+      body = readFileSync(filePath);
+    } catch {
+      continue;
+    }
     const headers = {
       'content-type': MIME[extname(filePath).toLowerCase()] || 'application/octet-stream',
     };
     const cacheControl = cacheControlFor(filePath);
     if (cacheControl) headers['cache-control'] = cacheControl;
-    return new Response(readFileSync(filePath), {
+    return new Response(body, {
       status: 200,
       headers,
     });

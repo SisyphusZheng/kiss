@@ -115,6 +115,23 @@ Deno.test('tryStatic serves files and refuses path escape', async () => {
   }
 });
 
+Deno.test('tryStatic treats a directory at a candidate path as a miss (#1281, CodeQL file-system-race)', async () => {
+  // The candidate check is read-and-fallback instead of existsSync/statSync
+  // guard-then-read (check-then-act TOCTOU): a directory named like a file
+  // candidate must fall through exactly like a missing file.
+  const root = await Deno.makeTempDir();
+  try {
+    await Deno.mkdir(join(root, 'dir.html'));
+    await Deno.writeTextFile(join(root, 'real.html'), '<h1>real</h1>');
+    assertEquals(tryStatic(root, '/dir.html'), null);
+    const real = tryStatic(root, '/real.html');
+    assert(real);
+    assertEquals(await real.text(), '<h1>real</h1>');
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
 Deno.test('malformed percent-encoding is a defined 400, never a crash (#823)', async () => {
   // decodeURIComponent throws URIError on input like /%zz; the serving layer
   // converts it to a 400 so `start` and the fixture server stay alive.

@@ -20,7 +20,13 @@ export function prepareArticle(html: string): { html: string; outline: ArticleOu
   const withIds = html.replace(
     /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi,
     (_match, depth, attrs, body) => {
-      const label = String(body).replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+      // Strip tags, then any angle bracket the tag pattern could not match
+      // (e.g. a `<script` fragment with no closing `>`), so the plain-text
+      // label can never carry a partial tag into the rail outline (#1281).
+      const label = String(body).replace(/<[^>]+>/g, '').replace(/[<>]/g, '').replace(
+        /&[^;]+;/g,
+        ' ',
+      ).trim();
       const stem = label.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '-').replace(
         /(^-|-$)/g,
         '',

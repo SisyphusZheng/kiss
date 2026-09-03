@@ -1,7 +1,7 @@
 import { formatError } from '@openelement/element';
 import { PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
 import { staleCurrencyClaimPatterns } from './check-strategic-docs.ts';
-import { MOJIBAKE_CHARS } from './lib/text.ts';
+import { escapeRegExp, MOJIBAKE_CHARS } from './lib/text.ts';
 import { STALE_HISTORY_CLAIM_PATTERNS } from './lib/stale-claims.ts';
 
 // Prerelease tag of the superseded line (e.g. "alpha.9"). The
@@ -60,7 +60,7 @@ export const staleCurrentClaims: RegExp[] = [
   // Bound to the superseded line's prerelease tag (see top of file) so a
   // future current anchor never trips this guard (#727).
   ...(previousPrereleaseTag
-    ? [new RegExp(`active release target.*${previousPrereleaseTag.replace(/\./g, '\\.')}`, 'i')]
+    ? [new RegExp(`active release target.*${escapeRegExp(previousPrereleaseTag)}`, 'i')]
     : []),
   /alpha\.13 was\s+the prior recovery train/i,
   // Currency claims ("published as X", "completed implementation anchor X")

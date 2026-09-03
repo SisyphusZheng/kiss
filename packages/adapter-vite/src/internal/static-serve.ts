@@ -12,7 +12,7 @@
  * this module.
  */
 
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -107,8 +107,16 @@ export function tryStatic(distDir: string, pathname: string): Response | null {
   for (const candidate of candidates) {
     const filePath = resolve(join(root, candidate));
     if (!filePath.startsWith(root + sep)) continue;
-    if (!existsSync(filePath) || !statSync(filePath).isFile()) continue;
-    const body = readFileSync(filePath);
+    // Read directly instead of existsSync/statSync guard-then-read: a
+    // check-then-act pair is a TOCTOU race (CodeQL #1281). A vanished,
+    // unreadable, or non-regular candidate (EISDIR) simply fails the read and
+    // falls through to the next candidate, exactly like a miss.
+    let body: ReturnType<typeof readFileSync>;
+    try {
+      body = readFileSync(filePath);
+    } catch {
+      continue;
+    }
     const headers: Record<string, string> = { 'content-type': contentTypeFor(filePath) };
     const cacheControl = cacheControlFor(filePath);
     if (cacheControl) headers['cache-control'] = cacheControl;
