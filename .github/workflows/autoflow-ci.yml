@@ -124,7 +124,7 @@ jobs:
             OPEN_ELEMENT_PORT=4891 OPEN_ELEMENT_HOST=127.0.0.1 node dist/server/serve.mjs &
             server_pid=$!
             trap 'kill $server_pid 2>/dev/null || true' EXIT
-            for i in $(seq 1 50); do
+            for _ in $(seq 1 50); do
               curl -sf -o /dev/null http://127.0.0.1:4891/ && break
               sleep 0.2
             done
