@@ -125,3 +125,5 @@ examples/deno-desktop-mastodon/stress-report.json
 # Root-local media/agent scratch artifacts (never release inputs)
 /.tmp/
 /.tmp-*
+# Release workflow (autoflow-release.yml) PR-CI evidence download dir: CI scratch, never a release input
+/.artifacts/
