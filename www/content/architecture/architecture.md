@@ -37,7 +37,7 @@ The roadmap earns WC fullstack leadership through compatibility evidence, comple
 
 ### WC SSR
 
-The 0.43 line classifies admitted standard, Lit, FAST and Stencil elements for DSD, light DOM or client-only rendering with actionable diagnostics and corpus evidence.
+The current line classifies admitted standard, Lit, FAST and Stencil elements for DSD, light DOM or client-only rendering with actionable diagnostics and corpus evidence — a contract first shipped on the 0.43 line and kept green by CI on the compiled line.
 
 ### Application loop
 

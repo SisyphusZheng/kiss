@@ -14,4 +14,4 @@ order: 90
 
 ## 当前诊断
 
-0.43 版本线已经交付通用 DSD/light/client-only 分类、hydration 不匹配诊断与已跟踪的第三方 WC SSR 语料库。准入仍依赖显式 package-island 配置与已观测 metadata，并不意味着对所有第三方组件作笼统认证。
+当前版本线交付通用 DSD/light/client-only 分类、hydration 不匹配诊断与已跟踪的第三方 WC SSR 语料库——最初随 0.43 线交付，并在编译型版本线上由 CI 持续验证。准入仍依赖显式 package-island 配置与已观测 metadata，并不意味着对所有第三方组件作笼统认证。

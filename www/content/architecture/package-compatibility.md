@@ -14,7 +14,8 @@ Known packages can be configured as package islands and use available CEM metada
 
 ## Current diagnostics
 
-The 0.43 line ships Universal DSD/light/client-only classification,
-hydration-mismatch diagnostics and the tracked third-party WC SSR corpus.
+The current line ships Universal DSD/light/client-only classification,
+hydration-mismatch diagnostics and the tracked third-party WC SSR corpus —
+first shipped on the 0.43 line and kept green by CI on the compiled line.
 Admission still depends on explicit package-island configuration and observed
 metadata; it is not a blanket certification of every third-party component.

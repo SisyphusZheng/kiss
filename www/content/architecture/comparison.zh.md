@@ -47,13 +47,13 @@ order: 20
 - 选择 **Astro / Enhance / Lit / Stencil** 当标准优先的 Web Components 方案很重要，且想避开沉重的应用运行时时。
 - 选择 **Next.js / Nuxt / SvelteKit** 当你的产品明确围绕 React、Vue 或 Svelte 应用模型构建时。
 - 选择 **Fresh** 当你想要 Deno 原生、近乎零构建的 Preact island 体验时。
-- 不要选择 **openElement** 当主要诉求是成熟生态、框架专属 UI 运行时或现成的企业级设计系统时。采用 0.43.x 的团队仍应在自己的生产环境中验证文档里的 starter 与部署路径。
+- 不要选择 **openElement** 当主要诉求是成熟生态、框架专属 UI 运行时或现成的企业级设计系统时。采用稳定 0.43 线的团队仍应在自己的生产环境中验证文档里的 starter 与部署路径。
 
 ## 官方组合路径
 
 OpenElement × Supabase × Cloudflare 是经过验证的全栈交付路径，所有权边界明确：OpenElement 负责应用 UX；Supabase 负责数据、Auth、RLS、Storage 与 Realtime；Cloudflare 负责边缘交付、安全、缓存与异步执行。Supabase 与 Cloudflare 是被组合的服务提供方——绝不是框架内建功能——tier-1 边界门禁保证服务提供方代码不进入框架包。
 
-随 0.43 线与 Universal WC SSR 一同交付。框架自有的生产运行时恢复与缓存语义仍在当前契约之外，尚未分配发布版本。
+最初随 0.43 线与 Universal WC SSR 一同交付，并由当前编译型版本线继承。框架自有的生产运行时恢复与缓存语义仍在当前契约之外，尚未分配发布版本。
 
 - [Supabase 配方](https://github.com/open-element/openelement/blob/main/docs/integrations/supabase.md)
 - [已验证的参考应用](https://github.com/open-element/openelement/tree/main/examples/supabase-cloudflare-starter)
