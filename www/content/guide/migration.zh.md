@@ -4,6 +4,8 @@ lede: '自 0.40.x 以来的全部 breaking change，按发布版本分组。'
 order: 75
 ---
 
+> 历史档案：本页归档 0.40.x → 0.41/0.42 的迁移记录，面向已退役的运行时创作线。当前版本线（{{OPENELEMENT_VERSION}}）通过 `@openelement/create` 全新接入——不提供 0.43 → 0.44 的原位升级路径。新项目请从当前 starter 与[上手指南](/zh/guide/getting-started)开始。
+
 ## 0.41.x → 0.42
 
 稳定的 0.42 版本线新增 request-time 面——loader、action、渐进增强表单、redirect 与 Nitro 服务端输出。静态面升级没有破坏 0.41 冻结面；ADR-0122 记录了已接受的 0.42.0 契约。

@@ -4,6 +4,8 @@ lede: 'Every breaking change since 0.40.x, grouped by the version that shipped i
 order: 75
 ---
 
+> Historical record: this page archives the 0.40.x → 0.41/0.42 migrations, written for the retired runtime-authoring line. The current line ({{OPENELEMENT_VERSION}}) is consumed fresh through `@openelement/create` — there is no supported 0.43 → 0.44 in-place upgrade. New projects start from the current starter and the [getting-started guide](/guide/getting-started).
+
 ## 0.41.x → 0.42
 
 The stable 0.42 line added request-time surfaces — loaders, actions, progressive-enhancement forms, redirects and Nitro server output. Static-first sites upgraded without a breaking change to the frozen 0.41 surface. ADR-0122 records the accepted 0.42.0 contract.
