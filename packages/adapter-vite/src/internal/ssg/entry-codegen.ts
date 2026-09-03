@@ -14,9 +14,9 @@ import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
   pageDefinitionExpr,
+  pageRouteTagExpr,
   rendererScopeMatches,
   routeMetaExpr,
-  routeTagNameExpr,
 } from './entry-route-helpers.ts';
 
 /**
@@ -336,7 +336,7 @@ export function renderRouteHandler(
     matchingRenderers: renderers.filter((r) => rendererScopeMatches(route.path, r.scope)),
     docConfig,
     pathLiteral: quoteGeneratedJavaScriptValue(route.path),
-    tagNameExpr: routeTagNameExpr(route.tagName),
+    tagNameExpr: pageRouteTagExpr(route.varName, route.tagName),
     pageDefExpr: pageDefinitionExpr(route.varName),
     routeMeta: routeMetaExpr(route.varName),
     routeContext: `{ path: ${quoteGeneratedJavaScriptValue(route.path)}, filePath: ${

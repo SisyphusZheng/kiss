@@ -200,11 +200,34 @@ async function stopRuntime(runtime: CapturedProcess | undefined) {
   await runtime.drained;
 }
 
+/**
+ * The v0.44 qualification fixture paginates with a GET form whose hidden
+ * inputs ride compiled property Parts (dynamic intrinsic attributes are
+ * outside the SSR part schema in grammar v1 — see
+ * examples/supabase-cloudflare-starter/app/components/page-workspace-records.tsx),
+ * so there is no next-page anchor to scrape. Reproduce the browser's GET form
+ * submission instead: locate the form carrying the submit button `id`, then
+ * build action + URL-encoded hidden inputs (empty values included, exactly as
+ * a browser submits them).
+ */
 function nextHref(html: string, id = 'next-page'): string {
-  const anchor = new RegExp(`<a\\b[^>]*\\bid=["']${id}["'][^>]*>`, 'iu').exec(html)?.[0];
-  const href = anchor && /\bhref=["']([^"']+)["']/i.exec(anchor)?.[1];
-  if (!href) throw new Error('qualification response omitted the next-page cursor');
-  return href.replaceAll('&amp;', '&');
+  const forms = html.matchAll(/<form\b[^>]*\bmethod=["']get["'][^>]*>[\s\S]*?<\/form>/giu);
+  for (const formMatch of forms) {
+    const formHtml = formMatch[0];
+    if (!new RegExp(`<button\\b[^>]*\\bid=["']${id}["']`, 'iu').test(formHtml)) continue;
+    const action = /\baction=["']([^"']+)["']/iu.exec(formHtml)?.[1];
+    if (!action) throw new Error(`qualification pagination form "${id}" omitted its action`);
+    const params = new URLSearchParams();
+    for (const inputMatch of formHtml.matchAll(/<input\b[^>]*>/giu)) {
+      const input = inputMatch[0];
+      if (!/\btype=["']hidden["']/iu.test(input)) continue;
+      const name = /\bname=["']([^"']+)["']/iu.exec(input)?.[1];
+      const value = /\bvalue=["']([^"']*)["']/iu.exec(input)?.[1];
+      if (name) params.set(name, (value ?? '').replaceAll('&amp;', '&'));
+    }
+    return `${action.replaceAll('&amp;', '&')}?${params.toString()}`;
+  }
+  throw new Error(`qualification response omitted the next-page pagination form "${id}"`);
 }
 
 function assertPage(

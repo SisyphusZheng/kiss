@@ -123,11 +123,15 @@ export const PR_CI_ARTIFACT_PREFIX = 'pr-full-ci-evidence-';
  * The workflow job ids that constitute the required full-matrix set. Every one
  * must be present and successful — in the record (from the trusted `needs`
  * context) and in the independently resolved GitHub run.
+ * `workspace-qualification` joined the set with #1276 (B1.3-F1): the definePage
+ * route SSR tag-mismatch defect shipped because the workspace runtime
+ * qualification was not CI-gated.
  */
 export const REQUIRED_PR_CI_JOBS = [
   'dependency-review',
   'autoflow-ci',
   'node-serve-smoke',
+  'workspace-qualification',
 ] as const;
 
 /** Map a GitHub API job display name back to its workflow job id. */

@@ -269,9 +269,10 @@ export async function scanRoutes(
               }
             }
             // #960: migration-period signal. On a definePage route the
-            // tagName export no longer drives SSR registration (the page
-            // registers under the path-derived fallback tag); it only names
-            // a content element. Sanctioned shape-1 modules USE the tag
+            // tagName export no longer drives SSR registration (the page's
+            // tag resolves from its compiled Part Program at entry evaluation,
+            // #1276); it only names a content element. Sanctioned shape-1
+            // modules USE the tag
             // (defineElement + <tag/> in the render) and stay silent — an
             // orphaned export gets a one-time note.
             if (isDefinePage && tagName !== undefined && !semantics.usesExportedTagName) {
@@ -281,9 +282,7 @@ export async function scanRoutes(
                 log.info(
                   `Route module ${resolvedPath} exports tagName '${tagName}' but never uses it; ` +
                     `the export is ignored for registration on definePage routes (#960) — ` +
-                    `the page registers under the path-derived tag '${
-                      fileToTagName(relativePath)
-                    }'.`,
+                    `the page's SSR tag resolves from its compiled Part Program (#1276).`,
                 );
               }
             }

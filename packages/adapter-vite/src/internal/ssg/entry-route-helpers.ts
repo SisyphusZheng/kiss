@@ -7,9 +7,16 @@ export function renderImport(imp: ImportDecl): string {
   return `import { ${names} } from '${imp.from}'`;
 }
 
-export function routeTagNameExpr(varNameOrFallback: string, fallback?: string): string {
-  const tagName = fallback ?? varNameOrFallback;
-  return quoteGeneratedJavaScriptValue(tagName);
+/**
+ * Page-route tag expression (#1276, B1.3-F1): resolves the route→program tag
+ * binding from the route module's compiled Part Program at generated-entry
+ * evaluation time (`__resolvePageTag`, emitted by entry-render-runtime.ts).
+ * The path-derived tag is passed only as the fallback for classes without a
+ * compiled program. Used for SSR registration, the page/404 handlers, and the
+ * SSG routeInfo — one canonical binding for every page-route tag consumer.
+ */
+export function pageRouteTagExpr(varName: string, fallbackTagName: string): string {
+  return `__resolvePageTag(${varName}, ${quoteGeneratedJavaScriptValue(fallbackTagName)})`;
 }
 
 export function pageDefinitionExpr(varName: string): string {

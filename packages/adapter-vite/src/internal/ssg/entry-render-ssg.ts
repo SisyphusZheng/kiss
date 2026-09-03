@@ -10,8 +10,8 @@ import type { EntryDescriptor } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
+  pageRouteTagExpr,
   renderMatchingRenderersFn,
-  routeTagNameExpr,
 } from './entry-route-helpers.ts';
 
 /**
@@ -39,7 +39,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   // --- routeInfo: structured route metadata ---
   lines.push('export const routeInfo = [');
   for (const r of desc.pageRoutes) {
-    const tagNameExpr = routeTagNameExpr(r.tagName);
+    const tagNameExpr = pageRouteTagExpr(r.varName, r.tagName);
     lines.push(
       `  { path: ${quoteGeneratedJavaScriptValue(r.path)}, filePath: ${
         quoteGeneratedJavaScriptValue(r.filePath)

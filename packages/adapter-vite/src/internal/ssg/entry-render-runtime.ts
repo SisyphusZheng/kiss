@@ -78,6 +78,28 @@ export function renderRuntimeHelpers(
   lines.push('}');
   lines.push('');
 
+  // #1276 (B1.3-F1): the compiled program is the one canonical source for the
+  // route→program tag binding. A definePage route module default-exports the
+  // compiled page class (definePage returns the class), whose
+  // __partProgram.tag carries the @element(...) decorator tag; the route FILE
+  // name derives the ROUTE, not the element's identity, so the bare
+  // path-derived tag must never reach renderDsd when the program declares a
+  // different one (request-time OE_PROGRAM_MISSING 500, B1.3 qualification).
+  // The path-derived fallback remains for classes without a compiled program —
+  // renderDsd fails closed on those exactly as before. Called at module
+  // evaluation (route registration, routeInfo), so this must stay a hoisted
+  // function declaration.
+  lines.push('function __resolvePageTag(routeModule, fallbackTag) {');
+  lines.push(
+    '  const program = routeModule && routeModule.default && routeModule.default.__partProgram;',
+  );
+  lines.push(
+    '  if (program && typeof program.tag === "string" && program.tag.includes("-")) return program.tag;',
+  );
+  lines.push('  return fallbackTag;');
+  lines.push('}');
+  lines.push('');
+
   lines.push('function __localizeShellHref(href, locale, defaultLocale) {');
   lines.push(
     '  if (typeof href !== "string" || locale === defaultLocale || !href.startsWith("/") || href.startsWith("//")) return href',

@@ -112,6 +112,29 @@ jobs:
             grep -q 'requires a runtime with WHATWG URLPattern' serve-error.log
           fi
 
+  # #1276 (B1.3-F1): the definePage route SSR tag-mismatch defect shipped
+  # because the workspace runtime qualification was not CI-gated. Run the full
+  # qualification leg (starter build -> Node 24 standalone + Wrangler workerd,
+  # byte-identical HTML across both) as a required CI job so this defect class
+  # cannot regress silently. Needs real Node 24 (the serve.mjs runtime floor,
+  # #969) — the autoflow-ci job itself has no Node setup.
+  workspace-qualification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # #1156 R11: same exact-SHA expression as every required job.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./.github/actions/setup-deno-workspace
+      # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+      - name: Workspace runtime qualification (Node 24 + workerd)
+        run: deno task fullstack:workspace-qualification
+
   # #1156 (ADR-0146): one deterministic exact-SHA PR full-CI evidence artifact.
   # This job runs only for pull requests and only after every required
   # full-matrix job succeeded (default needs gating — no `if: always()`), so a
@@ -122,7 +145,7 @@ jobs:
   pr-full-ci-evidence:
     name: pr-full-ci-evidence
     if: github.event_name == 'pull_request'
-    needs: [dependency-review, autoflow-ci, node-serve-smoke]
+    needs: [dependency-review, autoflow-ci, node-serve-smoke, workspace-qualification]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
