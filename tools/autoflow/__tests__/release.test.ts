@@ -361,9 +361,11 @@ Deno.test('R9: preparation runs the fast tier only, never the local full matrix'
 });
 
 Deno.test('two-phase release: publish-existing never bumps and verifies main CI first', () => {
-  const originalNpmToken = Deno.env.get('NPM_TOKEN');
+  // The publish-existing plan publishes in the Actions OIDC lane (#1187):
+  // GITHUB_ACTIONS, not a token variable, gates the npm publish steps.
+  const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
-  Deno.env.set('NPM_TOKEN', 'test-token');
+  Deno.env.set('GITHUB_ACTIONS', 'true');
   Deno.env.set('GITHUB_TOKEN', 'test-token');
   try {
     const steps = createPublishExistingPlan('0.41.0-alpha.11');
@@ -380,8 +382,8 @@ Deno.test('two-phase release: publish-existing never bumps and verifies main CI 
     );
     assertFalse(names.includes('bump patch version'));
   } finally {
-    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
-    else Deno.env.set('NPM_TOKEN', originalNpmToken);
+    if (originalGitHubActions === undefined) Deno.env.delete('GITHUB_ACTIONS');
+    else Deno.env.set('GITHUB_ACTIONS', originalGitHubActions);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
   }

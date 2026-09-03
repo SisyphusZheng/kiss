@@ -809,8 +809,13 @@ function canCreateGitHubRelease(): boolean {
 }
 
 function canPublishNpm(): boolean {
-  // npm publish needs an access token. In CI it comes from secrets.NPM_TOKEN.
-  return isTruthyEnv('NPM_TOKEN') || isTruthyEnv('NODE_AUTH_TOKEN');
+  // #1187 (Beta.2): npm publication authenticates via Trusted
+  // Publishing/OIDC, which exists only in the GitHub Actions release lane
+  // (autoflow-release.yml grants id-token: write and upgrades the npm CLI to
+  // the >=11.5.1 OIDC floor). The long-lived token path is removed — a local
+  // or manual release never publishes to npm, even if a legacy token
+  // variable happens to be set.
+  return Deno.env.get('GITHUB_ACTIONS') === 'true';
 }
 
 /**

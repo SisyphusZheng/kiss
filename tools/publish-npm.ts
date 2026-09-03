@@ -240,6 +240,8 @@ export async function publishPackage(
     ? ['publish', tar, '--dry-run', '--access', 'public']
     : ['publish', tar, '--access', 'public'];
   // Provenance requires GitHub Actions OIDC; skip locally and on other CI providers.
+  // #1187: in the Actions lane, auth is npm Trusted Publishing (no token);
+  // `--provenance` stays explicit so the attestation intent is visible here.
   if (!dryRun && Deno.env.get('GITHUB_ACTIONS') === 'true') {
     args.push('--provenance');
   }
