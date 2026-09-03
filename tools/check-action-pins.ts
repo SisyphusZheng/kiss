@@ -25,6 +25,8 @@ const ACTION_VERSION_PINS = new Map([
   ['github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3', 'v4.37.6'],
   ['github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938', 'v4.37.9'],
   ['github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938', 'v4.37.9'],
+  // #1156 (B2.6): zizmor workflow-security gate (ADR-0144).
+  ['zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99', 'v0.6.3'],
 ]);
 
 // Repos that carry an approved pin above. A full-SHA use of one of these repos

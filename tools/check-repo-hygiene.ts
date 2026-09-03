@@ -80,23 +80,16 @@ const allowedTrackedIgnoredPaths = [
   /^vendor\/jsr\.io\/(@[^/]+\/)?[^/]+\/LICENSE$/,
 ];
 
-// Secret scanning: tracked credential files are always failures, and
-// credential-shaped content in active source files fails the gate. These
-// patterns intentionally stay narrow to keep false positives at zero.
-// Placeholder templates (.env.example/.env.sample/.env.template) are
-// allowed by name — the content scan below still applies to them, so a
-// template carrying real credentials still fails.
+// Tracked credential files are always failures. The content-level secret
+// scan is owned by gitleaks (#1156 B2.6, .gitleaks.toml); this file-name
+// tripwire stays because gitleaks does not flag a tracked-but-empty
+// credential file. Placeholder templates (.env.example/.env.sample/
+// .env.template) are allowed by name.
 const allowedCredentialTemplates = /(?:^|\/)\.env(?:\.example|\.sample|\.template)$/;
 const forbiddenTrackedSecretFiles = [
   /(?:^|\/)\.env(?:\.[^/]+)?$/,
   /(?:^|\/)[^/]+\.pem$/,
   /(?:^|\/)id_rsa(?:\.pub)?$/,
-];
-const SECRET_CONTENT_PATTERNS = [
-  /-----BEGIN (?:RSA |EC |OPENSSH |PGP )?PRIVATE KEY-----/,
-  /\bAKIA[0-9A-Z]{16}\b/,
-  /\bgh[pousr]_[A-Za-z0-9]{36,}\b/,
-  /\bxox[baprs]-[A-Za-z0-9-]{20,}\b/,
 ];
 
 // Large tracked binaries: intentional design/e2e/fixture assets are listed;
@@ -163,12 +156,6 @@ for (const file of files.filter(isActiveScanFile)) {
         path: file,
         message: `active file references removed package ${packageName}`,
       });
-    }
-  }
-  for (const pattern of SECRET_CONTENT_PATTERNS) {
-    if (pattern.test(text)) {
-      failures.push({ path: file, message: 'credential-shaped content detected' });
-      break;
     }
   }
 }

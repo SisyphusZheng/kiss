@@ -44,6 +44,8 @@ jobs:
     steps:
       # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       # v1, pinned 2026-08-17
       - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1
@@ -75,6 +77,8 @@ jobs:
     steps:
       # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-deno-workspace
 
       - name: Require dedicated migration credentials
@@ -177,7 +181,7 @@ jobs:
           set -euo pipefail
           deno task build
           OPEN_ELEMENT_PORT=4173 nohup deno task start > "$GITHUB_WORKSPACE/.smoke/server.log" 2>&1 &
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -s -o /dev/null http://127.0.0.1:4173/; then break; fi
             sleep 1
           done
@@ -379,7 +383,7 @@ jobs:
           # instead of racing the invalidation; the assertion itself — the
           # object must become inaccessible — is unchanged.
           after_delete=""
-          for i in $(seq 1 12); do
+          for _ in $(seq 1 12); do
             after_delete=$(curl -s -o /dev/null -w '%{http_code}' \
               "$SUPABASE_URL/storage/v1/object/notes-attachments/$STORAGE_POLICY_KEY" \
               -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $token_a")
@@ -477,6 +481,10 @@ jobs:
 
       - name: Write the redacted smoke report
         if: always()
+        # zizmor: ignore[template-injection] every expansion below is
+        # GitHub-controlled context (job.status, github.run_id,
+        # steps.*.outcome, inputs.migration_mode) — no attacker-controllable
+        # input reaches this report writer.
         run: |
           matrix='[]'
           if [ -f .smoke/results.jsonl ]; then

@@ -62,6 +62,8 @@ jobs:
     steps:
       # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-deno-workspace
 
       - name: Build the Workers bundle
@@ -187,7 +189,7 @@ jobs:
           set -e
           mkdir -p .smoke
           record() { echo "{\"check\":\"$1\",\"result\":\"$2\"}" >> .smoke/results.jsonl; }
-          for i in 1 2 3 4 5 6; do
+          for _ in 1 2 3 4 5 6; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$WORKER_URL/" || true)
             [ "$code" = "200" ] && break
             sleep 10
@@ -336,6 +338,8 @@ jobs:
           eicar_name="scanner-eicar-$suffix.txt"
           printf 'OpenElement scanner qualification clean fixture.\n' > "$clean_file"
           # Standard EICAR test string, generated only in the ephemeral runner.
+          # shellcheck disable=SC2016 # the single-quoted EICAR signature must
+          # not expand its $ sequences.
           printf '%s' 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > "$eicar_file"
           for fixture in clean eicar; do
             name_var="${fixture}_name"; file_var="${fixture}_file"
@@ -415,6 +419,10 @@ jobs:
         if: always()
         env:
           WORKER_URL: https://openelement-ref-starter.freemanzheng.workers.dev
+        # zizmor: ignore[template-injection] every expansion below is
+        # GitHub-controlled context (job.status, github.run_id,
+        # steps.*.outcome) — no attacker-controllable input reaches this
+        # report writer.
         run: |
           checks='[]'
           if [ -f .smoke/results.jsonl ]; then

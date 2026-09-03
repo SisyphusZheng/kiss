@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/v0.23.2/schema/markdownlint-cli2-config-schema.json",
+  "gitignore": true,
+  "config": {
+    "default": false,
+    "MD001": true,
+    "MD009": { "br_spaces": 2 },
+    "MD011": true,
+    "MD012": true,
+    "MD024": { "siblings_only": true },
+    "MD042": true,
+    "MD047": true
+  }
+}

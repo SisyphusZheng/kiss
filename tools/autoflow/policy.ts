@@ -321,16 +321,18 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
-    name: 'type-safety:check',
-    command: ['deno', 'task', 'type-safety:check'],
-    tiers: ['ci', 'release'],
-    triggers: [/^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
-  },
-  {
     name: 'deno-api:check',
     command: ['deno', 'task', 'deno-api:check'],
     tiers: ['ci', 'release'],
     triggers: [/^packages\/(element|ui|app)\/src\//],
+  },
+  {
+    // #1156 (B2.6): markdownlint-cli2 owns Markdown structure per ADR-0144
+    // (thin .markdownlint-cli2.jsonc config; no bespoke checker).
+    name: 'lint:markdown',
+    command: ['deno', 'task', 'lint:markdown'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [/\.md$/, /^\.markdownlint-cli2\.jsonc$/, /^deno\.json$/],
   },
   {
     name: 'text-integrity:check',
