@@ -4,7 +4,7 @@ lede: 'OpenElement 是以 Web Components 为原生契约、static-first 的应�
 order: 1
 ---
 
-> 当前源码与 npm 发布线均为稳定版 `{{OPENELEMENT_VERSION}}`（dist-tag `latest`），承接 ADR-0119 静态冻结、ADR-0122 应用闭环冻结与 0.43 Universal WC SSR 契约。
+> 当前源码行为 `{{OPENELEMENT_VERSION}}`，是以 dist-tag `beta` 发布的公开预发布版；npm `latest` 仍为稳定 0.43 线，承接 ADR-0119 静态冻结、ADR-0122 应用闭环冻结与 0.43 Universal WC SSR 契约。
 
 ## 安装
 

@@ -35,11 +35,12 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.44.0-beta.1',
-      theme: 'renderer-owned light DOM hydration — robustness audit closure',
+      theme: 'framework qualification + governance freeze',
       copy:
-        'The published stable line remains available while 0.44 is prerelease. It proves Universal WC SSR, in-place light-DOM activation and the application delivery baseline that the compiled architecture must preserve.',
-      state: 'stable',
+        'The first public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It qualifies the framework itself — compiler, page-route SSR bound to the Part Program, delivery gates — under a frozen governance envelope (ADR-0151).',
+      state: 'next',
       stamp: 'CURRENT',
+      status: 'prerelease',
     },
     {
       version: 'v0.44 alpha',
@@ -85,12 +86,13 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.43.3',
-      theme: '渲染方所有的 light DOM 水合 — 鲁棒性审计闭环',
+      version: 'v0.44.0-beta.1',
+      theme: '框架资格验证 + 治理冻结',
       copy:
-        '已发布稳定线会在 0.44 预发布期间继续可用。它证明了 Universal WC SSR、light DOM 原地激活与应用交付基线；新的编译架构必须保持这些能力。',
-      state: 'stable',
+        '编译型线路的首个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它在冻结的治理边界内验证框架本身——编译器、绑定到 Part Program 的页面路由 SSR 与交付门禁（ADR-0151）。',
+      state: 'next',
       stamp: 'CURRENT',
+      status: '预发布',
     },
     {
       version: 'v0.44 alpha',

@@ -7,11 +7,10 @@ Standard Custom Elements are the durable component contract; JSX is the
 authoring syntax; Declarative Shadow DOM is the default server representation;
 and interactive regions activate selectively.
 
-The published stable line is `v0.43.3`. Work on `dev` is at Alpha.10, the
-internal Truth Closure checkpoint (unpublished; umbrella issue #1155) that
-hard-blocks Beta.1. Alpha checkpoints are internal work identifiers, not
-package releases. The first intended public v0.44 prerelease is Beta.1
-(`v0.44.0-beta.1`).
+The published stable line remains the 0.43 series on npm `latest`.
+`v0.44.0-beta.1` is the first public v0.44 prerelease — Beta.1, Framework
+Qualification + Governance Freeze (ADR-0151) — published under dist-tag
+`beta`. The next stage is Beta.2 (`v0.44.0-beta.2`).
 The `1.0.0` target remains unscheduled and requires separate evidence and approval.
 
 ```text
@@ -20,7 +19,7 @@ current proven scope = static-first applications with fullstack output paths
 ```
 
 Source package line: `0.44.0-beta.1` (`v0.44.0-beta.1`).
-npm registry line: `v0.44.0-beta.1` (dist-tag `latest`), published as stable `0.43.3`.
+npm registry line: `v0.44.0-beta.1` (prerelease, dist-tag `beta`); npm `latest` remains the stable `0.43.3` line.
 
 ## Why
 

@@ -14,15 +14,16 @@ the implementation, and the gates that prove the claim.
 Current execution anchor:
 
 - source package line `v0.44.0-beta.1`;
-- npm registry line `v0.44.0-beta.1` (published);
+- npm registry line `v0.44.0-beta.1` (prerelease, dist-tag `beta`; npm `latest`
+  remains the stable 0.43 line);
 - active target `v0.44.0-beta.1`;
-- current internal checkpoint: Alpha.10 (Truth Closure, unpublished; umbrella
-  issue #1155);
-- next public prerelease: `v0.44.0-beta.1`.
+- current internal checkpoint: none — the internal Alpha checkpoint train closed
+  at Alpha.10 (Truth Closure; verifier PASS, #1150);
+- next public prerelease: `v0.44.0-beta.2`.
 
 ADR-0143 explicitly reopens the minor train after the 0.43 maintenance freeze.
 The compiled OpenElement execution order — internal Alpha workspaces (complete
-through Alpha.9) → Alpha.10 truth closure → Beta.1 framework qualification and
+through Alpha.10) → Beta.1 framework qualification and
 governance freeze → Beta.2 productization and governance offload → Beta.3 final
 hardening, formal benchmark and real SaaS qualification → RC1 frozen candidate
 and soak → Stable/1.0 decision on Beta.3 evidence — lives in

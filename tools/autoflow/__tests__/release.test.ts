@@ -180,6 +180,67 @@ Deno.test('buildVersionAnchorReplacements: registry anchors cover current and la
   }
 });
 
+Deno.test('buildVersionAnchorReplacements: prerelease bumps rewrite the registry dist-tag annotation (#1282)', () => {
+  // The v0.43.3 → v0.44.0-beta.1 prepare composed the bumped registry anchor
+  // with the stale "(dist-tag `latest`)" suffix, claiming the beta published
+  // under latest. Prereleases publish under --tag alpha|beta|rc only
+  // (npmPublishTag in tools/publish-npm.ts) and `latest` stays on the stable
+  // line, so the bump must rewrite the annotation together with the version.
+  const version = '9.9.9-beta.1';
+  const tag = `v${version}`;
+  const reps = buildVersionAnchorReplacements(version);
+
+  for (const path of ['README.md', 'docs/roadmap/ROADMAP.md', 'docs/status/STATUS.md']) {
+    for (const fromTag of [PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION_TAG]) {
+      const from = `npm registry line: \`${fromTag}\` (dist-tag \`latest\`)`;
+      const to = `npm registry line: \`${tag}\` (prerelease, dist-tag \`beta\`)`;
+      assert(
+        reps.some(([p, f, t]) => p === path && f === from && t === to),
+        `missing prerelease dist-tag replacement ${path}: ${from} -> ${to}`,
+      );
+    }
+  }
+  // README.zh.md carries the same annotation in its own prose shape.
+  for (const fromTag of [PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION_TAG]) {
+    const from = `npm registry 行为 \`${fromTag}\`——已发布的五包版本(dist-tag \`latest\`)`;
+    const to = `npm registry 行为 \`${tag}\`——预发布版本(dist-tag \`beta\`)`;
+    assert(
+      reps.some(([p, f, t]) => p === 'README.zh.md' && f === from && t === to),
+      `missing prerelease dist-tag replacement README.zh.md: ${from} -> ${to}`,
+    );
+  }
+
+  // The annotation-aware rules must precede the generic registry-line rules:
+  // updateCurrentVersionAnchors applies rules in order, and the generic rule
+  // would otherwise consume the anchor first and strand the stale suffix.
+  const specificIndex = reps.findIndex(([p, f]) =>
+    p === 'README.md' && f === `npm registry line: \`${PACKAGE_VERSION_TAG}\` (dist-tag \`latest\`)`
+  );
+  const genericIndex = reps.findIndex(([p, f]) =>
+    p === 'README.md' && f === `npm registry line: \`${PACKAGE_VERSION_TAG}\``
+  );
+  assert(specificIndex !== -1 && genericIndex !== -1 && specificIndex < genericIndex);
+
+  // The dist-tag name follows the prerelease channel (alpha|beta|rc).
+  assert(
+    buildVersionAnchorReplacements('9.9.9-alpha.2').some(([, , t]) =>
+      t.includes('(prerelease, dist-tag `alpha`)')
+    ),
+  );
+  assert(
+    buildVersionAnchorReplacements('9.9.9-rc.1').some(([, , t]) =>
+      t.includes('(prerelease, dist-tag `rc`)')
+    ),
+  );
+
+  // Stable targets never touch the dist-tag annotation: a stable cut IS the
+  // latest line, and the rule surface stays at the exact 40 entries.
+  assertFalse(
+    buildVersionAnchorReplacements('9.9.9').some(([, f]) => f.includes('dist-tag')),
+  );
+  assertEquals(buildVersionAnchorReplacements('9.9.9').length, 40);
+});
+
 Deno.test('buildVersionAnchorReplacements: every target carries the previous or current line', () => {
   // Coverage gate: every file that is a replacement target must still carry
   // the previous package line (or its tag), so the bump has something to
@@ -197,9 +258,10 @@ Deno.test('buildVersionAnchorReplacements: every target carries the previous or 
   }
   // README carries one head package-line anchor, the currency claim the
   // strategic-docs gate enforces ("convergence is published as"), and the
-  // registry line in both accepted states (#754).
+  // registry line in both accepted states (#754). A prerelease source line
+  // adds the two dist-tag-correcting registry forms (#1282).
   const readmeReps = reps.filter(([p]) => p === 'README.md');
-  assertEquals(readmeReps.length, 4);
+  assertEquals(readmeReps.length, PACKAGE_VERSION.includes('-') ? 6 : 4);
 });
 
 Deno.test('createReleasePlan: rejects shell metacharacters in approval ids', () => {
