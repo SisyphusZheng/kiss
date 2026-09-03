@@ -332,10 +332,11 @@ export class OpenInput extends OpenElement {
   }
 
   formDisabledCallback(disabled: boolean): void {
-    if (disabled) {
-      this.setAttribute('disabled', '');
-    } else {
-      this.removeAttribute('disabled');
-    }
+    // Mirror onto the property (reflect: false), not the host attribute: the
+    // platform counts a form-associated custom element's own `disabled`
+    // attribute toward its disabledness, so writing it here would make the
+    // fieldset-driven state irreversible (#1226).
+    this.disabled = disabled;
+    this.updateStates();
   }
 }

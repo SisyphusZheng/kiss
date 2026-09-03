@@ -211,3 +211,24 @@ Deno.test('public light-child projection rejects forged TrustedHtml values', () 
     'ordinary strings are rejected',
   );
 });
+
+Deno.test('renderDsd threads the compiled delegatesFocus static into the DSD template (#1226)', () => {
+  const program = testProgram({
+    tag: 'oe-focusable',
+    rootMode: 'shadow-open',
+    template: [{ k: 'el', tag: 'button', attrs: [], children: [{ k: 'text', value: 'x' }] }],
+    parts: [],
+  });
+  const focusable = Object.assign(compiledClass(program), { delegatesFocus: true });
+  const plain = compiledClass(program);
+  // The client kernel passes the static to attachShadow; the DSD template
+  // must carry the matching marker or the claimed root loses delegation.
+  assertStringIncludes(
+    renderDsd('oe-focusable', { componentClass: focusable }).html,
+    '<template shadowrootmode="open" shadowrootdelegatesfocus>',
+  );
+  assertStringIncludes(
+    renderDsd('oe-focusable', { componentClass: plain }).html,
+    '<template shadowrootmode="open">',
+  );
+});

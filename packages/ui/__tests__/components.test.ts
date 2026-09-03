@@ -232,6 +232,7 @@ interface FakeDialog {
   show(): void;
   showModal(): void;
   close(): void;
+  setAttribute(name: string, value: string): void;
 }
 
 function fakeDialog(): FakeDialog {
@@ -250,6 +251,10 @@ function fakeDialog(): FakeDialog {
     close: () => {
       calls.push('close');
       fake.open = false;
+    },
+    setAttribute: (name: string, _value: string) => {
+      calls.push(`setAttribute:${name}`);
+      if (name === 'open') fake.open = true;
     },
   };
   return fake;
@@ -307,6 +312,49 @@ Deno.test('open-dialog: close dispatches open-dialog-close; cancel prevents defa
   assertEquals(el.open, false);
 });
 
+Deno.test('open-dialog: modal close restores the sink-removed open attribute before close() (#1226)', async () => {
+  const fake = fakeDialog();
+  const el = await dialogWith(fake);
+  el.open = true;
+  el.onDsdHydrated();
+  assertEquals(fake.calls.includes('showModal'), true);
+  // The compiled bool sink may remove the inner `open` attribute before the
+  // component's sync runs; per spec close() is then a no-op and the dialog
+  // stays :modal forever. The sync must restore the attribute first.
+  fake.open = false;
+  fake.calls.length = 0;
+  el.open = false;
+  el.syncDialogElement();
+  assertEquals(fake.calls, ['setAttribute:open', 'close']);
+  assertEquals(fake.open, false);
+});
+
+Deno.test('open-dialog: the native close echo of a programmatic close does not re-dispatch (#1226)', async () => {
+  const fake = fakeDialog();
+  const el = await dialogWith(fake);
+  let closes = 0;
+  el.addEventListener('open-dialog-close', () => {
+    closes++;
+  });
+  el.open = true;
+  el.onDsdHydrated();
+  // The user-facing close path (close button / cancel) fires the event.
+  el.handleCancel(new Event('cancel', { cancelable: true }));
+  assertEquals(closes, 1);
+  // The inner dialog's native close event arrives after the programmatic
+  // close; the session already fired its event.
+  fake.open = false;
+  el.handleNativeClose();
+  assertEquals(closes, 1);
+  // A genuine native close (e.g. form method="dialog") with the session
+  // still open still dispatches exactly once.
+  el.open = true;
+  fake.open = false;
+  el.handleNativeClose();
+  assertEquals(closes, 2);
+  assertEquals(el.open, false);
+});
+
 // ─── open-input: value channel + events ──────────────────────────────────────
 
 Deno.test('open-input: input events write the value attribute and dispatch open-input/open-change', async () => {
@@ -344,6 +392,19 @@ Deno.test('open-input: formResetCallback clears value and error attributes', asy
   el.formResetCallback();
   assertEquals(el.getAttribute('value'), '');
   assertEquals(el.hasAttribute('error'), false);
+});
+
+Deno.test('open-input: formDisabledCallback mirrors onto the property, never the attribute (#1226)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const el = new (OpenInput as unknown as new () => AnyComponent)();
+  el.formDisabledCallback(true);
+  assertEquals(el.disabled, true);
+  // The platform counts a form-associated custom element's own `disabled`
+  // attribute toward its disabledness: writing it would make the
+  // fieldset-driven state irreversible.
+  assertEquals(el.hasAttribute('disabled'), false);
+  el.formDisabledCallback(false);
+  assertEquals(el.disabled, false);
 });
 
 // ─── open-theme-toggle: initialization priority + persistence policy (#804) ──

@@ -66,6 +66,7 @@ interface CompiledComponentConstructor extends CustomElementConstructor {
     (signals: Record<string, ReturnType<typeof signal>>) => ReturnType<typeof signal>
   >;
   styles?: unknown;
+  delegatesFocus?: boolean;
 }
 
 /**
@@ -254,6 +255,11 @@ function renderDsdAtDepth(
   const html = serializeCompiledProgram(program, host, {
     mode,
     hostAttrs,
+    // SSR/CSR parity (#1226): the client kernel passes the compiled
+    // delegatesFocus static to attachShadow; the DSD template must carry the
+    // matching shadowrootdelegatesfocus marker or the claimed shadow root
+    // silently loses focus delegation.
+    dsd: resolvedClass.delegatesFocus === true ? { delegatesFocus: true } : undefined,
     styleCss: mode === 'light' && staticStyleCss
       ? scopeCompiledLightCss(tag, staticStyleCss)
       : staticStyleCss,

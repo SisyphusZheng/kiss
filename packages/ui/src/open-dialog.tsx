@@ -197,14 +197,35 @@ export class OpenDialog extends OpenElement {
   }
 
   private updateStates(): void {
-    if (!this._internals?.states) return;
+    const states = this.stateSet();
+    if (!states) return;
     if (this.open) {
-      this._internals.states.add('open');
-      this._internals.states.delete('closed');
+      states.add('open');
+      states.delete('closed');
     } else {
-      this._internals.states.delete('open');
-      this._internals.states.add('closed');
+      states.delete('open');
+      states.add('closed');
     }
+  }
+
+  /**
+   * The kernel attaches ElementInternals only for form-associated hosts, so
+   * the dialog (delegatesFocus, not formAssociated) attaches its own once —
+   * without it :state(open)/:state(closed) silently never apply (#1226).
+   */
+  private stateSet(): CustomStateSet | undefined {
+    if (this._internals?.states) return this._internals.states;
+    let internals = readInstanceState(
+      this,
+      'internals',
+      () => undefined as ElementInternals | undefined,
+    );
+    if (!internals) {
+      if (typeof this.attachInternals !== 'function') return undefined;
+      internals = this.attachInternals();
+      writeInstanceState(this, 'internals', internals);
+    }
+    return internals.states;
   }
 
   show(): void {
@@ -244,6 +265,12 @@ export class OpenDialog extends OpenElement {
         dialog.show();
       }
     } else {
+      // A modal session only exits the top layer while the inner `open`
+      // attribute is still present. The compiled bool sink subscribes to the
+      // same signal and may have already removed it — removing the attribute
+      // leaves the dialog :modal and close() is then a spec no-op, so the
+      // attribute must be restored before close() (#1226).
+      if (modalActive && !dialog.open) dialog.setAttribute('open', '');
       if (dialog.open) dialog.close();
       writeInstanceState(this, 'modalActive', false);
     }
@@ -254,10 +281,13 @@ export class OpenDialog extends OpenElement {
     // dialog and immediately re-opens it via showModal(); if the resulting
     // close event is dispatched asynchronously it arrives after the re-open
     // (dialog.open true, host attribute still present) and must be ignored.
-    // A genuine native close (e.g. form method="dialog") finds the platform
-    // has already cleared dialog.open.
     const dialog = this.shadowRoot?.querySelector('dialog');
     if (dialog?.open && this.open) return;
+    // A close() driven by handleClose (property already cleared) is the same
+    // closing session — its open-dialog-close event already fired (#1226).
+    if (!this.open) return;
+    // A genuine native close (e.g. form method="dialog") finds the platform
+    // has already cleared dialog.open.
     this.handleClose();
   }
 

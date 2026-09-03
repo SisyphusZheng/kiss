@@ -15,7 +15,7 @@
  * @csspart content - Popover content
  */
 import { computed, element, OpenElement, property } from '@openelement/element';
-import { nextInstanceId, overlayRecipe, recipe } from './component-recipes.ts';
+import { deepActiveElement, nextInstanceId, overlayRecipe, recipe } from './component-recipes.ts';
 import { readInstanceState, writeInstanceState } from './instance-state.ts';
 
 @element('open-dropdown', { root: 'shadow-open' })
@@ -82,10 +82,62 @@ export class OpenDropdown extends OpenElement {
 
   override onDsdHydrated(): void {
     this.syncAnchorName();
+    this.watchFocusReturn();
   }
 
   override onCsrRendered(): void {
     this.syncAnchorName();
+    this.watchFocusReturn();
+  }
+
+  /**
+   * Native popover focus return only works when the previously focused
+   * element lives in the same tree as the popover. The trigger is slotted
+   * light DOM while the popover sits in this shadow root, so on real pages
+   * (the host inside a page's shadow tree) the platform drops focus to
+   * <body> on dismiss (#1226). The trigger path records the composed focused
+   * element as the popover opens; on close, restore it only when the platform
+   * failed to.
+   */
+  private watchFocusReturn(): void {
+    if (readInstanceState(this, 'focusWired', () => false)) return;
+    writeInstanceState(this, 'focusWired', true);
+    const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
+    if (!content) return;
+    content.addEventListener('focusin', () => {
+      writeInstanceState(this, 'popoverHadFocus', true);
+    });
+    content.addEventListener('toggle', (event) => {
+      const toggle = event as ToggleEvent;
+      if (toggle.newState === 'open') {
+        writeInstanceState(this, 'popoverHadFocus', false);
+        return;
+      }
+      if (toggle.newState !== 'closed') return;
+      const hadFocus = readInstanceState(this, 'popoverHadFocus', () => false);
+      const previous = readInstanceState(
+        this,
+        'previouslyFocused',
+        () => null as HTMLElement | null,
+      );
+      writeInstanceState(this, 'previouslyFocused', null);
+      if (!hadFocus || !previous?.isConnected) return;
+      // The platform settles focus around the toggle event, not before it:
+      // the same-tree native restore lands by itself (active === previous),
+      // while the cross-shadow defect leaves focus inside the closing
+      // popover or drops it to <body> — both mean "restore it ourselves".
+      // A deliberate move (outside click) is neither and is left alone.
+      queueMicrotask(() => {
+        if (!previous.isConnected) return;
+        const active = deepActiveElement();
+        if (active === previous) return;
+        const focusInside = active !== null &&
+          (this.contains(active) || content.contains(active));
+        const dropped = !active || active === document.body || active === document.documentElement;
+        if (!focusInside && !dropped) return;
+        previous.focus();
+      });
+    });
   }
 
   // Both anchor halves must hold a name from the same realm. The SSR markup
@@ -116,6 +168,12 @@ export class OpenDropdown extends OpenElement {
     writeInstanceState(this, 'openAtPointerDown', false);
     if (wasOpen) return;
     const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
-    content?.togglePopover();
+    if (!content) return;
+    if (!content.matches(':popover-open')) {
+      // Capture the return-focus target now: by the queued toggle event the
+      // user may already have moved focus into the popover (#1226).
+      writeInstanceState(this, 'previouslyFocused', deepActiveElement());
+    }
+    content.togglePopover();
   }
 }
