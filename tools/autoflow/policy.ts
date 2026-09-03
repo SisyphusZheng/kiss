@@ -25,22 +25,9 @@ export function isCI(): boolean {
   return Deno.env.get('CI') === 'true';
 }
 
+// ADR-0144 / #1229: fmt/lint/type-graph/Markdown are owned by Deno fmt, deno
+// lint, deno check and markdownlint-cli2 as autoflow-ci.yml steps and .githooks calls.
 const GATES: readonly GateDefinition[] = [
-  {
-    name: 'fmt:check',
-    command: ['deno', 'task', 'fmt:check'],
-    tiers: ['dev', 'push', 'ci', 'release'],
-  },
-  {
-    name: 'lint',
-    command: ['deno', 'task', 'lint'],
-    tiers: ['dev', 'push', 'ci', 'release'],
-  },
-  {
-    name: 'typecheck',
-    command: ['deno', 'task', 'typecheck'],
-    tiers: ['push', 'ci', 'release'],
-  },
   {
     name: 'graph:check',
     command: ['deno', 'task', 'graph:check'],
@@ -325,14 +312,6 @@ const GATES: readonly GateDefinition[] = [
     command: ['deno', 'task', 'deno-api:check'],
     tiers: ['ci', 'release'],
     triggers: [/^packages\/(element|ui|app)\/src\//],
-  },
-  {
-    // #1156 (B2.6): markdownlint-cli2 owns Markdown structure per ADR-0144
-    // (thin .markdownlint-cli2.jsonc config; no bespoke checker).
-    name: 'lint:markdown',
-    command: ['deno', 'task', 'lint:markdown'],
-    tiers: ['push', 'ci', 'release'],
-    triggers: [/\.md$/, /^\.markdownlint-cli2\.jsonc$/, /^deno\.json$/],
   },
   {
     name: 'text-integrity:check',

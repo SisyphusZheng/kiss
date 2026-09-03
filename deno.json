@@ -70,7 +70,6 @@
     "fullstack:boundary-check": "deno run --allow-read --allow-run tools/check-fullstack-boundary.ts",
     "fullstack:migrations-check": "deno run --allow-read tools/check-supabase-migrations.ts",
     "fullstack:workspace-qualification": "deno task --cwd examples/supabase-cloudflare-starter build && deno task --cwd examples/supabase-cloudflare-starter nitro:build && deno run --allow-read --allow-write --allow-env --allow-sys --allow-net=127.0.0.1,localhost --allow-run=node,deno tools/qualify-workspace-runtime.ts",
-    "fullstack:notes-qualification": "deno task fullstack:workspace-qualification",
     "fullstack:evidence-freshness": "deno run --allow-env --allow-net=api.github.com tools/check-evidence-freshness.ts",
     "fullstack:cloudflare-config-check": "deno test --allow-read tools/render-cloudflare-async-config.test.ts && deno task --cwd examples/supabase-cloudflare-starter build && deno task --cwd examples/supabase-cloudflare-starter nitro:build && deno run --allow-read --allow-write tools/render-cloudflare-async-config.ts examples/supabase-cloudflare-starter/wrangler.jsonc examples/supabase-cloudflare-starter/.wrangler-async.generated.json && deno run --allow-run=deno tools/run-wrangler-dry-run.ts examples/supabase-cloudflare-starter/.wrangler-async.generated.json && rm examples/supabase-cloudflare-starter/.wrangler-async.generated.json",
     "arch:check": "deno run --allow-read --allow-run tools/check-architecture-contract.ts",
