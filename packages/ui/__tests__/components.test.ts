@@ -6,7 +6,8 @@
  * suite exercises the imperative behavior that survives in methods (the
  * compiler copies methods verbatim): click/form choreography, dialog top-layer
  * state machine, theme initialization priority, tabs keyboard pattern,
- * dropdown popover guard, code-block copy feedback.
+ * dropdown popover guard, code-block copy feedback. The fake-DOM harness is
+ * shared with lifecycle.test.ts (./harness.ts).
  *
  * Compiled-sink behavior (attribute ↔ signal ↔ DOM) is covered by the element
  * package's compiled facade/claim suites and by www's e2e against the shipped
@@ -14,111 +15,13 @@
  * nothing here connects an element.
  */
 import { assert, assertEquals, assertNotEquals, assertStringIncludes } from '@std/assert';
-
-type TestAttributeStore = WeakMap<object, Map<string, string>>;
-type TestListenerStore = WeakMap<object, Map<string, Set<EventListener>>>;
-
-/**
- * Minimal fake HTMLElement. `shadowRoot` is a writable own field so tests can
- * install a fake render root per instance.
- */
-class TestHTMLElement {
-  static observedAttributes?: readonly string[];
-
-  shadowRoot: unknown = null;
-  style = { setProperty: (_name: string, _value: string) => {} };
-
-  readonly #attributes: TestAttributeStore;
-  readonly #listeners: TestListenerStore;
-
-  constructor(attributes: TestAttributeStore, listeners: TestListenerStore) {
-    this.#attributes = attributes;
-    this.#listeners = listeners;
-  }
-
-  getAttribute(name: string): string | null {
-    return this.#attributes.get(this)?.get(name) ?? null;
-  }
-  setAttribute(name: string, value: string): void {
-    let attributes = this.#attributes.get(this);
-    if (!attributes) {
-      attributes = new Map();
-      this.#attributes.set(this, attributes);
-    }
-    attributes.set(name, value);
-  }
-  hasAttribute(name: string): boolean {
-    return this.#attributes.get(this)?.has(name) ?? false;
-  }
-  removeAttribute(name: string): void {
-    this.#attributes.get(this)?.delete(name);
-  }
-  addEventListener(type: string, listener: EventListener): void {
-    let listeners = this.#listeners.get(this);
-    if (!listeners) {
-      listeners = new Map();
-      this.#listeners.set(this, listeners);
-    }
-    let typed = listeners.get(type);
-    if (!typed) {
-      typed = new Set();
-      listeners.set(type, typed);
-    }
-    typed.add(listener);
-  }
-  removeEventListener(type: string, listener: EventListener): void {
-    this.#listeners.get(this)?.get(type)?.delete(listener);
-  }
-  dispatchEvent(event: Event): boolean {
-    const listeners = this.#listeners.get(this)?.get(event.type);
-    for (const listener of listeners ?? []) listener.call(this, event);
-    return true;
-  }
-  getRootNode(): Node {
-    return this as unknown as Node;
-  }
-  querySelector(): Element | null {
-    return null;
-  }
-  querySelectorAll(): NodeListOf<Element> {
-    return [] as unknown as NodeListOf<Element>;
-  }
-}
-
-function installDomHarness(): void {
-  if (typeof globalThis.HTMLElement !== 'undefined') return;
-  const attributes: TestAttributeStore = new WeakMap();
-  const listeners: TestListenerStore = new WeakMap();
-  const ElementBase = class extends TestHTMLElement {
-    constructor() {
-      super(attributes, listeners);
-    }
-  } as unknown as typeof HTMLElement;
-  Object.defineProperty(globalThis, 'HTMLElement', {
-    configurable: true,
-    value: ElementBase,
-  });
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: {
-      documentElement: {
-        dataset: {},
-        style: {},
-        getAttribute: () => null,
-        setAttribute: () => {},
-      },
-      createElement: () => new ElementBase(),
-      createTreeWalker: () => ({ nextNode: () => null }),
-      querySelector: () => null,
-      querySelectorAll: () => [],
-      body: new ElementBase(),
-      head: new ElementBase(),
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => true,
-    } as unknown as Document,
-  });
-}
+import {
+  dialogWith,
+  fakeDialog,
+  installDomHarness,
+  installThemeGlobals,
+  themeHarness,
+} from './harness.ts';
 
 installDomHarness();
 
@@ -225,50 +128,6 @@ Deno.test('open-button: disabled click prevents default and fires nothing (#757)
 });
 
 // ─── open-dialog: top-layer state machine (#1030) ────────────────────────────
-
-interface FakeDialog {
-  open: boolean;
-  calls: string[];
-  show(): void;
-  showModal(): void;
-  close(): void;
-  setAttribute(name: string, value: string): void;
-}
-
-function fakeDialog(): FakeDialog {
-  const calls: string[] = [];
-  const fake: FakeDialog = {
-    open: false,
-    calls,
-    show: () => {
-      calls.push('show');
-      fake.open = true;
-    },
-    showModal: () => {
-      calls.push('showModal');
-      fake.open = true;
-    },
-    close: () => {
-      calls.push('close');
-      fake.open = false;
-    },
-    setAttribute: (name: string, _value: string) => {
-      calls.push(`setAttribute:${name}`);
-      if (name === 'open') fake.open = true;
-    },
-  };
-  return fake;
-}
-
-function dialogWith(fake: FakeDialog, mode?: string) {
-  return (async () => {
-    const { OpenDialog } = await import('../src/open-dialog.tsx');
-    const el = new (OpenDialog as unknown as new () => AnyComponent)();
-    el.shadowRoot = { querySelector: (sel: string) => (sel === 'dialog' ? fake : null) };
-    if (mode) el.setAttribute('mode', mode);
-    return el;
-  })();
-}
 
 Deno.test('open-dialog: show/close/toggle manage the open property', async () => {
   const el = await dialogWith(fakeDialog());
@@ -408,65 +267,6 @@ Deno.test('open-input: formDisabledCallback mirrors onto the property, never the
 });
 
 // ─── open-theme-toggle: initialization priority + persistence policy (#804) ──
-
-interface ThemeHarness {
-  savedTheme: string | null;
-  writes: string[];
-  docTheme?: string;
-  mediaLight?: boolean;
-  dispatched: string[];
-}
-
-function themeHarness(init: Partial<ThemeHarness>): ThemeHarness {
-  return {
-    savedTheme: null,
-    writes: [],
-    dispatched: [],
-    ...init,
-  };
-}
-
-function installThemeGlobals(harness: ThemeHarness): void {
-  const documentElement = document.documentElement as unknown as {
-    dataset: Record<string, string>;
-    style: Record<string, string>;
-  };
-  if (harness.docTheme === undefined) delete documentElement.dataset.theme;
-  else documentElement.dataset.theme = harness.docTheme;
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: {
-      getItem: () => harness.savedTheme,
-      setItem: (_key: string, value: string) => {
-        harness.writes.push(value);
-      },
-    },
-  });
-  Object.defineProperty(globalThis, 'matchMedia', {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes('light') ? harness.mediaLight === true : false,
-    }),
-  });
-  Object.defineProperty(globalThis, 'CustomEvent', {
-    configurable: true,
-    value: class extends Event {
-      detail: unknown;
-      constructor(type: string, init?: { detail?: unknown }) {
-        super(type);
-        this.detail = init?.detail;
-      }
-    },
-  });
-  const prevDispatch = globalThis.dispatchEvent;
-  Object.defineProperty(globalThis, 'dispatchEvent', {
-    configurable: true,
-    value: (event: Event) => {
-      harness.dispatched.push((event as CustomEvent).type);
-      return prevDispatch ? prevDispatch(event) : true;
-    },
-  });
-}
 
 Deno.test('open-theme-toggle: init follows attribute > document > storage > media priority', async () => {
   const { OpenThemeToggle } = await import('../src/open-theme-toggle.tsx');
@@ -630,4 +430,49 @@ Deno.test('open-code-block: failed clipboard write shows Failed', async () => {
       value: originalNavigator,
     });
   }
+});
+
+// ─── package manifest: the consumer-facing attribute/event contract ──────────
+// adapter-vite derives island metadata from manifest.declarations (WC Package
+// Protocol); a drifted declaration silently miscompiles consumer pages.
+
+Deno.test("manifest: every declaration carries the component's published attributes and events", async () => {
+  const { manifest } = await import('../src/index.ts');
+  const expected: Record<string, { attributes: string[]; events: string[] }> = {
+    'open-card': { attributes: ['variant'], events: [] },
+    'open-callout': { attributes: ['type', 'label'], events: [] },
+    'open-button': {
+      attributes: ['variant', 'size', 'disabled', 'href', 'target', 'type'],
+      events: ['open-click'],
+    },
+    'open-input': {
+      attributes: [
+        'type',
+        'placeholder',
+        'label',
+        'name',
+        'value',
+        'disabled',
+        'required',
+        'error',
+      ],
+      events: ['open-input', 'open-change', 'open-focus', 'open-blur'],
+    },
+    'open-theme-toggle': { attributes: ['theme'], events: ['open:theme-change'] },
+    'open-code-block': { attributes: [], events: [] },
+    'open-badge': { attributes: ['tone', 'size'], events: [] },
+    'open-dialog': { attributes: ['open', 'label'], events: ['open-dialog-close'] },
+    'open-dropdown': { attributes: [], events: [] },
+    'open-tabs': { attributes: [], events: [] },
+  };
+  const actual = Object.fromEntries(
+    manifest.declarations.map((decl) => [
+      decl.tagName,
+      {
+        attributes: (decl.attributes ?? []).map((attr) => attr.name),
+        events: (decl.events ?? []).map((event) => event.name),
+      },
+    ]),
+  );
+  assertEquals(actual, expected);
 });
