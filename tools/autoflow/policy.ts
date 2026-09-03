@@ -407,6 +407,22 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/adapter-vite\/(src|__fixtures__)\//, /^deno\.json$/],
   },
   {
+    // @openelement/ui dogfood qualification (#1226, B2.1): the ui primitives
+    // are exercised as an external consumer through compile -> SSR/DSD ->
+    // serve -> browser on Chromium, Firefox and WebKit. A ui-source or
+    // framework-runtime change must re-prove the primitives; the job needs
+    // all three browsers installed (same as fixture:request-time:gate).
+    name: 'fixture:ui-dogfood:gate',
+    command: ['deno', 'task', 'fixture:ui-dogfood:gate'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\/ui\//,
+      /^packages\/element\//,
+      /^packages\/adapter-vite\/(src|__fixtures__)\//,
+      /^deno\.json$/,
+    ],
+  },
+  {
     // Packed-starter smoke (#934/#936): pack the create CLI, generate a
     // fresh starter, build it against the monorepo framework sources, and
     // run the visual/interaction matrix in the browser. The #937/#938/#943
