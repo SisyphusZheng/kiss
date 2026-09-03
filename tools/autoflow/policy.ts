@@ -240,6 +240,26 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // #1230 (B2.8): check-release-truth.ts (release-state.json consistency +
+    // README/STATUS/ROADMAP registry anchors) previously ran only inside the
+    // local docs:truth composition — a release-truth check with no CI wiring
+    // violates the CI-GATING rule. Same command as the composition, matching
+    // the sibling release:evidence:check tier declaration.
+    name: 'release:truth:check',
+    command: ['deno', 'task', 'release:truth:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^docs\/release\/release-state\.json$/,
+      /^docs\/(status|roadmap|current)\//,
+      /^README/,
+      /^examples\/supabase-cloudflare-starter\/deno\.json$/,
+      /^tools\/check-release-truth(?:\.test)?\.ts$/,
+      /^tools\/project-constants\.ts$/,
+      /^tools\/lib\/version\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     // Replays the durable autoflow3 release state machine recorded under
     // docs/release/autoflow3/<tag>.json from git history and fails unless the
     // final recorded state is completed.

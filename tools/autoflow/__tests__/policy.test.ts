@@ -97,6 +97,19 @@ Deno.test('policy: release tier includes publish dry-run and nitro proofs', () =
   assert(gates.includes('third-party-wc:smoke'));
 });
 
+Deno.test('policy: release-line truth is gated in ci and release tiers (#1230)', () => {
+  // check-release-truth.ts (release-state.json consistency + README/STATUS/
+  // ROADMAP registry anchors) must not depend on the local docs:truth
+  // composition alone — the CI-GATING rule requires a policy gate.
+  for (const tier of ['ci', 'release'] as const) {
+    const gates = selectGates(tier, ['docs/release/release-state.json']).map((gate) => gate.name);
+    assert(gates.includes('release:truth:check'), `release:truth:check missing from ${tier} tier`);
+  }
+  const gate = allRegisteredGates().find((candidate) => candidate.name === 'release:truth:check');
+  assert(gate, 'release:truth:check must be registered');
+  assertEquals(gate.command, ['deno', 'task', 'release:truth:check']);
+});
+
 Deno.test('policy: package artifacts gate packs before the packaged consumer runs', () => {
   const gates = selectGates('ci', ['packages/element/src/index.ts']).map((gate) => gate.name);
   assert(gates.indexOf('package-artifacts:check') < gates.indexOf('consumer:packaged'));
