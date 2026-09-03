@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "sourceVersion": "0.43.3",
-  "publishedVersion": "0.43.3",
-  "latestLandedTrain": "v0.43.3",
+  "sourceVersion": "0.44.0-beta.1",
+  "publishedVersion": "0.44.0-beta.1",
+  "latestLandedTrain": "v0.44.0-beta.1",
   "activeTarget": "v0.44.0-beta.1",
   "nextPlannedTrain": "v0.44.0-beta.2",
-  "maturity": "stable"
+  "maturity": "beta"
 }
