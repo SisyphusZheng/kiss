@@ -26,6 +26,9 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: write
+      # npm Trusted Publishing/OIDC (#1187): id-token is the ONLY npm
+      # credential. Requires per-package trusted-publisher registration on
+      # npmjs.com first — see docs/runbooks/npm-trusted-publishing.md.
       id-token: write
       # #997 / ADR-0134: the release-tier fullstack:evidence-freshness gate
       # reads the run history (scheduled and workflow_dispatch) of the
@@ -44,7 +47,25 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '22'
+          # Registry config only (provenance + publish target); auth comes
+          # exclusively from npm Trusted Publishing/OIDC (#1187).
           registry-url: 'https://registry.npmjs.org'
+      - name: Upgrade npm CLI for Trusted Publishing
+        # #1187 (Beta.2 slice, B2.12): publication authenticates via npm
+        # Trusted Publishing. The npm CLI performs the GitHub Actions OIDC
+        # exchange natively only from 11.5.1; Node 22's bundled npm is older,
+        # and switching the whole release lane to Node 24 would still leave
+        # the floor to whatever npm that image bundles, so the floor is
+        # pinned explicitly here and verified before publish runs.
+        run: |
+          npm install -g "npm@^11.5.1"
+          actual="$(npm --version)"
+          minimum="11.5.1"
+          if [ "$(printf '%s\n%s\n' "$minimum" "$actual" | sort -V | head -n1)" != "$minimum" ]; then
+            echo "npm CLI $actual is below the Trusted Publishing floor $minimum"
+            exit 1
+          fi
+          echo "npm CLI $actual satisfies the Trusted Publishing floor ($minimum)"
       - name: Install Playwright browsers
         # All three engines: the release tier includes fixture:request-time:gate,
         # which runs the request-time fixture suite on Chromium, Firefox and
@@ -54,12 +75,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Configure npm auth
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
-          echo "registry=https://registry.npmjs.org/" >> "$HOME/.npmrc"
       - name: Download the exact named PR CI evidence artifact
         # #1156 (ADR-0146): publication fails closed unless the exact-SHA PR
         # full-CI record, produced by the named source run for the exact HEAD
@@ -82,9 +97,15 @@ jobs:
             exit 1
           fi
       - name: Publish version already merged to main
+        # PRECONDITION (#1187, maintainer web action, cannot be done in-repo):
+        # each of the five @openelement packages (element, app, adapter-vite,
+        # create, ui) must have this repo's GitHub Actions trusted publisher
+        # registered on npmjs.com — repo open-element/openelement, workflow
+        # filename autoflow-release.yml, no environment. See
+        # docs/runbooks/npm-trusted-publishing.md. Until that registration
+        # exists, this step fails at npm with an auth error; there is NO
+        # token fallback by design (the long-lived npm token path is removed).
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ inputs.version }}
           RELEASE_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}

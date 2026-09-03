@@ -277,15 +277,18 @@ Deno.test('release: superseded theme is only recorded on a real version change',
   );
 });
 
-Deno.test('release: local plan includes publish, smoke, gates, and GitHub release when credentials are present', () => {
-  // Simulate a local/manual environment that has the credentials required for
-  // npm publish and GitHub release creation. Force CI off so the plan follows
-  // the dev -> main path.
+Deno.test('release: local plan runs gates and GitHub release but never publishes npm (OIDC-only publication)', () => {
+  // #1187: npm publication authenticates exclusively via Trusted
+  // Publishing/OIDC, which exists only in the GitHub Actions release lane.
+  // A local/manual run never includes the npm publish steps — even when a
+  // legacy token variable is set in the environment, it is ignored.
   const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
+  const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
   const originalCi = Deno.env.get('CI');
   Deno.env.set('NPM_TOKEN', 'test-token');
   Deno.env.set('GITHUB_TOKEN', 'test-token');
+  Deno.env.delete('GITHUB_ACTIONS');
   Deno.env.delete('CI');
   try {
     const commands = createReleasePlan('0.39.1').map((step) => [
@@ -296,28 +299,31 @@ Deno.test('release: local plan includes publish, smoke, gates, and GitHub releas
     assert(commands.some(([name]) => name === 'package artifact gate'));
     assert(commands.some(([name]) => name === 'push dev'));
     assert(commands.some(([name]) => name === 'sync main from dev (fast-forward)'));
-    assert(
+    assertFalse(
       commands.some(([, command]) => command.includes('deno task publish:npm')),
+      'local runs must not publish to npm: publication is OIDC-only in the Actions lane (#1187)',
     );
-    assert(
-      commands.some(([, command]) => command.includes('tools/consumer-smoke.ts --version 0.39.1')),
-    );
+    assertFalse(commands.some(([name]) => name === 'post-publish npm consumer smoke'));
     assert(commands.some(([name]) => name === 'create GitHub release'));
   } finally {
     if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
     else Deno.env.set('NPM_TOKEN', originalNpmToken);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
+    if (originalGitHubActions === undefined) Deno.env.delete('GITHUB_ACTIONS');
+    else Deno.env.set('GITHUB_ACTIONS', originalGitHubActions);
     if (originalCi === undefined) Deno.env.delete('CI');
     else Deno.env.set('CI', originalCi);
   }
 });
 
 Deno.test('release: CI plan publishes from main without touching dev', () => {
-  const originalNpmToken = Deno.env.get('NPM_TOKEN');
+  // Publication capability in CI comes from the Actions OIDC environment
+  // (npm Trusted Publishing, #1187), not from a token variable.
+  const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
   const originalCi = Deno.env.get('CI');
-  Deno.env.set('NPM_TOKEN', 'test-token');
+  Deno.env.set('GITHUB_ACTIONS', 'true');
   Deno.env.set('GITHUB_TOKEN', 'test-token');
   Deno.env.set('CI', 'true');
   try {
@@ -338,8 +344,8 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
     assert(names.includes('push tag'));
     assert(names.includes('create GitHub release'));
   } finally {
-    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
-    else Deno.env.set('NPM_TOKEN', originalNpmToken);
+    if (originalGitHubActions === undefined) Deno.env.delete('GITHUB_ACTIONS');
+    else Deno.env.set('GITHUB_ACTIONS', originalGitHubActions);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
     if (originalCi === undefined) Deno.env.delete('CI');
@@ -347,14 +353,13 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
   }
 });
 
-Deno.test('release: patch release plan omits publish and GitHub release without credentials', () => {
-  const originalNpmToken = Deno.env.get('NPM_TOKEN');
+Deno.test('release: patch release plan omits publish and GitHub release outside the Actions lane', () => {
+  // No GitHub credentials and no Actions OIDC environment: neither npm
+  // publish nor GitHub release creation may enter the plan (#1187).
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
   const originalGhToken = Deno.env.get('GH_TOKEN');
   const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
   const originalCi = Deno.env.get('CI');
-  Deno.env.delete('NPM_TOKEN');
-  Deno.env.delete('NODE_AUTH_TOKEN');
   Deno.env.delete('GITHUB_TOKEN');
   Deno.env.delete('GH_TOKEN');
   Deno.env.delete('GITHUB_ACTIONS');
@@ -366,8 +371,6 @@ Deno.test('release: patch release plan omits publish and GitHub release without 
     assert(names.includes('tag release'));
     assert(names.includes('push tag'));
   } finally {
-    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
-    else Deno.env.set('NPM_TOKEN', originalNpmToken);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
     if (originalGhToken === undefined) Deno.env.delete('GH_TOKEN');

@@ -86,7 +86,10 @@ openElement v0.41.0 distribution is **npm-primary distribution via `deno pack`**
    from the npm registry.
 5. **Release**: `tools/autoflow/release.ts` runs `package-artifacts:check`
    before `publish:npm`; GitHub Actions uses `actions/setup-node` and
-   `secrets.NPM_TOKEN` for provenance publishing.
+   `secrets.NPM_TOKEN` for provenance publishing. _(Superseded by #1187 in
+   v0.44 Beta.2: publication now uses npm Trusted Publishing/OIDC — see
+   `docs/runbooks/npm-trusted-publishing.md`; the long-lived token path is
+   removed.)_
 6. **Smoke**: post-publish consumer smoke installs from npm and validates Node
    ESM, Deno `npm:`, jsDelivr browser-safe exports, and Nitro Node/Workers.
 

@@ -132,3 +132,51 @@ Deno.test('R7 probe 5: the publication workflow retrieves the named artifact and
     'the evidence artifact must be downloaded before publication runs',
   );
 });
+
+Deno.test('B2.12 (#1187): publication authenticates with npm Trusted Publishing/OIDC, never a long-lived token', async () => {
+  const source = await Deno.readTextFile(RELEASE_WORKFLOW_PATH);
+  const doc = parse(source);
+  const job = jobsOf(doc)['release'];
+  assert(job, 'autoflow-release.yml lacks the release job');
+  // The OIDC token endpoint is the only npm credential: no long-lived token
+  // secret, no NODE_AUTH_TOKEN, and no .npmrc auth anywhere in the workflow.
+  const permissions = (job as unknown as { permissions?: Record<string, unknown> }).permissions;
+  assertEquals(permissions?.['id-token'], 'write', 'the release job must grant id-token: write');
+  for (const forbidden of ['NPM_TOKEN', 'NODE_AUTH_TOKEN', '_authToken', 'secrets.NPM_TOKEN']) {
+    assert(
+      !source.includes(forbidden),
+      `autoflow-release.yml must not reference ${forbidden}: the long-lived-token publish path is removed (#1187)`,
+    );
+  }
+  // npm CLI native OIDC support has a hard floor (11.5.1); the workflow must
+  // upgrade the CLI explicitly rather than trusting whatever npm the Node
+  // image bundles.
+  assertStringIncludes(
+    source,
+    'npm install -g "npm@^11.5.1"',
+    'the job must pin an explicit npm CLI upgrade at the OIDC floor',
+  );
+  assertStringIncludes(
+    source,
+    '11.5.1',
+    'the npm CLI floor for Trusted Publishing must be recorded',
+  );
+  const steps = job.steps ?? [];
+  const upgrade = steps.findIndex((step) => String(step.run ?? '').includes('npm install -g'));
+  const publish = steps.findIndex((step) =>
+    String(step.run ?? '').includes('autoflow:publish-existing')
+  );
+  assert(upgrade !== -1 && publish !== -1, 'npm upgrade and publish steps must both exist');
+  assert(upgrade < publish, 'the npm CLI upgrade must run before the publish step');
+  const publishStep = steps[publish];
+  const publishEnv = (publishStep.env ?? {}) as Record<string, unknown>;
+  for (const key of Object.keys(publishEnv)) {
+    assert(
+      key !== 'NPM_TOKEN' && key !== 'NODE_AUTH_TOKEN',
+      `the publish step must not pass ${key}`,
+    );
+  }
+  // registry-url stays: provenance and the publish target need the explicit
+  // npmjs registry configuration (registry config, not auth).
+  assertStringIncludes(source, "registry-url: 'https://registry.npmjs.org'");
+});
