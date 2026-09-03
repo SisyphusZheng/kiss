@@ -97,6 +97,19 @@ Deno.test('policy: release tier includes publish dry-run and nitro proofs', () =
   assert(gates.includes('third-party-wc:smoke'));
 });
 
+Deno.test('policy: release-line truth is gated in ci and release tiers (#1230)', () => {
+  // check-release-truth.ts (release-state.json consistency + README/STATUS/
+  // ROADMAP registry anchors) must not depend on the local docs:truth
+  // composition alone — the CI-GATING rule requires a policy gate.
+  for (const tier of ['ci', 'release'] as const) {
+    const gates = selectGates(tier, ['docs/release/release-state.json']).map((gate) => gate.name);
+    assert(gates.includes('release:truth:check'), `release:truth:check missing from ${tier} tier`);
+  }
+  const gate = allRegisteredGates().find((candidate) => candidate.name === 'release:truth:check');
+  assert(gate, 'release:truth:check must be registered');
+  assertEquals(gate.command, ['deno', 'task', 'release:truth:check']);
+});
+
 Deno.test('policy: package artifacts gate packs before the packaged consumer runs', () => {
   const gates = selectGates('ci', ['packages/element/src/index.ts']).map((gate) => gate.name);
   assert(gates.indexOf('package-artifacts:check') < gates.indexOf('consumer:packaged'));
@@ -388,3 +401,61 @@ Deno.test('release: patch release plan omits publish and GitHub release outside 
     else Deno.env.set('CI', originalCi);
   }
 });
+
+Deno.test('policy: every gate command resolves to an existing deno task (#1230)', async () => {
+  // policy.ts is the machine-readable gate registry; this assertion is the
+  // drift guard that keeps gate -> task -> owning script referentially intact.
+  const denoJson = JSON.parse(await Deno.readTextFile('deno.json')) as {
+    tasks: Record<string, string>;
+  };
+  const gates = allRegisteredGates();
+  assert(gates.length > 0);
+  for (const gate of gates) {
+    assertEquals(
+      gate.command.slice(0, 2),
+      ['deno', 'task'],
+      `${gate.name} must invoke a deno task`,
+    );
+    const task = gate.command[2];
+    assert(task in denoJson.tasks, `${gate.name} references missing deno task "${task}"`);
+  }
+});
+
+Deno.test('policy: no two gates share the same command (#1230)', () => {
+  // One concern, one owner: two gates on the same command would double-run
+  // the same check and fork its ownership. Parameterized gates (same task,
+  // different args — e.g. per-browser smoke) are distinct concerns.
+  const seen = new Map<string, string>();
+  for (const gate of allRegisteredGates()) {
+    const command = gate.command.join(' ');
+    assertEquals(
+      seen.get(command),
+      undefined,
+      `gates "${seen.get(command)}" and "${gate.name}" both own command "${command}"`,
+    );
+    seen.set(command, gate.name);
+  }
+});
+
+function allRegisteredGates() {
+  const byName = new Map<string, ReturnType<typeof selectGates>[number]>();
+  for (const tier of ['dev', 'push', 'ci', 'release'] as const) {
+    // ci/release selection ignores triggers; a maximally-broad changed-path
+    // set additionally captures dev/push-only triggered gates.
+    const changedPaths = [
+      'packages/element/src/index.ts',
+      'docs/current/VERSION_PLAN.md',
+      'www/app/main.tsx',
+      'tools/autoflow/policy.ts',
+      '.github/workflows/autoflow-ci.yml',
+      'examples/supabase-cloudflare-starter/deno.json',
+      'deno.json',
+      'README.md',
+      'e2e/starter-smoke/setup.ts',
+    ];
+    for (const gate of selectGates(tier, changedPaths)) {
+      byName.set(gate.name, gate);
+    }
+  }
+  return [...byName.values()];
+}

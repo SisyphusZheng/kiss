@@ -94,7 +94,7 @@ const forbiddenTrackedSecretFiles = [
 
 // Large tracked binaries: intentional design/e2e/fixture assets are listed;
 // anything else above 1 MiB should not enter the repository.
-const LARGE_BINARY_LIMIT_BYTES = 1024 * 1024;
+export const LARGE_BINARY_LIMIT_BYTES = 1024 * 1024;
 const allowedLargeBinaryDirs = [
   /^www\/design\/mockups\//,
   /^www\/e2e\/visual-baselines\.spec\.ts-snapshots\//,
@@ -104,90 +104,115 @@ const allowedLargeBinaryDirs = [
   /^www\/public\/assets\/dragon-/,
 ];
 
-const failures: Failure[] = [];
+export function isForbiddenRootTracked(path: string): boolean {
+  return forbiddenRootTracked.some((pattern) => pattern.test(path));
+}
 
-function isActiveScanFile(path: string): boolean {
+export function isForbiddenUntrackedResidue(path: string): boolean {
+  return forbiddenUntrackedResidue.some((pattern) => pattern.test(path));
+}
+
+export function isAllowedTrackedIgnored(path: string): boolean {
+  return allowedTrackedIgnoredPaths.some((pattern) => pattern.test(path));
+}
+
+export function isAllowedRemovedPackageMention(path: string): boolean {
+  return allowedRemovedPackageMentions.includes(path);
+}
+
+export function isActiveScanFile(path: string): boolean {
   if (!activeScanExtensions.test(path)) return false;
   return activeScanRoots.some((root) => path === root || path.startsWith(root));
 }
 
-for (const dir of removedPackageDirs) {
-  if (await exists(dir)) {
-    failures.push({ path: dir, message: 'removed package directory is still present' });
+/** Failure message when `path` is a tracked credential file, else undefined. */
+export function credentialFileFailure(path: string): string | undefined {
+  if (allowedCredentialTemplates.test(path)) return undefined;
+  if (forbiddenTrackedSecretFiles.some((pattern) => pattern.test(path))) {
+    return 'credential file is tracked';
   }
+  return undefined;
 }
 
-for (const path of removedAutoflow2Paths) {
-  if (await exists(path)) {
-    failures.push({ path, message: 'AutoFlow2 remnant is still present' });
-  }
+/** Failure message when a tracked binary exceeds the size limit outside the allowed dirs. */
+export function classifyTrackedBinary(path: string, size: number): string | undefined {
+  if (allowedLargeBinaryDirs.some((pattern) => pattern.test(path))) return undefined;
+  if (!/\.(?:png|jpe?g|gif|webp|pdf|zip|woff2?|mp4|mov|ico|icns)$/i.test(path)) return undefined;
+  if (size <= LARGE_BINARY_LIMIT_BYTES) return undefined;
+  return `tracked binary exceeds ${LARGE_BINARY_LIMIT_BYTES / 1024} KiB (${size} bytes)`;
 }
 
-const files = await gitTrackedFiles();
-for (const file of files) {
-  if (!(await exists(file))) continue;
-  if (forbiddenRootTracked.some((pattern) => pattern.test(file))) {
-    failures.push({ path: file, message: 'generated or archived root artifact is tracked' });
-  }
-}
+async function main(): Promise<void> {
+  const failures: Failure[] = [];
 
-for (const file of await gitUntrackedFiles()) {
-  if (forbiddenUntrackedResidue.some((pattern) => pattern.test(file))) {
-    failures.push({ path: file, message: 'untracked workflow or root tool residue is present' });
-  }
-}
-
-for (const file of await gitTrackedIgnoredFiles()) {
-  if (allowedTrackedIgnoredPaths.some((pattern) => pattern.test(file))) continue;
-  failures.push({ path: file, message: 'tracked file is also ignored by .gitignore' });
-}
-
-for (const file of files.filter(isActiveScanFile)) {
-  if (allowedRemovedPackageMentions.includes(file)) continue;
-  let text = '';
-  try {
-    text = await Deno.readTextFile(file);
-  } catch {
-    continue;
-  }
-  for (const packageName of removedPackageNames) {
-    if (text.includes(packageName)) {
-      failures.push({
-        path: file,
-        message: `active file references removed package ${packageName}`,
-      });
+  for (const dir of removedPackageDirs) {
+    if (await exists(dir)) {
+      failures.push({ path: dir, message: 'removed package directory is still present' });
     }
   }
-}
 
-for (const file of files) {
-  if (
-    !allowedCredentialTemplates.test(file) &&
-    forbiddenTrackedSecretFiles.some((pattern) => pattern.test(file))
-  ) {
-    failures.push({ path: file, message: 'credential file is tracked' });
-  }
-  if (allowedLargeBinaryDirs.some((pattern) => pattern.test(file))) continue;
-  if (!/\.(?:png|jpe?g|gif|webp|pdf|zip|woff2?|mp4|mov|ico|icns)$/i.test(file)) continue;
-  try {
-    const stat = await Deno.stat(file);
-    if (stat.size > LARGE_BINARY_LIMIT_BYTES) {
-      failures.push({
-        path: file,
-        message: `tracked binary exceeds ${
-          LARGE_BINARY_LIMIT_BYTES / 1024
-        } KiB (${stat.size} bytes)`,
-      });
+  for (const path of removedAutoflow2Paths) {
+    if (await exists(path)) {
+      failures.push({ path, message: 'AutoFlow2 remnant is still present' });
     }
-  } catch {
-    continue;
   }
+
+  const files = await gitTrackedFiles();
+  for (const file of files) {
+    if (!(await exists(file))) continue;
+    if (isForbiddenRootTracked(file)) {
+      failures.push({ path: file, message: 'generated or archived root artifact is tracked' });
+    }
+  }
+
+  for (const file of await gitUntrackedFiles()) {
+    if (isForbiddenUntrackedResidue(file)) {
+      failures.push({ path: file, message: 'untracked workflow or root tool residue is present' });
+    }
+  }
+
+  for (const file of await gitTrackedIgnoredFiles()) {
+    if (isAllowedTrackedIgnored(file)) continue;
+    failures.push({ path: file, message: 'tracked file is also ignored by .gitignore' });
+  }
+
+  for (const file of files.filter(isActiveScanFile)) {
+    if (isAllowedRemovedPackageMention(file)) continue;
+    let text = '';
+    try {
+      text = await Deno.readTextFile(file);
+    } catch {
+      continue;
+    }
+    for (const packageName of removedPackageNames) {
+      if (text.includes(packageName)) {
+        failures.push({
+          path: file,
+          message: `active file references removed package ${packageName}`,
+        });
+      }
+    }
+  }
+
+  for (const file of files) {
+    const credentialFailure = credentialFileFailure(file);
+    if (credentialFailure) failures.push({ path: file, message: credentialFailure });
+    try {
+      const stat = await Deno.stat(file);
+      const binaryFailure = classifyTrackedBinary(file, stat.size);
+      if (binaryFailure) failures.push({ path: file, message: binaryFailure });
+    } catch {
+      continue;
+    }
+  }
+
+  if (failures.length > 0) {
+    console.error('Repo hygiene check failed:');
+    for (const failure of failures) console.error(`- ${failure.path}: ${failure.message}`);
+    Deno.exit(1);
+  }
+
+  console.log('Repo hygiene check passed.');
 }
 
-if (failures.length > 0) {
-  console.error('Repo hygiene check failed:');
-  for (const failure of failures) console.error(`- ${failure.path}: ${failure.message}`);
-  Deno.exit(1);
-}
-
-console.log('Repo hygiene check passed.');
+if (import.meta.main) await main();

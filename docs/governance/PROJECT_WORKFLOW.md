@@ -156,3 +156,13 @@ npm's default `latest` tag. `tools/verify-npm-release.ts` asserts
 `deno task workflow:check` verifies that the workflow itself remains visible and
 that the active version plan has the required shape. AutoFlow3 is the single
 gate and evidence control plane for hooks and CI.
+
+Gate ownership (#1230): `tools/autoflow/policy.ts` is the machine-readable gate
+registry — each gate names exactly one deno task, and each task names its owning
+script. Generic toolchain concerns (format, lint, type graph, Markdown
+structure, secret content, workflow lint/security) are owned by the pinned OSS
+tools themselves and wired as plain CI steps and git-hook calls (ADR-0144), not
+as AutoFlow gates. Registry integrity — every gate resolving to an existing
+task, and no two gates sharing one command — is asserted in
+`tools/autoflow/__tests__/policy.test.ts`, so this document deliberately does
+not duplicate the gate list.
