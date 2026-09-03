@@ -1,13 +1,20 @@
 #!/bin/sh
 #
-# openElement pre-push hook.
-# AutoFlow3 owns the push tier gate selection.
+# openElement pre-push hook. Format/lint/type-graph/Markdown are owned by the
+# pinned OSS tools directly (ADR-0144, #1229); AutoFlow3 owns only the
+# OE-specific push-tier gate selection.
 #
 # Install: deno task hooks:install
 
 set -e
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+deno fmt --check
+deno lint
+deno task lint:markdown
+deno task typecheck
+
 echo "=== pre-push: autoflow:push for '$BRANCH' ==="
 
 deno task autoflow:push || {

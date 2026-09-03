@@ -50,9 +50,16 @@ Deno.test('policy: minor release with approved plan can execute', () => {
   assert(decision.requiredEvidence.includes('approval:ADR-0101/docs-current-v040'));
 });
 
-Deno.test('policy: dev tier remains fast', () => {
-  const gates = selectGates('dev', ['packages/core/src/index.ts']).map((gate) => gate.name);
-  assertEquals(gates, ['fmt:check', 'lint']);
+Deno.test('policy: generic toolchain concerns are not AutoFlow gates (ADR-0144, #1229)', () => {
+  // Deno fmt/lint/check and markdownlint-cli2 own these as CI steps and hook calls.
+  for (const tier of ['dev', 'push', 'ci', 'release'] as const) {
+    const names = selectGates(tier, ['packages/element/src/index.ts']).map((gate) => gate.name);
+    for (const generic of ['fmt:check', 'lint', 'typecheck', 'lint:markdown']) {
+      assertFalse(names.includes(generic), `${generic} must not be an AutoFlow ${tier} gate`);
+    }
+  }
+  // The dev tier carries no gates at all for a package-source-only change.
+  assertEquals(selectGates('dev', ['packages/core/src/index.ts']).map((gate) => gate.name), []);
 });
 
 Deno.test('policy: push tier stays fast for package source changes', () => {

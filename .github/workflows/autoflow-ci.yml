@@ -68,6 +68,11 @@ jobs:
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           /tmp/gitleaks git --redact --verbose .
       - uses: ./.github/actions/setup-deno-workspace
+      # ADR-0144 / #1229 (B2.7): generic toolchain gates are pinned OSS tool steps, not AutoFlow gates.
+      - run: deno fmt --check
+      - run: deno lint
+      - run: deno task lint:markdown
+      - run: deno task typecheck
       - name: Install Playwright browsers
         # All three engines up front: the gate's fixture:request-time:gate
         # runs the request-time fixture suite on Chromium, Firefox and WebKit.

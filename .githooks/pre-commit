@@ -1,12 +1,14 @@
 #!/bin/sh
 #
-# openElement pre-commit hook.
-# AutoFlow3 is the single local gate controller; this tier stays fast and
-# delegates gate policy to tools/autoflow/policy.ts.
+# openElement pre-commit hook. Format/lint are owned by the Deno toolchain
+# directly (ADR-0144, #1229); AutoFlow3 keeps only OE-specific dev-tier gates.
 #
 # Install: deno task hooks:install
 
 set -e
+
+deno fmt --check
+deno lint
 
 echo "[autoflow:dev] pre-commit"
 deno task autoflow:dev || {
