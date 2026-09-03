@@ -47,7 +47,9 @@ For v0.44 Alpha execution, read
 `docs/governance/V044_ALPHA_WORKSPACE_SOP.md` and
 `docs/current/v0.44.0-EXECUTION-PLAN.md`. The three-role
 `docs/governance/V044_AGENT_LOOP_SOP.md` begins at Beta.1. Also read
-`docs/governance/V044_ISSUE_SOP.md` before updating GitHub state.
+`docs/governance/V044_ISSUE_SOP.md` before updating GitHub state. From Beta.1,
+`docs/governance/GOVERNANCE_CONSTITUTION.md` freezes the semantic-ownership,
+duplicate-justification and contribution rules that audits and reviews cite.
 
 If these documents disagree, stop and fix the documents before changing product
 code. The workflow is part of the product contract.

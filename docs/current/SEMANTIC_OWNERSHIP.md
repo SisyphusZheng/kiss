@@ -1,5 +1,9 @@
 # Semantic ownership
 
+From Beta.1 this table is the registry of record under the governance
+constitution (`docs/governance/GOVERNANCE_CONSTITUTION.md` §3); its
+duplicate-justification rule is constitution §4.3.
+
 This table is the Alpha.9 semantic-ownership record: current truth for the
 v0.44 internal Alpha.9 checkpoint. One concept has one
 semantic owner. Other implementations are executors, adapters, conforming
