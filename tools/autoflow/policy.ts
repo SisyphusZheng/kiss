@@ -37,7 +37,15 @@ const GATES: readonly GateDefinition[] = [
     name: 'package-surface:check',
     command: ['deno', 'task', 'package-surface:check'],
     tiers: ['push', 'ci', 'release'],
-    triggers: [/^packages\//, /^deno\.json$/, /^tools\/lib\/package-graph\.ts$/],
+    triggers: [
+      /^packages\//,
+      /^deno\.json$/,
+      /^tools\/lib\/package-graph\.ts$/,
+      // #1177 (B2.3): the gate also asserts the www public-import boundary.
+      /^www\//,
+      /^tools\/check-package-surface\.ts$/,
+      /^tools\/lib\/typescript-ast\.ts$/,
+    ],
   },
   {
     name: 'interface:snapshot',

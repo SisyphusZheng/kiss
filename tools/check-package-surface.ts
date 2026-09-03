@@ -4,8 +4,11 @@ import {
   RETAINED_PACKAGE_NAMES,
 } from './project-constants.ts';
 import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
+import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 import { OPENELEMENT_EXPORT_FILES } from '../packages/adapter-vite/src/generated-export-files.ts';
 import { resolve } from '@std/path';
+import { exists } from '@std/fs';
+import { walk } from '@std/fs/walk';
 
 const retainedPackages = [...RETAINED_PACKAGE_NAMES].sort();
 const removedPackages = [...REMOVED_PACKAGE_NAMES].sort();
@@ -166,6 +169,53 @@ const APILIST_REQUIRED_PACKAGES = [
   '@openelement/app',
   '@openelement/adapter-vite',
 ];
+
+// ─── www public-import boundary (#1177, B2.3) ─────────────
+// The website must consume @openelement/* exactly as an external npm consumer
+// would: every specifier in the shipped site surface (www/app plus the build
+// entry points) resolves to a published export subpath of one of the five
+// retained packages — never a private source path. The only permitted
+// non-package @openelement specifiers are the www-local import-map aliases
+// declared in www/deno.json. www/e2e is deliberately out of scope: its probe
+// harness (browser-bundle.ts) bundles package sources in memory and ships
+// nothing.
+
+export function extractWwwPackageSpecifiers(source: string, path = 'source.ts'): string[] {
+  const specifiers = new Set<string>();
+  for (const { value } of extractStaticModuleSpecifiers(source, path)) {
+    if (value.startsWith('@openelement/')) specifiers.add(value);
+  }
+  for (
+    const match of source.matchAll(/\/\*\*?\s*@jsxImportSource\s+(@openelement\/[^\s*]+)/g)
+  ) {
+    specifiers.add(match[1]);
+  }
+  return [...specifiers];
+}
+
+export function wwwImportBoundaryDrift(
+  specifiers: readonly string[],
+  publishedSubpaths: ReadonlyMap<string, ReadonlySet<string>>,
+  localAliasPrefixes: readonly string[],
+): string[] {
+  const drift: string[] = [];
+  for (const specifier of specifiers) {
+    if (!specifier.startsWith('@openelement/')) continue;
+    if (localAliasPrefixes.some((prefix) => specifier.startsWith(prefix))) continue;
+    const segments = specifier.split('/');
+    const pkgName = segments.slice(0, 2).join('/');
+    const subpath = segments.slice(2).join('/') || '.';
+    const published = publishedSubpaths.get(pkgName);
+    if (!published) {
+      drift.push(`${specifier} does not resolve to a retained published package.`);
+      continue;
+    }
+    if (!published.has(subpath)) {
+      drift.push(`${specifier} is not a published export subpath of ${pkgName}.`);
+    }
+  }
+  return drift.sort();
+}
 
 async function main(): Promise<void> {
   for (const dir of ['packages', 'examples', 'www/app', 'tools/third-party-wc-smoke']) {
@@ -389,6 +439,56 @@ async function main(): Promise<void> {
         `www/app/routes/apilist.tsx does not document ${required} exports as concrete subpaths.`,
       );
     }
+  }
+
+  // ─── www public-import boundary (#1177, B2.3) ─────────────
+  // Prove the shipped site surface (www/app + its build entry points) imports
+  // only published export subpaths, so workspace resolution during in-repo
+  // development is byte-identical to the packed npm artifacts.
+
+  const publishedSubpaths = new Map(
+    packages.map((pkg) => [
+      pkg.name,
+      new Set(Object.keys(normalizeExports(pkg.exports))),
+    ]),
+  );
+  const wwwConfig = JSON.parse(await Deno.readTextFile('www/deno.json'));
+  const localAliasPrefixes = Object.keys(wwwConfig.imports ?? {})
+    .filter((key) => key.startsWith('@openelement/'));
+
+  const wwwSurfaceFiles = [
+    'www/vite.config.ts',
+    'www/content-collections.ts',
+    'www/build-pagefind.ts',
+  ];
+  for await (
+    const { path: file } of walk('www/app', {
+      includeDirs: false,
+      skip: [/(^|\/)dist(\/|$)/],
+    })
+  ) {
+    if (/\.(?:ts|tsx)$/.test(file)) wwwSurfaceFiles.push(file);
+  }
+  const specifierOrigins = new Map<string, string[]>();
+  for (const file of wwwSurfaceFiles.sort()) {
+    if (!await exists(file)) continue;
+    const text = await Deno.readTextFile(file);
+    for (const specifier of extractWwwPackageSpecifiers(text, file)) {
+      const origins = specifierOrigins.get(specifier) ?? [];
+      origins.push(file);
+      specifierOrigins.set(specifier, origins);
+    }
+  }
+  for (
+    const item of wwwImportBoundaryDrift(
+      [...specifierOrigins.keys()],
+      publishedSubpaths,
+      localAliasPrefixes,
+    )
+  ) {
+    const specifier = item.split(' ')[0];
+    const origins = specifierOrigins.get(specifier) ?? [];
+    failures.push(`www import boundary: ${item} (imported by ${origins.join(', ')})`);
   }
 
   if (failures.length > 0) {
