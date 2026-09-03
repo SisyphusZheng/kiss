@@ -30,43 +30,15 @@ interface PackageJson {
   [key: string]: unknown;
 }
 
-import { parse as parseSemver, type SemVer } from '@std/semver';
+import { type LineVersion, parseLineVersion } from './lib/version.ts';
 import { getArg } from './lib/process.ts';
 
-interface ParsedVersion {
-  major: number;
-  minor: number;
-  patch: number;
-  prerelease?: string;
-  prereleaseNumber: number;
-}
+// Canonical prerelease/version truth lives in tools/lib/version.ts (#1231
+// M16); keep the historical names as local aliases so callers and tests are
+// unchanged.
+export type ParsedVersion = LineVersion;
 
-export function parseVersion(version: string): ParsedVersion {
-  let parsed: SemVer;
-  try {
-    parsed = parseSemver(version);
-  } catch {
-    throw new Error(`Invalid semver version: ${version}`);
-  }
-  // The bump line is strict x.y.z(-label.n): reject the v/= prefixes and
-  // build metadata that @std/semver otherwise tolerates.
-  if (!/^\d/u.test(version) || (parsed.build ?? []).length > 0) {
-    throw new Error(`Invalid semver version: ${version}`);
-  }
-  const { major, minor, patch } = parsed;
-  const prerelease = parsed.prerelease ?? [];
-  if (prerelease.length === 0) {
-    return { major, minor, patch, prereleaseNumber: 0 };
-  }
-  const [label, num] = prerelease;
-  return {
-    major,
-    minor,
-    patch,
-    prerelease: String(label),
-    prereleaseNumber: num === undefined ? 0 : Number(num),
-  };
-}
+export const parseVersion = parseLineVersion;
 
 const PRERELEASE_RANK: Record<string, number> = {
   alpha: 1,

@@ -23,6 +23,8 @@ import {
   resolvePatchTargetVersion,
 } from './release.ts';
 import { PACKAGE_VERSION } from '../project-constants.ts';
+import { normalizeReleaseVersion as normalizeLineVersion } from '../lib/version.ts';
+import { acquireReleaseLock, RELEASE_LOCK_PATH, releaseLockSync } from './release-lock.ts';
 import { runWithOutput } from '../lib/process.ts';
 
 interface CliOptions {
@@ -41,7 +43,8 @@ interface GateResult {
 
 export function normalizeReleaseVersion(version: string | undefined): string | undefined {
   if (!version) return undefined;
-  return version.replace(/-(alpha|beta|rc)(\d+)$/u, '-$1.$2');
+  // Canonical prerelease/version truth: tools/lib/version.ts (#1231 M16).
+  return normalizeLineVersion(version);
 }
 
 export function parseArgs(args: string[]): CliOptions {
@@ -331,49 +334,83 @@ async function runApprovedRelease(
   await executeReleasePlan('approved-release', targetVersion, approvedPlan, dryRun);
 }
 
+/**
+ * Release-mutating commands (#1231 M14): the CI concurrency group in
+ * autoflow-release.yml serializes the hosted lane; this set is the local
+ * counterpart — each of these commands takes the deterministic repo-local
+ * lock (release-lock.ts) before doing anything, so two local release
+ * operations cannot interleave. Read-only tiers (dev/push/ci) never lock.
+ */
+const RELEASE_LOCK_COMMANDS = new Set([
+  'patch-release',
+  'release',
+  'release-prepare',
+  'publish-existing',
+  'release-record',
+]);
+
 export async function main(args: string[]): Promise<void> {
   const options = parseArgs(args);
 
-  switch (options.command) {
-    case 'dev':
-      await runTier('dev', options.dryRun);
-      break;
-    case 'push':
-      await runTier('push', options.dryRun);
-      break;
-    case 'ci':
-      await runTier('ci', options.dryRun);
-      break;
-    case 'patch-release':
-      await runPatchRelease(options.dryRun, options.approvedPlan, options.prCiEvidence);
-      break;
-    case 'release':
-      await runApprovedRelease(
-        options.approvedPlan,
-        options.targetVersion,
-        options.dryRun,
-        options.prCiEvidence,
-      );
-      break;
-    case 'release-prepare':
-      await runReleasePrepare(
-        options.approvedPlan,
-        options.targetVersion,
-        options.dryRun,
-        options.prCiEvidence,
-      );
-      break;
-    case 'publish-existing':
-      await runPublishExisting(options.targetVersion, options.dryRun, options.prCiEvidence);
-      break;
-    case 'release-record':
-      await runReleaseRecord(options.targetVersion, options.dryRun);
-      break;
-    default:
-      console.error(
-        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION] [--pr-ci PATH]',
-      );
+  let release: (() => Promise<void>) | undefined;
+  if (RELEASE_LOCK_COMMANDS.has(options.command)) {
+    const lock = await acquireReleaseLock(RELEASE_LOCK_PATH, options.command);
+    if (!lock.acquired) {
+      console.error(`Refusing to run ${options.command}: ${lock.reason}`);
       Deno.exit(1);
+    }
+    release = lock.release;
+    // Gate failures inside the release plan Deno.exit(1) directly; the unload
+    // hook (Deno.exit dispatches unload) plus the finally below release the
+    // lock on every exit path short of a hard kill, which leaves a stale lock
+    // the next run reports by name.
+    globalThis.addEventListener('unload', () => releaseLockSync(RELEASE_LOCK_PATH));
+  }
+
+  try {
+    switch (options.command) {
+      case 'dev':
+        await runTier('dev', options.dryRun);
+        break;
+      case 'push':
+        await runTier('push', options.dryRun);
+        break;
+      case 'ci':
+        await runTier('ci', options.dryRun);
+        break;
+      case 'patch-release':
+        await runPatchRelease(options.dryRun, options.approvedPlan, options.prCiEvidence);
+        break;
+      case 'release':
+        await runApprovedRelease(
+          options.approvedPlan,
+          options.targetVersion,
+          options.dryRun,
+          options.prCiEvidence,
+        );
+        break;
+      case 'release-prepare':
+        await runReleasePrepare(
+          options.approvedPlan,
+          options.targetVersion,
+          options.dryRun,
+          options.prCiEvidence,
+        );
+        break;
+      case 'publish-existing':
+        await runPublishExisting(options.targetVersion, options.dryRun, options.prCiEvidence);
+        break;
+      case 'release-record':
+        await runReleaseRecord(options.targetVersion, options.dryRun);
+        break;
+      default:
+        console.error(
+          'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION] [--pr-ci PATH]',
+        );
+        Deno.exit(1);
+    }
+  } finally {
+    await release?.();
   }
 }
 

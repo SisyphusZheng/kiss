@@ -1,5 +1,9 @@
 import { assert, assertEquals } from '@std/assert';
-import { findRemovedAuthoringVocabulary, isInEvidenceWindow } from './check-docs-truth.ts';
+import {
+  findRemovedAuthoringVocabulary,
+  isCurrentDocAllowed,
+  isInEvidenceWindow,
+} from './check-docs-truth.ts';
 import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
 
 Deno.test('docs-truth current: removed authoring vocabulary is flagged on current surfaces', () => {
@@ -108,6 +112,26 @@ Deno.test('docs-truth evidence window: prerelease ordering is semver, not lexico
   assertEquals(isInEvidenceWindow('0.41.0-alpha.14'), true);
   assertEquals(isInEvidenceWindow('0.42.0-alpha.1'), true);
   assertEquals(isInEvidenceWindow('0.40.9'), false);
+});
+
+Deno.test('docs-truth current: whitelist matching is exact-path, not substring (#1231 M17)', () => {
+  // Directory prefixes (trailing '/') allow everything below the named dir.
+  assert(isCurrentDocAllowed('docs/release/v0.29.3.md'));
+  assert(isCurrentDocAllowed('docs/adr/ADR-0151-v044-release-train-retopology.md'));
+  // Exact file entries allow only that one path.
+  assert(isCurrentDocAllowed('docs/current/v0.44.0-MIGRATION.md'));
+  assert(isCurrentDocAllowed('www/content/guide/migration.md'));
+  assert(isCurrentDocAllowed('www/app/routes/changelog.tsx'));
+  // Substring lookalikes that the old `includes` matching exempted are now gated.
+  assertEquals(isCurrentDocAllowed('docs/runbooks/supabase-migrations.md'), false);
+  assertEquals(isCurrentDocAllowed('docs/runbooks/legacy-upgrade.md'), false);
+  assertEquals(isCurrentDocAllowed('docs/current/CHANGELOG-notes.md'), false);
+  assertEquals(isCurrentDocAllowed('docs/current/release-cadence.md'), false);
+  assertEquals(isCurrentDocAllowed('www/app/routes/archived-posts.tsx'), false);
+  // An exact entry is not a prefix: sibling files stay gated.
+  assertEquals(isCurrentDocAllowed('www/content/guide/migration-notes.md'), false);
+  // Current-truth surfaces remain gated.
+  assertEquals(isCurrentDocAllowed('docs/current/VERSION_PLAN.md'), false);
 });
 
 const CHECK_SCRIPT = new URL('./check-docs-truth.ts', import.meta.url);

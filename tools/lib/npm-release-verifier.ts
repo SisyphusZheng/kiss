@@ -1,4 +1,9 @@
-import { parse as parseSemver, type SemVer } from '@std/semver';
+import {
+  type PrereleaseChannel,
+  prereleaseChannel,
+  prereleaseParts,
+  tryParseLineVersion,
+} from './version.ts';
 
 const DEFAULT_REGISTRY_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000, 15_000] as const;
 
@@ -47,46 +52,25 @@ export interface VerifyNpmReleaseOptions {
   log?: (message: string) => void;
 }
 
-function parseLineVersion(version: string): SemVer | null {
-  // Strict x.y.z(-label.n) only: reject the v/= prefixes and build metadata
-  // that @std/semver otherwise tolerates.
-  if (!/^\d/u.test(version)) return null;
-  try {
-    const parsed = parseSemver(version);
-    return (parsed.build ?? []).length > 0 ? null : parsed;
-  } catch {
-    return null;
-  }
-}
+// Strict x.y.z(-label.n) parsing is the canonical line-version contract in
+// ./version.ts (#1231 M16); the v/= prefixes and build metadata that
+// @std/semver would tolerate are rejected there.
 
-export function prereleaseTag(version: string): 'alpha' | 'beta' | 'rc' | null {
-  const parsed = parseLineVersion(version);
-  const prerelease = parsed?.prerelease ?? [];
-  if (parsed && prerelease.length === 0) return null;
-  const [name, num] = prerelease;
-  if (
-    parsed && prerelease.length === 2 && typeof num === 'number' &&
-    (name === 'alpha' || name === 'beta' || name === 'rc')
-  ) {
-    return name;
-  }
+export function prereleaseTag(version: string): PrereleaseChannel | null {
+  const parsed = tryParseLineVersion(version);
+  if (parsed && parsed.prerelease === undefined) return null;
+  const channel = prereleaseChannel(version);
+  if (channel) return channel;
   throw new Error(`Expected version x.y.z or x.y.z-alpha|beta|rc.n, got: ${version}`);
 }
 
 // #869-2.5: the version immediately before the target on the same line, so a
 // release can never skip a number (alpha.8-style hole).
 export function previousPrerelease(version: string): string | null {
-  const parsed = parseLineVersion(version);
-  const prerelease = parsed?.prerelease ?? [];
-  const [name, num] = prerelease;
-  if (
-    !parsed || prerelease.length !== 2 || typeof num !== 'number' ||
-    (name !== 'alpha' && name !== 'beta' && name !== 'rc')
-  ) {
-    return null;
-  }
-  if (num <= 1) return null;
-  return `${parsed.major}.${parsed.minor}.${parsed.patch}-${name}.${num - 1}`;
+  const parts = prereleaseParts(version);
+  const channel = prereleaseChannel(version);
+  if (!parts || !channel || parts.num <= 1) return null;
+  return `${parts.base}-${channel}.${parts.num - 1}`;
 }
 
 async function verifyField(

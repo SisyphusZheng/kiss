@@ -19,6 +19,7 @@ import { formatJson } from '@openelement/element/build-utils';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 import { npmTarballName, tarballPath } from './lib/npm-tarball.ts';
 import { npmView } from './lib/npm-release-verifier.ts';
+import { prereleaseChannel } from './lib/version.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
@@ -269,9 +270,9 @@ export async function publishPackage(
 }
 
 export function npmPublishTag(version: string): string {
-  if (version.includes('-alpha')) return 'alpha';
-  if (version.includes('-beta')) return 'beta';
-  if (version.includes('-rc')) return 'rc';
+  // Canonical prerelease/version truth: tools/lib/version.ts (#1231 M16).
+  const channel = prereleaseChannel(version);
+  if (channel) return channel;
   // Only called for prereleases (see publishPackage), and the release line
   // produces alpha/beta/rc only — anything else is a tooling bug, not 'next'.
   throw new Error(`No npm publish tag for version: ${version}`);

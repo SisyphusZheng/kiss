@@ -1,3 +1,5 @@
+import { prereleaseChannel } from './version.ts';
+
 export interface ReleaseClosureRecord {
   tagCommit: string;
   finalEvidenceCommit: string;
@@ -63,7 +65,7 @@ export function validateReleaseEvidenceClosure(input: ReleaseEvidenceClosureInpu
   // exist but the registry is empty. `publish-existing` is exempt — its kind
   // asserts the publish; `patch-release` is the two-phase tag phase whose final
   // evidence is the publish-existing run instead.
-  const isPrerelease = /-(alpha|beta|rc)\b/i.test(input.version);
+  const isPrerelease = prereleaseChannel(input.version) !== undefined;
   const kind = input.finalEvidence.kind;
   const isReleasePath = kind === 'release' || kind === 'approved-release';
   const recordsNpmPublish = input.finalEvidence.steps.some((step) =>

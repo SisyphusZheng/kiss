@@ -38,6 +38,7 @@ import {
   stalePackageVersionClaims,
 } from './project-constants.ts';
 import { escapeRegExp } from './lib/text.ts';
+import { prereleaseSequence } from './lib/version.ts';
 import { formatError } from '@openelement/element';
 
 export interface VersionAnchor {
@@ -300,7 +301,7 @@ export function findInflightVersionClaimFailures(read: (path: string) => string)
   }
   const parts: string[] = [];
   for (const version of publishedVersions) {
-    const alpha = version.match(/-alpha\.(\d+)$/u)?.[1];
+    const alpha = prereleaseSequence(version, 'alpha');
     parts.push(`v?${escapeRegExp(version)}`);
     if (alpha) parts.push(`\\balpha\\.${alpha}\\b`);
   }

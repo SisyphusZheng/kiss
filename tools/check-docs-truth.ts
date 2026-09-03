@@ -28,7 +28,13 @@ import {
   REMOVED_PACKAGE_NAMES,
 } from './project-constants.ts';
 import { formatError } from '@openelement/element';
-import { compareVersions, roadmapEntryTheme } from './autoflow/release.ts';
+import { roadmapEntryTheme } from './autoflow/release.ts';
+import {
+  compareVersions,
+  FIRST_TAGGED_VERSION,
+  PRERELEASE_CHANNELS,
+  prereleaseSequence,
+} from './lib/version.ts';
 
 type CheckResult = {
   passed: boolean;
@@ -189,33 +195,45 @@ const STALE_CURRENT_CONTRACT: Array<{ re: RegExp; name: string }> = [
   },
 ];
 
+/**
+ * Current-docs whitelist (#1231 M17): EXACT-PATH semantics, replacing the old
+ * substring (`file.includes(entry)`) matching that exempted any path merely
+ * containing a token like 'migration' or 'legacy' anywhere (e.g.
+ * docs/runbooks/supabase-migrations.md slipped through via 'migration').
+ *
+ * Entry forms:
+ *   - trailing '/'  → directory prefix, anchored at the repo root
+ *                     ('docs/release/' allows everything below it),
+ *   - otherwise     → one exact repo-relative file path.
+ * Anything not listed is gated; new historical surfaces opt in explicitly.
+ */
 const CURRENT_DOC_ALLOWED = [
-  'migration',
-  'MIGRATION',
-  'changelog',
-  'release/',
-  'legacy',
-  'archive',
-  'audit/',
-  'sop/',
-  'adr/',
-  'conversation/',
-  'benchmark/',
-  'status/reviews/',
-  'design/',
-  'reference/',
-  'zh/guide/',
-  'guide/migration',
-  'guide/static-props',
-  'jsx-component-model',
-  'signal-vnode-effect',
-  'guide/jsx-components',
-  'registry/_hub-data',
-  'docs/arch/',
-  'docs/guide/',
+  // Historical record trees.
+  'docs/release/',
+  'docs/audit/',
+  'docs/adr/',
+  'docs/archive/',
+  'docs/design/',
   'docs/roadmap/',
   'docs/status/',
+  // Migration guides and changelog pages legitimately name removed APIs.
+  'docs/current/v0.44.0-MIGRATION.md',
+  'www/content/guide/migration.md',
+  'www/content/guide/migration.zh.md',
+  'www/app/routes/guide/migration.tsx',
+  'www/app/components/article-routes/guide-migration.tsx',
+  'www/app/routes/changelog.tsx',
+  'www/app/components/page-changelog.tsx',
+  'www/app/components/page-changelog-styles.ts',
 ];
+
+/** Exact-path whitelist membership (M17): directory prefix or exact file. */
+export function isCurrentDocAllowed(file: string): boolean {
+  const path = normalizeSlashes(file);
+  return CURRENT_DOC_ALLOWED.some((entry) =>
+    entry.endsWith('/') ? path.startsWith(entry) : path === entry
+  );
+}
 
 /**
  * Removed v0.43 authoring vocabulary (A10.10/#1218). These names must not
@@ -294,7 +312,7 @@ const currentCheck: DocsTruthCheck = {
     const issues: { file: string; line: number; text: string }[] = [];
 
     async function check(file: string): Promise<void> {
-      if (!/\.(ts|tsx|md)$/.test(file) || CURRENT_DOC_ALLOWED.some((a) => file.includes(a))) {
+      if (!/\.(ts|tsx|md)$/.test(file) || isCurrentDocAllowed(file)) {
         return;
       }
       // Generated www/app content-data mirrors are build artifacts of the
@@ -374,11 +392,13 @@ const sourceRoots = [
 
 const escapedCurrentVersion = PACKAGE_VERSION.replaceAll('.', '\\.');
 const escapedRegistryVersion = PREVIOUS_PACKAGE_VERSION.replaceAll('.', '\\.');
-const currentAlphaNumber = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
-const registryAlphaNumber = PREVIOUS_PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
+const currentAlphaNumber = prereleaseSequence(PACKAGE_VERSION, 'alpha');
+const registryAlphaNumber = prereleaseSequence(PREVIOUS_PACKAGE_VERSION, 'alpha');
 const allowedAlphaNumbers = [currentAlphaNumber, registryAlphaNumber].filter(Boolean).join('|');
 const retiredFullForm =
-  `(?!v?${escapedCurrentVersion}(?!\\d))(?!v?${escapedRegistryVersion}(?!\\d))v?\\d+\\.\\d+\\.\\d+-(?:alpha|beta|rc)\\.\\d+(?!\\d)`;
+  `(?!v?${escapedCurrentVersion}(?!\\d))(?!v?${escapedRegistryVersion}(?!\\d))v?\\d+\\.\\d+\\.\\d+-(?:${
+    PRERELEASE_CHANNELS.join('|')
+  })\\.\\d+(?!\\d)`;
 const retiredShortForm = allowedAlphaNumbers
   ? `\\balpha\\.(?!(?:${allowedAlphaNumbers})(?!\\d))\\d+(?!\\d)`
   : `\\balpha\\.\\d+(?!\\d)`;
@@ -737,13 +757,13 @@ import {
 import { readJson } from './lib/fs.ts';
 
 const EVIDENCE_DIR = 'docs/release/autoflow3';
-const FIRST_TAGGED_VERSION = '0.41.0-alpha.14';
 
 /**
  * Semver window for the forward-tag sweep: evidence records older than the
- * first tagged release predate the immutable-tag policy. This must be a
- * numeric semver compare — lexicographic order ranks '0.41.0-alpha.2' above
- * '0.41.0-alpha.14' and would sweep untagged history into the gate.
+ * first tagged release (FIRST_TAGGED_VERSION, canonical in ./lib/version.ts)
+ * predate the immutable-tag policy. This must be a numeric semver compare —
+ * lexicographic order ranks '0.41.0-alpha.2' above '0.41.0-alpha.14' and would
+ * sweep untagged history into the gate.
  */
 export function isInEvidenceWindow(version: string): boolean {
   return compareVersions(version, FIRST_TAGGED_VERSION) >= 0;

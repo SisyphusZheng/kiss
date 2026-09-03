@@ -7,6 +7,23 @@
  * The change set comes from `git diff --name-only <base>`:
  *   - PR CI: base is the merge-base of HEAD with origin/$GITHUB_BASE_REF
  *   - local: base is origin/main...HEAD
+ *
+ * Local/CI diff semantics (#1231, Beta.1 carried risk): the two bases differ
+ * (CI uses the PR target branch, local always origin/main), and the PR-body
+ * amendment signal below is CI-only (GITHUB_EVENT_PATH). The divergence is
+ * provably ONE-DIRECTIONAL (fail closed), so no local green can mask a red CI:
+ * under the ADR-0151 train topology origin/main only advances by merging dev,
+ * hence origin/main is an ancestor of every dev-based PR HEAD (verified:
+ * `git merge-base --is-ancestor origin/main origin/dev`), the local merge-base
+ * equals origin/main and is an ancestor of the CI merge-base, so the local
+ * diff is a SUPERSET of the CI diff while the local amendment signals are a
+ * SUBSET (no PR body). A frozen change the CI sees is therefore always seen
+ * locally; evaluate(local)=ok implies evaluate(CI)=ok. The residual gap is
+ * only local false-FAIL: dev drift inside the wider local diff, or an
+ * amendment cited solely in the PR body. Both fail safe. Do not "fix" this by
+ * defaulting the local base to origin/dev: for a dev→main release PR that
+ * diff is empty locally while CI diffs against origin/main — a fail-open.
+ *
  * An amendment reference is any of:
  *   1. a changed/added file under docs/adr/ (the amendment path itself),
  *   2. an `ADR-\d+` token OTHER than the frozen baselines (ADR-0119,

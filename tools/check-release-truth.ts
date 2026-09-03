@@ -4,6 +4,7 @@ import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
 } from './project-constants.ts';
+import { prereleaseChannel } from './lib/version.ts';
 
 export interface ReleaseState {
   schemaVersion: number;
@@ -40,8 +41,8 @@ const DEFAULT_CONTEXT: ReleaseTruthContext = {
  * never move `latest`; stable releases keep npm's default `latest` tag.
  */
 export function npmDistTag(version: string): 'alpha' | 'beta' | 'rc' | 'latest' {
-  return (version.match(/-(alpha|beta|rc)(?:\.|$)/u)?.[1] as 'alpha' | 'beta' | 'rc' | undefined) ??
-    'latest';
+  // Canonical prerelease/version truth: ./lib/version.ts (#1231 M16).
+  return prereleaseChannel(version) ?? 'latest';
 }
 
 /**

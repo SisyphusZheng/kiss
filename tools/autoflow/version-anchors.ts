@@ -15,6 +15,7 @@ import {
   PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION_TAG,
 } from '../project-constants.ts';
+import { prereleaseChannel, prereleaseParts } from '../lib/version.ts';
 
 export function releaseTag(version: string): string {
   return `v${version}`;
@@ -38,7 +39,7 @@ export interface PublishedReleaseState {
  */
 export function advancePublishedReleaseStateText(text: string, version: string): string {
   const state = JSON.parse(text) as PublishedReleaseState;
-  const prerelease = version.match(/-(alpha|beta)(?:\.|$)/u)?.[1];
+  const prerelease = prereleaseParts(version)?.name;
   return `${
     JSON.stringify(
       {
@@ -63,10 +64,9 @@ export async function updatePublishedReleaseState(version: string): Promise<void
 }
 
 export function nextPrereleaseTag(version: string): string {
-  const match = version.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/u);
-  if (!match) return releaseTag(version);
-  const [, base, name, number] = match;
-  return `v${base}-${name}.${Number(number) + 1}`;
+  const parts = prereleaseParts(version);
+  if (!parts) return releaseTag(version);
+  return `v${parts.base}-${parts.name}.${parts.num + 1}`;
 }
 
 /**
@@ -428,7 +428,7 @@ export function buildVersionAnchorReplacements(
   // would otherwise consume the anchor first, stranding the stale suffix.
   // Docs whose registry line carries no annotation (VERSION_PLAN,
   // PROJECT_WORKFLOW) need no rule — the generic replacement is correct.
-  const prereleaseDistTag = version.match(/-(alpha|beta|rc)\.\d+$/u)?.[1];
+  const prereleaseDistTag = prereleaseChannel(version);
   const prereleaseRules: Array<[string, string, string]> = [];
   if (prereleaseDistTag !== undefined) {
     for (const path of ['README.md', 'docs/roadmap/ROADMAP.md', 'docs/status/STATUS.md']) {
