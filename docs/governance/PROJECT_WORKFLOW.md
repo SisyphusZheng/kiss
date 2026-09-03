@@ -166,3 +166,8 @@ as AutoFlow gates. Registry integrity — every gate resolving to an existing
 task, and no two gates sharing one command — is asserted in
 `tools/autoflow/__tests__/policy.test.ts`, so this document deliberately does
 not duplicate the gate list.
+
+Dependency policy (#1233): pin style, lockfile discipline, update cadence and
+the validation-library boundary are recorded in
+`docs/governance/DEPENDENCY_POLICY.md`; its enforcement gates live in the
+registry above like every other gate.
