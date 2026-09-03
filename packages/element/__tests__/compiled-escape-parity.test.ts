@@ -10,10 +10,11 @@
  * both call sites and requires byte-identical output.
  */
 
-import { assertEquals } from '@std/assert';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { serializeToHtml as serializeRuntime } from '../src/internal/compiled/runtime.ts';
 import { serializeToHtml as serializeServer } from '../src/internal/compiled/server/index.ts';
 import { escapeAttr } from '../src/internal/core/html-escape.ts';
+import { escapeText } from '../src/internal/compiled/escape-text.ts';
 import { testProgram } from './compiled-runtime/test-program.ts';
 
 const CORPUS: readonly string[] = [
@@ -70,4 +71,74 @@ Deno.test('escape parity: fixed attribute corpus is byte-identical across both s
 
 Deno.test('escape parity: canonical contract escapes & < > " and \'', () => {
   assertEquals(escapeAttr(`a&b"c<d>e'f`), 'a&amp;b&quot;c&lt;d&gt;e&#39;f');
+});
+
+/**
+ * Text-node corpus (B1.1 audit remediation, #1272 / finding F3).
+ *
+ * Text nodes use a REDUCED escape contract (`&`, `<`, `>` only — quotes are
+ * pass-through in text content) owned by one shared helper,
+ * `internal/compiled/escape-text.ts`, consumed by both serializers. Before the
+ * convergence each serializer carried a private copy and no test bound the
+ * two at byte level for text output; a drift confined to `>` escaping in text
+ * nodes would have been silent. This corpus requires byte-identical text
+ * output across both serializers and pins the shared contract.
+ */
+const TEXT_CORPUS: readonly string[] = [
+  `a&b"c<d>e'f`,
+  `<`,
+  `>`,
+  `&`,
+  `"`,
+  `'`,
+  `&quot;entity-looking&quot;`,
+  `plain`,
+  `line\nbreak\ttab`,
+  `unicode é ‹› „ “`,
+  `</script><script>alert(1)</script>`,
+];
+
+Deno.test('escape parity: static text corpus is byte-identical across both serializers', () => {
+  for (const value of TEXT_CORPUS) {
+    const program = testProgram({
+      tag: 'x-parity',
+      template: [
+        { k: 'el', tag: 'div', attrs: [], children: [{ k: 'text', value }] },
+      ],
+      parts: [],
+    });
+    const runtime = serializeRuntime(program, hostWith(undefined) as unknown as RuntimeHost);
+    const server = serializeServer(program, hostWith(undefined));
+    assertEquals(runtime, server, `serializers diverged for ${JSON.stringify(value)}`);
+    assertEquals(
+      runtime,
+      `<div>${escapeText(value)}</div>`,
+      `shared escapeText contract broken for ${JSON.stringify(value)}`,
+    );
+  }
+});
+
+Deno.test('escape parity: text Part corpus is byte-identical across both serializers', () => {
+  for (const value of TEXT_CORPUS) {
+    const program = testProgram({
+      tag: 'x-parity',
+      template: [
+        { k: 'el', tag: 'div', attrs: [], children: [{ k: 'part', index: 0 }] },
+      ],
+      parts: [{ k: 'text', index: 0, signal: 'v' }],
+    });
+    const runtime = serializeRuntime(program, hostWith(value) as unknown as RuntimeHost);
+    const server = serializeServer(program, hostWith(value));
+    assertEquals(runtime, server, `serializers diverged for ${JSON.stringify(value)}`);
+    assertStringIncludes(
+      runtime,
+      escapeText(value),
+      `escaped text missing from output for ${JSON.stringify(value)}`,
+    );
+  }
+});
+
+Deno.test('escape parity: text contract escapes & < > and passes quotes and non-ASCII through', () => {
+  assertEquals(escapeText(`a&b"c<d>e'f`), 'a&amp;b"c&lt;d&gt;e\'f');
+  assertEquals(escapeText(`unicode é ‹› „ “`), `unicode é ‹› „ “`);
 });
