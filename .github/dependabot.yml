@@ -4,4 +4,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      # zizmor dependabot-cooldown (#1156 B2.6): let fresh action releases
+      # bake for a week before Dependabot proposes them.
+      default-days: 7
     open-pull-requests-limit: 5
