@@ -1,5 +1,9 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
-import { compare as compareSemver, parse as parseSemver, type SemVer } from '@std/semver';
+import {
+  compareVersions as compareLineVersions,
+  FIRST_TAGGED_VERSION,
+  nextPatchVersion as nextLinePatchVersion,
+} from '../lib/version.ts';
 import {
   PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION,
@@ -74,33 +78,16 @@ export interface ReleaseCommandStep {
   run?: (evidence: ReleaseEvidence) => Promise<void>;
 }
 
+/**
+ * Canonical prerelease/version truth lives in ../lib/version.ts (#1231 M16);
+ * these wrappers keep the established release.ts import surface unchanged.
+ *
+ * Pre-release line semantics: bump the pre-release counter, not the patch, so
+ * a version like 0.41.0-alpha.6 advances to 0.41.0-alpha.7 instead of the
+ * stable 0.41.1 (which would silently leave pre-release scope).
+ */
 export function nextPatchVersion(version: string): string {
-  let parsed: SemVer;
-  try {
-    parsed = parseSemver(version);
-  } catch {
-    throw new Error(`Invalid semver version: ${version}`);
-  }
-  // Strict x.y.z(-label.n) only: reject the v/= prefixes and build metadata
-  // that @std/semver otherwise tolerates.
-  if (!/^\d/u.test(version) || (parsed.build ?? []).length > 0) {
-    throw new Error(`Invalid semver version: ${version}`);
-  }
-  const { major, minor, patch } = parsed;
-  const prerelease = parsed.prerelease ?? [];
-
-  // Pre-release line: bump the pre-release counter, not the patch, so a
-  // version like 0.41.0-alpha.6 advances to 0.41.0-alpha.7 instead of
-  // the stable 0.41.1 (which would silently leave pre-release scope).
-  if (prerelease.length > 0) {
-    const [preName, preNum] = prerelease;
-    if (prerelease.length !== 2 || typeof preName !== 'string' || typeof preNum !== 'number') {
-      throw new Error(`Invalid semver version: ${version}`);
-    }
-    return `${major}.${minor}.${patch}-${preName}.${preNum + 1}`;
-  }
-
-  return `${major}.${minor}.${patch + 1}`;
+  return nextLinePatchVersion(version);
 }
 
 /**
@@ -530,7 +517,7 @@ export function createPreparePlan(
  * can widen.
  */
 export async function assertForwardOnlyTags(targetVersion: string): Promise<void> {
-  const firstTagged = '0.41.0-alpha.14';
+  const firstTagged = FIRST_TAGGED_VERSION;
   const min = compareVersions(targetVersion, firstTagged);
   if (min < 0) return; // Pre-window releases are legacy; no forward-only claim.
   const untagged: string[] = [];
@@ -556,7 +543,7 @@ export async function assertForwardOnlyTags(targetVersion: string): Promise<void
 
 /** Numeric semver compare for x.y.z(-prerelease); prerelease < release. */
 export function compareVersions(a: string, b: string): number {
-  return compareSemver(parseSemver(a), parseSemver(b));
+  return compareLineVersions(a, b);
 }
 
 /**

@@ -4,6 +4,7 @@ import {
   PACKAGE_VERSION_TAG,
 } from './project-constants.ts';
 import { staleClaimsAlternation } from './check-version-anchors.ts';
+import { prereleaseSequence } from './lib/version.ts';
 import { STALE_HISTORY_CLAIM_PATTERNS } from './lib/stale-claims.ts';
 import { formatError } from '@openelement/element';
 
@@ -75,7 +76,7 @@ const currentDocs = [
  */
 export function staleCurrencyClaimPatterns(): RegExp[] {
   const stale = staleClaimsAlternation();
-  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1] ?? '0';
+  const currentAlpha = prereleaseSequence(PACKAGE_VERSION, 'alpha') ?? '0';
   return [
     new RegExp(`five-package convergence is published as\\s+\`?(?:${stale})(?![\\d.])`, 'i'),
     new RegExp(`五包收敛已作为\\s+\`?(?:${stale})(?![\\d.])`, 'i'),

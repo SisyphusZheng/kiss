@@ -1,6 +1,8 @@
 // NOTE: this module is also loaded by Nitro/jiti under Node
 // (packages/adapter-vite/__fixtures__/nitro-proof/nitro.config.ts) — keep it
-// free of jsr:/npm: imports.
+// and its imports (./lib/version.ts) free of jsr:/npm: imports.
+
+import { prereleaseParts } from './lib/version.ts';
 
 export const PACKAGE_VERSION = '0.44.0-beta.1';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
@@ -90,14 +92,12 @@ export const PREVIOUS_RELEASE_THEME =
  */
 export function stalePackageVersionClaims(): string[] {
   const claims = [PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG];
-  // Hand-rolled parse on purpose: this module is also loaded by Nitro/jiti
-  // under Node (packages/adapter-vite/__fixtures__/nitro-proof/nitro.config.ts),
-  // so it must stay free of jsr:/npm: imports — no @std/semver here.
-  const match = PREVIOUS_PACKAGE_VERSION.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/u);
-  if (match) {
-    const [, base, preName, preNum] = match;
-    for (let n = Number(preNum) - 1; n >= 1; n--) {
-      claims.push(`${base}-${preName}.${n}`, `v${base}-${preName}.${n}`);
+  // Canonical prerelease truth lives in ./lib/version.ts (import-free, so this
+  // module stays loadable by Nitro/jiti under Node).
+  const parts = prereleaseParts(PREVIOUS_PACKAGE_VERSION);
+  if (parts) {
+    for (let n = parts.num - 1; n >= 1; n--) {
+      claims.push(`${parts.base}-${parts.name}.${n}`, `v${parts.base}-${parts.name}.${n}`);
     }
   }
   return claims;
