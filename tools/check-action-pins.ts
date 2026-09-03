@@ -23,6 +23,8 @@ const ACTION_VERSION_PINS = new Map([
   ],
   ['github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3', 'v4.37.6'],
   ['github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3', 'v4.37.6'],
+  ['github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938', 'v4.37.9'],
+  ['github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938', 'v4.37.9'],
 ]);
 
 // Repos that carry an approved pin above. A full-SHA use of one of these repos
