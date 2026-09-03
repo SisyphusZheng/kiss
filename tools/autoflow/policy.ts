@@ -334,6 +334,19 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/(element|ui|app)\/src\//],
   },
   {
+    // #1233 (B2.11): the dual zod/valibot decision confines both libraries to
+    // the request-time interop fixture; published package source stays
+    // validation-agnostic (docs/governance/DEPENDENCY_POLICY.md).
+    name: 'validation:boundary-check',
+    command: ['deno', 'task', 'validation:boundary-check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\/[^/]+\/src\//,
+      /^tools\/check-validation-boundary(?:\.test)?\.ts$/,
+      /^docs\/governance\/DEPENDENCY_POLICY\.md$/,
+    ],
+  },
+  {
     name: 'text-integrity:check',
     command: ['deno', 'task', 'text-integrity:check'],
     tiers: ['ci', 'release'],

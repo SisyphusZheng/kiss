@@ -36,7 +36,10 @@ export function action(ctx: { formData: FormData }) {
 ```
 
 valibot is interchangeable (`v.safeParse(schema, input)`); see the fixture
-for both. The page reads the failure through its descriptor's `props`
+for both. The dual-library presence is the interop proof, and published
+packages stay validation-library-free by policy — see
+`docs/governance/DEPENDENCY_POLICY.md` §3 for the decision and boundary rule.
+The page reads the failure through its descriptor's `props`
 projector (`actionData` on the projector context, mapped onto the compiled
 page properties); mark the form
 `data-open-enhance` to get the morph-based enhanced path for free.
