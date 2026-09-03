@@ -179,12 +179,24 @@ function sanitizeHeadExtras(
 ): string {
   if (allowHeadExtrasScripts || !headExtras) return headExtras;
   // Strip <script> tags and their content. The delimiter class includes `/`
-  // (`<script/src=...>` is still a script tag to the browser), and a second
-  // pass strips an unclosed `<script ...>` to end-of-input (browsers treat
-  // the rest of the document as script raw text).
-  let safeHeadExtras = headExtras
-    .replace(/<script[\s>/][\s\S]*?<\/script\s*>/gi, '')
-    .replace(/<script[\s>/][\s\S]*$/gi, '');
+  // (`<script/src=...>` is still a script tag to the browser). The end-tag
+  // pattern accepts attributes/whitespace because browsers ignore them on end
+  // tags (`</script\t\n bar>` still ends the script raw-text element). Both
+  // properties hold only when the strip runs to a fixed point: removing an
+  // inner pair can re-form a live outer `<script>...</script>`, so the block
+  // pass repeats until stable before the final backstop strips an unclosed
+  // `<script ...>` to end-of-input (browsers treat the rest of the document
+  // as script raw text). Fixed-point first keeps that backstop from eating
+  // legitimate trailing markup (CodeQL #1281).
+  const SCRIPT_BLOCK_RE = /<script[\s>/][\s\S]*?<\/script(?=[\s/>])[^>]*>/gi;
+  const SCRIPT_OPEN_TO_EOF_RE = /<script[\s>/][\s\S]*$/gi;
+  let safeHeadExtras = headExtras;
+  for (;;) {
+    const stripped = safeHeadExtras.replace(SCRIPT_BLOCK_RE, '');
+    if (stripped === safeHeadExtras) break;
+    safeHeadExtras = stripped;
+  }
+  safeHeadExtras = safeHeadExtras.replace(SCRIPT_OPEN_TO_EOF_RE, '');
   if (safeHeadExtras !== headExtras) {
     warnOnce(
       'headExtrasScripts',
@@ -194,12 +206,17 @@ function sanitizeHeadExtras(
       warnScope,
     );
   }
-  // Strip on* event handler attributes (strong XSS indicator)
+  // Strip on* event handler attributes (strong XSS indicator). Also to a
+  // fixed point: a match ending at a quoted value can leave a concatenated
+  // `on...=` sequence that only becomes strippable once the earlier match is
+  // removed (CodeQL #1281).
   if (/\s+on\w+\s*=/i.test(safeHeadExtras)) {
-    safeHeadExtras = safeHeadExtras.replace(
-      /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
-      '',
-    );
+    const EVENT_HANDLER_ATTR_RE = /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
+    for (;;) {
+      const stripped = safeHeadExtras.replace(EVENT_HANDLER_ATTR_RE, '');
+      if (stripped === safeHeadExtras) break;
+      safeHeadExtras = stripped;
+    }
     log.warn(
       'headExtras contained on* event handler attributes which were stripped for security.',
     );
@@ -214,9 +231,11 @@ function sanitizeHeadExtras(
  */
 function validateHeadExtrasBalance(headExtras: string): void {
   if (!headExtras) return;
-  // Check for unclosed HTML comments: <!-- without matching -->
+  // Check for unclosed HTML comments: <!-- without a matching close. The
+  // HTML standard also accepts `--!>` as an (abrupt) comment close, so both
+  // forms count (CodeQL #1281).
   const commentOpens = (headExtras.match(/<!--/g) || []).length;
-  const commentCloses = (headExtras.match(/-->/g) || []).length;
+  const commentCloses = (headExtras.match(/--!?>/g) || []).length;
   if (commentOpens !== commentCloses) {
     log.warn(
       'headExtras has unbalanced HTML comments (<!-- vs -->). ' +

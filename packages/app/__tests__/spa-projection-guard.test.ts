@@ -108,7 +108,7 @@ async function mountAndCaptureHost(
   loader: () => Promise<unknown>,
 ): Promise<{ host: Record<string, unknown>; baseline: object }> {
   const hosts: Record<string, unknown>[] = [];
-  let baseline: object = Object.prototype;
+  let baseline: object;
   const root = {
     innerHTML: '',
     addEventListener() {},

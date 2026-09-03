@@ -2,7 +2,10 @@ import { assert, assertEquals } from '@std/assert';
 import {
   findIntegrationSpecifierFailures,
   packageSurfaceSpecifiers,
+  staleCurrentClaims,
 } from './check-public-docs-integrity.ts';
+import { PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
+import { escapeRegExp } from './lib/text.ts';
 
 const surfaceText = `<!-- package-surface-map
 {
@@ -99,4 +102,24 @@ Deno.test('integration specifiers: real repo docs stay inside the current packag
   }
   assert(docs.length > 0);
   assertEquals(findIntegrationSpecifierFailures(read, docs), []);
+});
+
+Deno.test('stale "active release target" guard binds the previous prerelease tag as a literal (#1281)', () => {
+  // The tag is interpolated into a RegExp via escapeRegExp (CodeQL incomplete
+  // sanitization). The extraction regex constrains the tag to
+  // `[a-zA-Z]+\.\d+`, where escapeRegExp is byte-identical to the historical
+  // dot-only escaping — this pins that parity so the guard's matching
+  // contract provably did not change.
+  const previousTag = PREVIOUS_PACKAGE_VERSION.match(/-([a-zA-Z]+\.\d+)$/u)?.[1];
+  const guard = staleCurrentClaims.find((re) => re.source.startsWith('active release target'));
+  if (!previousTag) {
+    // Stable previous line: the guard is intentionally absent (#727).
+    assertEquals(guard, undefined);
+    return;
+  }
+  assert(guard);
+  assert(guard.source.includes(escapeRegExp(previousTag)));
+  assert(guard.test(`the active release target is v0.44.0-${previousTag}`));
+  // A `.` in the tag must be matched literally, never as a regex wildcard.
+  assert(!guard.test(`the active release target is v0x44x0-${previousTag.replace('.', 'X')}`));
 });
