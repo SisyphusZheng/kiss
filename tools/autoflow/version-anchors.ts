@@ -418,7 +418,37 @@ export function buildVersionAnchorReplacements(
       .replaceAll('$PV', pv)
       .replaceAll('$TAG', tag)
       .replaceAll('$VER', version);
-  return raw.map(([path, from, to]) => [path, resolve(from), resolve(to)]);
+  // Prerelease bumps (#1282): the generic registry-line rules advance the
+  // anchor version but leave the stable-era "(dist-tag `latest`)" annotation
+  // untouched, composing a false claim — prereleases publish under
+  // --tag alpha|beta|rc only (npmPublishTag in tools/publish-npm.ts) and
+  // `latest` stays on the stable line. Rewrite the annotation together with
+  // the version. These forms must precede the generic registry-line rules:
+  // updateCurrentVersionAnchors applies rules in order and the generic rule
+  // would otherwise consume the anchor first, stranding the stale suffix.
+  // Docs whose registry line carries no annotation (VERSION_PLAN,
+  // PROJECT_WORKFLOW) need no rule — the generic replacement is correct.
+  const prereleaseDistTag = version.match(/-(alpha|beta|rc)\.\d+$/u)?.[1];
+  const prereleaseRules: Array<[string, string, string]> = [];
+  if (prereleaseDistTag !== undefined) {
+    for (const path of ['README.md', 'docs/roadmap/ROADMAP.md', 'docs/status/STATUS.md']) {
+      for (const fromTag of ['$PVT', '$PREV_PVT']) {
+        prereleaseRules.push([
+          path,
+          `npm registry line: \`${fromTag}\` (dist-tag \`latest\`)`,
+          `npm registry line: \`$TAG\` (prerelease, dist-tag \`${prereleaseDistTag}\`)`,
+        ]);
+      }
+    }
+    for (const fromTag of ['$PVT', '$PREV_PVT']) {
+      prereleaseRules.push([
+        'README.zh.md',
+        `npm registry 行为 \`${fromTag}\`——已发布的五包版本(dist-tag \`latest\`)`,
+        `npm registry 行为 \`$TAG\`——预发布版本(dist-tag \`${prereleaseDistTag}\`)`,
+      ]);
+    }
+  }
+  return [...prereleaseRules, ...raw].map(([path, from, to]) => [path, resolve(from), resolve(to)]);
 }
 
 export async function updateCurrentVersionAnchors(version: string): Promise<void> {

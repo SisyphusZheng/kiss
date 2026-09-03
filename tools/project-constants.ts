@@ -9,12 +9,13 @@ export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
 export const LATEST_LANDED_TRAIN = 'v0.44.0-beta.1';
 export const ACTIVE_EXECUTION_VERSION = 'v0.44.0-beta.1';
 export const NEXT_EXECUTION_VERSION = 'v0.44.0-beta.2';
-// Internal v0.44 admission checkpoints are not package versions. Keep them
-// separate from release-bump constants so Alpha.10 cannot be interpreted as a
-// publishable npm/tag target.
+// Internal v0.44 admission checkpoints are not package versions. The Alpha
+// checkpoint train closed at Alpha.10 (verifier PASS, #1150); with Beta.1
+// published as a public prerelease there is no active internal checkpoint —
+// the value records that closure so the VERSION_PLAN anchor stays honest.
 export const ACTIVE_INTERNAL_CHECKPOINT =
-  'Alpha.10 Truth Closure (internal, unpublished; umbrella #1155)';
-export const NEXT_PUBLIC_PRERELEASE = 'v0.44.0-beta.1';
+  'none — internal Alpha checkpoints closed at Alpha.10 (verifier PASS, #1150); the active line is the public Beta train (ADR-0151)';
+export const NEXT_PUBLIC_PRERELEASE = 'v0.44.0-beta.2';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',

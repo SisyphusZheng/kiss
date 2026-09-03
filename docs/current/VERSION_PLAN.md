@@ -2,8 +2,10 @@
 
 OpenElement = Web Components-native fullstack application framework.
 
-The published stable line remains `v0.43.3`. The active target is the internal,
-unpublished Alpha.10 Truth Closure checkpoint tracked by umbrella issue #1155.
+The published stable line remains the 0.43 series on npm `latest`.
+`v0.44.0-beta.1` is published as the first public v0.44 prerelease (Beta.1 —
+Framework Qualification + Governance Freeze) under dist-tag `beta`. The next
+stage is Beta.2 (`v0.44.0-beta.2`) per ADR-0151.
 
 ADR-0147 defines the Alpha workspace train, which is complete through Alpha.9.
 ADR-0151 retopologizes the release train and supersedes the ADR-0149 five-Beta
@@ -11,15 +13,15 @@ mapping; the remainder of ADR-0149 and ADR-0150 that is not about Beta topology
 is unaffected. ADR-0146 remains the release-role authority and activates at
 Beta.1.
 
-- Repository package line: `v0.43.3`
-- npm registry line: `v0.43.3`
+- Repository package line: `v0.44.0-beta.1`
+- npm registry line: `v0.44.0-beta.1` (prerelease, dist-tag `beta`; npm `latest` remains the stable 0.43 line)
 - Current source package line: `v0.44.0-beta.1`
 - Current npm registry line: `v0.44.0-beta.1`
 - Latest landed train: `v0.44.0-beta.1`
-- Active internal target: Alpha.10 Truth Closure (internal, unpublished; umbrella #1155)
+- Active internal target: none — internal Alpha checkpoints closed at Alpha.10 (verifier PASS, #1150); the active line is the public Beta train (ADR-0151)
 - Active release target: `v0.44.0-beta.1`
-- Next planned public train: `v0.44.0-beta.1`
-- Next public prerelease: `v0.44.0-beta.1`
+- Next planned public train: `v0.44.0-beta.2`
+- Next public prerelease: `v0.44.0-beta.2`
 
 The coherent five-package distribution contract follows
 [PACKAGE_SURFACE.md](./PACKAGE_SURFACE.md) and ADR-0114. The supported server

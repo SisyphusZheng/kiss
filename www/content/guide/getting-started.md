@@ -4,7 +4,7 @@ lede: 'OpenElement is a Web Components-native, static-first application framewor
 order: 1
 ---
 
-> The current source and published npm line is stable `{{OPENELEMENT_VERSION}}` (dist-tag `latest`), carrying the ADR-0119 static freeze, the ADR-0122 application-loop freeze and the 0.43 Universal WC SSR contract.
+> The current source line is `{{OPENELEMENT_VERSION}}`, a public prerelease published under dist-tag `beta`; npm `latest` remains the stable 0.43 line, carrying the ADR-0119 static freeze, the ADR-0122 application-loop freeze and the 0.43 Universal WC SSR contract.
 
 ## Install
 
