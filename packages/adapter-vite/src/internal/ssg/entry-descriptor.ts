@@ -221,11 +221,13 @@ export function buildEntryDescriptor(
         varName: `$${r.varName}`,
         filePath: r.filePath,
         defaultTagName: fallbackTagName,
-        // #960 (registration decoupling, Option 2): a definePage route always
-        // registers its page class under the path-derived fallback tag, so the
-        // definePage render always runs — its tagName export only names a
-        // content element and never drives registration. Plain element routes
-        // keep the exported tagName as their registration tag.
+        // #960 (registration decoupling, Option 2) + #1276 (B1.3-F1): a
+        // definePage route's tagName export only names a content element and
+        // never drives registration. For every page route the generated entry
+        // resolves the SSR tag from the route module's compiled Part Program
+        // at evaluation time (__resolvePageTag); the tag here is the
+        // resolver's path-derived fallback, used only when the class carries
+        // no compiled program.
         tagName: r.definePage === true ? fallbackTagName : (r.tagName || fallbackTagName),
         importPath: `/${routesDir}/${r.filePath}`,
         isDynamic,

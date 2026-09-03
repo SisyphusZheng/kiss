@@ -32,7 +32,7 @@ import type { EntryDescriptor } from '../protocol/ssg.ts';
 import { validateIslandModuleSpecifier } from './entry-generators.ts';
 import { renderActionRoute, renderPageRoute } from './entry-codegen.ts';
 import { renderNotFoundRoute } from './entry-not-found-codegen.ts';
-import { renderImport, routeTagNameExpr } from './entry-route-helpers.ts';
+import { pageRouteTagExpr, renderImport } from './entry-route-helpers.ts';
 import { renderApiRoute, renderMiddleware } from './entry-server-codegen.ts';
 import { renderRuntimeHelpers } from './entry-render-runtime.ts';
 import { renderActionRuntime } from './entry-action-runtime.ts';
@@ -186,8 +186,11 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('};');
     lines.push('');
     // #952: entry-side registration ownership tracking. Since #960
-    // (registration decoupling) a definePage route's page class registers
-    // under the path-derived fallback tag; v0.44 compiled modules never
+    // (registration decoupling) a definePage route's page class registration
+    // is decoupled from the module's tagName export; since #1276 (B1.3-F1) the
+    // registered tag resolves from the compiled Part Program
+    // (__resolvePageTag), with the path-derived tag as fallback. v0.44
+    // compiled modules never
     // self-register, so the entry owns every registration. The ownership
     // guard still covers dev re-evaluation — overwriting a fresh
     // self-registered class with the entry's page class would recurse when
@@ -211,7 +214,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('');
   }
   for (const route of desc.pageRoutes) {
-    const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
+    const tagNameExpr = pageRouteTagExpr(route.varName, route.tagName);
     lines.push(
       `try { __registerSsrComponent(${tagNameExpr}, ${route.varName}.default); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
     );

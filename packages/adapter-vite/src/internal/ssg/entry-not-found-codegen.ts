@@ -4,9 +4,9 @@ import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
   pageDefinitionExpr,
+  pageRouteTagExpr,
   rendererScopeMatches,
   routeMetaExpr,
-  routeTagNameExpr,
 } from './entry-route-helpers.ts';
 
 interface RouteHandlerDocConfig {
@@ -30,7 +30,7 @@ export function renderNotFoundRoute(
   lines.push('app.notFound(async (c) => {');
   lines.push(`  const __responseHeaders = new Headers();`);
   lines.push(`  return __mergeChannelHeaders(await (async () => {`);
-  lines.push(`  let __tag = ${routeTagNameExpr(route.tagName)};`);
+  lines.push(`  let __tag = ${pageRouteTagExpr(route.varName, route.tagName)};`);
   lines.push(`  let __page = ${pageDefinitionExpr(route.varName)};`);
   lines.push(`  let __params = {};`);
   lines.push(`  let __routeMetaValue = ${routeMetaExpr(route.varName)};`);

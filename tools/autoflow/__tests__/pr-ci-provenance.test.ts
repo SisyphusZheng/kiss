@@ -50,6 +50,7 @@ function runInfo(overrides: Partial<GitHubRunInfo> = {}): GitHubRunInfo {
       { name: 'autoflow-ci', status: 'completed', conclusion: 'success' },
       { name: 'dist/server Node smoke (Node 20)', status: 'completed', conclusion: 'success' },
       { name: 'dist/server Node smoke (Node 24)', status: 'completed', conclusion: 'success' },
+      { name: 'workspace-qualification', status: 'completed', conclusion: 'success' },
       { name: PR_CI_EVIDENCE_JOB_NAME, status: 'completed', conclusion: 'success' },
     ],
     artifactNames: [`${PR_CI_ARTIFACT_PREFIX}${SHA}`],

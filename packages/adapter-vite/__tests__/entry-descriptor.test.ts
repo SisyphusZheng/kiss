@@ -445,7 +445,7 @@ Deno.test('buildEntryDescriptor: plain element route keeps its tagName export (#
   assertEquals(desc.pageRoutes[0].defaultTagName, 'index-page');
 });
 
-Deno.test('renderEntry: definePage route registers and renders under the fallback tag (#960)', () => {
+Deno.test('renderEntry: definePage route binds its tag through the compiled program, never the tagName export (#960, #1276)', () => {
   const routes: RouteEntry[] = [
     {
       path: '/',
@@ -458,21 +458,29 @@ Deno.test('renderEntry: definePage route registers and renders under the fallbac
   ];
   const code = renderEntry(buildEntryDescriptor(routes));
 
-  // Registration and the page handler's jsx root both use the fallback tag —
-  // the exported content-element tag never appears in the registration call,
-  // so a module-self-registered content element can no longer shadow the
-  // definePage render (the issue's original failure mode).
-  assertStringIncludes(code, '__registerSsrComponent("index-page"');
+  // Registration and the page handler resolve the tag from the route module's
+  // compiled Part Program at entry evaluation (#1276); the path-derived
+  // fallback tag is the resolver's fallback argument only, and the exported
+  // content-element tag never appears — a module-self-registered content
+  // element can no longer shadow the definePage render (the #960 failure
+  // mode).
+  assertStringIncludes(
+    code,
+    '__registerSsrComponent(__resolvePageTag($pageIndex, "index-page")',
+  );
   assertEquals(code.includes('__registerSsrComponent("home-page"'), false);
-  assertStringIncludes(code, 'let __tag = "index-page"');
+  assertEquals(code.includes('__resolvePageTag($pageIndex, "home-page"'), false);
+  assertStringIncludes(code, 'let __tag = __resolvePageTag($pageIndex, "index-page")');
 });
 
-Deno.test('renderEntry: plain element route still registers under its tagName export', () => {
+Deno.test('renderEntry: plain element route binds its tag through the compiled program too (#1276)', () => {
   const routes: RouteEntry[] = [
     { path: '/', filePath: 'index.tsx', type: 'page', varName: 'pageIndex', tagName: 'home-page' },
   ];
   const code = renderEntry(buildEntryDescriptor(routes));
 
-  assertStringIncludes(code, '__registerSsrComponent("home-page"');
-  assertStringIncludes(code, 'let __tag = "home-page"');
+  // One canonical binding for every page route: the scanner's tagName export
+  // is the fallback argument; the compiled program tag wins at evaluation.
+  assertStringIncludes(code, '__registerSsrComponent(__resolvePageTag($pageIndex, "home-page")');
+  assertStringIncludes(code, 'let __tag = __resolvePageTag($pageIndex, "home-page")');
 });

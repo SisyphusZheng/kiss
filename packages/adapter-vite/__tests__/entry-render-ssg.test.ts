@@ -51,6 +51,10 @@ const $boom_route = {
   default: class BoomPage {},
 };
 function __pageDefinition(m) { return m?.default?.openElementPage || {}; }
+function __resolvePageTag(routeModule, fallback) {
+  const program = routeModule && routeModule.default && routeModule.default.__partProgram;
+  return program && typeof program.tag === "string" && program.tag.includes("-") ? program.tag : fallback;
+}
 function __routeMeta() { return {}; }
 function __isOpenElementRedirect(e) { return e && e.__openRedirect === true; }
 function __isOpenElementNotFound(e) { return e && e.__openNotFound === true; }
