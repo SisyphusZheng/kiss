@@ -53,7 +53,7 @@ function normalizeExports(exports: unknown): Record<string, string> {
   );
 }
 
-interface SurfaceMapEntry {
+export interface SurfaceMapEntry {
   supported: string[];
   internal: string[];
 }
@@ -62,7 +62,7 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
-function extractSurfaceMap(doc: string): Record<string, SurfaceMapEntry> | null {
+export function extractSurfaceMap(doc: string): Record<string, SurfaceMapEntry> | null {
   const BEGIN = '<!-- package-surface-map';
   const begin = doc.indexOf(BEGIN);
   if (begin === -1) return null;

@@ -97,6 +97,8 @@
     "generate:ui-tokens:check": "deno run --allow-read tools/generate-ui-token-module.ts --check",
     "generate:ui-manifest": "deno task generate:ui-tokens && deno run --allow-read --allow-write --allow-env tools/generate-ui-manifest.ts",
     "generate:www-content-data": "deno run --allow-read --allow-write tools/generate-www-content-data.ts",
+    "generate:content-graph": "deno run --allow-read --allow-write --allow-env tools/generate-content-graph.ts",
+    "content-graph:check": "deno run --allow-read --allow-env tools/generate-content-graph.ts --check",
     "test:coverage": "deno test --coverage=.coverage --allow-read --allow-write --allow-env --allow-net --allow-run --allow-ffi --allow-sys && deno coverage .coverage --html && deno coverage .coverage --lcov > .coverage/lcov.info",
     "test:watch": "deno test --allow-read --allow-write --allow-env --allow-net --allow-run --watch",
     "test:e2e": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts --project=chromium",
