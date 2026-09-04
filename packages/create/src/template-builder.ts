@@ -1,6 +1,35 @@
 import { join, resolve } from 'node:path';
 import { CREATE_VERSION } from './version.ts';
 
+// npm package-name ceiling (validate-npm-package-name); a generated project
+// directory must stay a legal package name so `npm init`-style flows and
+// registry publication are never blocked by the scaffold itself (L11).
+const MAX_PROJECT_NAME_LENGTH = 214;
+const PROJECT_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
+
+/**
+ * L11: validate the scaffold target name before any filesystem work. Returns
+ * an actionable message when the name is unsafe, `null` when it is a legal
+ * npm-style package name that cannot escape the current directory.
+ */
+export function validateProjectName(name: string): string | null {
+  if (name.length === 0) return 'Project name must not be empty.';
+  if (name.length > MAX_PROJECT_NAME_LENGTH) {
+    return `Project name must be at most ${MAX_PROJECT_NAME_LENGTH} characters (npm package-name limit).`;
+  }
+  if (name.includes('..')) {
+    return 'Project name must not contain ".." (path traversal is not allowed).';
+  }
+  if (name !== name.toLowerCase()) {
+    return 'Project name must be lowercase (npm package names cannot contain uppercase letters).';
+  }
+  if (!PROJECT_NAME_PATTERN.test(name)) {
+    return 'Project name must start with a lowercase letter or number and may only contain ' +
+      'lowercase letters, numbers, dots, underscores, and hyphens.';
+  }
+  return null;
+}
+
 interface ProductVersions {
   app: string;
   adapterVite: string;
