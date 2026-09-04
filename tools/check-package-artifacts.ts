@@ -38,6 +38,42 @@ const HOST_PATTERNS: Array<[RegExp, string]> = [
   [/\bclearImmediate\b/, 'Node clearImmediate global'],
 ];
 
+// #1273 / B2.13 (stage #1288 risk #8): dead v0.43 renderer/binding/hydration
+// residue must not silently reappear in PUBLISHED artifacts (the packages
+// ship src/**, so a removed module that comes back would go straight to
+// npm). Paths are relative to the extracted package root; the audit table in
+// the B2.13 PR records the dead-code proof for each entry.
+const FORBIDDEN_LEGACY_PATHS: Record<string, ReadonlyArray<string>> = {
+  '@openelement/element': [
+    // Legacy ElementDefinition / runtime-renderer typing (VNode model).
+    'src/types.ts',
+    'src/internal/protocol/vnode.ts',
+    // Legacy static prop-declaration typing (ADR-0052 era), superseded by the
+    // compiler's __compiledProperties metadata.
+    'src/internal/protocol/prop.ts',
+    // Legacy renderer DOM helpers with no consumer in the compiled model.
+    'src/internal/core/dom-utils.ts',
+    'src/internal/core/dsd-shadow-root.ts',
+  ],
+};
+
+// Marker strings of the removed v0.43 marker-hydration channel, scanned in
+// comment-stripped packed sources. The same literals are forbidden in built
+// artifacts by tools/check-v044-legacy-absence.ts; this rule extends that
+// absence contract to the published src/** payload.
+const FORBIDDEN_LEGACY_SOURCE_PATTERNS: Record<string, ReadonlyArray<[RegExp, string]>> = {
+  '@openelement/element': [
+    [/\bDATA_SSR_PROPS\b/u, 'dead data-ssr-props channel export (#836, removed in 0.44)'],
+    [
+      /['"]data-(?:eid|signal)(?:-[^'"]*)?['"]/u,
+      'legacy marker-based hydration attribute',
+    ],
+    [/['"]oe-(?:branch|for-item):/u, 'legacy branch/list hydration comment marker'],
+  ],
+};
+
+const SOURCE_SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs']);
+
 export interface ArtifactViolation {
   path: string;
   message: string;
@@ -137,6 +173,8 @@ export function scanExtractedPackage(packageName: string, packageRoot: string): 
   pushPackageJsonViolations(packageName, `${packageRoot}/package.json`, violations);
 
   const runtimeFree = RUNTIME_FREE_PACKAGES.has(packageName);
+  const forbiddenPaths = FORBIDDEN_LEGACY_PATHS[packageName] ?? [];
+  const forbiddenSourcePatterns = FORBIDDEN_LEGACY_SOURCE_PATTERNS[packageName] ?? [];
   const files = new Set<string>();
   for (
     const entry of walkSync(packageRoot, {
@@ -146,6 +184,22 @@ export function scanExtractedPackage(packageName: string, packageRoot: string): 
   ) {
     const relative = entry.path.slice(packageRoot.length + 1);
     files.add(relative);
+    if (forbiddenPaths.includes(relative)) {
+      violations.push({
+        path: `${packageName}/${relative}`,
+        message: 'dead v0.43 residue must not be published (#1273/B2.13)',
+      });
+    }
+    if (
+      forbiddenSourcePatterns.length > 0 && SOURCE_SCAN_EXTENSIONS.has(extension(entry.path))
+    ) {
+      const text = stripComments(Deno.readTextFileSync(entry.path));
+      for (const [pattern, message] of forbiddenSourcePatterns) {
+        if (pattern.test(text)) {
+          violations.push({ path: `${packageName}/${relative}`, message });
+        }
+      }
+    }
     if (
       packageName === '@openelement/adapter-vite' &&
       relative.split('/').some((segment) =>
