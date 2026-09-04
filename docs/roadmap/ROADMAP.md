@@ -8,13 +8,13 @@ The npm `latest` dist-tag remains on the published stable 0.43 line.
 Active execution target: `v0.44.0-beta.2`.
 Latest landed train: `v0.44.0-beta.2`.
 Next planned train: `v0.44.0-beta.3`.
-Next public prerelease: `v0.44.0-beta.2`.
+Next public prerelease: `v0.44.0-beta.3`.
 Long-term stable product target: `1.0.0` (unscheduled).
 
 Execution follows
 [PROJECT_WORKFLOW.md](../governance/PROJECT_WORKFLOW.md).
 
-## Current: Beta.1 framework qualification + governance freeze
+## Current: Beta.2 productization + governance offload
 
 The internal Alpha workspace train is complete through Alpha.10. Alpha.0 supplied
 the accepted compiler proof, exact-SHA CI foundation and minimum history safety;
@@ -27,8 +27,9 @@ Alpha identifiers were internal work identifiers, not package releases, and the
 three-role loop was off for all Alpha work.
 
 Beta.1 (`v0.44.0-beta.1`) is published as the first public v0.44 prerelease
-under dist-tag `beta`; npm `latest` stays on the stable 0.43 line. The next
-stage is Beta.2 (`v0.44.0-beta.2`).
+under dist-tag `beta`; npm `latest` stays on the stable 0.43 line. Beta.2
+(`v0.44.0-beta.2`) is the active public prerelease line; the next stage is
+Beta.3 (`v0.44.0-beta.3`).
 
 ## Release train
 

@@ -8,9 +8,9 @@ authoring syntax; Declarative Shadow DOM is the default server representation;
 and interactive regions activate selectively.
 
 The published stable line remains the 0.43 series on npm `latest`.
-`v0.44.0-beta.1` is the first public v0.44 prerelease — Beta.1, Framework
-Qualification + Governance Freeze (ADR-0151) — published under dist-tag
-`beta`. The next stage is Beta.2 (`v0.44.0-beta.2`).
+`v0.44.0-beta.2` is the current public v0.44 prerelease — Beta.2,
+Productization + Governance Offload (ADR-0151) — published under dist-tag
+`beta`. The next stage is Beta.3 (`v0.44.0-beta.3`).
 The `1.0.0` target remains unscheduled and requires separate evidence and approval.
 
 ```text

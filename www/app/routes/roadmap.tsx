@@ -35,9 +35,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.44.0-beta.2',
-      theme: 'framework qualification + governance freeze',
+      theme: 'productization + governance offload',
       copy:
-        'The first public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It qualifies the framework itself — compiler, page-route SSR bound to the Part Program, delivery gates — under a frozen governance envelope (ADR-0151).',
+        'The second public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It proves external users can really use and maintain the framework — packaged-consumer qualification, derived-truth release gates and governance offload onto the three-role release loop (ADR-0151).',
       state: 'next',
       stamp: 'CURRENT',
       status: 'prerelease',
@@ -86,10 +86,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.44.0-beta.1',
-      theme: '框架资格验证 + 治理冻结',
+      version: 'v0.44.0-beta.2',
+      theme: '产品化 + 治理减负',
       copy:
-        '编译型线路的首个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它在冻结的治理边界内验证框架本身——编译器、绑定到 Part Program 的页面路由 SSR 与交付门禁（ADR-0151）。',
+        '编译型线路的第二个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它验证外部用户能否真正使用并维护该框架——打包消费者资格验证、派生真相发布门禁，以及向三角色发布循环的治理减负（ADR-0151）。',
       state: 'next',
       stamp: 'CURRENT',
       status: '预发布',

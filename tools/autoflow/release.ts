@@ -41,6 +41,7 @@ import {
 import {
   releaseTag,
   updateCurrentVersionAnchors,
+  updatePrepareReleaseState,
   updateProjectConstants,
   updatePublishedReleaseState,
 } from './version-anchors.ts';
@@ -313,8 +314,24 @@ export function createReleasePlan(
       run: () => updateCurrentVersionAnchors(targetVersion),
     },
     {
+      // The release-truth gate pins the state file's planning pair to
+      // ACTIVE/NEXT_EXECUTION_VERSION, which the bump advances (#1288: the
+      // beta.2 bump left them on the prior window and failed
+      // release:truth:check on dev CI). Published-line fields stay
+      // finalize-owned.
+      name: 'update release-state planning anchors',
+      run: () => updatePrepareReleaseState(targetVersion),
+    },
+    {
       name: 'regenerate versioned artifacts',
       command: ['deno', 'task', 'generate:ui-manifest'],
+    },
+    {
+      // The bump rewrites content-graph sources (www version truth, roadmap
+      // timeline); without regenerating, the bump commit fails
+      // content-graph:check on dev CI (#1288, runs 33885139920/33885147030).
+      name: 'regenerate content graph',
+      command: ['deno', 'task', 'generate:content-graph'],
     },
     {
       name: 'format release bump',
@@ -336,8 +353,10 @@ export function createReleasePlan(
         'examples/open-element-in-fresh/README.md',
         'docs/current/VERSION_PLAN.md',
         'docs/governance/PROJECT_WORKFLOW.md',
+        'docs/release/release-state.json',
         'docs/roadmap/ROADMAP.md',
         'docs/status/STATUS.md',
+        'www/app/data/_generated-content-graph.json',
         'www/app/data/version.ts',
         'www/app/routes/index/index.tsx',
         'www/app/routes/guide/getting-started.tsx',
@@ -408,7 +427,9 @@ const PREPARE_STEP_NAMES = new Set([
   'bump patch version',
   'update project constants',
   'update current version anchors',
+  'update release-state planning anchors',
   'regenerate versioned artifacts',
+  'regenerate content graph',
   'format release bump',
   'stage release bump',
   'commit release bump',

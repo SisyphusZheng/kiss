@@ -17,7 +17,7 @@ export const NEXT_EXECUTION_VERSION = 'v0.44.0-beta.3';
 // the value records that closure so the VERSION_PLAN anchor stays honest.
 export const ACTIVE_INTERNAL_CHECKPOINT =
   'none — internal Alpha checkpoints closed at Alpha.10 (verifier PASS, #1150); the active line is the public Beta train (ADR-0151)';
-export const NEXT_PUBLIC_PRERELEASE = 'v0.44.0-beta.2';
+export const NEXT_PUBLIC_PRERELEASE = 'v0.44.0-beta.3';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',
