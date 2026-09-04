@@ -14,7 +14,8 @@ import { expect, type Page, test } from '@playwright/test';
 async function waitForLayoutReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const layout = document.querySelector('open-layout');
-    return !!layout?.querySelector('.app-layout');
+    // The shell's main landmark is the user-visible readiness signal.
+    return !!layout?.querySelector('main');
   });
 }
 
@@ -35,7 +36,9 @@ test.describe('Layout Island Shell', () => {
       const layout = document.querySelector('open-layout');
       return {
         light: layout?.hasAttribute('data-oe-light') ?? false,
-        shell: !!layout?.querySelector('.app-layout'),
+        // Landmark structure is the shell contract: banner + main + footer.
+        shell: !!layout?.querySelector('header') && !!layout?.querySelector('main') &&
+          !!layout?.querySelector('footer'),
       };
     });
     expect(state).toEqual({ light: true, shell: true });
@@ -48,7 +51,8 @@ test.describe('Layout Island Shell', () => {
       return {
         search: !!layout.querySelector('open-search'),
         themeToggle: !!layout.querySelector('open-theme-toggle'),
-        brand: !!layout.querySelector('.logo-glyph'),
+        // The brand mark is the labelled site-name link in the header.
+        brand: !!layout.querySelector('header a[aria-label="openElement"]'),
       };
     });
 

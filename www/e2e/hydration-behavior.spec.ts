@@ -32,22 +32,20 @@ function isProbeError(result: unknown): result is ProbeError {
 async function waitForHydratedSearch(page: Page): Promise<void> {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
-  await page.waitForFunction(() => {
-    if (!customElements.get('open-search') || !customElements.get('open-theme-toggle')) {
-      return false;
-    }
-    const layout = document.querySelector('open-layout');
-    const search = layout?.querySelector('open-search');
-    return !!search?.querySelector('.search-trigger');
-  });
+  await page.waitForFunction(() =>
+    !!customElements.get('open-search') && !!customElements.get('open-theme-toggle')
+  );
+  // Role locators pierce the open shadow roots natively; the accessible name
+  // is the user-visible contract, not an implementation class.
+  await expect(page.getByRole('button', { name: 'Search' })).toBeAttached();
+  await expect(page.getByRole('button', { name: 'Toggle theme' })).toBeAttached();
 }
 
 test.describe('compiled activation on shipped islands', () => {
   test('theme binding patches the existing DSD node in place', async ({ page }) => {
     await waitForHydratedSearch(page);
 
-    const host = page.locator('open-theme-toggle');
-    const button = host.locator('button');
+    const button = page.getByRole('button', { name: 'Toggle theme' });
     const ssrButton = await button.elementHandle();
     expect(ssrButton).not.toBeNull();
     const initialTheme = await button.getAttribute('data-theme');
@@ -65,14 +63,17 @@ test.describe('compiled activation on shipped islands', () => {
   test('search controller activates against the existing SSR nodes', async ({ page }) => {
     await waitForHydratedSearch(page);
 
-    const trigger = page.locator('open-search .search-trigger');
+    const trigger = page.getByRole('button', { name: 'Search' });
+    // Node identity is asserted on the SSR overlay element: the dialog role
+    // only enters the accessibility tree once the overlay opens, so the
+    // hidden-state node reference must come from the structural host scope.
     const overlay = page.locator('open-search .overlay');
     const ssrOverlay = await overlay.elementHandle();
     expect(ssrOverlay).not.toBeNull();
 
     await expect(overlay).toBeHidden();
     await trigger.click();
-    await expect(overlay).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Search' })).toBeVisible();
 
     const activatedOverlay = await overlay.elementHandle();
     expect(activatedOverlay).not.toBeNull();
@@ -98,8 +99,8 @@ test.describe('compiled activation on shipped islands', () => {
       host.remove();
       parent?.insertBefore(host, next);
     });
-    await search.locator('.search-trigger').click();
-    await expect(overlay).toBeVisible();
+    await page.getByRole('button', { name: 'Search' }).click();
+    await expect(page.getByRole('dialog', { name: 'Search' })).toBeVisible();
 
     const reconnectedOverlay = await overlay.elementHandle();
     expect(reconnectedOverlay).not.toBeNull();
