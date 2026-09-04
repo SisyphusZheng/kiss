@@ -69,7 +69,9 @@ export async function workspacePaths(): Promise<Record<string, string[]>> {
 export async function typeCheckExamples(examples: ContentExample[]): Promise<ExampleFailure[]> {
   if (examples.length === 0) return [];
   // The temp dir must live inside the workspace so node_modules resolution
-  // (vite, preact, ...) walks up to the repo's dependencies.
+  // (vite, preact, ...) walks up to the repo's dependencies; `.tmp` is
+  // gitignored, so create it first (clean CI checkouts do not carry it).
+  await Deno.mkdir('.tmp', { recursive: true });
   const dir = await Deno.makeTempDir({ dir: '.tmp', prefix: 'content-examples-' });
   try {
     const files: string[] = [];
