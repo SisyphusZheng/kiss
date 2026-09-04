@@ -5,6 +5,7 @@ import {
   assertUnifiedProductVersions,
   buildTemplates,
   resolveVersions,
+  validateProjectName,
 } from '../src/template-builder.ts';
 
 const packageDir = join(import.meta.dirname!, '..');
@@ -22,6 +23,23 @@ async function runCreate(executable: string, cwd: string, name: string) {
   }).output();
   assertEquals(result.code, 0, new TextDecoder().decode(result.stderr));
   return new TextDecoder().decode(result.stdout);
+}
+
+async function runCreateExpectingFailure(executable: string, cwd: string, name: string) {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: ['run', '-A', executable, name],
+    cwd,
+    stdout: 'piped',
+    stderr: 'piped',
+  }).output();
+  assert(result.code !== 0, `expected create to fail for "${name}"`);
+  return new TextDecoder().decode(result.stderr);
+}
+
+// A clean, actionable CLI error is a single message line: no runtime stack
+// trace vomit (L9). Deno stack frames are indented `at file:///` lines.
+function assertCleanError(stderr: string): void {
+  assertFalse(stderr.includes('\n    at '), `stack trace leaked into CLI error:\n${stderr}`);
 }
 
 Deno.test('starter exposes only product imports and the standard lifecycle', () => {
@@ -284,6 +302,87 @@ Deno.test('source CLI generates a complete, token-free starter', async () => {
   } finally {
     Deno.removeSync(tmpRoot, { recursive: true });
   }
+});
+
+Deno.test('L11: project name validation enforces npm-name and traversal rules', () => {
+  for (const name of ['my-app', 'app', 'my_app', 'app2', '2app', 'my.app', 'a']) {
+    assertEquals(validateProjectName(name), null, name);
+  }
+  const invalid: Array<[string, string]> = [
+    ['MyApp', 'lowercase'],
+    ['my app', 'may only contain'],
+    ['foo/bar', 'may only contain'],
+    ['.hidden', 'may only contain'],
+    ['_private', 'may only contain'],
+    ['-leading', 'may only contain'],
+    ['../escape', '".."'],
+    ['a..b', '".."'],
+    ['x'.repeat(215), '214'],
+  ];
+  for (const [name, fragment] of invalid) {
+    const message = validateProjectName(name);
+    assert(message !== null, `expected "${name}" to be rejected`);
+    assert(message.includes(fragment), `"${name}": expected "${fragment}" in "${message}"`);
+  }
+});
+
+Deno.test('L9/L11: CLI rejects an invalid project name with a clean actionable error', async () => {
+  const tmpRoot = Deno.makeTempDirSync({ prefix: 'open-create-invalid-' });
+  try {
+    const stderr = await runCreateExpectingFailure(
+      join(packageDir, 'src', 'cli.ts'),
+      tmpRoot,
+      'Bad Name',
+    );
+    assert(stderr.includes('Invalid project name'), stderr);
+    assertCleanError(stderr);
+    assertFalse(existsSync(join(tmpRoot, 'Bad Name')));
+  } finally {
+    Deno.removeSync(tmpRoot, { recursive: true });
+  }
+});
+
+Deno.test('L9: CLI refuses an existing target directory with guidance, not a stack trace', async () => {
+  const tmpRoot = Deno.makeTempDirSync({ prefix: 'open-create-exists-' });
+  try {
+    const executable = join(packageDir, 'src', 'cli.ts');
+    await runCreate(executable, tmpRoot, 'sample-app');
+    const stderr = await runCreateExpectingFailure(executable, tmpRoot, 'sample-app');
+    assert(stderr.includes('already exists'), stderr);
+    // Actionable: tells the adopter how to resolve the collision.
+    assert(stderr.includes('Choose a different name'), stderr);
+    assertCleanError(stderr);
+  } finally {
+    Deno.removeSync(tmpRoot, { recursive: true });
+  }
+});
+
+Deno.test({
+  name: 'L9: CLI reports scaffolding write failures cleanly and actionably',
+  // chmod-based permission failures are a POSIX mechanism; the CI matrix for
+  // this suite is Linux/macOS only.
+  ignore: Deno.build.os === 'windows',
+  async fn() {
+    const tmpRoot = Deno.makeTempDirSync({ prefix: 'open-create-readonly-' });
+    try {
+      Deno.mkdirSync(join(tmpRoot, 'readonly'));
+      Deno.chmodSync(join(tmpRoot, 'readonly'), 0o555);
+      const stderr = await runCreateExpectingFailure(
+        join(packageDir, 'src', 'cli.ts'),
+        join(tmpRoot, 'readonly'),
+        'sample-app',
+      );
+      assert(
+        stderr.includes('Permission denied') || stderr.includes('Failed to'),
+        stderr,
+      );
+      assert(stderr.includes('sample-app'), stderr);
+      assertCleanError(stderr);
+    } finally {
+      Deno.chmodSync(join(tmpRoot, 'readonly'), 0o755);
+      Deno.removeSync(tmpRoot, { recursive: true });
+    }
+  },
 });
 
 Deno.test('packed CLI retains every starter template, including dotfiles', async () => {
