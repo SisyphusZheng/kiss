@@ -15,11 +15,11 @@ Beta.1.
 
 - Repository package line: `v0.44.0-beta.1`
 - npm registry line: `v0.44.0-beta.1` (prerelease, dist-tag `beta`; npm `latest` remains the stable 0.43 line)
-- Current source package line: `v0.44.0-beta.1`
-- Current npm registry line: `v0.44.0-beta.1`
-- Latest landed train: `v0.44.0-beta.1`
+- Current source package line: `v0.44.0-beta.2`
+- Current npm registry line: `v0.44.0-beta.2`
+- Latest landed train: `v0.44.0-beta.2`
 - Active internal target: none — internal Alpha checkpoints closed at Alpha.10 (verifier PASS, #1150); the active line is the public Beta train (ADR-0151)
-- Active release target: `v0.44.0-beta.1`
+- Active release target: `v0.44.0-beta.2`
 - Next planned public train: `v0.44.0-beta.2`
 - Next public prerelease: `v0.44.0-beta.2`
 

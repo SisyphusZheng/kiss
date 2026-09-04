@@ -34,7 +34,7 @@ interface RoadmapListItem {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.44.0-beta.1',
+      version: 'v0.44.0-beta.2',
       theme: 'framework qualification + governance freeze',
       copy:
         'The first public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It qualifies the framework itself — compiler, page-route SSR bound to the Part Program, delivery gates — under a frozen governance envelope (ADR-0151).',

@@ -13,8 +13,8 @@ the implementation, and the gates that prove the claim.
 
 Current execution anchor:
 
-- source package line `v0.44.0-beta.1`;
-- npm registry line `v0.44.0-beta.1` (prerelease, dist-tag `beta`; npm `latest`
+- source package line `v0.44.0-beta.2`;
+- npm registry line `v0.44.0-beta.2` (prerelease, dist-tag `beta`; npm `latest`
   remains the stable 0.43 line);
 - active target `v0.44.0-beta.1`;
 - current internal checkpoint: none — the internal Alpha checkpoint train closed

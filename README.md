@@ -18,8 +18,8 @@ OpenElement = Web Components-native fullstack application framework
 current proven scope = static-first applications with fullstack output paths
 ```
 
-Source package line: `0.44.0-beta.1` (`v0.44.0-beta.1`).
-npm registry line: `v0.44.0-beta.1` (prerelease, dist-tag `beta`); npm `latest` remains the stable `0.43.3` line.
+Source package line: `0.44.0-beta.2` (`v0.44.0-beta.2`).
+npm registry line: `v0.44.0-beta.2` (prerelease, dist-tag `beta`); npm `latest` remains the stable `0.43.3` line.
 
 ## Why
 

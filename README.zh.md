@@ -7,9 +7,9 @@
 长期保存的应用组件模型；JSX 与 Basic Element 是作者层；Declarative Shadow
 DOM 是默认服务端表示；交互区域按需升级。
 
-源码包行为 `0.44.0-beta.1`（`v0.44.0-beta.1`）——首个公开 v0.44 预发布线
+源码包行为 `0.44.0-beta.2`（`v0.44.0-beta.2`）——首个公开 v0.44 预发布线
 （Beta.1：框架资格验证 + 治理冻结，ADR-0151）。
-npm registry 行为 `v0.44.0-beta.1`——预发布版本(dist-tag `beta`)；npm `latest` 仍为
+npm registry 行为 `v0.44.0-beta.2`——预发布版本(dist-tag `beta`)；npm `latest` 仍为
 已发布的稳定 0.43 线。
 
 ## 当前产品
