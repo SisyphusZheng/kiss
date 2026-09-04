@@ -1,7 +1,7 @@
 # v0.44 Beta.2 Re-Verification Addendum — narrow F1-closure pass
 
 - Date: 2026-09-04
-- Verifier: fresh `kimi-code` session, profile `.agents/v044-kimi-release-verifier.md` (independent of the first verifier session and of the implementer)
+- Verifier: fresh release-verifier session per the configured release-verifier profile under `.agents/` (independent of the first verifier session and of the implementer)
 - Scope: narrow re-verification of the sole NO-GO finding (F1) from `docs/evidence/2026-09-04-v044-beta2-closure-verification.md` after remediation PR #1313 (issue #1312), plus a regression screen over everything the remediation touched.
 - First-report integrity note: the first closure record was read in full. Its wide padded table column alignment is a `deno fmt` reflow artifact; the content itself (battery rows, F1 finding, fingerprints, residual risks) is coherent, internally consistent, and matches what the remediation targeted. Nothing beyond formatting appears altered.
 

@@ -1,7 +1,7 @@
 # v0.44 Beta.2 Closure Verification — independent verifier record
 
 - Date: 2026-09-04
-- Verifier: fresh `kimi-code` session, profile `.agents/v044-kimi-release-verifier.md` (no implementer/thinker session reuse)
+- Verifier: fresh release-verifier session per the configured release-verifier profile under `.agents/` (no implementer/thinker session reuse)
 - Stage issue: #1288 (umbrella #1155, authority ADR-0151, Beta.1 record #1150)
 - Candidate SHA: `aa3dd70ff8e5c8dbee602f8f7acd8e3b9d3c2b2b` (dev tip, tree clean at session start)
 - CI at candidate: AutoFlow CI run 33871051171 SUCCESS, CodeQL run 33871051092 SUCCESS — both at the exact candidate SHA (verified via `gh run view … --json headSha`).
