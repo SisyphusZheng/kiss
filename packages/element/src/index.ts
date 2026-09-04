@@ -80,12 +80,6 @@ export { DANGEROUS_KEYS, injectPropsSafe, isDangerousKey } from './public-runtim
 
 export type { IslandOptions } from './public-runtime.ts';
 
-// ─── Hydration markers (protocol) ───────────────────────
-
-// Shared by SSR writers and client readers (app, www) so the attribute name
-// has a single typed source (#836).
-export { DATA_SSR_PROPS } from './public-runtime.ts';
-
 // ─── StyleSheet (re-export from core) ────────────────────
 
 export {
