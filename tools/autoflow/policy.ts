@@ -231,6 +231,24 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // #1158 (B2.4): generated API reference drift gate — the committed
+    // _generated-api-reference.ts must be a byte-identical regeneration of
+    // the real public exports + JSDoc + PACKAGE_SURFACE.md stability classes
+    // + the UI compiler manifest. The generator itself fails closed on
+    // unclassified, removed, undocumented or internal-leaking exports and on
+    // duplicate anchors.
+    name: 'api-reference:check',
+    command: ['deno', 'task', 'api-reference:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\//,
+      /^docs\/current\/PACKAGE_SURFACE\.md$/,
+      /^www\/app\/(?:routes\/apilist\.tsx|data\/_generated-api-reference\.ts)$/,
+      /^tools\/(?:generate-api-reference|lib\/api-reference)/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-version-anchors',
     command: ['deno', 'task', 'docs:check-version-anchors'],
     tiers: ['ci', 'release'],

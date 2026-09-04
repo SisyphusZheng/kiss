@@ -401,7 +401,9 @@ const OPEN_PROPS_TOKEN_CSS = `/**
 
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(OPEN_PROPS_TOKEN_CSS);
+/** Pre-built stylesheet carrying the full Open Props token set (adopt into a shadow root). */
 export const openPropsTokenSheet: StyleSheetLike = sheet;
 
+/** Pre-built stylesheet exposing the Open Props tokens on `:root` (document-level adoption). */
 export const openPropsRootSheet: StyleSheetLike = new StyleSheet();
 openPropsRootSheet.replaceSync(toRootCss(OPEN_PROPS_TOKEN_CSS));

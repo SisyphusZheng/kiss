@@ -75,10 +75,12 @@ const _securityLog = createLogger('security');
 
 const trustedHtmlValues = new WeakSet<object>();
 
+/** Opaque capability marking HTML the application has explicitly vetted as trusted. */
 export interface TrustedHtml {
   readonly html: string;
 }
 
+/** Mark an HTML string as trusted for explicit `innerHTML` sinks (the trust does not serialize). */
 export function trustedHtml(html: string): TrustedHtml {
   const value = Object.freeze({ html });
   trustedHtmlValues.add(value);

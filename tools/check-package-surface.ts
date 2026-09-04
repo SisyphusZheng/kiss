@@ -399,34 +399,32 @@ async function main(): Promise<void> {
     }
   }
 
-  // ─── www apilist surface literals ─────────────────────────
-  // The supported-subpath chips on www/app/routes/apilist.tsx must match each
-  // package's exports map ('root' stands for the '.' export). Entries with
-  // placeholder chips ('CLI only', 'retained primitive subpaths') are skipped;
-  // element, app and adapter-vite must always be checked so the gate cannot
-  // silently no-op.
+  // ─── www apilist generated inventory (#1158) ─────────────
+  // The apilist page consumes the generated API reference module; its
+  // supported+internal subpath inventory per package must equal the real
+  // exports map ('root' chips are gone — the generated module records raw
+  // subpaths, '.' included). Handwritten inventory literals in
+  // www/app/routes/apilist.tsx were removed in #1158; the generated module
+  // is the truth this gate validates.
 
-  const apilist = await Deno.readTextFile('www/app/routes/apilist.tsx');
+  const { apiReference } = await import('../www/app/data/_generated-api-reference.ts');
   const apilistChecked: string[] = [];
-  for (
-    const match of apilist.matchAll(
-      /importPath: '([^']+)'[\s\S]*?exports: \[([^\]]*)\]/g,
-    )
-  ) {
-    const [, importPath, exportsLiteral] = match;
-    const pkg = packages.find((candidate) => candidate.name === importPath);
-    if (!pkg) continue; // e.g. npm:@openelement/create is not a workspace package
-    const chips = [...exportsLiteral.matchAll(/'([^']+)'/g)].map((chip) => chip[1]);
-    if (chips.some((chip) => !/^[a-z0-9./-]+$/.test(chip))) continue; // placeholder chips
-    const documented = chips
-      .map((chip) => (chip === 'root' ? '.' : chip))
+  for (const generated of apiReference.packages) {
+    const pkg = packages.find((candidate) => candidate.name === generated.name);
+    if (!pkg) {
+      failures.push(
+        `_generated-api-reference.ts lists ${generated.name}, which is not a workspace package.`,
+      );
+      continue;
+    }
+    const documented = [...generated.supportedSubpaths, ...generated.internalSubpaths]
       .sort((left, right) => left.localeCompare(right));
     const actual = Object.keys(normalizeExports(pkg.exports)).sort((left, right) =>
       left.localeCompare(right)
     );
     if (JSON.stringify(documented) !== JSON.stringify(actual)) {
       failures.push(
-        `www/app/routes/apilist.tsx ${pkg.name} exports drift. expected=${
+        `_generated-api-reference.ts ${pkg.name} subpath inventory drift. expected=${
           JSON.stringify(actual)
         } actual=${JSON.stringify(documented)}`,
       );
@@ -436,7 +434,7 @@ async function main(): Promise<void> {
   for (const required of APILIST_REQUIRED_PACKAGES) {
     if (!apilistChecked.includes(required)) {
       failures.push(
-        `www/app/routes/apilist.tsx does not document ${required} exports as concrete subpaths.`,
+        `_generated-api-reference.ts does not document ${required} as a package.`,
       );
     }
   }

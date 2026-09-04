@@ -1,12 +1,14 @@
 /** Primitive frontmatter field types supported by content collections. */
 export type CollectionFieldType = 'string' | 'number' | 'boolean' | 'string[]';
 
+/** Declarative definition of one frontmatter field (type, required, default). */
 export interface CollectionFieldDefinition {
   type: CollectionFieldType;
   required?: boolean;
   default?: unknown;
 }
 
+/** Context handed to a collection schema's `transform` hook. */
 export interface CollectionSchemaContext {
   collection: string;
   fileName: string;
@@ -14,6 +16,7 @@ export interface CollectionSchemaContext {
   slug: string;
 }
 
+/** The slug/frontmatter result a collection schema `transform` returns. */
 export interface CollectionSchemaResult {
   slug?: string;
   frontmatter: Record<string, unknown>;
@@ -32,6 +35,7 @@ export interface CollectionSchema {
   ) => CollectionSchemaResult;
 }
 
+/** Configuration of one content collection (directory, base path, schema). */
 export interface CollectionOptions {
   contentDir: string;
   basePath?: string;
@@ -40,6 +44,7 @@ export interface CollectionOptions {
   markdown?: (content: string) => string | Promise<string>;
 }
 
+/** One loaded collection entry: slug, validated frontmatter and rendered HTML. */
 export interface CollectionEntry {
   slug: string;
   locale?: string;

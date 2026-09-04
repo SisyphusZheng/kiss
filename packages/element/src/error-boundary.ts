@@ -23,6 +23,7 @@
 import { OpenElement } from './open-element.ts';
 import type { OpenElementError } from './internal/core/index.ts';
 
+/** Base class for elements that catch descendant render/hydration errors and apply a retry policy. */
 export abstract class ErrorBoundary extends OpenElement {
   /**
    * ADR-0053 Layer 2: marks this component as an error boundary. The kernel

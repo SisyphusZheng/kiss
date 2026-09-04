@@ -6,6 +6,7 @@ import { sanitizeContentHtml } from '../sanitize.ts';
 import { collectionFieldTypeScript, validateCollectionFrontmatter } from './schema.ts';
 import type { CollectionEntry, CollectionOptions } from './types.ts';
 
+/** Load a content collection from disk: parse frontmatter, validate the schema and render Markdown. */
 export async function loadCollectionData(
   name: string,
   options: CollectionOptions,
@@ -39,6 +40,7 @@ export async function loadCollectionData(
   return entries;
 }
 
+/** Serialize loaded collection entries into the generated typed data module source. */
 export function writeCollectionDataModule(
   name: string,
   entries: CollectionEntry[],

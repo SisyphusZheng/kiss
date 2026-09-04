@@ -13,6 +13,7 @@ export interface OpenElementRequestContext<
   platform?: unknown;
 }
 
+/** Inputs for building an {@linkcode OpenElementRequestContext} from a platform request event. */
 export interface CreateRequestContextOptions<
   Env extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -22,6 +23,7 @@ export interface CreateRequestContextOptions<
   platform?: unknown;
 }
 
+/** Build the canonical OpenElement request context from a platform request event. */
 export function createRequestContext<
   Env extends Record<string, unknown> = Record<string, unknown>,
 >(options: CreateRequestContextOptions<Env>): OpenElementRequestContext<Env> {

@@ -10,6 +10,7 @@ export interface StyleSheetRule {
   cssText: string;
 }
 
+/** Minimal stylesheet contract (replaceSync + cssRules) satisfied by native and shim sheets. */
 export interface StyleSheetLike {
   replaceSync(text: string): void;
   readonly cssRules: StyleSheetRule[];

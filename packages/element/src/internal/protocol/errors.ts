@@ -34,4 +34,5 @@ export interface OpenElementError extends Error {
   readonly recoverable: boolean;
 }
 
+/** Callback receiving every reported {@linkcode OpenElementError} for telemetry. */
 export type ErrorTelemetryHook = (error: OpenElementError) => void;

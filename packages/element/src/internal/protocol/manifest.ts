@@ -6,6 +6,7 @@ import type { ComponentLayer, HydrationStrategy } from './framework.ts';
 
 // --- Manifest descriptors (CEM-compatible) ------------------------
 
+/** One documented attribute of a custom element declaration. */
 export interface OpenElementAttribute {
   name: string;
   type?: string;
@@ -15,17 +16,20 @@ export interface OpenElementAttribute {
   fieldName?: string;
 }
 
+/** One documented custom event of a custom element declaration. */
 export interface OpenElementEvent {
   name: string;
   type?: string;
   description?: string;
 }
 
+/** One documented slot of a custom element declaration. */
 export interface OpenElementSlot {
   name: string;
   description?: string;
 }
 
+/** One documented CSS part of a custom element declaration. */
 export interface OpenElementCssPart {
   name: string;
   description?: string;
@@ -40,6 +44,7 @@ export interface OpenElementExtensions {
   export?: string;
 }
 
+/** One custom element declaration in a package manifest: tag, members and delivery metadata. */
 export interface OpenElementDeclaration {
   tagName: string;
   className?: string;

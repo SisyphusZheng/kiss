@@ -17,6 +17,7 @@ export interface NitroRequestEvent<
   platform?: unknown;
 }
 
+/** Options for mounting an OpenElement request handler under a Nitro/Node server. */
 export interface OpenElementNitroMountOptions<
   Env extends Record<string, unknown> = Record<string, unknown>,
 > {
