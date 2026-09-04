@@ -38,7 +38,7 @@
   "tasks": {
     "dev": "cd www && deno run --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys npm:vite --config vite.config.ts",
     "www:dev-smoke": "deno run --allow-net --allow-run tools/smoke-www-dev.ts",
-    "build": "deno task generate:ui-manifest && (cd www && deno run --config ../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../packages/adapter-vite/src/cli/build.ts) && deno task www:pagefind && deno task www:check-artifact-truth",
+    "build": "deno task generate:ui-manifest && (cd www && deno run --config ../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../packages/adapter-vite/src/cli/build.ts) && deno task www:pagefind && deno task www:check-artifact-truth && deno task www:check-links",
     "www:pagefind": "cd www && deno run --config ../deno.json --allow-read --allow-write --allow-run --allow-env --allow-net --allow-ffi --allow-sys build-pagefind.ts",
     "preview": "cd www && deno run --allow-read --allow-write --allow-net --allow-env --allow-ffi npm:vite preview --config vite.config.ts",
     "workflow:check": "deno run --allow-read --allow-run=git tools/check-project-workflow.ts && deno task v044:orchestration:check",
@@ -62,6 +62,9 @@
     "www:check-current-truth": "deno run --allow-read tools/check-docs-truth.ts --check=www",
     "www:check-theme-tokens": "deno run --allow-read tools/check-www-theme-tokens.ts",
     "www:check-artifact-truth": "deno run --allow-read tools/check-docs-truth.ts --check=www --artifacts",
+    "www:check-links": "deno run --allow-read tools/check-www-links.ts",
+    "www:check-truth": "deno run --allow-read --allow-env tools/check-www-truth.ts",
+    "content:examples-check": "deno run --allow-read --allow-write --allow-env tools/check-content-examples.ts",
     "package-surface:check": "deno run --allow-read --allow-env tools/check-package-surface.ts",
     "interface:snapshot": "deno run --allow-read --allow-env tools/check-public-interface-snapshot.ts",
     "interface:snapshot:write": "deno run --allow-read --allow-write --allow-env tools/check-public-interface-snapshot.ts --write",

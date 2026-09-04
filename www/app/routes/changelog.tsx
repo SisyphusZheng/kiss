@@ -80,7 +80,15 @@ function loadChangelogHtml(loadError: string): string {
   }
   try {
     if (!changelogPath) throw new Error('CHANGELOG.md not found');
-    const markdown = Deno.readTextFileSync(changelogPath).replace(/^#\s+Changelog\s*\n/, '');
+    const markdown = Deno.readTextFileSync(changelogPath)
+      .replace(/^#\s+Changelog\s*\n/, '')
+      // CHANGELOG.md links are repository-relative so they resolve on GitHub;
+      // on the built site they would 404 (#1159 link truth), so project them
+      // onto the canonical GitHub tree before rendering.
+      .replaceAll(
+        '](./',
+        '](https://github.com/open-element/openelement/tree/main/',
+      );
     return sanitizeHtml(marked.parse(markdown, { async: false }) as string);
   } catch {
     return loadError;

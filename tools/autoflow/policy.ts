@@ -249,6 +249,34 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // #1159 (B2.4): hand-maintained www surfaces must mechanically agree with
+    // owned truth — generated nav freshness (byte-identical regeneration of
+    // route meta + headerNav), headerNav hrefs resolve to real routes,
+    // bilingual locale availability (no orphan/missing/duplicated-untranslated
+    // zh), and the CURRENT roadmap entry names the package version tag.
+    name: 'www:check-truth',
+    command: ['deno', 'task', 'www:check-truth'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^www\/(content|app\/routes|app\/data\/_generated-nav\.ts|vite\.config\.ts)/,
+      /^tools\/(?:check-www-truth|project-constants)/,
+      /^deno\.json$/,
+    ],
+  },
+  {
+    // #1159 (B2.4): guide/architecture code examples that import
+    // @openelement/* must type-check against the real framework sources.
+    name: 'content:examples-check',
+    command: ['deno', 'task', 'content:examples-check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^www\/content\//,
+      /^packages\//,
+      /^tools\/check-content-examples/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-version-anchors',
     command: ['deno', 'task', 'docs:check-version-anchors'],
     tiers: ['ci', 'release'],
@@ -404,7 +432,13 @@ const GATES: readonly GateDefinition[] = [
     name: 'build',
     command: ['deno', 'task', 'build'],
     tiers: ['ci', 'release'],
-    triggers: [/^(packages|www)\//, /^deno\.json$/],
+    // #1159: the build task ends with the built-output internal
+    // link/fragment + SEO gate (www:check-links), so checker edits rebuild.
+    triggers: [
+      /^(packages|www)\//,
+      /^deno\.json$/,
+      /^tools\/(?:check-www-links|lib\/www-links)/,
+    ],
   },
   {
     // Runs after build when both gates are selected. check-coverage keeps a
