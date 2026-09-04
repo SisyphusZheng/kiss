@@ -19,6 +19,7 @@ export type ComponentLayer = 'dsd-static' | 'dsd-interactive' | 'pure-island' | 
  * for the `HydrationStrategy` union. Consumed by island/registry validation and
  * re-exported from the element root for app and build adapters. */
 export const HYDRATION_STRATEGIES = ['load', 'idle', 'visible', 'only'] as const;
+/** Island hydration trigger: 'load' | 'idle' | 'visible' | 'only'. */
 export type HydrationStrategy = typeof HYDRATION_STRATEGIES[number];
 export type StrategySource = 'default' | 'manifest' | 'component' | 'route';
 

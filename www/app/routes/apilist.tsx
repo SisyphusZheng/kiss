@@ -2,40 +2,32 @@
 import { definePage } from '@openelement/app';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
+import { apiReference } from '../data/_generated-api-reference.ts';
 import ApiCorePage, { type ApiPackageItem } from '../components/page-apilist.tsx';
 
 export const meta = { section: 'Reference', label: 'API Reference', order: 5 };
 
 type Locale = 'en' | 'zh';
 
-type ApiPackage = {
-  id: string;
-  name: string;
+/**
+ * Authored bilingual presentation copy, keyed by generated package id. The
+ * inventory itself (packages, subpaths, exports, anchors) is generated from
+ * repository truth by tools/generate-api-reference.ts (#1158) — only prose
+ * lives here, and the fail-closed projection below refuses a stale key.
+ */
+type AuthoredPackageCopy = {
   copy: Record<Locale, string>;
-  importPath: string;
-  exports: string[];
-  /** Subpaths importable for tooling but carrying no compatibility promise (marked ※). */
-  internalExports?: string[];
   notes: Record<Locale, string[]>;
   kind: 'core' | 'build' | 'optional';
 };
 
-const kindLabels = {
-  en: { core: 'CORE', build: 'BUILD', optional: 'OPTIONAL' },
-  zh: { core: '核心', build: '构建', optional: '可选' },
-} as const;
-
-const packages: ApiPackage[] = [
-  {
-    id: 'element',
-    name: 'element',
+const authoredCopy: Record<string, AuthoredPackageCopy> = {
+  element: {
     copy: {
       en:
         'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
       zh: '受支持的 Custom Element 创作面，覆盖 JSX、DSD、hydration、signals 与样式。',
     },
-    importPath: '@openelement/element',
-    exports: ['root', 'jsx-runtime', 'jsx-dev-runtime', 'build-utils', 'sanitize'],
     notes: {
       en: [
         'Start here for standalone element authoring.',
@@ -50,16 +42,11 @@ const packages: ApiPackage[] = [
     },
     kind: 'core',
   },
-  {
-    id: 'app',
-    name: 'app',
+  app: {
     copy: {
       en: 'The application surface for pages, routes, islands and request/render semantics.',
       zh: '面向页面、路由、island 与请求/渲染语义的应用创作面。',
     },
-    importPath: '@openelement/app',
-    exports: ['root', 'model', 'spa', 'i18n', 'preact'],
-    internalExports: ['i18n'],
     notes: {
       en: [
         'Use `definePage`, `defineIslandConfig` and `defineApp` for application authoring.',
@@ -72,15 +59,11 @@ const packages: ApiPackage[] = [
     },
     kind: 'core',
   },
-  {
-    id: 'adapter-vite',
-    name: 'adapter-vite',
+  'adapter-vite': {
     copy: {
       en: 'The official Vite, content, static-build and Nitro output adapter.',
       zh: '官方的 Vite、内容、静态构建与 Nitro 输出 adapter。',
     },
-    importPath: '@openelement/adapter-vite',
-    exports: ['root', 'nitro-mount', 'cli/build', 'cli/start', 'sitemap'],
     notes: {
       en: [
         'Use `buildApp()` or the generated build task.',
@@ -93,15 +76,11 @@ const packages: ApiPackage[] = [
     },
     kind: 'build',
   },
-  {
-    id: 'create',
-    name: 'create',
+  create: {
     copy: {
       en: 'The installed starter and zero-context consumer entrypoint.',
       zh: '安装即用的 starter，零上下文的使用者入口。',
     },
-    importPath: 'npm:@openelement/create',
-    exports: ['root', 'CLI only'],
     notes: {
       en: [
         'Generated projects expose `dev`, `check`, `test`, `build`, `start` and `preview`.',
@@ -114,15 +93,11 @@ const packages: ApiPackage[] = [
     },
     kind: 'build',
   },
-  {
-    id: 'ui',
-    name: 'ui',
+  ui: {
     copy: {
       en: 'Optional primitives retained only when they have demonstrated reusable behavior.',
       zh: '可选原语，仅在已证明行为可复用时保留。',
     },
-    importPath: '@openelement/ui',
-    exports: ['root', 'retained primitive subpaths'],
     notes: {
       en: [
         'UI is not required to use OpenElement.',
@@ -135,7 +110,60 @@ const packages: ApiPackage[] = [
     },
     kind: 'optional',
   },
-];
+};
+
+/**
+ * Project the generated inventory against the authored copy. A package with
+ * no authored copy — or authored copy for a package the truth no longer
+ * lists — fails the build instead of silently drifting (#1158).
+ */
+function projectPackages(): Array<{
+  id: string;
+  name: string;
+  importPath: string;
+  supportedSubpaths: readonly string[];
+  internalSubpaths: readonly string[];
+  authored: AuthoredPackageCopy;
+}> {
+  const generatedIds = new Set<string>();
+  const projected = apiReference.packages.map((pkg) => {
+    generatedIds.add(pkg.id);
+    const authored = authoredCopy[pkg.id];
+    if (!authored) {
+      throw new Error(
+        `apilist: generated package '${pkg.id}' has no authored bilingual copy in www/app/routes/apilist.tsx`,
+      );
+    }
+    return {
+      id: pkg.id,
+      name: pkg.name,
+      importPath: pkg.importPath,
+      supportedSubpaths: pkg.supportedSubpaths,
+      internalSubpaths: pkg.internalSubpaths,
+      authored,
+    };
+  });
+  for (const id of Object.keys(authoredCopy)) {
+    if (!generatedIds.has(id)) {
+      throw new Error(
+        `apilist: authored copy for '${id}' has no generated package — remove the stale entry`,
+      );
+    }
+  }
+  return projected;
+}
+
+const kindLabels = {
+  en: { core: 'CORE', build: 'BUILD', optional: 'OPTIONAL' },
+  zh: { core: '核心', build: '构建', optional: '可选' },
+} as const;
+
+/** Subpath display labels projected into the fixed chip grammar (5 slots). */
+function subpathChips(supportedSubpaths: readonly string[]): string[] {
+  const labels = supportedSubpaths.map((subpath) => subpath === '.' ? 'root' : subpath);
+  if (labels.length <= 5) return labels;
+  return [...labels.slice(0, 4), `+${labels.length - 4} more`];
+}
 
 const content = {
   en: {
@@ -155,8 +183,8 @@ const content = {
     headKind: 'Kind',
     footnote: (v: string) =>
       `※ Internal subpaths (app/i18n, adapter-vite build pipeline, element hydration modules) stay importable for tooling but carry no compatibility promise. The public type surface is explicit — no export-star seams on the ${v} line.`,
-    footnoteCheckPre: "Machine-checked against each package's exports map by ",
-    footnoteCheckPost: '.',
+    footnoteCheckPre: 'Generated from repository truth by ',
+    footnoteCheckPost: " and machine-checked against each package's exports map.",
   },
   zh: {
     pageTitle: 'API 参考',
@@ -175,7 +203,7 @@ const content = {
     footnote: (v: string) =>
       `※ 内部子路径（app/i18n、adapter-vite 构建管线、element hydration 模块）仍可被工具导入，但不携带兼容性承诺。公开类型面是显式的——${v} 线上没有 export-star 缝隙。`,
     footnoteCheckPre: '由 ',
-    footnoteCheckPost: ' 对照每个包的 exports map 做机器校验。',
+    footnoteCheckPost: ' 从仓库真值生成，并对照每个包的 exports map 做机器校验。',
   },
 } as const;
 
@@ -184,33 +212,32 @@ export default definePage(ApiCorePage, {
     const resolved: Locale = contentLocale(locale ?? 'en');
     const t = content[resolved];
     const kinds = kindLabels[resolved];
-    const projectPackage = (pkg: ApiPackage): ApiPackageItem => ({
-      id: pkg.id,
-      name: pkg.name,
-      importPath: pkg.importPath,
-      copy: pkg.copy[resolved],
-      note1: pkg.notes[resolved][0] ?? '',
-      note2: pkg.notes[resolved][1] ?? '',
-      note3: pkg.notes[resolved][2] ?? '',
-      export1: pkg.exports[0]
-        ? `${pkg.exports[0]}${pkg.internalExports?.includes(pkg.exports[0]) ? '※' : ''}`
-        : '',
-      export2: pkg.exports[1]
-        ? `${pkg.exports[1]}${pkg.internalExports?.includes(pkg.exports[1]) ? '※' : ''}`
-        : '',
-      export3: pkg.exports[2]
-        ? `${pkg.exports[2]}${pkg.internalExports?.includes(pkg.exports[2]) ? '※' : ''}`
-        : '',
-      export4: pkg.exports[3]
-        ? `${pkg.exports[3]}${pkg.internalExports?.includes(pkg.exports[3]) ? '※' : ''}`
-        : '',
-      export5: pkg.exports[4]
-        ? `${pkg.exports[4]}${pkg.internalExports?.includes(pkg.exports[4]) ? '※' : ''}`
-        : '',
-      kind: pkg.kind,
-      kindClass: `kind kind-${pkg.kind}`,
-      kindLabel: kinds[pkg.kind],
-    });
+    const packages = projectPackages();
+    const projectPackage = (pkg: (typeof packages)[number]): ApiPackageItem => {
+      const chips = subpathChips(pkg.supportedSubpaths);
+      const internal = new Set(pkg.internalSubpaths);
+      const chip = (index: number): string => {
+        const label = chips[index] ?? '';
+        return label && internal.has(label === 'root' ? '.' : label) ? `${label}※` : label;
+      };
+      return {
+        id: pkg.id,
+        name: pkg.name,
+        importPath: pkg.importPath,
+        copy: pkg.authored.copy[resolved],
+        note1: pkg.authored.notes[resolved][0] ?? '',
+        note2: pkg.authored.notes[resolved][1] ?? '',
+        note3: pkg.authored.notes[resolved][2] ?? '',
+        export1: chip(0),
+        export2: chip(1),
+        export3: chip(2),
+        export4: chip(3),
+        export5: chip(4),
+        kind: pkg.authored.kind,
+        kindClass: `kind kind-${pkg.authored.kind}`,
+        kindLabel: kinds[pkg.authored.kind],
+      };
+    };
     return {
       metadata: {
         breadcrumb: 'Reference',

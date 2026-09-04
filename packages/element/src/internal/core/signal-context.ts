@@ -9,6 +9,7 @@ import { signal } from '../signal/index.ts';
 
 export const CONTEXT_REQUEST_EVENT = 'context-request';
 
+/** A typed context token: protocol identity (`key`) plus its default value. */
 export interface Context<T> {
   /** Strict-equality protocol identity shared with vanilla and Lit consumers. */
   readonly key: symbol;
@@ -53,6 +54,7 @@ interface ProviderRecord<T> {
 const providers = new WeakMap<HTMLElement, Map<symbol, ProviderRecord<unknown>>>();
 const consumedSignalCleanups = new WeakMap<WritableSignal<unknown>, Unsubscribe>();
 
+/** Create a typed context token shared between provider and consumer elements. */
 export function createContext<T>(key: symbol, defaultValue: T): Context<T> {
   return Object.freeze({ key, defaultValue });
 }

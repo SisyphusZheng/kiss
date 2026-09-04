@@ -35,11 +35,13 @@ export interface OpenElementNavSection {
   items: Array<{ path: string; label: string; order?: number }>;
 }
 
+/** One header navigation link (href + label) in the generated site nav. */
 export interface OpenElementHeaderNavLink {
   href: string;
   label: string;
 }
 
+/** Locale options carried through the build context to the i18n integration. */
 export interface OpenElementI18nContextOptions {
   locales: string[];
   defaultLocale: string;

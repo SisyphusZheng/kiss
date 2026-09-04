@@ -4,6 +4,7 @@
 
 import type { HydrationStrategy } from './framework.ts';
 
+/** Per-island delivery options (hydration strategy, SSR/DSD participation). */
 export interface IslandOptions {
   /** Hydration strategy:
    *   - 'load': load immediately when module is imported

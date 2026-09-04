@@ -30,6 +30,7 @@ type PreactIslandComponent<
   props: Props,
 ) => ComponentChild;
 
+/** Options for {@linkcode definePreactIsland} (base props, SSR participation). */
 export interface PreactIslandOptions {
   /**
    * Server-render the island's light-DOM content (default). Set `false` for a
@@ -72,6 +73,7 @@ function resolveProps(
   };
 }
 
+/** Define a Preact component as a custom-element island with attribute-to-props bridging. */
 export function definePreactIsland<
   Props extends PreactIslandProps = PreactIslandProps,
 >(

@@ -30,6 +30,7 @@ const ESCAPE_MAP: Record<string, string> = {
   '"': '&quot;',
   "'": '&#39;',
 };
+/** Escape the five HTML-significant characters in text content. */
 export function escapeHtml(str: string): string {
   if (typeof str !== 'string') return '';
   return str.replace(/[&<>"']/g, (ch) => ESCAPE_MAP[ch] || ch);

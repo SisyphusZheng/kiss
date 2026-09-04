@@ -28,6 +28,7 @@ import type { FrameworkOptions } from './framework.ts';
 import { createOpenPlugin } from './plugin.ts';
 import { DEFAULT_COMPONENTS_DIR, DEFAULT_ISLANDS_DIR, DEFAULT_ROUTES_DIR } from './paths.ts';
 
+/** Options for the low-level {@linkcode openPipeline} Vite plugin pipeline. */
 export interface OpenPipelineConfig {
   /** Build/dev mode. 'ssg' (default) enables SSR dev server + static generation. 'spa' produces a client-only app (no SSR). */
   mode?: 'ssg' | 'spa';
@@ -38,6 +39,7 @@ export interface OpenPipelineConfig {
   headExtras?: string;
 }
 
+/** Low-level Vite plugin pipeline: SSR dev server, SSG and islands without the content/i18n conveniences of `openElement()`. */
 export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
   const options: FrameworkOptions = {
     mode: config.mode,

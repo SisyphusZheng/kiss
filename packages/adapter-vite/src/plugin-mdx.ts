@@ -21,6 +21,7 @@ import { relative, resolve, sep } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 
+/** Options for the `.mdx` route plugin ({@linkcode mdxPlugin}). */
 export interface OpenMdxPluginOptions {
   /**
    * Routes directory (as configured in openElement()). The compiled page tag
@@ -223,6 +224,7 @@ export function mdxToCompiledPageSource(
   ].join('\n');
 }
 
+/** Vite plugin compiling `.mdx` route files into compiled page modules. */
 export function mdxPlugin(options: OpenMdxPluginOptions = {}): Plugin {
   return {
     name: 'open:mdx',

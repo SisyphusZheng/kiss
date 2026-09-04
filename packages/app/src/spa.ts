@@ -84,6 +84,7 @@ interface SpaAppOptions {
   routerMode?: RouterMode;
 }
 
+/** A mounted SPA: idempotent mount/dispose plus the client-side router instance. */
 export interface SpaAppInstance {
   /** Mount the SPA into the given CSS selector. Idempotent — re-mount starts fresh. */
   mount(selector: string): void;
@@ -95,6 +96,7 @@ export interface SpaAppInstance {
 
 // ─── defineApp ─────────────────────────────────────────────────
 
+/** Define a client-side SPA application: route table, router mode and mount/dispose lifecycle. */
 export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let router: RouterInstance | null = null;
   let rootEl: Element | null = null;

@@ -18,6 +18,7 @@ export interface CollectionPluginCompatibility {
   itemLabel?: string;
 }
 
+/** Create the Vite plugin that loads one content collection into a generated data module. */
 export function createCollectionPlugin(
   name: string,
   options: CollectionOptions,

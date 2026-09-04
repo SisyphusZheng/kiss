@@ -56,6 +56,7 @@ export interface PageRouteContext {
 
 const REDIRECT_STATUSES: ReadonlySet<number> = new Set([301, 302, 303, 307, 308]);
 
+/** Redirect signal thrown from a loader/action to short-circuit rendering with an HTTP redirect. */
 export class OpenElementRedirect extends OpenElementError {
   readonly location: string;
   readonly status: number;
@@ -83,6 +84,7 @@ export class OpenElementRedirect extends OpenElementError {
   }
 }
 
+/** Not-found signal thrown from a loader to render the route's 404 path. */
 export class OpenElementNotFound extends OpenElementError {
   readonly status = 404;
 
@@ -98,14 +100,17 @@ export class OpenElementNotFound extends OpenElementError {
   }
 }
 
+/** Throw an {@linkcode OpenElementRedirect} for `location` (status must be a real 3xx). */
 export function redirect(location: string | URL, status = 302): never {
   throw new OpenElementRedirect(location, status);
 }
 
+/** Throw an {@linkcode OpenElementNotFound} to render the 404 path. */
 export function notFound(message = 'Not Found'): never {
   throw new OpenElementNotFound(message);
 }
 
+/** Type guard for {@linkcode OpenElementRedirect}, including its duck-typed cross-realm shape. */
 export function isOpenElementRedirect(error: unknown): error is OpenElementRedirect {
   return error instanceof OpenElementRedirect ||
     (
@@ -121,6 +126,7 @@ export function isOpenElementRedirect(error: unknown): error is OpenElementRedir
     );
 }
 
+/** Type guard for {@linkcode OpenElementNotFound}, including its duck-typed cross-realm shape. */
 export function isOpenElementNotFound(error: unknown): error is OpenElementNotFound {
   return error instanceof OpenElementNotFound ||
     (
@@ -156,10 +162,12 @@ export class OpenElementActionFailure<Data = unknown> {
   }
 }
 
+/** Return a structured action failure with an HTTP status and typed data payload. */
 export function fail<Data>(status: number, data: Data): OpenElementActionFailure<Data> {
   return new OpenElementActionFailure(status, data);
 }
 
+/** Type guard for {@linkcode OpenElementActionFailure}, including its duck-typed cross-realm shape. */
 export function isActionFailure(error: unknown): error is OpenElementActionFailure {
   return error instanceof OpenElementActionFailure ||
     (
@@ -407,8 +415,10 @@ export function projectPageProps(
   return props;
 }
 
+/** Delivery strategy for an island: a hydration trigger or media-gated loading. */
 export type IslandDeliveryStrategy = HydrationStrategy | 'media';
 
+/** Per-island delivery configuration (SSR/DSD participation and hydration strategy). */
 export interface IslandConfig {
   ssr?: boolean;
   dsd?: boolean;
@@ -479,6 +489,7 @@ function validateIslandTags(value: unknown, field: 'tags' | 'tagNames'): string[
   });
 }
 
+/** Validate and register an island delivery descriptor; returns the normalized config. */
 export function defineIslandConfig(config: IslandConfig): IslandConfig {
   if (typeof config !== 'object' || config === null || Array.isArray(config)) {
     throw new Error(`${ERROR_PREFIX} defineIslandConfig() requires an object descriptor.`);

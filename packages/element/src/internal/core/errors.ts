@@ -48,6 +48,7 @@ interface OpenElementErrorOptions {
   recoverable?: boolean;
 }
 
+/** Framework error carrying a stable code, severity, phase and recoverability contract. */
 export class OpenElementError extends Error implements ProtocolOpenElementError {
   public readonly code: string;
   public readonly severity: ErrorSeverity;
@@ -103,6 +104,7 @@ export class SsrRenderError extends OpenElementError {
 
 // ─── New ADR-0053 error classes ─────────────────────────────────────
 
+/** Recoverable render-phase error carrying the failing component path and tag. */
 export class RenderError extends OpenElementError implements ProtocolRenderError {
   public readonly componentPath: string;
   public readonly tagName: string;
@@ -131,6 +133,7 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
 
 let _telemetryHook: ErrorTelemetryHook | undefined;
 
+/** Install the process-wide error telemetry hook (replaceable for tests/HMR/multi-app pages). */
 export function setErrorTelemetryHook(hook: ErrorTelemetryHook): void {
   // Reconfiguration is intentional (#1099): tests, HMR, and multi-app pages
   // must be able to replace a stale hook without restarting the process.
@@ -142,6 +145,7 @@ export function resetErrorTelemetryHookForTests(): void {
   _telemetryHook = undefined;
 }
 
+/** Report an {@linkcode OpenElementError} to the telemetry hook, or console.error when none is installed. */
 export function reportError(error: OpenElementError): void {
   if (_telemetryHook) {
     try {

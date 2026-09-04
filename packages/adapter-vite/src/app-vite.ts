@@ -34,6 +34,7 @@ export interface OpenElementOptions extends FrameworkOptions {
   ssg?: SsgBehaviorOptions;
 }
 
+/** Create the full OpenElement Vite plugin set: pipeline, content collections, nav, i18n and sitemap. */
 export function openElement(options: OpenElementOptions = {}): Plugin[] {
   const { content: contentOpts, i18n: i18nOpts, ...coreOpts } = options;
   const ctx = new OpenElementBuildContext({
