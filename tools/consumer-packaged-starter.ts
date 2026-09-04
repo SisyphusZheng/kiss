@@ -1,3 +1,26 @@
+/**
+ * Packed-artifact starter consumer walkthrough (#1228, B2.5).
+ *
+ * The observational rule for packaging defects: qualify the PACKED artifact,
+ * never the workspace source. This tool installs the five pack:dry-run
+ * tarballs into a scratch consumer OUTSIDE the repository (so the adapter's
+ * workspace auto-alias in workspace-alias.ts cannot substitute workspace
+ * source for the packed modules), scaffolds the canonical starter through the
+ * packed @openelement/create CLI, and then exercises the full external
+ * consumer lifecycle exactly as an adopter would:
+ *
+ *   dev      vite dev server boots and SSR-renders / over HTTP
+ *   check    the starter's own typecheck task
+ *   test     the starter's own test task
+ *   build    real SSG build; must emit dist/server/index.js (request-time)
+ *   start    cli/start serves static + request-time + API routes over HTTP
+ *   deploy   the standalone dist/server/serve.mjs serves the same probes
+ *   preview  fails closed with start guidance (the starter is dynamic, #601)
+ *
+ * Every leg asserts over-the-wire output, not just a green exit. Gated in CI
+ * as `consumer:packaged` (tools/autoflow/policy.ts).
+ */
+
 import { existsSync } from '@std/fs';
 import { join, resolve } from '@std/path';
 import { formatJson } from '@openelement/element/build-utils';
@@ -10,6 +33,9 @@ const repoRoot = resolve(import.meta.dirname!, '..');
 // Generous ceiling for the starter's real SSG build (vite + nitro); a hung
 // packed adapter must fail the tool instead of stalling CI forever.
 const BUILD_TIMEOUT_MS = 10 * 60_000;
+// Cold-cache vite dev under Deno can take well over a minute before the
+// first SSR response; dev/start/deploy legs share this readiness ceiling.
+const SERVER_READY_TIMEOUT_MS = 3 * 60_000;
 
 async function run(
   command: string,
@@ -44,6 +70,88 @@ async function run(
     return { success: result.success, output };
   } finally {
     clearTimeout(timeoutId);
+  }
+}
+
+// Let the OS choose from its ephemeral range (same rationale as
+// consumer-local.ts: fixed ranges collide with parallel CI jobs).
+function reservePort(): number {
+  const probe = Deno.listen({ hostname: '127.0.0.1', port: 0 });
+  const port = (probe.addr as Deno.NetAddr).port;
+  probe.close();
+  return port;
+}
+
+/**
+ * Boot one long-running lifecycle server (dev/start/deploy), wait for it to
+ * answer HTTP, assert every [path, marker] probe over the wire, then stop it.
+ * A green exit alone is not lifecycle evidence: the packed artifacts must
+ * actually serve the documented routes.
+ */
+async function exerciseServer(
+  label: string,
+  command: string,
+  buildArgs: (port: number) => string[],
+  cwd: string,
+  env: Record<string, string>,
+  probes: ReadonlyArray<readonly [string, string]>,
+): Promise<void> {
+  const port = reservePort();
+  const server = new Deno.Command(command, {
+    args: buildArgs(port),
+    cwd,
+    env: { ...env, OPEN_ELEMENT_PORT: String(port), OPEN_ELEMENT_HOST: '127.0.0.1' },
+    stdout: 'piped',
+    stderr: 'piped',
+  }).spawn();
+  let exited = false;
+  const status = server.status.then((s) => {
+    exited = true;
+    return s;
+  });
+  const stdout = new Response(server.stdout).text();
+  const stderr = new Response(server.stderr).text();
+  try {
+    const baseUrl = `http://127.0.0.1:${port}`;
+    let ready = false;
+    const deadline = Date.now() + SERVER_READY_TIMEOUT_MS;
+    while (Date.now() < deadline && !exited) {
+      try {
+        const response = await fetch(`${baseUrl}${probes[0][0]}`);
+        await response.text();
+        ready = true;
+        break;
+      } catch {
+        await new Promise((resolveWait) => setTimeout(resolveWait, 150));
+      }
+    }
+    if (!ready) {
+      throw new Error(
+        `${label} did not become ready within ${SERVER_READY_TIMEOUT_MS}ms:\n${await stdout}\n${await stderr}`,
+      );
+    }
+    for (const [path, marker] of probes) {
+      const response = await fetch(`${baseUrl}${path}`);
+      const body = await response.text();
+      if (response.status !== 200 || !body.includes(marker)) {
+        throw new Error(
+          `${label} probe ${path} failed: status=${response.status}, missing marker ${marker}`,
+        );
+      }
+    }
+    console.log(`${label} passed (port ${port}).`);
+  } finally {
+    if (!exited) {
+      try {
+        server.kill('SIGTERM');
+      } catch (error) {
+        if (!(error instanceof TypeError)) {
+          console.error(`[consumer-packaged-starter] failed to stop ${label} server:`, error);
+        }
+      }
+    }
+    await status.catch(() => undefined);
+    await Promise.all([stdout.catch(() => ''), stderr.catch(() => '')]);
   }
 }
 
@@ -152,11 +260,30 @@ try {
   await Deno.writeTextFile(configPath, formatJson(config));
   await Deno.symlink(join(tmp, 'node_modules'), join(starter, 'node_modules'), { type: 'dir' });
 
+  // Lifecycle leg 1 — dev: the packed adapter must boot the real vite dev
+  // server and SSR-render the index route over HTTP, not just exit green.
+  await exerciseServer(
+    'Packed starter dev server',
+    Deno.execPath(),
+    (port) => ['task', 'dev', '--port', String(port), '--strictPort'],
+    starter,
+    {},
+    [['/', 'Static pages, alive where it counts']],
+  );
+
+  // Lifecycle leg 2 — check.
   const check = await run(Deno.execPath(), ['task', 'check'], starter);
   if (!check.success) throw new Error(`Packed starter typecheck failed:\n${check.output}`);
   console.log(`Packed starter typecheck passed for ${PACKAGE_VERSION}.`);
 
-  // Full-stack main path: packed adapter must run the real SSG build.
+  // Lifecycle leg 3 — test: the starter's own test task must run green
+  // (permit-no-files today; the leg pins the task wiring for when the
+  // starter ships real tests).
+  const test = await run(Deno.execPath(), ['task', 'test'], starter);
+  if (!test.success) throw new Error(`Packed starter test task failed:\n${test.output}`);
+  console.log('Packed starter test task passed.');
+
+  // Lifecycle leg 4 — build: packed adapter must run the real SSG build.
   const build = await run(Deno.execPath(), ['task', 'build'], starter, BUILD_TIMEOUT_MS);
   if (!build.success) throw new Error(`Packed starter SSG build failed:\n${build.output}`);
 
@@ -171,6 +298,47 @@ try {
     );
   }
   console.log(`Packed starter SSG build passed for ${PACKAGE_VERSION}.`);
+
+  // Lifecycle legs 5–6 — start and deploy: serve the built output through the
+  // documented production entries (cli/start and the standalone
+  // dist/server/serve.mjs a consumer deploys without the CLI) and assert the
+  // static route, the request-time route and the API route over HTTP.
+  const serveProbes = [
+    ['/', 'Static pages, alive where it counts'],
+    ['/contact', 'Stay in the loop'],
+    ['/api/health', '"framework":"openElement"'],
+  ] as const;
+  await exerciseServer(
+    'Packed starter start server',
+    Deno.execPath(),
+    () => ['task', 'start'],
+    starter,
+    {},
+    serveProbes,
+  );
+  await exerciseServer(
+    'Packed starter standalone deploy entry (dist/server/serve.mjs)',
+    Deno.execPath(),
+    () => ['run', '-A', 'dist/server/serve.mjs'],
+    starter,
+    {},
+    serveProbes,
+  );
+
+  // Lifecycle leg 7 — preview: the starter ships a request-time route, so the
+  // documented preview behavior is a fail-closed refusal that points at
+  // `deno task start` (#601); a silent static-only preview would be wrong.
+  const preview = await run(Deno.execPath(), ['task', 'preview'], starter);
+  if (
+    preview.success ||
+    !preview.output.includes('request-time routes') ||
+    !preview.output.includes('deno task start')
+  ) {
+    throw new Error(
+      `Packed starter preview must fail closed with start guidance for a dynamic app:\n${preview.output}`,
+    );
+  }
+  console.log('Packed starter preview fail-closed guidance passed.');
 } finally {
   await Deno.remove(tmp, { recursive: true }).catch(() => undefined);
 }
