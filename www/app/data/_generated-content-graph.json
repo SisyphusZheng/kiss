@@ -464,7 +464,7 @@
       ],
       "references": [],
       "route": "/architecture/benchmark",
-      "fingerprint": "567a73a9e2b9b167af103713a2348cc91484589cab0943336fdb03fd5e7f953b",
+      "fingerprint": "169bb90be1aef8fef6d3d827cfe04399d0867e0e23e7cfd10f7880bf93252495",
       "data": {
         "lede": "Zero-noise. What we actually measure.",
         "order": 100,
@@ -486,7 +486,7 @@
       ],
       "references": [],
       "route": "/architecture/benchmark",
-      "fingerprint": "a5827dbdcacccd147b98bd853d479fcb6f96e09849be4c19a5588feb3b974c8e",
+      "fingerprint": "d597265186df853b11d4f3d16a656224647e28adfcfe5ee6485ae842b8302515",
       "data": {
         "lede": "零噪音。只列我们实际测量的数据。",
         "order": 100,

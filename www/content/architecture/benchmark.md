@@ -8,7 +8,7 @@ order: 100
 
 | Metric          | Value                                             |
 | --------------- | ------------------------------------------------- |
-| SSG build (www) | 30 route modules, 205 sitemap URLs                |
+| SSG build (www) | Every route prerendered; sitemap built from routes |
 | Dev cold start  | Measured by CI performance evidence               |
 | Vite dev start  | Measured by CI performance evidence               |
 | Client bundle   | Budgeted island chunks; no mandatory page runtime |
