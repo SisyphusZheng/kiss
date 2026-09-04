@@ -31,7 +31,8 @@
  * - `routes/products.tsx`       → `/products`
  * - `routes/products/[id].tsx`  → `/products/:id`
  * - `routes/products/index.tsx` → `/products`
- * - `routes/products/[...slug].tsx` → `/products/*` (catch-all)
+ * - `routes/products/[...slug].tsx` → `/products/:slug{.+}` (catch-all; Hono
+ *   named-regex parameter matching across `/`, see scanRoutes #556)
  *
  * @module route-manifest
  */
