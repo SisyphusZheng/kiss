@@ -1,23 +1,57 @@
 /**
- * Content example type-check gate (#1159, B2.4): TypeScript/TSX fenced code
- * blocks in the authored bilingual guides that import `@openelement/*` must
- * type-check against the real v0.44 framework sources. zh duplicates of an
- * en block are deduped by content. Fails closed with compiler diagnostics.
+ * Content example type-check gate (#1159, B2.4; hardened #1307): TypeScript
+ * fenced code blocks in the authored bilingual guides that import
+ * `@openelement/*` must type-check against the real v0.44 framework sources.
+ * zh duplicates of an en block are deduped by content. Fails closed with
+ * compiler diagnostics.
+ *
+ * Fence policy (#1307): ```ts, ```tsx and the ```typescript alias are
+ * type-checked; ```js/```javascript fences that import `@openelement/*` are
+ * checked too (compiled as TS — JavaScript snippets must be valid TypeScript
+ * syntax), so the alias can no longer smuggle an unchecked framework example
+ * past the gate.
+ *
+ * Blog exclusion (#1307 adjudication): www/content/blog is deliberately NOT
+ * type-checked. Dispatches are dated historical records — their snippets
+ * document the API surface of their era (LessJS-era names, since-removed
+ * packages) and stay truthful as history, not as current authoring guidance.
+ * The maintained authoring surface is guide/architecture, and it is fully
+ * covered. The checked directory list is explicit below so widening the
+ * surface is a deliberate edit.
  *
  * Elision convention: guide snippets are written as consumer-project modules
  * and legitimately omit application context. The harness therefore suppresses
  * only the diagnostics that express that elision — unresolved non-framework
  * module specifiers (TS2307 outside `@openelement/*`; the virtual
  * `@openelement/generated/*` namespace is adapter-generated consumer code),
- * undefined names from elided app code (TS2304), implicit-any (TS7006) and
- * property access on the uninferred loader-data generic (TS2339 on `{}`).
- * Everything on the framework surface — unknown `@openelement` modules or
- * exports, argument/assignability errors against real APIs, syntax and JSX
- * errors — fails the gate.
+ * undefined names from elided app code (TS2304 — but NOT when the undefined
+ * name is a documented framework export: an import-elided snippet calling a
+ * framework function must import it, so wrong-argument calls against the
+ * real API stay visible, #1307), implicit-any (TS7006) and property access on
+ * the uninferred loader-data generic (TS2339 on `{}`). Everything on the
+ * framework surface — unknown `@openelement` modules or exports,
+ * argument/assignability errors against real APIs, syntax and JSX errors —
+ * fails the gate.
  */
 import ts from 'typescript';
 import { walk } from '@std/fs/walk';
 import { readPackages } from './lib/package-graph.ts';
+import { apiReference } from '../www/app/data/_generated-api-reference.ts';
+
+/** The maintained authoring surface; blog is excluded deliberately (header). */
+const CHECKED_CONTENT_DIRS = ['www/content/guide', 'www/content/architecture'];
+
+/** Every documented framework export + custom-element class name. */
+function frameworkExportNames(): ReadonlySet<string> {
+  const names = new Set<string>();
+  for (const pkg of apiReference.packages) {
+    for (const subpath of pkg.subpaths) {
+      for (const exported of subpath.exports) names.add(exported.name);
+    }
+  }
+  for (const element of apiReference.elements) names.add(element.className);
+  return names;
+}
 
 export interface ExampleFailure {
   file: string;
@@ -32,15 +66,22 @@ export interface ContentExample {
   code: string;
 }
 
-const FENCE_PATTERN = /```(ts|tsx)\n([\s\S]*?)```/g;
+const FENCE_PATTERN = /```(ts|tsx|typescript|javascript|js)\n([\s\S]*?)```/g;
 
-/** Extract unique ts/tsx fenced blocks that import @openelement packages. */
+/** Normalize fence aliases; js/javascript are checked as TypeScript (header). */
+function normalizeFenceLang(lang: string): string {
+  if (lang === 'typescript') return 'ts';
+  if (lang === 'javascript' || lang === 'js') return 'ts';
+  return lang;
+}
+
+/** Extract unique fenced blocks that import @openelement packages. */
 export function extractExamples(file: string, markdown: string): ContentExample[] {
   const examples: ContentExample[] = [];
   for (const match of markdown.matchAll(FENCE_PATTERN)) {
     const code = match[2];
     if (!code.includes('@openelement/')) continue;
-    examples.push({ file, index: examples.length, lang: match[1], code });
+    examples.push({ file, index: examples.length, lang: normalizeFenceLang(match[1]), code });
   }
   return examples;
 }
@@ -133,7 +174,10 @@ export async function typeCheckExamples(examples: ContentExample[]): Promise<Exa
  * diagnostics that express documented snippet elision, never framework-surface
  * errors.
  */
-export function suppressElidedDiagnostic(diagnostic: ts.Diagnostic): boolean {
+export function suppressElidedDiagnostic(
+  diagnostic: ts.Diagnostic,
+  frameworkNames: ReadonlySet<string> = frameworkExportNames(),
+): boolean {
   const text = ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ');
   if (diagnostic.code === 2307) {
     // Unresolved module: only framework modules are harness truth. The
@@ -141,8 +185,13 @@ export function suppressElidedDiagnostic(diagnostic: ts.Diagnostic): boolean {
     if (/Cannot find module '@openelement\/(?!generated\/)/.test(text)) return false;
     return true;
   }
-  // Undefined names from elided application code.
-  if (diagnostic.code === 2304) return true;
+  // Undefined names from elided application code — but never a documented
+  // framework export: those must be imported so calls are checked (#1307).
+  if (diagnostic.code === 2304) {
+    const name = text.match(/Cannot find name '([^']+)'/)?.[1];
+    if (name !== undefined && frameworkNames.has(name)) return false;
+    return true;
+  }
   // Implicit-any in teaching snippets.
   if (diagnostic.code === 7006) return true;
   // Property access on the uninferred loader-data generic (`{}`).
@@ -153,7 +202,7 @@ export function suppressElidedDiagnostic(diagnostic: ts.Diagnostic): boolean {
 export async function checkContentExamples(): Promise<ExampleFailure[]> {
   const seen = new Set<string>();
   const examples: ContentExample[] = [];
-  for (const dir of ['www/content/guide', 'www/content/architecture']) {
+  for (const dir of CHECKED_CONTENT_DIRS) {
     for await (const entry of walk(dir, { includeDirs: false, exts: ['.md'] })) {
       const markdown = await Deno.readTextFile(entry.path);
       for (const example of extractExamples(entry.path, markdown)) {

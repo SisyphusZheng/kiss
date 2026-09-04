@@ -15,6 +15,7 @@ import {
   type CollectionOptions,
   loadCollectionData,
 } from '../../packages/adapter-vite/src/content.ts';
+import { blogCollectionOptions } from '../../packages/adapter-vite/src/internal/content/blog/plugin.ts';
 import { scanRoutes } from '../../packages/adapter-vite/src/internal/ssg/route-scanner.ts';
 import { parseTypeScript } from './typescript-ast.ts';
 import { extractExportClassMap, extractSurfaceMap } from '../check-package-surface.ts';
@@ -74,12 +75,21 @@ async function adaptCollection(
   const localeOf = (index: number) => loaded[index].locale ?? 'en';
   const idFor = (slug: string, locale: string) => `article:${collection}/${slug}:${locale}`;
   // loadCollectionData does not expose source paths; re-derive them from the
-  // slug/locale the collection schema produced (the schema's transform is the
-  // single owner of the `<slug>.<locale>.md` convention).
-  const pathFor = (slug: string, locale: string) =>
-    locale === 'en'
-      ? `${options.contentDir}/${slug}.md`
-      : `${options.contentDir}/${slug}.${locale}.md`;
+  // slug/locale the collection schema produced. Guide/architecture own the
+  // `<slug>.<locale>.md` convention; the blog schema additionally strips the
+  // `YYYY-MM-DD-` date prefix, so match the on-disk filename by suffix (#1307).
+  const fileNames: string[] = [];
+  for await (const dirEntry of Deno.readDir(options.contentDir)) {
+    if (dirEntry.isFile && dirEntry.name.endsWith('.md')) fileNames.push(dirEntry.name);
+  }
+  const pathFor = (slug: string, locale: string) => {
+    const suffix = locale === 'en' ? `${slug}.md` : `${slug}.${locale}.md`;
+    const exact = `${options.contentDir}/${suffix}`;
+    if (fileNames.includes(suffix)) return exact;
+    const prefixed = fileNames.find((name) => name.endsWith(`-${suffix}`));
+    if (prefixed) return `${options.contentDir}/${prefixed}`;
+    return exact; // unreadable paths surface as hard IO failures below
+  };
   const known = new Map<string, string>();
   for (const [index, entry] of loaded.entries()) {
     known.set(`${entry.slug}:${localeOf(index)}`, idFor(entry.slug, localeOf(index)));
@@ -122,8 +132,15 @@ async function adaptCollection(
       fingerprint: await sha256Hex(raw),
       data: {
         title: entry.frontmatter.title,
-        ...(typeof entry.frontmatter.lede === 'string' ? { lede: entry.frontmatter.lede } : {}),
+        // SEO descriptions derive from `lede` (guide/architecture) or the
+        // blog's `excerpt` — one `lede` key keeps the query surface uniform.
+        ...(typeof entry.frontmatter.lede === 'string'
+          ? { lede: entry.frontmatter.lede }
+          : typeof entry.frontmatter.excerpt === 'string'
+          ? { lede: entry.frontmatter.excerpt }
+          : {}),
         ...(typeof entry.frontmatter.order === 'number' ? { order: entry.frontmatter.order } : {}),
+        ...(typeof entry.frontmatter.lang === 'string' ? { lang: entry.frontmatter.lang } : {}),
       },
     });
   }
@@ -397,7 +414,10 @@ export async function buildContentGraph(root = WWW_ROOT): Promise<ContentGraph> 
   entries.push(
     ...await adaptCollection(
       'blog',
-      { contentDir: `${root}/content/blog`, basePath: '/blog' },
+      // The blog plugin's own collection options: the date-prefix slug
+      // transform and frontmatter schema are the same truth the built site
+      // uses, so graph routes match the served routes exactly (#1307).
+      blogCollectionOptions({ contentDir: `${root}/content/blog`, basePath: '/blog' }),
       'blog-post',
     ),
   );

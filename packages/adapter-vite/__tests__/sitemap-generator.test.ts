@@ -37,6 +37,23 @@ Deno.test('generateSitemap creates deploy outputs with web-readable permissions'
   }
 });
 
+Deno.test('generateSitemap never lists 404 pages, including locale-prefixed ones (#1307)', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    await Deno.mkdir(join(root, 'zh', '404'), { recursive: true });
+    await Deno.mkdir(join(root, 'zh'), { recursive: true });
+    await Deno.writeTextFile(join(root, 'index.html'), 'home');
+    await Deno.writeTextFile(join(root, '404.html'), 'not found'); // default-locale flat artifact
+    await Deno.writeTextFile(join(root, 'zh', 'index.html'), 'zh home');
+    await Deno.writeTextFile(join(root, 'zh', '404', 'index.html'), 'zh not found');
+    generateSitemap(root, { hostname: 'https://example.com' });
+    const xml = await Deno.readTextFile(join(root, 'sitemap.xml'));
+    assert(!xml.includes('/404</loc>'), 'sitemap must not list any 404 page');
+    assert(xml.includes('<loc>https://example.com/zh</loc>'));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
 Deno.test('generateSitemap exclude matches path boundaries, not bare prefixes (#1039)', async () => {
   const root = await Deno.makeTempDir();
   try {

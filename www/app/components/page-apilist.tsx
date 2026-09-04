@@ -30,6 +30,38 @@ export interface ApiPackageItem {
   kindLabel: string;
 }
 
+/** One generated export entry; `anchor` is the generated searchRecord anchor. */
+export interface ApiReferenceItem {
+  key: string;
+  anchor: string;
+  name: string;
+  container: string;
+  kind: string;
+  stability: string;
+  summary: string;
+  source: string;
+}
+
+/** One generated custom-element record with its detail lists inlined. */
+export interface ApiElementItem {
+  key: string;
+  anchor: string;
+  tag: string;
+  className: string;
+  description: string;
+  layer: string;
+  hydrate: string;
+  module: string;
+  attributes: string;
+  events: string;
+  slots: string;
+  cssParts: string;
+  attributesLabel: string;
+  eventsLabel: string;
+  slotsLabel: string;
+  partsLabel: string;
+}
+
 interface ApiRailItem {
   id: string;
   href: string;
@@ -95,6 +127,39 @@ export default class ApiCorePage extends OpenElement {
   @property({ reflect: false, attribute: false })
   packages: ApiPackageItem[] = [];
 
+  @property({ reflect: false, attribute: false })
+  s3Index = '';
+
+  @property({ reflect: false, attribute: false })
+  s3Title = '';
+
+  @property({ reflect: false, attribute: false })
+  s3Copy = '';
+
+  @property({ reflect: false, attribute: false })
+  headExport = '';
+
+  @property({ reflect: false, attribute: false })
+  headSummary = '';
+
+  @property({ reflect: false, attribute: false })
+  headSource = '';
+
+  @property({ reflect: false, attribute: false })
+  referenceEntries: ApiReferenceItem[] = [];
+
+  @property({ reflect: false, attribute: false })
+  s4Index = '';
+
+  @property({ reflect: false, attribute: false })
+  s4Title = '';
+
+  @property({ reflect: false, attribute: false })
+  s4Copy = '';
+
+  @property({ reflect: false, attribute: false })
+  elementEntries: ApiElementItem[] = [];
+
   render() {
     return (
       <main>
@@ -149,6 +214,67 @@ export default class ApiCorePage extends OpenElement {
                   {this.footnoteCheckPost}
                 </p>
               </footer>
+            </div>
+          </open-section-frame>
+          <open-section-frame>
+            <span slot='index'>{this.s3Index}</span>
+            <span slot='title'>{this.s3Title}</span>
+            <span slot='copy'>{this.s3Copy}</span>
+            <div class='registry' id='api-reference'>
+              <div class='registry-head' aria-hidden='true'>
+                <span>{this.headExport}</span>
+                <span>{this.headSummary}</span>
+                <span>{this.headSource}</span>
+              </div>
+              {this.referenceEntries.map((entry) => (
+                <div class='ref-row' id={entry.anchor} key={entry.key}>
+                  <div>
+                    <span class='ref-name'>{entry.name}</span>
+                    <span class='ref-container'>{entry.container}</span>
+                    <span class='chip'>{entry.kind}</span>
+                    <span class='chip chip-stability'>{entry.stability}</span>
+                  </div>
+                  <p class='ref-summary'>{entry.summary}</p>
+                  <span class='ref-source'>{entry.source}</span>
+                </div>
+              ))}
+            </div>
+          </open-section-frame>
+          <open-section-frame>
+            <span slot='index'>{this.s4Index}</span>
+            <span slot='title'>{this.s4Title}</span>
+            <span slot='copy'>{this.s4Copy}</span>
+            <div class='registry' id='element-reference'>
+              {this.elementEntries.map((element) => (
+                <div class='ce-row' id={element.anchor} key={element.key}>
+                  <div>
+                    <span class='ce-tag'>{element.tag}</span>
+                    <span class='ce-class'>{element.className}</span>
+                    <span class='chip'>{element.layer}</span>
+                    <span class='chip'>{element.hydrate}</span>
+                  </div>
+                  <p class='ce-description'>{element.description}</p>
+                  <span class='ce-module'>{element.module}</span>
+                  <div class='ce-details'>
+                    <span class='ce-detail'>
+                      <b>{element.attributesLabel}</b>
+                      {element.attributes}
+                    </span>
+                    <span class='ce-detail'>
+                      <b>{element.eventsLabel}</b>
+                      {element.events}
+                    </span>
+                    <span class='ce-detail'>
+                      <b>{element.slotsLabel}</b>
+                      {element.slots}
+                    </span>
+                    <span class='ce-detail'>
+                      <b>{element.partsLabel}</b>
+                      {element.cssParts}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </open-section-frame>
         </open-reading-shell>

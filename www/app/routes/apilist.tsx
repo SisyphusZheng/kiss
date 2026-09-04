@@ -3,7 +3,11 @@ import { definePage } from '@openelement/app';
 import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
 import { apiReference } from '../data/_generated-api-reference.ts';
-import ApiCorePage, { type ApiPackageItem } from '../components/page-apilist.tsx';
+import ApiCorePage, {
+  type ApiElementItem,
+  type ApiPackageItem,
+  type ApiReferenceItem,
+} from '../components/page-apilist.tsx';
 
 export const meta = { section: 'Reference', label: 'API Reference', order: 5 };
 
@@ -158,6 +162,77 @@ const kindLabels = {
   zh: { core: '核心', build: '构建', optional: '可选' },
 } as const;
 
+/**
+ * Flatten the generated per-export reference into one render list. Anchors
+ * come from the generated module unchanged, so they match the generated
+ * searchRecords (and the built-output fragment gate) by construction (#1307).
+ */
+function projectReferenceEntries(): ApiReferenceItem[] {
+  return apiReference.packages.flatMap((pkg) =>
+    pkg.subpaths.flatMap((subpath) =>
+      subpath.exports.map((exported) => ({
+        key: exported.anchor,
+        anchor: exported.anchor,
+        name: exported.name,
+        container: `${pkg.name} · ${subpath.label}`,
+        kind: exported.kind,
+        stability: exported.stability,
+        summary: exported.summary,
+        source: `${exported.source.path}:${exported.source.line}`,
+      }))
+    )
+  );
+}
+
+interface GeneratedElementDetail {
+  name?: string;
+  type?: string;
+  description?: string;
+  default?: string;
+}
+
+/** Render one generated detail list (attributes/events/slots/CSS parts) as inline text. */
+function detailLine(details: readonly GeneratedElementDetail[]): string {
+  return details
+    .map((detail) => {
+      const name = detail.name === '' ? '(default)' : detail.name ?? '';
+      const type = typeof detail.type === 'string' && detail.type !== '' ? `: ${detail.type}` : '';
+      const fallback = typeof detail.default === 'string' ? ` = ${detail.default}` : '';
+      const description = typeof detail.description === 'string' && detail.description !== ''
+        ? ` — ${detail.description}`
+        : '';
+      return `${name}${type}${fallback}${description}`;
+    })
+    .join('; ');
+}
+
+/** Per-element detail rows from the generated compiler-manifest records. */
+function projectElementEntries(labels: {
+  attributes: string;
+  events: string;
+  slots: string;
+  parts: string;
+}): ApiElementItem[] {
+  return apiReference.elements.map((element) => ({
+    key: element.anchor,
+    anchor: element.anchor,
+    tag: `<${element.tag}>`,
+    className: element.className,
+    description: element.description,
+    layer: element.layer,
+    hydrate: element.hydrate,
+    module: element.module,
+    attributes: detailLine(element.attributes),
+    events: detailLine(element.events),
+    slots: detailLine(element.slots),
+    cssParts: detailLine(element.cssParts),
+    attributesLabel: labels.attributes,
+    eventsLabel: labels.events,
+    slotsLabel: labels.slots,
+    partsLabel: labels.parts,
+  }));
+}
+
 /** Subpath display labels projected into the fixed chip grammar (5 slots). */
 function subpathChips(supportedSubpaths: readonly string[]): string[] {
   const labels = supportedSubpaths.map((subpath) => subpath === '.' ? 'root' : subpath);
@@ -181,6 +256,23 @@ const content = {
     headPackage: 'Package',
     headSubpaths: 'Supported subpaths',
     headKind: 'Kind',
+    railExports: 'Exports',
+    railElements: 'Elements',
+    s3Index: '03 / export reference',
+    s3Title: 'Every documented export, anchored.',
+    s3Copy:
+      'Each entry below is enumerated from the package exports maps by the reference generator — name, kind, stability class and JSDoc summary are generated facts, never hand-copied. The anchor matches the generated search record for the same export.',
+    headExport: 'Export',
+    headSummary: 'Summary',
+    headSource: 'Source',
+    s4Index: '04 / element reference',
+    s4Title: 'Custom elements from the compiler manifest.',
+    s4Copy:
+      'Tag, layer, hydration strategy, attributes, events, slots and CSS parts come from the @openelement/ui compiler manifest — the same truth the SSR/claim pipeline validates against.',
+    attributesLabel: 'Attributes',
+    eventsLabel: 'Events',
+    slotsLabel: 'Slots',
+    partsLabel: 'CSS parts',
     footnote: (v: string) =>
       `※ Internal subpaths (app/i18n, adapter-vite build pipeline, element hydration modules) stay importable for tooling but carry no compatibility promise. The public type surface is explicit — no export-star seams on the ${v} line.`,
     footnoteCheckPre: 'Generated from repository truth by ',
@@ -200,6 +292,23 @@ const content = {
     headPackage: '包',
     headSubpaths: '受支持的子路径',
     headKind: '类别',
+    railExports: '导出',
+    railElements: '元素',
+    s3Index: '03 / 导出参考',
+    s3Title: '每一个记录在案的导出，都有锚点。',
+    s3Copy:
+      '以下条目由参考生成器从各包的 exports map 枚举——名称、类别、稳定性级别与 JSDoc 摘要均为生成事实，绝不手工复制。锚点与该导出生成的搜索记录一一对应。',
+    headExport: '导出',
+    headSummary: '摘要',
+    headSource: '来源',
+    s4Index: '04 / 元素参考',
+    s4Title: '来自编译器 manifest 的 Custom Element。',
+    s4Copy:
+      '标签、层级、hydration 策略、属性、事件、插槽与 CSS parts 均来自 @openelement/ui 编译器 manifest——SSR/claim 管线校验所依据的同一份真值。',
+    attributesLabel: '属性',
+    eventsLabel: '事件',
+    slotsLabel: '插槽',
+    partsLabel: 'CSS parts',
     footnote: (v: string) =>
       `※ 内部子路径（app/i18n、adapter-vite 构建管线、element hydration 模块）仍可被工具导入，但不携带兼容性承诺。公开类型面是显式的——${v} 线上没有 export-star 缝隙。`,
     footnoteCheckPre: '由 ',
@@ -244,12 +353,16 @@ export default definePage(ApiCorePage, {
         title: t.pageTitle,
         lede: t.lede(OPENELEMENT_VERSION),
       },
-      railItems: packages.map((pkg) => ({
-        id: pkg.id,
-        href: `#${pkg.id}`,
-        label: pkg.name,
-        depth: '3',
-      })),
+      railItems: [
+        ...packages.map((pkg) => ({
+          id: pkg.id,
+          href: `#${pkg.id}`,
+          label: pkg.name,
+          depth: '3',
+        })),
+        { id: 'api-reference', href: '#api-reference', label: t.railExports, depth: '3' },
+        { id: 'element-reference', href: '#element-reference', label: t.railElements, depth: '3' },
+      ],
       s1Index: t.s1Index,
       s1Title: t.s1Title,
       s1Copy: t.s1Copy,
@@ -263,6 +376,22 @@ export default definePage(ApiCorePage, {
       footnoteCheckPre: t.footnoteCheckPre,
       footnoteCheckPost: t.footnoteCheckPost,
       packages: packages.map(projectPackage),
+      s3Index: t.s3Index,
+      s3Title: t.s3Title,
+      s3Copy: t.s3Copy,
+      headExport: t.headExport,
+      headSummary: t.headSummary,
+      headSource: t.headSource,
+      referenceEntries: projectReferenceEntries(),
+      s4Index: t.s4Index,
+      s4Title: t.s4Title,
+      s4Copy: t.s4Copy,
+      elementEntries: projectElementEntries({
+        attributes: t.attributesLabel,
+        events: t.eventsLabel,
+        slots: t.slotsLabel,
+        parts: t.partsLabel,
+      }),
     };
   },
 });

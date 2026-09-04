@@ -66,9 +66,51 @@ export const pageApiListStyles = [compiledStyle(`
   .footnote p + p { margin-block-start: var(--size-3); }
   .footnote code { color: var(--violet-8); }
 
+  /* generated reference: hairline rows, one per export / custom element */
+  .ref-row, .ce-row {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1fr) auto;
+    gap: clamp(1rem, 4vw, 3rem);
+    align-items: start;
+    padding-block: var(--size-4);
+    border-block-end: var(--border-size-1) solid var(--border);
+  }
+  .ce-row { grid-template-columns: minmax(0, .9fr) minmax(0, 1fr); }
+  .ref-name {
+    display: inline;
+    color: var(--violet-8);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-1);
+    font-weight: var(--font-weight-7);
+  }
+  .ref-container { display: block; margin-block-start: var(--size-1); color: var(--text-muted); font-size: var(--font-size-00); }
+  .ref-row .chip, .ce-row .chip { margin-inline-end: var(--size-1); }
+  .chip-stability { background: transparent; box-shadow: inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--violet-5) 55%, transparent); }
+  .ref-summary { color: var(--text-secondary); font-size: var(--font-size-0); line-height: var(--font-lineheight-3); }
+  .ref-source, .ce-module { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); }
+  .ce-tag {
+    display: inline;
+    color: var(--violet-8);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-1);
+    font-weight: var(--font-weight-7);
+  }
+  .ce-class { display: block; margin-block-start: var(--size-1); color: var(--text-muted); font-size: var(--font-size-00); }
+  .ce-description { color: var(--text-secondary); font-size: var(--font-size-0); line-height: var(--font-lineheight-3); }
+  .ce-details { grid-column: 1 / -1; display: grid; gap: var(--size-2); }
+  .ce-detail { display: block; color: var(--text-muted); font-size: var(--font-size-00); line-height: var(--font-lineheight-3); }
+  .ce-detail b {
+    margin-inline-end: var(--size-2);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-7);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
   @media (max-width: 860px) {
     .registry-head { display: none; }
     .pkg-row { grid-template-columns: 1fr; gap: var(--size-3); }
     .kind { justify-self: start; }
+    .ref-row, .ce-row { grid-template-columns: 1fr; gap: var(--size-2); }
   }
 `)];

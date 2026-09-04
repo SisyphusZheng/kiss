@@ -1,6 +1,7 @@
 ---
 title: '.less Compiler — Optional Zero-Framework Component Authoring'
 date: '2026-05-11'
+lang: 'en'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

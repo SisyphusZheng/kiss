@@ -55,6 +55,10 @@ export default class PageBlogPost extends OpenElement {
   @property({ reflect: false, attribute: false })
   date = '';
   @property({ reflect: false, attribute: false })
+  postLang = '';
+  @property({ reflect: false, attribute: false })
+  langNotice = '';
+  @property({ reflect: false, attribute: false })
   tags: BlogTag[] = [];
   @property({ reflect: false, attribute: false })
   railItems: BlogRailItem[] = [];
@@ -92,11 +96,17 @@ export default class PageBlogPost extends OpenElement {
                 <time>{this.date}</time>
                 {this.tags.map((tag) => <span key={tag.key}>· {tag.label}</span>)}
               </p>
+              <p class='lang-notice' role='note'>{this.langNotice}</p>
             </div>
             <div slot='rail'>
               <open-page-rail items={this.railItems}></open-page-rail>
             </div>
-            <div class='blog-content' innerHTML={this.articleHtml} trustedHtml />
+            <div
+              class='blog-content'
+              lang={this.postLang}
+              innerHTML={this.articleHtml}
+              trustedHtml
+            />
             <nav class='next-dispatch' aria-label='Next dispatch'>
               <span class='next-label'>{this.nextDispatchLabel}</span>
               <a href={this.nextDispatchHref}>{this.nextDispatchText}</a>

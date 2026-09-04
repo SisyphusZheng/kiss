@@ -1,6 +1,7 @@
 ---
 title: 'WithDsdHydration Mixin + 自建 SSR 决策'
 date: '2026-05-07'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

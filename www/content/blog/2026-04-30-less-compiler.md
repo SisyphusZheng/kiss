@@ -1,6 +1,7 @@
 ---
 title: '.less Compiler — 可选零框架运行时组件'
 date: '2026-04-30'
+lang: 'zh'
 excerpt: '一个可选编译器将声明式 .less 文件编译为原生 Custom Elements，让 Lit 从必选路线变成 adapter。'
 tags: ['architecture', 'compiler']
 ---

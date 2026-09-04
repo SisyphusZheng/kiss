@@ -60,6 +60,19 @@ export const pageBlogIndexStyles = [compiledStyle(`
     line-height: 1.75;
   }
 
+  .origin-note {
+    max-width: 38rem;
+    margin-block-start: var(--size-3);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: 1.75;
+  }
+
+  .origin-note:empty {
+    display: none;
+  }
+
   /* ── featured dispatch band ── */
   .featured {
     display: block;
@@ -180,6 +193,22 @@ export const pageBlogIndexStyles = [compiledStyle(`
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     line-height: 1.6;
+  }
+
+  .row-lang {
+    display: inline-block;
+    margin-block-start: var(--size-2);
+    padding: 0 var(--size-2);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--violet-5) 45%, transparent);
+    border-radius: var(--radius-1);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    letter-spacing: 0.08em;
+  }
+
+  .row-lang:empty {
+    display: none;
   }
 
   .row-date {

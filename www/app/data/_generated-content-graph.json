@@ -812,8 +812,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0001-keep-hono-vite-dev-server",
-      "fingerprint": "ad7b5acfb187c6bdacf26d331e437ba2c13804fc0b9e40a283cde02c7dbb275b",
+      "fingerprint": "24996325b7a161c7190e71fed813e63020393b46785db447e8d35c9320c44264",
       "data": {
+        "lang": "en",
         "title": "@hono/vite-dev-server Evaluation"
       }
     },
@@ -827,8 +828,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0002-less-compiler-eliminate-lit",
-      "fingerprint": "d303dee0aee21c5fa47ac278cd5fa3063aa49e7ef4b38f80ccf281c086b7e2a5",
+      "fingerprint": "fb7c7cdc808c66044508745602e0bf993601e263c9a9f7ba22fdf0755fcad30d",
       "data": {
+        "lang": "en",
         "title": ".less Compiler — Optional Zero-Framework Component Authoring"
       }
     },
@@ -842,8 +844,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0003-pwa-support",
-      "fingerprint": "9a0b0657c630b008f2e4dc302607fee7f5da172c47feb5bd188cfaad1486ad7d",
+      "fingerprint": "65f0edf4723a0a2787b4455117ad49f66b90bcdf6e0121f6e2c87b55b37d70a7",
       "data": {
+        "lang": "en",
         "title": "PWA Support for LessJS SSG"
       }
     },
@@ -857,8 +860,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0004-blog-system",
-      "fingerprint": "e6b3c3d06ee561ac2ec1dd536f41f6a40a3a1c9b0108e614044ff755e20a329c",
+      "fingerprint": "d23388805c0b1ff1647d1d64d1f99ec744e079f63a57eddd2e448e7732cb5087",
       "data": {
+        "lang": "en",
         "title": "@openelement/blog - Standalone Blog Package"
       }
     },
@@ -878,8 +882,9 @@
         }
       ],
       "route": "/blog/0005-with-dsd-hydration-mixin",
-      "fingerprint": "54a146ffd432b6fd0ffebbe2fe899f06c47bc092040cacf4cb8893a5e70b2634",
+      "fingerprint": "0fa931bd59335954d90fd3e76912ac5086dda2509812fedb976d91d2780a1da3",
       "data": {
+        "lang": "zh",
         "title": "WithDsdHydration Mixin + 自建 SSR 决策"
       }
     },
@@ -904,8 +909,9 @@
         }
       ],
       "route": "/blog/0006-version-strategy",
-      "fingerprint": "21fceaf5b3360a067e76fe997cf3fe8bd0219433f631e127dc82e7581bbdcee2",
+      "fingerprint": "ad7028a04bad3bdbcab7650d90ef0ea55852fb518bc306c041b703b36cf4c098",
       "data": {
+        "lang": "zh",
         "title": "ADR 0006: 版本号策略 — 从 0.6 到 2.0 的递进路线"
       }
     },
@@ -930,8 +936,9 @@
         }
       ],
       "route": "/blog/0007-view-transitions-speculation-rules",
-      "fingerprint": "1bfc7f79155f3ad3d231ee70dfa3cbbbc7fcf9cf4de08e84b98e5b85401f0588",
+      "fingerprint": "1533b1c560bcadee58f1bd622de2a4fcdd48cb238cb5e418004f540c4078fd97",
       "data": {
+        "lang": "zh",
         "title": "ADR 0007: View Transitions + Speculation Rules"
       }
     },
@@ -956,8 +963,9 @@
         }
       ],
       "route": "/blog/0008-eliminate-createserver-globalthis-bridges",
-      "fingerprint": "734fce2acd5bd303cd614b36e01bc55722f19018b98e4377c04f0cac54532636",
+      "fingerprint": "faaae34b9c3dbe9171dd05a8dd99440945ac0245e3c9b2390c0a5954b63eb10d",
       "data": {
+        "lang": "zh",
         "title": "ADR 0008: 消除 createServer()、.less/ 临时文件与 globalThis 桥接"
       }
     },
@@ -977,8 +985,9 @@
         }
       ],
       "route": "/blog/0009-repo-simplification-issue",
-      "fingerprint": "fc8e45717013135f5a64ca8dc06a14378d7fde3860614fea25ad1c4fb5584e9d",
+      "fingerprint": "05e4aadf6fb4843bc711cdba77a58c92847bf5a40c9cf22a1420a823a855e12c",
       "data": {
+        "lang": "en",
         "title": "Repo-wide Simplification Roadmap: ADR 0008 + ADR 0009"
       }
     },
@@ -992,8 +1001,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0010-eliminate-all-dot-less-temp-files",
-      "fingerprint": "e43847e5987002da9849ae08adeff582a8599dbc1d122ea9bf98258c8e359ea1",
+      "fingerprint": "ffac6a1ecf54fcfb15d7a3d76c6b139b8e436b1308bb19192ca9b9534c908230",
       "data": {
+        "lang": "zh",
         "title": "ADR 0010: 消除所有 .less/ 临时文件，统一单进程构建"
       }
     },
@@ -1018,8 +1028,9 @@
         }
       ],
       "route": "/blog/0011-eliminate-last-globalthis-via-closebundle",
-      "fingerprint": "575877be800ffbc7f2327be79df800a242606d0d1aa097823bc173965016160d",
+      "fingerprint": "d61d3db6da877d76e712e777058241ad3f11d47197b33860d1e06c81c3f0ea97",
       "data": {
+        "lang": "zh",
         "title": "ADR 0011: 消除最后一个 globalThis 桥接 — closeBundle 内联 Phase 2/3"
       }
     },
@@ -1044,8 +1055,9 @@
         }
       ],
       "route": "/blog/0012-extract-lessjs-umbrella-to-app-package",
-      "fingerprint": "f1bfcce0a41af14b0583aa7e68c2be094a7714caa02d7350af835d35a0dafe5f",
+      "fingerprint": "f5cb62bbc1b80d4ba1a51bcb068c75995a23c810cd2449a21a11fd5047001838",
       "data": {
+        "lang": "zh",
         "title": "ADR 0012: 将 lessjs() 统一入口从 @openelement/core 拆到 @openelement/app"
       }
     },
@@ -1070,8 +1082,9 @@
         }
       ],
       "route": "/blog/0013-eliminate-less-runtime-barrel-inline-shim",
-      "fingerprint": "40031dab6d4d90f3b8afb625c75ef28f5596a87c6155bed0e50f2f2aa1b706d9",
+      "fingerprint": "4330421014038543535480a6be790e07bcdf3c03d12c075518d7bb05defa229c",
       "data": {
+        "lang": "zh",
         "title": "ADR 0013: 消除 less-runtime barrel、删除 virtual:less-runtime、移除 .less/ 残留"
       }
     },
@@ -1101,8 +1114,9 @@
         }
       ],
       "route": "/blog/0014-ssr-bundle-export-renderroute",
-      "fingerprint": "f3233bc9cdc353bb397f0bee4aff115dc50e2c8e009cb878e5450382e969607e",
+      "fingerprint": "624669b9d75962113cd70f4844cea256d43769a7044e26cf89ccee2a4ec340e4",
       "data": {
+        "lang": "zh",
         "title": "ADR 0014: SSR Bundle 导出 renderRoute() — 消除 build-ssg.ts 的越权访问"
       }
     },
@@ -1116,8 +1130,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0016-dual-mode-subpath-resolution",
-      "fingerprint": "f4496dc8aaba6844ed96d36ce4916362c1590f66f7f39e6f6097e983a2e13f19",
+      "fingerprint": "c668a67f7074d7c40720f843c4ca2d6ea64bada2fccb1294ce411e4eb638f956",
       "data": {
+        "lang": "zh",
         "title": "ADR 0016: 双模式子路径解析 — resolve.alias 本地 + resolveId/load 虚拟模块远程"
       }
     },
@@ -1142,8 +1157,9 @@
         }
       ],
       "route": "/blog/0017-separate-runtime-from-build-orchestration",
-      "fingerprint": "b450f6cbb708ad4e72b49dae5aae212eba8b073618c8ad55b99181c7dd8f1eaa",
+      "fingerprint": "5a91fc3459469eadd67832f86f4d3bd8709eb24fe3e2808f8910336358788a0e",
       "data": {
+        "lang": "zh",
         "title": "ADR 0017: 框架运行时与构建编排解耦 — 拆分 @openelement/adapter-vite"
       }
     },
@@ -1173,8 +1189,9 @@
         }
       ],
       "route": "/blog/0018-dev-build-data-consistency-plugin-data-bridge",
-      "fingerprint": "8d7af2703d99c16f086d584d427a5b8287c86bb2072c22bddaeb7cf88667a51e",
+      "fingerprint": "f067fb5dd598b2d4a5c73891c8c3b001db7d7012c26f04f22af1cb21bdf2923d",
       "data": {
+        "lang": "zh",
         "title": "ADR 0018: Eliminate Plugin Module State — Virtual Data Modules + @deno/vite-plugin"
       }
     },
@@ -1209,8 +1226,9 @@
         }
       ],
       "route": "/blog/0019-post-review-improvement-plan",
-      "fingerprint": "f87a24b8029138ef74fc914414850a90c0855ef7c04aa46dccabcadbb3e07b72",
+      "fingerprint": "913560d726a1f5f7b27a847569104f9170ce1f57d5da7c5c58a8610e601318b3",
       "data": {
+        "lang": "zh",
         "title": "ADR 0019: Post-Review Comprehensive Improvement Plan"
       }
     },
@@ -1235,8 +1253,9 @@
         }
       ],
       "route": "/blog/0020-dsd-engine-islands-enhancement",
-      "fingerprint": "6200fa5ad7ad89fa5b1e36f4e68a0c437dcf62c374cc427e7bc8a6da6edbc74a",
+      "fingerprint": "8ae0f276a04fcb8fc0fea66fbd52dc44448349182dbd75ba655524dea09f4755",
       "data": {
+        "lang": "zh",
         "title": "ADR 0020: DSD 渲染引擎与 Islands 策略增强 — 核心护城河建设"
       }
     },
@@ -1250,8 +1269,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0021-api-surface-pipeline-phase-check",
-      "fingerprint": "22eb05a1403d43678114396a42597eb6e15d03c271cceb738184efa21ab109a6",
+      "fingerprint": "a4c7f75b4b6e5ff73783ac1675afbb8f0800055d22b313ff326bcd9e9befccb6",
       "data": {
+        "lang": "zh",
         "title": "ADR 0021: A+ 架构冲刺 — API 表面收敛 + 管道化 + 参数校验"
       }
     },
@@ -1265,8 +1285,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0022-esm-self-sustaining-ssg-pipeline",
-      "fingerprint": "7d0318c8302c08bfc0f1553b6f5460ba6317c1378541ca0c174a7862568709f5",
+      "fingerprint": "0e5c0829f4c92f458e8cb8d3a4c6c71721684827d86de5ba301a8d114c5561a9",
       "data": {
+        "lang": "en",
         "title": "ADR 0022: ESM-Native LessJS — Pure ESM Imports Across Browser/Deno/Bun/CF Workers"
       }
     },
@@ -1280,8 +1301,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0023-phase-reordering-bundler-agnostic",
-      "fingerprint": "6168da45ccfede153405495b85eb4a06fbfd6fffe7b085f2f4461ad7773c57ac",
+      "fingerprint": "cb3b680fa647d1eb3b4c0b5e8a228816f1f194c07137ac4c7ebcd8c76e320f7d",
       "data": {
+        "lang": "en",
         "title": "ADR 0023: Phase Reordering — Client Bundle as Final Layer"
       }
     },
@@ -1295,8 +1317,9 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0024-standards-first-wc-renderer-roadmap",
-      "fingerprint": "0fb7c6107698d8b77ea150f2fa53d2d9543108519b076e8564a392b4472e4770",
+      "fingerprint": "f7b7c7e5539bb375b65cc3e8e3eb1201aedead86280494f599528189958c08a7",
       "data": {
+        "lang": "en",
         "title": "ADR 0024: Standards-first Web Components Renderer Roadmap"
       }
     },
@@ -1310,13 +1333,94 @@
       "alternates": [],
       "references": [],
       "route": "/blog/0100-three-audits-later-the-stable-line",
-      "fingerprint": "85c3fe022b325c6af7d0af06b88c37a06862b3f80655ccd9070fde3df48b56a3",
+      "fingerprint": "141417918ac6b2ea028ee18f06f2586227375a973df3bbf2ae453e4e1cd12e99",
       "data": {
+        "lang": "en",
         "title": "Three audits later, the stable line"
       }
     },
     {
-      "id": "article:blog/2026-04-30-less-compiler:en",
+      "id": "article:blog/adr-0008-0009-implementation-status:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/adr-0008-0009-implementation-status.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/adr-0008-0009-implementation-status",
+      "fingerprint": "0b7151c7894f6e9b85c391f339d40bbebfff3e7e7c160100141977ec167b7319",
+      "data": {
+        "lang": "en",
+        "title": "ADR 0008/0009/0010/0011/0012 — Implementation Status"
+      }
+    },
+    {
+      "id": "article:blog/adr-0008-0009-unification-sop:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/adr-0008-0009-unification-sop.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/adr-0008-0009-unification-sop",
+      "fingerprint": "f0b851b3c6c8049c258949cbe49a2b9afb9171589cd12648fdb517ed641d0d0b",
+      "data": {
+        "lang": "en",
+        "title": "SOP: ADR 0008 Completion + Single-Plugin Unification"
+      }
+    },
+    {
+      "id": "article:blog/adr-0009-full-repo-simplification:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/adr-0009-full-repo-simplification.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/adr-0009-full-repo-simplification",
+      "fingerprint": "cec8807e7ab0ca736bd7d09e55fc0d94960c2e4b788fa85c7446d39ac6d613e8",
+      "data": {
+        "lang": "zh",
+        "title": "LessJS 全仓库简化方案 — ADR 0009"
+      }
+    },
+    {
+      "id": "article:blog/architecture-analysis:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/2026-05-13-architecture-analysis.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/architecture-analysis",
+      "fingerprint": "cc3e68ce8e4f2171d9fe03e3cabf73fce55d095a7d0ae3b0529771af726dd357",
+      "data": {
+        "lang": "zh",
+        "title": "LessJS 架构分析报告"
+      }
+    },
+    {
+      "id": "article:blog/core-architecture-simplification-report:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/core-architecture-simplification-report.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/core-architecture-simplification-report",
+      "fingerprint": "691b66e6d0e255fae374d4b194553cea816373678e671bf5d96b008b571e4bb6",
+      "data": {
+        "lang": "zh",
+        "title": "@openelement/core 架构简化审查报告"
+      }
+    },
+    {
+      "id": "article:blog/less-compiler:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
@@ -1335,104 +1439,32 @@
           "line": 64
         }
       ],
-      "route": "/blog/2026-04-30-less-compiler",
-      "fingerprint": "07e1231f9419ca4986f8ee030fbcdc66f602a46311e8c790979c390a283fcba5",
+      "route": "/blog/less-compiler",
+      "fingerprint": "5107f8863d927337fb220ea0758a1ab2ae56992fd8fb9d203ba834a0b71851c7",
       "data": {
+        "lang": "zh",
+        "lede": "一个可选编译器将声明式 .less 文件编译为原生 Custom Elements，让 Lit 从必选路线变成 adapter。",
         "title": ".less Compiler — 可选零框架运行时组件"
       }
     },
     {
-      "id": "article:blog/2026-04-30-v0-4-0:en",
+      "id": "article:blog/the-0-42-architecture:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
-        "path": "www/content/blog/2026-04-30-v0-4-0.md"
+        "path": "www/content/blog/2026-08-02-the-0-42-architecture.md"
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/2026-04-30-v0-4-0",
-      "fingerprint": "1a08cd1533274eb794afca94db0c6f6969300cb190466039512fe220e8266602",
+      "route": "/blog/the-0-42-architecture",
+      "fingerprint": "0a5e84f93ab3d465f58f87cae40b8eca2558b88b8b883e15e91f9af99a35d4c8",
       "data": {
-        "title": "LessJS v0.4.0 — Serverless Integration Milestone"
+        "lang": "zh",
+        "title": "为什么是 0.42 这个样子：一个 WC 全栈框架的目标、参照与取舍"
       }
     },
     {
-      "id": "article:blog/2026-05-02-v0-5-0:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-02-v0-5-0.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-02-v0-5-0",
-      "fingerprint": "dae6f1978f0fdf93828c7b949e7e338e21375b4712233d3a16b943bb07e3327c",
-      "data": {
-        "title": "LessJS v0.5-alpha-0 — 架构精简"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-03-v0-5-alpha1:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-03-v0-5-alpha1.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-03-v0-5-alpha1",
-      "fingerprint": "5fd320615db14ca8397536cf525fd4af1dd8e79853558b3f1aed3cdfde60c2d5",
-      "data": {
-        "title": "v0.5-alpha1 — 全量架构审计与精准修复"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-05-v0-6-x:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-05-v0-6-x.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-05-v0-6-x",
-      "fingerprint": "f57f5a7b22eae3171653e81badd082b635e2ca8c91a4db1ddfeee2030d92f83e",
-      "data": {
-        "title": "LessJS v0.6.x — DSD 渲染模型 + Island 架构 + 三层组件模型"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-07-v0-7-0:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-07-v0-7-0.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-07-v0-7-0",
-      "fingerprint": "dd31d33291418e281b647f7516f0e8910d722e1679f65682496789b4314f3314",
-      "data": {
-        "title": "LessJS v0.7.0 — 审计修复 + 测试补全 + 部署迁移"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-08-v0-8-0:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-08-v0-8-0.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-08-v0-8-0",
-      "fingerprint": "ad81363f5bce352d7df6205775f78936a65a0480ccec7f599b8c5c8327ace2fe",
-      "data": {
-        "title": "v0.8.0 — Audit Resolution + Structured Logging + Blog Plugin"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-12-v0-12-0:en",
+      "id": "article:blog/v0-12-0:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
@@ -1446,14 +1478,16 @@
           "line": 4
         }
       ],
-      "route": "/blog/2026-05-12-v0-12-0",
-      "fingerprint": "3cea52d81bb2df61733b4fc48c21f46a2e705f8862fd5ff9bdf9aecbebd99d8f",
+      "route": "/blog/v0-12-0",
+      "fingerprint": "951c02e4ab0bf65a9aa0a2b6a7b3c210fd37da373ace673bc4e78e695333fc10",
       "data": {
+        "lang": "en",
+        "lede": "Eliminated all module-level state from @openelement/content and @openelement/i18n. Pure functions replace stateful init/getter patterns. Virtual modules become the only data bridge for SSR routes.",
         "title": "v0.12.0 — Virtual Data Modules + Zero Module State"
       }
     },
     {
-      "id": "article:blog/2026-05-12-v0-13-0:en",
+      "id": "article:blog/v0-13-0:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
@@ -1461,44 +1495,16 @@
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/2026-05-12-v0-13-0",
-      "fingerprint": "9b9d1cd42594e5f971b4a1e2df54d414cd0505e4be1da9c6ad4972d113aa1927",
+      "route": "/blog/v0-13-0",
+      "fingerprint": "8a794f49164d3201939e744b8c89e852ce70f936685cc63c1e9081cf7f196eb8",
       "data": {
+        "lang": "en",
+        "lede": "Core API surface reduced from 18 to 6 exports, compile-time phase ordering via branded types, virtual module IDs migrated from core to adapter-vite, and CI coverage collection.",
         "title": "v0.13.0 — API Surface Convergence + Phase Branded Types"
       }
     },
     {
-      "id": "article:blog/2026-05-13-architecture-analysis:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-13-architecture-analysis.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-13-architecture-analysis",
-      "fingerprint": "c06564b06e83de418812e8c3dbffbfd54f1fc7b9cd55e16c8416e4a7dff0641b",
-      "data": {
-        "title": "LessJS 架构分析报告"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-13-v0.14-audit-report:en",
-      "kind": "blog-post",
-      "locale": "en",
-      "source": {
-        "path": "www/content/blog/2026-05-13-v0.14-audit-report.md"
-      },
-      "alternates": [],
-      "references": [],
-      "route": "/blog/2026-05-13-v0.14-audit-report",
-      "fingerprint": "e3a45297ff48c54f4337343d9a1ef424a80dae200def22cf429401c1daaf5702",
-      "data": {
-        "title": "v0.14.0 — Release Readiness Audit Report"
-      }
-    },
-    {
-      "id": "article:blog/2026-05-14-v0-14-1:en",
+      "id": "article:blog/v0-14-1:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
@@ -1506,14 +1512,15 @@
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/2026-05-14-v0-14-1",
-      "fingerprint": "f8c9f363a5060f2a2e4f407de41ce7bfee2f7d91ee5a46dfd1f3a2f2bdeb634a",
+      "route": "/blog/v0-14-1",
+      "fingerprint": "f83b34f9ffbea9795137bc11d5a20910d424c374734b774e317be9ab42094f46",
       "data": {
+        "lang": "en",
         "title": "v0.14.1 — Release Hardening"
       }
     },
     {
-      "id": "article:blog/2026-05-14-v0-14-2:en",
+      "id": "article:blog/v0-14-2:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
@@ -1521,85 +1528,129 @@
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/2026-05-14-v0-14-2",
-      "fingerprint": "0acfcda0dd55629baca5f7c2871f3f3c7ba734d0f369d17769bf6b93661a8d4b",
+      "route": "/blog/v0-14-2",
+      "fingerprint": "755a124baa01548308cbca8472b5419722c4327d6a5de387595710d0bdd25d80",
       "data": {
+        "lang": "en",
         "title": "v0.14.2 - Standards & Safety Patch"
       }
     },
     {
-      "id": "article:blog/2026-08-02-the-0-42-architecture:en",
+      "id": "article:blog/v0-4-0:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
-        "path": "www/content/blog/2026-08-02-the-0-42-architecture.md"
+        "path": "www/content/blog/2026-04-30-v0-4-0.md"
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/2026-08-02-the-0-42-architecture",
-      "fingerprint": "2f97decfe5c9db636c8a3318f09bbed85aabefdef1af193db41f8aa0a940163f",
+      "route": "/blog/v0-4-0",
+      "fingerprint": "23696ccf740ccc90b7cd899930ba6c3957816a3e17039dfdcfe00147bb540cda",
       "data": {
-        "title": "为什么是 0.42 这个样子：一个 WC 全栈框架的目标、参照与取舍"
+        "lang": "zh",
+        "lede": "Serverless API 部署成功、全站统一 0.5px 视觉风格、零 lint 零 type errors。从\"能跑起来\"到\"真正能用\"的里程碑。",
+        "title": "LessJS v0.4.0 — Serverless Integration Milestone"
       }
     },
     {
-      "id": "article:blog/adr-0008-0009-implementation-status:en",
+      "id": "article:blog/v0-5-0:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
-        "path": "www/content/blog/adr-0008-0009-implementation-status.md"
+        "path": "www/content/blog/2026-05-02-v0-5-0.md"
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/adr-0008-0009-implementation-status",
-      "fingerprint": "e377be0bb0c10b8790fa00c2e971212f5dd8b441eab10e3b1c93fa4cd1b9a22b",
+      "route": "/blog/v0-5-0",
+      "fingerprint": "fa81f41dba39658890e76709a87d33203670e52be9563e4d66df383987e4fc67",
       "data": {
-        "title": "ADR 0008/0009/0010/0011/0012 — Implementation Status"
+        "lang": "zh",
+        "lede": "零框架运行时 Core · 原生 RPC · OpenProps + Lit · 单 deno.json",
+        "title": "LessJS v0.5-alpha-0 — 架构精简"
       }
     },
     {
-      "id": "article:blog/adr-0008-0009-unification-sop:en",
+      "id": "article:blog/v0-5-alpha1:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
-        "path": "www/content/blog/adr-0008-0009-unification-sop.md"
+        "path": "www/content/blog/2026-05-03-v0-5-alpha1.md"
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/adr-0008-0009-unification-sop",
-      "fingerprint": "df4ecdb83e5488b2176df99d62264f4acd2b412f69db8d35a79eac5c8ea3bee8",
+      "route": "/blog/v0-5-alpha1",
+      "fingerprint": "fb21a27c122554fe0c3b66b6a43e71683d471d34f3b2974d29cc729d320d57a6",
       "data": {
-        "title": "SOP: ADR 0008 Completion + Single-Plugin Unification"
+        "lang": "zh",
+        "lede": "3 agent 扫描 13k 行源码 · CSS 注入修复 · Island 升级修复 · 6 条新设计原则 · 配置精简",
+        "title": "v0.5-alpha1 — 全量架构审计与精准修复"
       }
     },
     {
-      "id": "article:blog/adr-0009-full-repo-simplification:en",
+      "id": "article:blog/v0-6-x:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
-        "path": "www/content/blog/adr-0009-full-repo-simplification.md"
+        "path": "www/content/blog/2026-05-05-v0-6-x.md"
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/adr-0009-full-repo-simplification",
-      "fingerprint": "a1617841e9d4233bc6f072de49cb43aa548294a562bc0ea7841921170c6f57be",
+      "route": "/blog/v0-6-x",
+      "fingerprint": "73b70ec528eaceed82c060e5a4a7d7aef2703608f8637c5869186e5b5c6bf1d7",
       "data": {
-        "title": "LessJS 全仓库简化方案 — ADR 0009"
+        "lang": "zh",
+        "lede": "v0.6.0 确立 DSD 为核心渲染模型，引入 island() Mixin 替代 monkey-patch，定义三层组件模型（dsd-static / dsd-interactive / pure-island）。v0.6.1 移除 npm 发布，全面转向 JSR。v0.6.2 统一 WithDsdHydration Mixin，消除 DsdLitElement 继承。",
+        "title": "LessJS v0.6.x — DSD 渲染模型 + Island 架构 + 三层组件模型"
       }
     },
     {
-      "id": "article:blog/core-architecture-simplification-report:en",
+      "id": "article:blog/v0-7-0:en",
       "kind": "blog-post",
       "locale": "en",
       "source": {
-        "path": "www/content/blog/core-architecture-simplification-report.md"
+        "path": "www/content/blog/2026-05-07-v0-7-0.md"
       },
       "alternates": [],
       "references": [],
-      "route": "/blog/core-architecture-simplification-report",
-      "fingerprint": "ca2ee0717b1f634ad60a8ba116cb0bbabab82d3cab1a5bc3f70eec06e93be2dc",
+      "route": "/blog/v0-7-0",
+      "fingerprint": "350a6642af4738482101b1fcabd924f3dc3e3df8ff84c9414de4fca511560486",
       "data": {
-        "title": "@openelement/core 架构简化审查报告"
+        "lang": "zh",
+        "lede": "P0 审计修复：runtime-shim 一致性、XSS 警告、静默 catch 消除。73 个新测试覆盖 render-dsd.ts 和 island.ts。部署从 GitHub Pages 迁移到 Cloudflare Pages。",
+        "title": "LessJS v0.7.0 — 审计修复 + 测试补全 + 部署迁移"
+      }
+    },
+    {
+      "id": "article:blog/v0-8-0:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/2026-05-08-v0-8-0.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/v0-8-0",
+      "fingerprint": "4e98b0a981461612224a7dda132928a8dad630400881a0dc709d852c856bae3c",
+      "data": {
+        "lang": "en",
+        "lede": "Five audit items resolved: structured logging, runtime-shim auto-generation, parse5 nested DSD optimization, advanced feature docs, and Playwright E2E tests. @openelement/blog ships and dogfoods.",
+        "title": "v0.8.0 — Audit Resolution + Structured Logging + Blog Plugin"
+      }
+    },
+    {
+      "id": "article:blog/v0.14-audit-report:en",
+      "kind": "blog-post",
+      "locale": "en",
+      "source": {
+        "path": "www/content/blog/2026-05-13-v0.14-audit-report.md"
+      },
+      "alternates": [],
+      "references": [],
+      "route": "/blog/v0.14-audit-report",
+      "fingerprint": "2a9d4bc4200026b01b7daa02df1e30ee371c22c0ee462e50226d8cd8bf3f12d7",
+      "data": {
+        "lang": "zh",
+        "title": "v0.14.0 — Release Readiness Audit Report"
       }
     },
     {
@@ -1773,7 +1824,7 @@
       ],
       "references": [],
       "route": "/guide/configuration",
-      "fingerprint": "f1ad13a02a0bf173357721d7a589b0e7eaaabb1393ec893a7c70ba36ea100d78",
+      "fingerprint": "277e4e28695e002532cfb54a21b9b55df847a3ebe9935409d40989b621887da7",
       "data": {
         "lede": "Configuration stays close to the route, build or package surface it affects.",
         "order": 70,
@@ -1795,7 +1846,7 @@
       ],
       "references": [],
       "route": "/guide/configuration",
-      "fingerprint": "583db835a220dd7d19cd72c4f18c444ed4d69ed626b9e1bbf208cd3e410225ae",
+      "fingerprint": "b50cc7b053c08795ba1b6b489b99350ebfa379a1072e4e507351fdf28ff33c58",
       "data": {
         "lede": "配置贴近它所影响的 route、build 或 package 表面。",
         "order": 70,

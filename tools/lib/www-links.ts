@@ -12,18 +12,102 @@ export interface LinkFailure {
   message: string;
 }
 
-/** Per-page SEO invariants checked over built HTML (#1159). */
+/** Effective description length: CJK glyphs carry roughly twice the information density. */
+function effectiveLength(text: string): number {
+  const cjk = text.match(/[　-鿿豈-﫿]/g)?.length ?? 0;
+  return text.length + cjk;
+}
+
+/** Per-page SEO invariants checked over built HTML (#1159, strengthened #1307). */
 export function findSeoFailures(html: string, file: string): LinkFailure[] {
   const failures: LinkFailure[] = [];
   const titles = html.match(/<title>/g) ?? [];
   if (titles.length !== 1) {
     failures.push({ file, message: `expected exactly one <title>, found ${titles.length}` });
   }
-  if (!/<meta name="description" content="[^"]{20,}"\s*\/?>/.test(html)) {
+  // The boilerplate era shipped the bare site name as every page's title;
+  // a real page title always says more than the brand.
+  const titleText = html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
+  if (titleText === 'openElement' || titleText === '') {
+    failures.push({ file, message: `boilerplate or empty <title> '${titleText}'` });
+  }
+  const description = html.match(/<meta name="description" content="([^"]*)"\s*\/?>/)?.[1];
+  if (description === undefined || effectiveLength(description) < 20) {
     failures.push({ file, message: 'missing or trivial meta description' });
   }
   if (!/<meta property="og:title" content="[^"]+"/.test(html)) {
     failures.push({ file, message: 'missing og:title' });
+  }
+  // Error documents (404) deliberately carry no canonical/hreflang.
+  const is404 = /(?:^|\/)404(?:\.html|\/index\.html)$/.test(file);
+  if (!is404) {
+    if (!/<link rel="canonical" href="https:\/\/openelement\.org[^"]*">/.test(html)) {
+      failures.push({ file, message: 'missing canonical link' });
+    }
+    for (const locale of ['en', 'zh']) {
+      if (!new RegExp(`<link rel="alternate" hreflang="${locale}" href="`).test(html)) {
+        failures.push({ file, message: `missing hreflang alternate for '${locale}'` });
+      }
+    }
+  }
+  return failures;
+}
+
+export interface BuiltPageSeo {
+  file: string;
+  title: string;
+  description: string;
+  locale: string;
+}
+
+/** Extract the comparable SEO fields from one built page. */
+export function pageSeo(html: string, file: string, locales: readonly string[]): BuiltPageSeo {
+  const first = file.split('/').filter(Boolean)[0];
+  const locale = locales.includes(first) && first !== locales[0] ? first : locales[0];
+  return {
+    file,
+    title: html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '',
+    description: html.match(/<meta name="description" content="([^"]*)"\s*\/?>/)?.[1] ?? '',
+    locale,
+  };
+}
+
+/**
+ * Cross-page SEO invariants (#1307): within one locale, two distinct routes
+ * must not share a <title> (the boilerplate era made every title identical);
+ * and a zh page must not carry the site-wide English boilerplate
+ * description. Locale-mismatched blog pages legitimately keep the
+ * original-language description — that is the disclosed single-language
+ * presentation, not boilerplate.
+ */
+export function findCrossPageSeoFailures(
+  pages: readonly BuiltPageSeo[],
+  boilerplateDescription: string,
+): LinkFailure[] {
+  const failures: LinkFailure[] = [];
+  const titleByLocale = new Map<string, Map<string, string>>();
+  for (const page of pages) {
+    if (page.title === '') continue;
+    const titles = titleByLocale.get(page.locale) ?? new Map<string, string>();
+    const existing = titles.get(page.title);
+    if (existing !== undefined) {
+      failures.push({
+        file: page.file,
+        message:
+          `duplicate <title> '${page.title}' within locale '${page.locale}' (also ${existing})`,
+      });
+    } else {
+      titles.set(page.title, page.file);
+    }
+    titleByLocale.set(page.locale, titles);
+    if (
+      page.locale !== 'en' && page.description !== '' && page.description === boilerplateDescription
+    ) {
+      failures.push({
+        file: page.file,
+        message: 'non-default-locale page carries the English boilerplate description',
+      });
+    }
   }
   return failures;
 }

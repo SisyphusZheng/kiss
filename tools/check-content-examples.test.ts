@@ -7,7 +7,7 @@ import {
 } from './check-content-examples.ts';
 import ts from 'typescript';
 
-Deno.test('extractExamples: only fenced ts/tsx blocks importing @openelement', () => {
+Deno.test('extractExamples: ts/tsx plus the typescript/js aliases, importing @openelement', () => {
   const markdown = [
     '```ts',
     "import { signal } from '@openelement/element';",
@@ -23,11 +23,18 @@ Deno.test('extractExamples: only fenced ts/tsx blocks importing @openelement', (
     "import { OpenElement } from '@openelement/element';",
     'export class X extends OpenElement {}',
     '```',
+    '```typescript',
+    "import { signal } from '@openelement/element';",
+    'const other = signal(1);',
+    '```',
+    '```js',
+    "import { signal } from '@openelement/element';",
+    'const plain = signal(2);',
+    '```',
   ].join('\n');
   const examples = extractExamples('guide/x.md', markdown);
-  assertEquals(examples.length, 2);
-  assertEquals(examples[0].lang, 'ts');
-  assertEquals(examples[1].lang, 'tsx');
+  assertEquals(examples.length, 4);
+  assertEquals(examples.map((example) => example.lang), ['ts', 'tsx', 'ts', 'ts']);
 });
 
 Deno.test('typeCheckExamples: framework-surface errors fail closed (RED proof)', async () => {
@@ -95,6 +102,17 @@ Deno.test('suppressElidedDiagnostic: suppression boundary is exact', () => {
     false,
   );
   assertEquals(suppressElidedDiagnostic(make(2304, "Cannot find name 'listEntries'.")), true);
+  // #1307: an undefined name that IS a documented framework export must not be
+  // suppressed — the snippet has to import it so its calls are type-checked.
+  assertEquals(suppressElidedDiagnostic(make(2304, "Cannot find name 'definePage'.")), false);
+  assertEquals(suppressElidedDiagnostic(make(2304, "Cannot find name 'signal'.")), false);
+  assertEquals(
+    suppressElidedDiagnostic(
+      make(2304, "Cannot find name 'listEntries'."),
+      new Set(['definePage']),
+    ),
+    true,
+  );
   assertEquals(
     suppressElidedDiagnostic(make(2339, "Property 'entries' does not exist on type '{}'.")),
     true,

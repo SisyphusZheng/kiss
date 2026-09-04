@@ -179,6 +179,8 @@ export default defineConfig({
 ### vite.config.ts —— middleware.use（#858）
 
 ```ts
+import { defineConfig } from 'vite';
+import { openElement } from '@openelement/adapter-vite';
 import type { Middleware } from '@openelement/element';
 
 // Self-contained: the source is inlined into the generated server entry,

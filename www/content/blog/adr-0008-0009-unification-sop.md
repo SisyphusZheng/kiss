@@ -1,6 +1,7 @@
 ﻿---
 title: 'SOP: ADR 0008 Completion + Single-Plugin Unification'
 date: '2026-05-10'
+lang: 'en'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

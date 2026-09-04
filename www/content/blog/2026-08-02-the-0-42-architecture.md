@@ -1,6 +1,7 @@
 ---
 title: '为什么是 0.42 这个样子：一个 WC 全栈框架的目标、参照与取舍'
 date: '2026-08-02'
+lang: 'zh'
 type: 'dispatch'
 tags: ['architecture', 'decision', 'release-truth']
 draft: false

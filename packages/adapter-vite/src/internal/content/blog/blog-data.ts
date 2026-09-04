@@ -30,6 +30,7 @@ export function writeBlogDataModule(posts: BlogPost[]): string {
     '    tags?: string[];',
     '    excerpt?: string;',
     '    type?: string;',
+    '    lang?: string;',
     '  };',
     '  content: string;',
     '  html: string;',

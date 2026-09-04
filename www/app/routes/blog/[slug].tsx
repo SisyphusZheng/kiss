@@ -35,6 +35,8 @@ export default definePage(PageBlogPost, {
         postTitle: '',
         lede: '',
         date: '',
+        postLang: resolved,
+        langNotice: '',
         tags: [],
         railItems: [],
         navigation: {},
@@ -45,6 +47,16 @@ export default definePage(PageBlogPost, {
     }
 
     const tags = post.frontmatter.tags ?? [];
+    // #1307: dispatches are single-language originals (the www:check-truth
+    // blog-language gate requires the `lang` frontmatter). When the rendered
+    // locale does not match the post's language, say so instead of letting
+    // the locale prefix imply a translation.
+    const postLang = post.frontmatter.lang ?? 'en';
+    const langNotice = postLang === resolved
+      ? ''
+      : resolved === 'en'
+      ? 'This dispatch is published in Chinese (中文原文).'
+      : '本文以英文原文发布（English original）。';
     const article = prepareArticle(post.html);
     const visiblePosts = posts
       .filter((candidate) => candidate.frontmatter.type !== 'adr')
@@ -61,6 +73,8 @@ export default definePage(PageBlogPost, {
       postTitle: post.frontmatter.title,
       lede: post.frontmatter.excerpt ?? '',
       date: post.frontmatter.date,
+      postLang,
+      langNotice,
       tags: tags.map((tag) => ({ key: tag, label: tag })),
       railItems: article.outline.map((item) => ({
         id: item.id,

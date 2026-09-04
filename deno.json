@@ -38,7 +38,8 @@
   "tasks": {
     "dev": "cd www && deno run --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys npm:vite --config vite.config.ts",
     "www:dev-smoke": "deno run --allow-net --allow-run tools/smoke-www-dev.ts",
-    "build": "deno task generate:ui-manifest && (cd www && deno run --config ../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../packages/adapter-vite/src/cli/build.ts) && deno task www:pagefind && deno task www:check-artifact-truth && deno task www:check-links",
+    "build": "deno task generate:ui-manifest && (cd www && deno run --config ../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../packages/adapter-vite/src/cli/build.ts) && deno task www:apply-seo && deno task www:pagefind && deno task www:check-artifact-truth && deno task www:check-links",
+    "www:apply-seo": "deno run --allow-read --allow-write tools/apply-www-seo.ts",
     "www:pagefind": "cd www && deno run --config ../deno.json --allow-read --allow-write --allow-run --allow-env --allow-net --allow-ffi --allow-sys build-pagefind.ts",
     "preview": "cd www && deno run --allow-read --allow-write --allow-net --allow-env --allow-ffi npm:vite preview --config vite.config.ts",
     "workflow:check": "deno run --allow-read --allow-run=git tools/check-project-workflow.ts && deno task v044:orchestration:check",

@@ -6,6 +6,13 @@
  * every sitemap.xml URL must resolve. Fails closed — the acceptance bar is
  * zero broken internal links or fragments. External URLs are deliberately not
  * fetched (scheduled external checks are deferred to Beta.3 under #1156).
+ *
+ * Pagefind skip (#1307 adjudication): the walk skips pagefind/ because those
+ * files are generated search-index artifacts (hashed fragment/index chunks),
+ * not served documents — no page links into them and they carry no authored
+ * anchors. The apilist search-record anchors that Pagefind surfaces are
+ * covered directly instead: every generated searchRecord anchor must exist as
+ * an id in the built /apilist documents (both locales) below.
  */
 import { walk } from '@std/fs/walk';
 import { join } from '@std/path';
@@ -13,12 +20,22 @@ import { normalize as posixNormalize } from '@std/path/posix';
 import {
   anchorsFragment,
   extractBuiltLinks,
+  findCrossPageSeoFailures,
   findSeoFailures,
   type LinkFailure,
+  pageSeo,
   resolveBuiltPath,
 } from './lib/www-links.ts';
+import { apiReference } from '../www/app/data/_generated-api-reference.ts';
 
 export const WWW_DIST = 'www/dist';
+const SITE_LOCALES = ['en', 'zh'] as const;
+
+/** The site-wide boilerplate description, read from the vite config inject. */
+async function boilerplateDescription(): Promise<string> {
+  const config = await Deno.readTextFile('www/vite.config.ts');
+  return config.match(/<meta name="description" content="([^"]+)">/)?.[1] ?? '';
+}
 
 export async function checkBuiltLinks(dist = WWW_DIST): Promise<LinkFailure[]> {
   const failures: LinkFailure[] = [];
@@ -40,10 +57,12 @@ export async function checkBuiltLinks(dist = WWW_DIST): Promise<LinkFailure[]> {
     return text;
   };
 
+  const pages: ReturnType<typeof pageSeo>[] = [];
   for (const htmlFile of htmlFiles.sort()) {
     const relative = htmlFile.slice(dist.length + 1);
     const html = await readHtml(relative);
     failures.push(...findSeoFailures(html, relative));
+    pages.push(pageSeo(html, relative, SITE_LOCALES));
     for (const link of extractBuiltLinks(relative, html)) {
       let target: string | null;
       if (link.path === '') {
@@ -80,6 +99,30 @@ export async function checkBuiltLinks(dist = WWW_DIST): Promise<LinkFailure[]> {
       const path = new URL(url).pathname;
       if (resolveBuiltPath(path, exists) === null) {
         failures.push({ file: 'sitemap.xml', message: `sitemap URL does not resolve: ${url}` });
+      }
+    }
+  }
+
+  // Cross-page SEO invariants (#1307): per-locale title uniqueness and no
+  // boilerplate English description on non-default-locale pages.
+  failures.push(...findCrossPageSeoFailures(pages, await boilerplateDescription()));
+
+  // Generated reference anchors (#1307): every generated searchRecord anchor
+  // must exist in the built apilist documents, in every built locale — the
+  // search/surface promise is that /apilist#<anchor> resolves.
+  for (const page of ['apilist/index.html', 'zh/apilist/index.html']) {
+    if (!exists(page)) {
+      failures.push({ file: page, message: 'built apilist page is missing' });
+      continue;
+    }
+    const html = await readHtml(page);
+    for (const record of apiReference.searchRecords) {
+      if (!anchorsFragment(html, record.anchor)) {
+        failures.push({
+          file: page,
+          message:
+            `generated searchRecord anchor '#${record.anchor}' (${record.title}) is not rendered`,
+        });
       }
     }
   }

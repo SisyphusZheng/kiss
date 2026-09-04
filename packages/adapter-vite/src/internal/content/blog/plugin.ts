@@ -21,11 +21,17 @@ function toBlogPost(entry: CollectionEntry): BlogPost {
       tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [],
       ...(typeof frontmatter.excerpt === 'string' ? { excerpt: frontmatter.excerpt } : {}),
       ...(typeof frontmatter.type === 'string' ? { type: frontmatter.type } : {}),
+      ...(typeof frontmatter.lang === 'string' ? { lang: frontmatter.lang } : {}),
     },
   };
 }
 
-function blogCollectionOptions(options: OpenElementBlogOptions): CollectionOptions {
+/**
+ * The blog collection options (date-prefix slug transform + frontmatter
+ * schema) — exported so the repo's content-graph adapter derives blog
+ * slugs/routes through the same truth as the built site (#1307).
+ */
+export function blogCollectionOptions(options: OpenElementBlogOptions): CollectionOptions {
   return {
     contentDir: options.contentDir ?? 'posts',
     basePath: options.basePath ?? '/blog',
@@ -38,6 +44,7 @@ function blogCollectionOptions(options: OpenElementBlogOptions): CollectionOptio
         tags: 'string[]',
         excerpt: 'string',
         type: 'string',
+        lang: 'string',
       },
       transform(frontmatter, context) {
         const datePrefix = context.fileName.match(/^(\d{4}-\d{2}-\d{2})-/)?.[1];
@@ -51,6 +58,7 @@ function blogCollectionOptions(options: OpenElementBlogOptions): CollectionOptio
             tags: frontmatter.tags ?? [],
             ...(frontmatter.excerpt === undefined ? {} : { excerpt: frontmatter.excerpt }),
             ...(frontmatter.type === undefined ? {} : { type: frontmatter.type }),
+            ...(frontmatter.lang === undefined ? {} : { lang: frontmatter.lang }),
           },
         };
       },

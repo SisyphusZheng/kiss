@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0018: Eliminate Plugin Module State — Virtual Data Modules + @deno/vite-plugin'
 date: '2026-05-11'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
