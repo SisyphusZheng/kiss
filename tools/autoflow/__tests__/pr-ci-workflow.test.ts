@@ -34,7 +34,13 @@ Deno.test('R7 probe 4: the PR workflow aggregates exact-SHA evidence after the f
   );
   assertEquals(
     job.needs,
-    ['dependency-review', 'autoflow-ci', 'node-serve-smoke', 'workspace-qualification'],
+    [
+      'dependency-review',
+      'autoflow-ci',
+      'node-serve-smoke',
+      'bun-serve-smoke',
+      'workspace-qualification',
+    ],
     'the aggregation job must depend on every required full-matrix job (and therefore run only after successful needs)',
   );
   const steps = job.steps ?? [];
@@ -71,6 +77,7 @@ Deno.test('R11: every repository-dependent required job checks out and attests t
     const jobId of [
       'autoflow-ci',
       'node-serve-smoke',
+      'bun-serve-smoke',
       'workspace-qualification',
       'pr-full-ci-evidence',
     ]
