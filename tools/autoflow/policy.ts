@@ -496,6 +496,7 @@ const GATES: readonly GateDefinition[] = [
       /^tools\/check-package-artifacts\.ts$/,
       /^tools\/publish-npm\.ts$/,
       /^tools\/lib\/package-graph\.ts$/,
+      /^tools\/lib\/compiled-pack-staging\.ts$/,
     ],
   },
   {
@@ -507,6 +508,25 @@ const GATES: readonly GateDefinition[] = [
       /^packages\/app\//,
       /^packages\/adapter-vite\//,
       /^tools\/consumer-local\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
+    // #1301: qualify the PACKED @openelement/ui artifact through the
+    // documented packageIslands admission path — workspace-source consumers
+    // (www, ui-dogfood) cannot see packed-only defects because the adapter
+    // auto-aliases workspace members to source. Ordered after
+    // package-artifacts:check, which produces the tarballs it installs.
+    name: 'consumer:packaged-ui',
+    command: ['deno', 'task', 'consumer:packaged-ui'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\/ui\//,
+      /^packages\/element\//,
+      /^packages\/adapter-vite\//,
+      /^tools\/consumer-packaged-ui\.ts$/,
+      /^tools\/publish-npm\.ts$/,
+      /^tools\/lib\/compiled-pack-staging\.ts$/,
       /^deno\.json$/,
     ],
   },
@@ -559,6 +579,7 @@ const GATES: readonly GateDefinition[] = [
       /^deno\.json$/,
       /^tools\/publish-npm\.ts$/,
       /^tools\/lib\/package-graph\.ts$/,
+      /^tools\/lib\/compiled-pack-staging\.ts$/,
     ],
   },
 ];
