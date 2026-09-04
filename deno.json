@@ -87,6 +87,7 @@
     "stress:dogfood": "deno run --allow-read --allow-run --allow-env tools/run-dogfood-stress.ts",
     "dogfood:evidence": "deno run --allow-read --allow-write --allow-run tools/run-dogfood-evidence.ts",
     "package-artifacts:check": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env tools/check-package-artifacts.ts",
+    "consumer:packaged-ui": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-ui.ts",
     "pack": "deno task generate:ui-manifest && deno run --allow-read --allow-write --allow-run --allow-env tools/publish-npm.ts pack",
     "pack:dry-run": "deno task generate:ui-manifest && deno run --allow-read --allow-write --allow-run --allow-env tools/publish-npm.ts pack:dry-run",
     "publish:npm": "deno task generate:ui-manifest && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/publish-npm.ts publish:npm",

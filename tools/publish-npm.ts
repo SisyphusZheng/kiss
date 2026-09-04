@@ -18,6 +18,10 @@ import { formatError } from '@openelement/element';
 import { formatJson } from '@openelement/element/build-utils';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 import { npmTarballName, tarballPath } from './lib/npm-tarball.ts';
+import {
+  compilePackageElementModules,
+  stageCompiledPackWorkspace,
+} from './lib/compiled-pack-staging.ts';
 import { npmView } from './lib/npm-release-verifier.ts';
 import { prereleaseChannel } from './lib/version.ts';
 
@@ -174,6 +178,8 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 async function packPackage(
   pkg: PackageInfo,
   dependencies: Record<string, string>,
+  allPackages: PackageInfo[],
+  rootDenoJson: { imports?: Record<string, string>; compilerOptions?: Record<string, unknown> },
 ): Promise<string> {
   const filename = npmTarballName(pkg);
   const out = tarballPath(pkg);
@@ -182,7 +188,45 @@ async function packPackage(
   // that allowlist, so packing must allow those known generated files in both
   // dry-run and publish mode.
   const args = ['pack', '--output', filename, '--allow-dirty'];
-  await runCommand('deno', args, { cwd: pkg.dir });
+
+  // #1301: a package shipping compiled-element sources (.tsx modules with a
+  // canonically bound @element decorator) must run the open:compiled-element
+  // intrinsic transform BEFORE `deno pack` transpiles — decorator lowering
+  // (applyDecs2203R) erases the compile-time-only intrinsics, and the packed
+  // artifact would register no Part Program (packageIslands SSR fails closed
+  // with OE_PROGRAM_MISSING). The admission contract is unchanged: staging
+  // only replaces module contents with the same compiler output a consumer's
+  // own build would produce from workspace source.
+  let staged: Awaited<ReturnType<typeof stageCompiledPackWorkspace>> | null = null;
+  const compiledModules = compilePackageElementModules(pkg.dir);
+  if (compiledModules.length > 0) {
+    const byName = new Map(allPackages.map((candidate) => [candidate.name, candidate]));
+    const members = [
+      pkg,
+      ...Object.keys(dependencies)
+        .filter((name) => name.startsWith('@openelement/'))
+        .map((name) => {
+          const member = byName.get(name);
+          if (!member) throw new Error(`Workspace dependency not found for staging: ${name}`);
+          return member;
+        }),
+    ];
+    staged = await stageCompiledPackWorkspace(pkg, members, rootDenoJson, compiledModules);
+    console.log(
+      `[npm] ${pkg.name}: packing staged compiler output for ${compiledModules.length} ` +
+        'compiled element module(s) (#1301).',
+    );
+  }
+
+  try {
+    const packDir = staged?.packDir ?? pkg.dir;
+    await runCommand('deno', args, { cwd: packDir });
+    if (staged) {
+      await Deno.copyFile(`${staged.packDir}/${filename}`, out);
+    }
+  } finally {
+    await staged?.cleanup();
+  }
 
   const tmp = await Deno.makeTempDir({ prefix: 'pack-' });
   const tarEnv = { COPYFILE_DISABLE: '1' };
@@ -306,6 +350,10 @@ async function main(): Promise<void> {
   const allPackages = await readPackages();
   const packages = releasePublishOrder(allPackages);
   const dependencyMap = deriveAllDependencies(packages);
+  const rootDenoJson = JSON.parse(Deno.readTextFileSync('deno.json')) as {
+    imports?: Record<string, string>;
+    compilerOptions?: Record<string, unknown>;
+  };
   if (packages.length === 0) throw new Error('No packages found under packages/.');
 
   assertVersionConsistency(packages);
@@ -325,7 +373,12 @@ async function main(): Promise<void> {
 
   const tarballs: string[] = [];
   for (const pkg of packages) {
-    const tar = await packPackage(pkg, dependencyMap.get(pkg.name) ?? {});
+    const tar = await packPackage(
+      pkg,
+      dependencyMap.get(pkg.name) ?? {},
+      allPackages,
+      rootDenoJson,
+    );
     tarballs.push(tar);
   }
 
