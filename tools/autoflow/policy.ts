@@ -209,6 +209,28 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^www\//, /^docs\//, /^tools\/project-constants\.ts$/],
   },
   {
+    // #1157 (B2.4): typed Content Graph drift gate — the committed
+    // _generated-content-graph.json must be a byte-identical regeneration of
+    // the owned Markdown/API/compiler-metadata/roadmap/release sources, and
+    // the graph must validate (duplicate ids, broken references and false
+    // locale alternates fail closed inside the generator).
+    name: 'content-graph:check',
+    command: ['deno', 'task', 'content-graph:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^www\/content\//,
+      /^www\/content-collections\.ts$/,
+      /^www\/app\/routes\//,
+      /^www\/app\/data\/_generated-content-graph\.json$/,
+      /^docs\/current\/PACKAGE_SURFACE\.md$/,
+      /^docs\/roadmap\/ROADMAP\.md$/,
+      /^docs\/release\//,
+      /^packages\/ui\/src\/generated-manifest\.json$/,
+      /^tools\/(?:lib\/content-graph|generate-content-graph|check-package-surface)/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'docs:check-version-anchors',
     command: ['deno', 'task', 'docs:check-version-anchors'],
     tiers: ['ci', 'release'],
