@@ -7,10 +7,11 @@ Updated: 2026-09-02
 - Latest landed train: `v0.44.0-beta.2`
 - Active release target: `v0.44.0-beta.2`
 - Next planned train: `v0.44.0-beta.3`
-- Next public prerelease: `v0.44.0-beta.2`
+- Next public prerelease: `v0.44.0-beta.3`
 - Published stable package line: `v0.43.3` on npm `latest`
 - Current development mode: public Beta train — Beta.1 published as a
-  prerelease under dist-tag `beta`; next stage Beta.2 (ADR-0151)
+  prerelease under dist-tag `beta`; Beta.2 in flight, next stage Beta.3
+  (ADR-0151)
 - Minimum branch rules: active on `dev` and `main` through ruleset `21775463`
 - Deferred hardening: #1192 Beta.3 with #1156 #1187 #1188 #1189
 - Long-term `1.0.0` target: unscheduled

@@ -2401,7 +2401,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "1c85f9891a5a34ddb92de6cc42cf5db6c61f8f011e9903220c543e6ab1dfb6d3",
+      "fingerprint": "69408f8d3b2f6231d7ac1cf2cae72b6e9d239af6a1c8849d5ed6b209a6bc2e09",
       "data": {}
     },
     {
@@ -2934,12 +2934,12 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "6e41fca95f0f7329d912e39693739cb3f91c1c4496c88b29381b771befe93655",
+      "fingerprint": "106b5f3b46968db360501d47b2e95d25ee501bdac4719fbc5d98959e82712d64",
       "data": {
-        "activeTarget": "v0.44.0-beta.1",
+        "activeTarget": "v0.44.0-beta.2",
         "latestLandedTrain": "v0.44.0-beta.1",
         "maturity": "beta",
-        "nextPlannedTrain": "v0.44.0-beta.2",
+        "nextPlannedTrain": "v0.44.0-beta.3",
         "publishedVersion": "0.44.0-beta.1",
         "schemaVersion": 1,
         "sourceVersion": "0.44.0-beta.1"
@@ -4318,14 +4318,14 @@
         }
       ],
       "references": [],
-      "fingerprint": "00b1fb5934c64e1a4e1ce54dc4ae131aedacbe65ea0f257517f5b0fddd1b89a5",
+      "fingerprint": "06b7d0f915e7f702d45744877b679ffae2daf8c32efb47033394977efc211752",
       "data": {
-        "copy": "The first public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It qualifies the framework itself — compiler, page-route SSR bound to the Part Program, delivery gates — under a frozen governance envelope (ADR-0151).",
+        "copy": "The second public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It proves external users can really use and maintain the framework — packaged-consumer qualification, derived-truth release gates and governance offload onto the three-role release loop (ADR-0151).",
         "stamp": "CURRENT",
         "state": "next",
         "status": "prerelease",
-        "theme": "framework qualification + governance freeze",
-        "version": "v0.44.0-beta.1"
+        "theme": "productization + governance offload",
+        "version": "v0.44.0-beta.2"
       }
     },
     {
@@ -4464,14 +4464,14 @@
         }
       ],
       "references": [],
-      "fingerprint": "48af9d0e5a826842b72f783ca99fe396aa24306f660ab0e3b668a449a784a8de",
+      "fingerprint": "419a38f9e9d289a7b466492d5ad8597b6a5f7e2145a2e2aad456f11e5a4c160c",
       "data": {
-        "copy": "编译型线路的首个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它在冻结的治理边界内验证框架本身——编译器、绑定到 Part Program 的页面路由 SSR 与交付门禁（ADR-0151）。",
+        "copy": "编译型线路的第二个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它验证外部用户能否真正使用并维护该框架——打包消费者资格验证、派生真相发布门禁，以及向三角色发布循环的治理减负（ADR-0151）。",
         "stamp": "CURRENT",
         "state": "next",
         "status": "预发布",
-        "theme": "框架资格验证 + 治理冻结",
-        "version": "v0.44.0-beta.1"
+        "theme": "产品化 + 治理减负",
+        "version": "v0.44.0-beta.2"
       }
     },
     {
