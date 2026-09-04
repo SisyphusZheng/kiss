@@ -76,7 +76,7 @@ test.describe('Unified page structure', () => {
   test('docs landing is a v4 manual index with four entrances', async ({ page }) => {
     await page.goto('/docs');
     await expect(page.locator('docs-index h1')).toContainText('MANUAL.');
-    const entrances = page.locator('docs-index .entrance');
+    const entrances = page.locator('docs-index').getByRole('link');
     await expect(entrances).toHaveCount(4);
     await expect(entrances.first()).toHaveAttribute('href', '/guide/getting-started');
   });
@@ -150,7 +150,7 @@ test.describe('Unified page structure', () => {
     await expect(rail).toBeVisible();
     expect(await rail.locator('a[href^="#"]').count()).toBeGreaterThan(0);
     await expect(page.locator('body')).not.toContainText(/鏂|鈫|鍗|杩|鏈/);
-    await expect(page.locator('open-reading-shell').locator('nav[aria-label="Page navigation"]'))
+    await expect(page.getByRole('navigation', { name: 'Page navigation' }))
       .toBeVisible();
   });
 
@@ -204,7 +204,12 @@ test.describe('Unified page structure', () => {
     });
     await page.goto('/guide/core-concepts');
     await expect(page.locator('open-reading-shell').locator('h1')).toContainText('Core Concepts');
-    const outlineLinks = page.locator('open-page-rail .desktop-outline a[href^="#"]');
+    // The rail outline is the 'On this page' complementary landmark; the
+    // persistent desktop outline links are the ones outside the mobile
+    // details drawer (the drawer duplicates the same fragments on small
+    // viewports).
+    const outlineLinks = page.getByRole('complementary', { name: 'On this page' })
+      .locator('a[href^="#"]:not(details a)');
     await expect(outlineLinks).toHaveCount(4);
     await expect(outlineLinks.first()).toHaveAttribute('href', '#start');
   });

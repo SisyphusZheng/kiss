@@ -19,20 +19,16 @@ test.describe('Search', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => customElements.get('open-search'));
     await page.keyboard.press('Control+K');
-    await page.locator('open-search').evaluate((el) => {
-      const input = el.querySelector('input') as HTMLInputElement | null;
-      input?.focus();
-    });
-    await page.keyboard.type('routing');
+    const searchField = page.getByRole('textbox', { name: 'Search documentation' });
+    await expect(searchField).toBeVisible();
+    await searchField.pressSequentially('routing');
     // First search pays the Pagefind wasm/index load; allow extra time.
-    await expect(page.locator('open-search').locator('.result').first()).toBeVisible({
-      timeout: 15_000,
-    });
+    const firstResult = page.getByRole('region', { name: 'Search results' })
+      .getByRole('link')
+      .first();
+    await expect(firstResult).toBeVisible({ timeout: 15_000 });
 
-    const href = await page.locator('open-search').evaluate((el) => {
-      const link = el.querySelector('.result') as HTMLAnchorElement | null;
-      return link?.getAttribute('href') ?? null;
-    });
+    const href = await firstResult.getAttribute('href');
     expect(href).toBeTruthy();
     expect(href).not.toBe('/guide/routing');
     const res = await request.get(href!);
@@ -46,14 +42,15 @@ test.describe('Search', () => {
 
     await page.getByRole('button', { name: 'Search' }).click();
 
-    const search = page.locator('open-search');
-    const input = search.locator('input');
+    const input = page.getByRole('textbox', { name: 'Search documentation' });
     await expect(input).toBeFocused();
 
     await page.keyboard.type('routing');
     await expect(input).toHaveValue('routing');
 
-    const firstResult = search.locator('.result').first();
+    const firstResult = page.getByRole('region', { name: 'Search results' })
+      .getByRole('link')
+      .first();
     // First search pays the Pagefind wasm/index load; allow extra time.
     await expect(firstResult).toBeVisible({ timeout: 15_000 });
     const firstHref = await firstResult.getAttribute('href');
@@ -66,14 +63,13 @@ test.describe('Search', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => customElements.get('open-search'));
 
-    await page.locator('open-search').evaluate((el) => {
-      const button = el.querySelector('button');
-      button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    });
+    await page.getByRole('button', { name: 'Search' }).click();
 
-    const overlay = await page.locator('open-search').evaluate((el) => {
-      const node = el.querySelector('.overlay');
-      if (!node) return null;
+    const dialog = page.getByRole('dialog', { name: 'Search' });
+    await expect(dialog).toBeVisible();
+    // The geometry contract lives on the backdrop container (`.overlay`):
+    // it must span the viewport exactly, so the dialog never opens displaced.
+    const overlay = await page.locator('open-search .overlay').evaluate((node) => {
       const rect = node.getBoundingClientRect();
       const style = getComputedStyle(node);
       return {
@@ -85,11 +81,10 @@ test.describe('Search', () => {
       };
     });
 
-    expect(overlay).not.toBeNull();
-    expect(overlay!.display).toBe('flex');
-    expect(Math.abs(overlay!.left)).toBeLessThanOrEqual(1);
-    expect(Math.abs(overlay!.right - overlay!.viewportWidth)).toBeLessThanOrEqual(1);
-    expect(Math.abs(overlay!.width - overlay!.viewportWidth)).toBeLessThanOrEqual(1);
+    expect(overlay.display).toBe('flex');
+    expect(Math.abs(overlay.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(overlay.right - overlay.viewportWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(overlay.width - overlay.viewportWidth)).toBeLessThanOrEqual(1);
   });
 
   test('search initial HTML does not stringify computed signals', async ({ page }) => {
@@ -97,11 +92,14 @@ test.describe('Search', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => customElements.get('open-search'));
 
-    const text = await page.locator('open-search').evaluate((el) =>
-      el.querySelector('.results')?.textContent ?? ''
-    );
+    // The results region lives inside the closed overlay — it enters the
+    // accessibility tree once the user opens the search.
+    await page.getByRole('button', { name: 'Search' }).click();
+    const results = page.getByRole('region', { name: 'Search results' });
+    await expect(results).toBeVisible();
+    const text = await results.evaluate((el) => el.textContent ?? '');
     expect(text).not.toContain('[object Object]');
-    expect(text).toContain('Type at least 2 characters to search');
+    await expect(results).toContainText('Type at least 2 characters to search');
   });
 
   test('search panel follows theme token changes', async ({ page }) => {
@@ -109,29 +107,23 @@ test.describe('Search', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => customElements.get('open-search'));
 
-    const readPanelBackground = async () =>
-      await page.locator('open-search').evaluate((el) => {
-        const button = el.querySelector('button');
-        button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-        const panel = el.querySelector('.panel');
-        return panel ? getComputedStyle(panel).backgroundColor : '';
-      });
+    const dialog = page.getByRole('dialog', { name: 'Search' });
+    const readPanelBackground = async () => {
+      await page.getByRole('button', { name: 'Search' }).click();
+      await expect(dialog).toBeVisible();
+      return await dialog.evaluate((panel) => getComputedStyle(panel).backgroundColor);
+    };
 
     const darkBackground = await readPanelBackground();
-    await page.locator('open-search').evaluate((el) => {
-      const overlay = el.querySelector('.overlay');
-      overlay?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    });
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
 
     const beforeTheme = await page.evaluate(() =>
       document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
     );
     const expectedTheme = beforeTheme === 'light' ? 'dark' : 'light';
 
-    await page.locator('open-theme-toggle').evaluate((el) => {
-      const button = el.shadowRoot?.querySelector('button');
-      button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    });
+    await page.getByRole('button', { name: 'Toggle theme' }).click();
 
     await page.waitForFunction(
       (theme) => document.documentElement.getAttribute('data-theme') === theme,
@@ -149,26 +141,17 @@ test.describe('Search', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => customElements.get('open-search'));
 
-    await page.locator('open-search').evaluate((el) => {
-      const button = el.querySelector('button');
-      button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    });
+    await page.getByRole('button', { name: 'Search' }).click();
 
-    let overlay = await page.locator('open-search').evaluate((el) => {
-      const node = el.querySelector<HTMLElement>('.overlay');
-      return node ? !node.hidden : false;
-    });
-    expect(overlay).toBe(true);
+    const dialog = page.getByRole('dialog', { name: 'Search' });
+    await expect(dialog).toBeVisible();
 
-    await page.locator('open-search').evaluate((el) => {
-      const node = el.querySelector('.overlay');
-      node?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    });
+    // The backdrop (`.overlay`) covers the full viewport around the dialog;
+    // a real click in its corner must dismiss the search like a user expects.
+    const backdrop = page.locator('open-search .overlay');
+    await backdrop.click({ position: { x: 2, y: 2 } });
 
-    overlay = await page.locator('open-search').evaluate((el) => {
-      const node = el.querySelector<HTMLElement>('.overlay');
-      return node ? !node.hidden : false;
-    });
-    expect(overlay).toBe(false);
+    await expect(backdrop).toBeHidden();
+    await expect(dialog).toBeHidden();
   });
 });

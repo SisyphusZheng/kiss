@@ -8,12 +8,11 @@
  *   - Page titles are correct per route
  *
  * NOTE: compiled page and layout components use light roots while some UI
- * package components retain Shadow DOM. Shared deep queries cover both.
+ * package components retain Shadow DOM. Playwright role/element locators
+ * pierce open shadow roots natively, so no hand-rolled deep queries.
  */
 
 import { expect, test } from '@playwright/test';
-import { deepQuery, deepQueryAll } from './helpers.js';
-import { deepQueryAllInPage } from '../../tools/lib/shadow-walker.ts';
 
 test.describe('Direct URL Access', () => {
   const routes = [
@@ -48,9 +47,10 @@ test.describe('Link Navigation', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Links are inside Shadow DOM - use the shared deep query to find them
-    const links = await deepQueryAll(page, 'a[href]');
-    const hrefs = await Promise.all(links.map((a) => a.getAttribute('href')));
+    // getByRole('link') pierces open shadow roots natively — no hand-rolled
+    // deep query required to cover links inside component shadow DOM.
+    const hrefs = await page.getByRole('link')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
     const internalLinks = hrefs.filter((href): href is string =>
       !!href &&
       !href.startsWith('http') &&
@@ -66,10 +66,12 @@ test.describe('Link Navigation', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Find guide links in shadow DOM
-    const guideAnchors = await deepQueryAll(page, 'a[href*="/guide/"]');
-    const guideLinks = (await Promise.all(guideAnchors.map((a) => a.getAttribute('href'))))
-      .filter((href): href is string => href !== null);
+    const guideLinks = await page.getByRole('link')
+      .evaluateAll((links) =>
+        links
+          .map((link) => link.getAttribute('href'))
+          .filter((href): href is string => !!href && href.includes('/guide/'))
+      );
 
     expect(guideLinks.length).toBeGreaterThan(0);
 
@@ -84,23 +86,14 @@ test.describe('Link Navigation', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    await page.locator('a[href="/guide/getting-started"]').first().click();
+    await page.getByRole('link', { name: 'Start building', exact: true }).first().click();
 
     await page.waitForURL(/\/guide\/getting-started\/?$/);
-    await page.waitForFunction(() => {
-      const layout = document.querySelector('open-layout');
-      return !!layout?.querySelector('slot > guide-getting-started');
-    });
-
-    const state = await page.evaluate(() => {
-      const layout = document.querySelector('open-layout')!;
-      return {
-        light: layout.hasAttribute('data-oe-light'),
-        routeCount: layout.querySelectorAll('slot > guide-getting-started').length,
-        routeHasArticle: !!layout.querySelector('guide-getting-started open-article-view'),
-      };
-    });
-    expect(state).toEqual({ light: true, routeCount: 1, routeHasArticle: true });
+    // The route page element is slotted into the compiled light-root shell.
+    await expect(page.locator('open-layout')).toHaveAttribute('data-oe-light', '');
+    await expect(page.locator('guide-getting-started')).toHaveCount(1);
+    await expect(page.locator('guide-getting-started open-article-view')).toHaveCount(1);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
   test('navigating between guide pages preserves layout', async ({ page }) => {
@@ -111,20 +104,10 @@ test.describe('Link Navigation', () => {
     await page.goto('/guide/architecture');
     await page.waitForLoadState('networkidle');
 
-    // Page should still have custom elements (layout intact)
-    // open-layout exists in light DOM (it's the top-level wrapper)
-    const hasLayout = await page.evaluate(() => {
-      // Check both light DOM and that the element is defined
-      const layout = document.querySelector('open-layout');
-      if (layout) return true;
-      // Fallback: check if any custom elements with shadow roots exist
-      const all = document.querySelectorAll('*');
-      for (const el of all) {
-        if (el.shadowRoot) return true;
-      }
-      return false;
-    });
-    expect(hasLayout).toBe(true);
+    // The app shell landmarks survive the navigation (nested mains: shell +
+    // page body — the first is the shell's).
+    await expect(page.locator('open-layout')).toHaveCount(1);
+    await expect(page.getByRole('main').first()).toBeVisible();
   });
 });
 
@@ -134,36 +117,15 @@ test.describe('404 Page', () => {
     await page.goto('/404.html');
     await page.waitForLoadState('networkidle');
 
-    // Should show the 404 page content — light DOM plus every shadow root
-    const bodyText: string = await page.evaluate(
-      `(document.body?.textContent ?? '') + ' ' + (${deepQueryAllInPage.toString()})(document, '*')` +
-        ".filter((el) => el.shadowRoot).map((el) => el.shadowRoot.textContent ?? '').join(' ')",
-    );
-    const has404 = bodyText.includes('404') ||
-      bodyText.includes('not found') ||
-      bodyText.includes('does not exist') ||
-      bodyText.includes('Not Found');
-    expect(has404).toBe(true);
+    await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
   });
 
   test('404 page has link back to home', async ({ page }) => {
     await page.goto('/404.html');
     await page.waitForLoadState('networkidle');
 
-    // Search for home link in both light and shadow DOM
-    const hasHomeLink = await page.evaluate(() => {
-      const checkRoot = (root: Document | ShadowRoot): boolean => {
-        const links = root.querySelectorAll('a[href="/"]');
-        return links.length > 0;
-      };
-      if (checkRoot(document)) return true;
-      const all = document.querySelectorAll('*');
-      for (const el of all) {
-        if (el.shadowRoot && checkRoot(el.shadowRoot)) return true;
-      }
-      return false;
-    });
-    expect(hasHomeLink).toBe(true);
+    // open-button renders a real anchored link inside its open shadow root.
+    await expect(page.getByRole('link', { name: 'Back home' })).toHaveAttribute('href', '/');
   });
 });
 
@@ -180,27 +142,13 @@ test.describe('Blog Pages', () => {
     await page.goto('/blog');
     await page.waitForLoadState('networkidle');
 
-    // Blog index should have links to blog posts
-    // Links are inside Shadow DOM - pierce through
-    const blogLinks = await page.evaluate(() => {
-      const links: string[] = [];
-
-      const collectLinks = (root: Document | ShadowRoot) => {
-        root.querySelectorAll('a[href*="/blog/"]').forEach((a) => {
-          const href = a.getAttribute('href');
-          if (href && href !== '/blog' && href !== '/blog/') {
-            links.push(href);
-          }
-        });
-      };
-
-      collectLinks(document);
-      document.querySelectorAll('*').forEach((el) => {
-        if (el.shadowRoot) collectLinks(el.shadowRoot!);
-      });
-
-      return links;
-    });
+    // Blog index should have links to individual posts.
+    const blogLinks = await page.locator('blog-index').getByRole('link')
+      .evaluateAll((links) =>
+        links
+          .map((link) => link.getAttribute('href'))
+          .filter((href): href is string => !!href && /^\/blog\/.+/.test(href))
+      );
 
     expect(blogLinks.length).toBeGreaterThan(0);
   });
@@ -209,16 +157,20 @@ test.describe('Blog Pages', () => {
     await page.goto('/blog');
     await page.waitForLoadState('networkidle');
 
-    // Get first blog post link (pierce shadow DOM)
-    const firstPost = await deepQuery(page, 'a[href*="/blog/v"]');
-    const firstPostLink = firstPost ? await firstPost.getAttribute('href') : null;
+    // Follow the first post link the index actually renders — never assume a
+    // slug pattern.
+    const firstPostLink = await page.locator('blog-index').getByRole('link')
+      .evaluateAll((links) =>
+        links
+          .map((link) => link.getAttribute('href'))
+          .find((href) => !!href && /^\/blog\/.+/.test(href)) ?? null
+      );
 
-    if (firstPostLink) {
-      await page.goto(firstPostLink);
-      await page.waitForLoadState('networkidle');
+    expect(firstPostLink).not.toBeNull();
+    await page.goto(firstPostLink!);
+    await page.waitForLoadState('networkidle');
 
-      const title = await page.title();
-      expect(title).toBeTruthy();
-    }
+    const title = await page.title();
+    expect(title).toBeTruthy();
   });
 });

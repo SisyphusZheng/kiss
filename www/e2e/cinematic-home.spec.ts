@@ -14,7 +14,8 @@ test.describe('Cinematic homepage', () => {
 
   test('renders a transparent theme-aware logo linked to the current locale home', async ({ page }) => {
     await page.goto('/zh/guide/getting-started');
-    const logo = page.locator('open-layout').locator('a.logo');
+    // The logo is the site-name link inside the banner landmark.
+    const logo = page.getByRole('banner').getByRole('link', { name: 'openElement' });
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute('href', '/zh');
     await expect.poll(() => logo.evaluate((element) => getComputedStyle(element).backgroundImage))

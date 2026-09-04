@@ -21,11 +21,21 @@ const baseURL = `http://127.0.0.1:${PORT}`;
 export default defineConfig({
   testDir: '.',
   testMatch: '*.spec.ts',
+  // fullyParallel and workers must agree (#1232): fullyParallel with a single
+  // worker was a contradiction — parallelism was declared but never allowed.
+  // Tests are context-isolated and the static server is read-only, so
+  // parallel workers are safe; CI stays conservative on the shared runner.
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: 1,
-  reporter: 'html',
+  workers: process.env.CI ? 2 : '50%',
+  // CI-visible reporting (#1232): 'github' annotates failures inline on the
+  // workflow run; the HTML report is uploaded as a failure artifact by
+  // .github/workflows/autoflow-ci.yml and never auto-opens a browser.
+  reporter: process.env.CI
+    ? [['list'], ['github'], ['html', { open: 'never' }]]
+    : [['list'], ['html', { open: 'never' }]],
+  outputDir: 'test-results',
   timeout: 120_000,
   // Visual baselines are product artifacts, not host-OS artifacts. JetBrains
   // Mono is self-hosted and a small pixel allowance absorbs rasterizer-only
@@ -41,6 +51,8 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    // Failure evidence lands in test-results/ for the CI artifact upload.
+    screenshot: 'only-on-failure',
   },
 
   // Auto-start a Deno static file server for www/dist/.

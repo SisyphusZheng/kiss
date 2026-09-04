@@ -10,22 +10,21 @@
  */
 
 import { expect, type Page, test } from '@playwright/test';
-import { deepQuery, deepQueryAll } from './helpers.js';
 
-async function readDeepLayoutState(page: Page) {
-  const layout = await deepQuery(page, 'open-layout');
-  const layoutState = await layout?.evaluate((el) => {
-    const logo = el.querySelector<HTMLAnchorElement>('.logo');
-    const navLinks = Array.from(el.querySelectorAll<HTMLAnchorElement>('.header-nav a'));
-    return {
-      homeHref: logo?.getAttribute('href'),
-      navHrefs: navLinks.map((link) => link.getAttribute('href')),
-    };
-  });
+async function readShellState(page: Page) {
+  // The logo is the site-name link in the banner landmark; the primary nav
+  // links are its labelled navigation landmark. Both are user-visible
+  // semantics — no class or shadow-walk queries needed.
+  const homeHref = await page.getByRole('banner')
+    .getByRole('link', { name: 'openElement' })
+    .getAttribute('href');
+  const navHrefs = await page.getByRole('navigation', { name: 'Primary navigation' })
+    .getByRole('link')
+    .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
   return {
     htmlLang: await page.evaluate(() => document.documentElement.lang),
-    homeHref: layoutState?.homeHref,
-    navHrefs: layoutState?.navHrefs,
+    homeHref,
+    navHrefs,
     title: await page.title(),
   };
 }
@@ -84,7 +83,7 @@ test.describe('Localized app shell', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const state = await readDeepLayoutState(page);
+    const state = await readShellState(page);
     expect(state.htmlLang).toBe('en');
     expect(state.homeHref).toBe('/');
     expect(state.navHrefs).toContain('/docs');
@@ -95,7 +94,7 @@ test.describe('Localized app shell', () => {
     await page.goto('/zh/');
     await page.waitForLoadState('networkidle');
 
-    const state = await readDeepLayoutState(page);
+    const state = await readShellState(page);
     expect(state.htmlLang).toBe('zh');
     expect(state.homeHref).toBe('/zh');
     expect(state.navHrefs).toContain('/zh/docs');
@@ -119,9 +118,9 @@ test.describe('Localized app shell', () => {
     await page.goto('/zh/guide/getting-started');
     await page.waitForLoadState('networkidle');
 
-    await page.locator('open-layout .logo').click();
+    await page.getByRole('banner').getByRole('link', { name: 'openElement' }).click();
     await page.waitForURL(/\/zh\/?$/);
-    const after = await readDeepLayoutState(page);
+    const after = await readShellState(page);
 
     expect(after.htmlLang).toBe('zh');
     expect(after.homeHref).toBe('/zh');
@@ -145,8 +144,10 @@ test.describe('i18n SSG Output', () => {
     expect(res?.status()).toBeLessThan(400);
     await page.waitForLoadState('networkidle');
 
-    const links = await deepQueryAll(page, 'a[href]');
-    const hrefs = await Promise.all(links.map((link) => link.getAttribute('href')));
+    // getByRole('link') pierces open shadow roots and matches every anchored
+    // link; no hand-rolled shadow walk needed.
+    const hrefs = await page.getByRole('link')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
     // The header language switcher legitimately links to the zh locale;
     // the regression was post content/navigation linking into /zh/blog.
     const zhHrefs = hrefs.filter((href) => href?.startsWith('/zh/blog'));

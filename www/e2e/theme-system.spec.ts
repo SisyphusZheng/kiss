@@ -10,14 +10,14 @@
  */
 
 import { expect, type Page, test } from '@playwright/test';
-import { deepQuery } from './helpers.js';
 
+/**
+ * The toggle button is the user-visible control ("Toggle theme"); Playwright
+ * role locators pierce the open shadow roots of open-layout and
+ * open-theme-toggle natively, so no ad-hoc shadow walking is needed.
+ */
 async function clickThemeToggle(page: Page): Promise<void> {
-  const toggle = await deepQuery(page, 'open-theme-toggle');
-  await toggle?.evaluate((el) => {
-    const btn = el.shadowRoot?.querySelector('button') as HTMLButtonElement | null;
-    btn?.click();
-  });
+  await page.getByRole('button', { name: 'Toggle theme' }).click();
 }
 
 async function waitForThemeChange(page: Page, before: string | null): Promise<void> {
@@ -29,17 +29,13 @@ async function waitForThemeChange(page: Page, before: string | null): Promise<vo
 /**
  * Wait for <open-theme-toggle> to be fully upgraded:
  * DSD hydration + _initTheme() must complete before clicks work.
- * We wait for the component to have a data-theme attribute,
- * which is set by _initTheme() during onDsdHydrated().
- *
- * NOTE: <open-theme-toggle> lives inside <open-layout>'s shadow DOM,
- * so we must query through the shadow root to find it.
+ * The host carries a data-theme attribute once _initTheme() ran during
+ * onDsdHydrated().
  */
 async function waitForToggleReady(page: Page): Promise<void> {
-  await expect.poll(async () => {
-    const toggle = await deepQuery(page, 'open-theme-toggle');
-    return (await toggle?.evaluate((el) => el.hasAttribute('data-theme'))) === true;
-  }, { timeout: 10000 }).toBe(true);
+  await expect(page.locator('open-theme-toggle')).toHaveAttribute('data-theme', /^(light|dark)$/, {
+    timeout: 10000,
+  });
 }
 
 test.describe('Theme Toggle', () => {
@@ -49,13 +45,13 @@ test.describe('Theme Toggle', () => {
     await waitForToggleReady(page);
   });
 
-  test('theme toggle element exists', async ({ page }) => {
-    expect(await deepQuery(page, 'open-theme-toggle')).not.toBeNull();
+  test('theme toggle button is exposed with an accessible name', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Toggle theme' })).toBeVisible();
   });
 
   test('theme toggle has shadow root', async ({ page }) => {
-    const toggle = await deepQuery(page, 'open-theme-toggle');
-    const hasShadowRoot = await toggle?.evaluate((el) => el.shadowRoot !== null);
+    const hasShadowRoot = await page.locator('open-theme-toggle')
+      .evaluate((el) => el.shadowRoot !== null);
     expect(hasShadowRoot).toBe(true);
   });
 
@@ -64,8 +60,6 @@ test.describe('Theme Toggle', () => {
       return document.documentElement.getAttribute('data-theme');
     });
 
-    // Click the toggle button via evaluate to guarantee the shadow DOM
-    // button is clicked regardless of Playwright's shadow DOM piercing.
     await clickThemeToggle(page);
 
     await waitForThemeChange(page, themeBefore);

@@ -12,7 +12,10 @@ The supported behavior is verified in the Chromium, Firefox, and WebKit
 Playwright projects by `www/e2e/dsd-layers.spec.ts`. CI runs the full E2E suite
 on Chromium and the DSD/island-hydration/theme smoke subset
 (`test:e2e:browser-smoke firefox`, `test:e2e:browser-smoke webkit`) on Firefox
-and WebKit. The
+and WebKit. Since #1232 (B2.10) that smoke subset also includes the full
+public information architecture route coverage
+(`www/e2e/public-routes.spec.ts`, routes enumerated mechanically from the
+built sitemap), so every public page renders on all three gated engines. The
 default build emits no inline DSD fallback, so a strict CSP does not need
 `unsafe-inline` for DSD.
 

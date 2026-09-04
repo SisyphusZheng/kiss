@@ -24,16 +24,20 @@ export default defineConfig({
   // dev.spec.ts targets the vite dev server (playwright.dev.config.ts), not
   // the production `start` server this config boots.
   testIgnore: 'dev.spec.ts',
+  // Serial by design (#1232): one packed starter serves one app on one port,
+  // so fullyParallel and workers agree on sequential execution.
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'list',
+  // CI-visible reporting (#1232): 'github' annotates failures on the run.
+  reporter: process.env.CI ? [['list'], ['github']] : 'list',
   timeout: 60_000,
 
   use: {
     baseURL,
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
 
   webServer: {

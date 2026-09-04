@@ -74,10 +74,11 @@ test.describe('Accessibility', () => {
 
   test('layout footer labels do not create skipped heading levels', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('open-layout footer h4')).toHaveCount(0);
-    const footer = page.locator('open-layout footer.app-footer');
+    // The shell footer is a contentinfo landmark; its links and any stray
+    // headings are user-visible semantics, so query by role, not class.
+    const footer = page.getByRole('contentinfo');
     await expect(footer).toHaveCount(1);
-    await expect(footer.locator('h1, h2, h3, h4, h5, h6')).toHaveCount(0);
+    await expect(footer.getByRole('heading')).toHaveCount(0);
     await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
       'https://github.com/open-element/openelement',
@@ -128,9 +129,9 @@ test.describe('Accessibility', () => {
       });
       expect(hasDelegatesFocus).toBe(true);
 
-      // Verify the toggle contains a button (focusable target)
-      const hasButton = await page.locator('open-theme-toggle >> button').count();
-      expect(hasButton).toBeGreaterThan(0);
+      // Verify the toggle button is a focusable target with an accessible
+      // name (role locators pierce the component's open shadow root).
+      await expect(page.getByRole('button', { name: 'Toggle theme' })).toBeVisible();
     }
   });
 
@@ -199,8 +200,8 @@ test.describe('Performance', () => {
     await page.waitForFunction(() => {
       const layout = document.querySelector('open-layout');
       // The compiled app shell is a light-root static artifact. It is usable
-      // before upgrade when its provenance marker and rendered body exist.
-      return layout?.hasAttribute('data-oe-light') && !!layout.querySelector('.app-layout');
+      // before upgrade when its provenance marker and main landmark exist.
+      return layout?.hasAttribute('data-oe-light') && !!layout.querySelector('main');
     });
 
     // Filter out known non-critical errors (e.g., analytics, CDN, external CDN integrity mismatch)

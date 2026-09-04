@@ -66,14 +66,15 @@ export default class OpenSearch extends OpenElement {
         </button>
 
         <div class='overlay' hidden onClick={this.closeSearchOnBackdrop}>
-          <div class='panel'>
+          <div class='panel' role='dialog' aria-modal='true' aria-label='Search'>
             <input
               type='text'
               class='search-input'
+              aria-label='Search documentation'
               placeholder='Search documentation...'
               onInput={this.searchFromInput}
             />
-            <div class='results'>
+            <div class='results' role='region' aria-label='Search results' aria-live='polite'>
               <div class='empty'>Type at least 2 characters to search</div>
             </div>
           </div>
