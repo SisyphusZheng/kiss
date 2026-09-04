@@ -32,6 +32,7 @@ import {
   writeReleaseNote,
 } from '../release.ts';
 import {
+  advancePrepareReleaseStateText,
   advancePublishedReleaseStateText,
   buildVersionAnchorReplacements,
   bumpProjectConstantsText,
@@ -42,6 +43,7 @@ import {
   ACTIVE_EXECUTION_VERSION,
   LATEST_LANDED_TRAIN,
   NEXT_EXECUTION_VERSION,
+  NEXT_PUBLIC_PRERELEASE,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -60,7 +62,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // lag-state previous-tag form (#754). The interop example anchor likewise
   // covers the source-line and lagging npm-published forms. Stable targets add
   // the equivalent two forms for PUBLISHED_STABLE_VERSION.
-  assertEquals(reps.length, 40);
+  assertEquals(reps.length, 43);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -102,7 +104,7 @@ Deno.test('buildVersionAnchorReplacements: from side derives from the loaded sou
       from.includes(PACKAGE_VERSION) || from.includes(PACKAGE_VERSION_TAG) ||
         from.includes(PREVIOUS_PACKAGE_VERSION) || from.includes(PREVIOUS_PACKAGE_VERSION_TAG) ||
         from.includes(LATEST_LANDED_TRAIN) || from.includes(ACTIVE_EXECUTION_VERSION) ||
-        from.includes(NEXT_EXECUTION_VERSION),
+        from.includes(NEXT_EXECUTION_VERSION) || from.includes(NEXT_PUBLIC_PRERELEASE),
       `from must derive from the canonical release-state constants: ${from}`,
     );
   }
@@ -234,11 +236,11 @@ Deno.test('buildVersionAnchorReplacements: prerelease bumps rewrite the registry
   );
 
   // Stable targets never touch the dist-tag annotation: a stable cut IS the
-  // latest line, and the rule surface stays at the exact 40 entries.
+  // latest line, and the rule surface stays at the exact 43 entries.
   assertFalse(
     buildVersionAnchorReplacements('9.9.9').some(([, f]) => f.includes('dist-tag')),
   );
-  assertEquals(buildVersionAnchorReplacements('9.9.9').length, 40);
+  assertEquals(buildVersionAnchorReplacements('9.9.9').length, 43);
 });
 
 Deno.test('buildVersionAnchorReplacements: every target carries the previous or current line', () => {
@@ -278,6 +280,7 @@ const CONSTANTS_FIXTURE = [
   "export const LATEST_LANDED_TRAIN = 'v0.41.0-alpha.17';",
   "export const ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.17';",
   "export const NEXT_EXECUTION_VERSION = 'v0.41.0-alpha.18';",
+  "export const NEXT_PUBLIC_PRERELEASE = 'v0.41.0-alpha.18';",
   "export const PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.15';",
   '',
 ].join('\n');
@@ -292,6 +295,10 @@ Deno.test('bumpProjectConstantsText: bump maintains previous line and active exe
   assert(updated.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.17'"));
   assert(updated.includes("LATEST_LANDED_TRAIN = 'v0.41.0-alpha.17'"));
   assert(updated.includes("NEXT_EXECUTION_VERSION = 'v0.41.0-alpha.18'"));
+  // The next public prerelease advances with the same prerelease successor;
+  // left on the bumped line it trips the #813 in-flight binding as soon as
+  // the publish evidence completes (#1283 fixed this by hand for Beta.1).
+  assert(updated.includes("NEXT_PUBLIC_PRERELEASE = 'v0.41.0-alpha.18'"));
 });
 
 Deno.test('bumpProjectConstantsText: stable bump sets the active target to the bump target', () => {
@@ -300,6 +307,9 @@ Deno.test('bumpProjectConstantsText: stable bump sets the active target to the b
   assert(fromPrevious.includes("PACKAGE_VERSION = '0.41.0'"));
   assert(fromPrevious.includes("PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.16'"));
   assert(fromPrevious.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.0'"));
+  // The train after a stable cut is a deliberate human decision; the bump
+  // must not derive one.
+  assert(fromPrevious.includes("NEXT_PUBLIC_PRERELEASE = 'v0.41.0-alpha.18'"));
 });
 
 Deno.test('bumpProjectConstantsText: re-running a bump is a no-op and keeps the true previous line', () => {
@@ -334,6 +344,104 @@ Deno.test('advancePublishedReleaseStateText: finalize converges source and regis
   assertEquals(alpha.maturity, 'alpha');
 });
 
+Deno.test('advancePrepareReleaseStateText: prepare advances the planning anchors only (#1288)', () => {
+  const input = JSON.stringify({
+    schemaVersion: 1,
+    sourceVersion: '0.44.0-beta.1',
+    publishedVersion: '0.44.0-beta.1',
+    latestLandedTrain: 'v0.44.0-beta.1',
+    activeTarget: 'v0.44.0-beta.1',
+    nextPlannedTrain: 'v0.44.0-beta.2',
+    maturity: 'beta',
+  });
+  const state = JSON.parse(advancePrepareReleaseStateText(input, '0.44.0-beta.2'));
+  // check-release-truth pins the planning pair to ACTIVE/NEXT_EXECUTION_VERSION,
+  // which the bump advances; prepare must move them with the bump.
+  assertEquals(state.activeTarget, 'v0.44.0-beta.2');
+  assertEquals(state.nextPlannedTrain, 'v0.44.0-beta.3');
+  // The published-line fields stay finalize-owned
+  // (advancePublishedReleaseStateText): prepare leaves the prepare-window lag.
+  assertEquals(state.sourceVersion, '0.44.0-beta.1');
+  assertEquals(state.publishedVersion, '0.44.0-beta.1');
+  assertEquals(state.latestLandedTrain, 'v0.44.0-beta.1');
+  assertEquals(state.maturity, 'beta');
+
+  // A stable target has no derivable successor train; nextPlannedTrain stays
+  // human-owned (same rule as NEXT_EXECUTION_VERSION in bumpProjectConstantsText).
+  const stable = JSON.parse(advancePrepareReleaseStateText(input, '0.44.0'));
+  assertEquals(stable.activeTarget, 'v0.44.0');
+  assertEquals(stable.nextPlannedTrain, 'v0.44.0-beta.2');
+});
+
+Deno.test('buildVersionAnchorReplacements: VERSION_PLAN repository/registry head lines join the bump (#1288)', () => {
+  // The v0.44.0-beta.2 prepare bumped the "Current *" pair but left the
+  // STATUS-form pair ("Repository package line" / bare "npm registry line")
+  // stale in VERSION_PLAN's head zone, failing docs:check-version-anchors and
+  // the release:truth:check prerelease registry anchor (runs 33885139920 /
+  // 33885147030).
+  const version = '9.9.9-beta.2';
+  const tag = `v${version}`;
+  const reps = buildVersionAnchorReplacements(version);
+  assert(
+    reps.some(([p, f, t]) =>
+      p === 'docs/current/VERSION_PLAN.md' &&
+      f === `Repository package line: \`${PACKAGE_VERSION_TAG}\`` &&
+      t === `Repository package line: \`${tag}\``
+    ),
+    'missing VERSION_PLAN repository-line replacement',
+  );
+  for (const fromTag of [PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION_TAG]) {
+    const from = `npm registry line: \`${fromTag}\``;
+    const to = `npm registry line: \`${tag}\``;
+    assert(
+      reps.some(([p, f, t]) => p === 'docs/current/VERSION_PLAN.md' && f === from && t === to),
+      `missing VERSION_PLAN registry replacement: ${from} -> ${to}`,
+    );
+  }
+  // The generic registry rule must not eat the "Current npm registry line"
+  // anchor first: the specific rule stays earlier in application order.
+  const bareIndex = reps.findIndex(([p, f]) =>
+    p === 'docs/current/VERSION_PLAN.md' && f === `npm registry line: \`${PACKAGE_VERSION_TAG}\``
+  );
+  const currentIndex = reps.findIndex(([p, f]) =>
+    p === 'docs/current/VERSION_PLAN.md' &&
+    f === `Current npm registry line: \`${PACKAGE_VERSION_TAG}\``
+  );
+  assert(bareIndex !== -1 && currentIndex !== -1 && currentIndex < bareIndex);
+});
+
+Deno.test('buildVersionAnchorReplacements: prerelease bump advances the next-public-prerelease anchors (#1288)', () => {
+  // #1283 advanced NEXT_PUBLIC_PRERELEASE by hand; left stale, the published
+  // line is described as the next train and trips the #813 in-flight binding
+  // once its publish evidence completes. The bump now advances it like
+  // NEXT_EXECUTION_VERSION, and the doc anchors follow.
+  const version = '9.9.9-beta.2';
+  const nextTag = nextPrereleaseTag(version);
+  const reps = buildVersionAnchorReplacements(version);
+  const anchors: Array<[string, string]> = [
+    ['docs/current/VERSION_PLAN.md', 'Next planned public train: `'],
+    ['docs/current/VERSION_PLAN.md', 'Next public prerelease: `'],
+    ['docs/status/STATUS.md', 'Next public prerelease: `'],
+    ['docs/roadmap/ROADMAP.md', 'Next public prerelease: `'],
+  ];
+  for (const [path, prefix] of anchors) {
+    const from = `${prefix}${NEXT_PUBLIC_PRERELEASE}\``;
+    const to = `${prefix}${nextTag}\``;
+    assert(
+      reps.some(([p, f, t]) => p === path && f === from && t === to),
+      `missing next-public-prerelease replacement ${path}: ${from} -> ${to}`,
+    );
+  }
+  // Stable cuts leave the human-owned next-prerelease anchors alone (same rule
+  // as the next-train anchors: no derivable successor after a stable cut).
+  assertFalse(
+    buildVersionAnchorReplacements('9.9.9').some(([p, f]) =>
+      (p === 'docs/current/VERSION_PLAN.md' && f.startsWith('Next planned public train:')) ||
+      f.startsWith('Next public prerelease:')
+    ),
+  );
+});
+
 Deno.test('two-phase release: prepare never publishes, tags, or pushes main', () => {
   const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
   const names = steps.map((step) => step.name);
@@ -358,6 +466,39 @@ Deno.test('R9: preparation runs the fast tier only, never the local full matrix'
   );
   const gates = steps.find((step) => step.name === 'run fast preparation gates after bump');
   assertEquals(gates?.command, ['deno', 'task', 'autoflow:push']);
+});
+
+Deno.test('prepare plan regenerates derived artifacts and release-truth anchors after the bump (#1288)', () => {
+  // The v0.44.0-beta.2 bump commit (10744cc3) passed the fast prepare gates
+  // but failed dev CI (run 33885147030) and the promotion PR (run 33885139920)
+  // on every derived-truth gate the prepare did not re-run: content-graph:check
+  // (bump rewrites graph sources version.ts/roadmap.tsx), release:truth:check
+  // (release-state planning anchors), docs:check-version-anchors. The prepare
+  // plan must leave the bump commit self-consistent under them.
+  for (
+    const plan of [
+      createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md'),
+      createReleasePlan('0.41.0-alpha.11'),
+    ]
+  ) {
+    const names = plan.map((step) => step.name);
+    const anchors = names.indexOf('update current version anchors');
+    const planning = names.indexOf('update release-state planning anchors');
+    const graph = names.indexOf('regenerate content graph');
+    const commit = names.indexOf('commit release bump');
+    assert(anchors !== -1, 'plan must update the version anchors');
+    assert(planning > anchors, 'release-state planning anchors advance with the bump');
+    assert(graph > anchors, 'content graph regenerates after its sources are bumped');
+    assert(
+      planning < commit && graph < commit,
+      'regeneration and anchors land inside the bump commit',
+    );
+    const graphStep = plan[graph];
+    assertEquals(graphStep.command, ['deno', 'task', 'generate:content-graph']);
+    const stage = plan.find((step) => step.name === 'stage release bump');
+    assert(stage?.command?.includes('www/app/data/_generated-content-graph.json'));
+    assert(stage?.command?.includes('docs/release/release-state.json'));
+  }
 });
 
 Deno.test('two-phase release: publish-existing never bumps and verifies main CI first', () => {
@@ -634,9 +775,10 @@ Deno.test('buildVersionAnchorReplacements: bump updates the VERSION_PLAN head li
   const version = '9.9.9';
   const reps = buildVersionAnchorReplacements(version)
     .filter(([path]) => path === 'docs/current/VERSION_PLAN.md');
-  // Source line + registry line in both accepted states (#754), plus latest,
-  // active, and next train fields.
-  assertEquals(reps.length, 6);
+  // Source line + registry line in both accepted states (#754), the
+  // STATUS-form repository/registry head pair (#1288), plus latest, active,
+  // and next train fields.
+  assertEquals(reps.length, 9);
 
   // Simulate the bump against the plan's real head shape: the two header
   // lines and the active release target all move to the target.

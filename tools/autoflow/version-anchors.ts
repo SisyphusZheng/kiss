@@ -10,6 +10,7 @@ import {
   ACTIVE_EXECUTION_VERSION,
   LATEST_LANDED_TRAIN,
   NEXT_EXECUTION_VERSION,
+  NEXT_PUBLIC_PRERELEASE,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
@@ -63,6 +64,46 @@ export async function updatePublishedReleaseState(version: string): Promise<void
   await Deno.writeTextFile(path, advancePublishedReleaseStateText(text, version));
 }
 
+/**
+ * Advance the prepare-owned planning fields of the durable release state.
+ * check-release-truth pins activeTarget/nextPlannedTrain to
+ * ACTIVE_EXECUTION_VERSION/NEXT_EXECUTION_VERSION, which the bump advances —
+ * so the bump must move the state file with it (#1288: the v0.44.0-beta.2
+ * bump left the pair on the beta.1 window and failed release:truth:check).
+ * The published-line fields (sourceVersion/publishedVersion/latestLandedTrain/
+ * maturity) stay finalize-owned: prepare intentionally leaves them on the
+ * prior published line (the prepare-window lag the checker accepts).
+ */
+export function advancePrepareReleaseStateText(text: string, version: string): string {
+  const state = JSON.parse(text) as PublishedReleaseState;
+  const next = nextPrereleaseTag(version);
+  return `${
+    JSON.stringify(
+      {
+        ...state,
+        schemaVersion: 1,
+        activeTarget: releaseTag(version),
+        // The train after a stable cut is a deliberate human decision (same
+        // rule as NEXT_EXECUTION_VERSION in bumpProjectConstantsText).
+        nextPlannedTrain: next === releaseTag(version) ? state.nextPlannedTrain : next,
+      } satisfies PublishedReleaseState,
+      null,
+      2,
+    )
+  }\n`;
+}
+
+export async function updatePrepareReleaseState(version: string): Promise<void> {
+  const path = 'docs/release/release-state.json';
+  const text = await Deno.readTextFile(path);
+  const updated = advancePrepareReleaseStateText(text, version);
+  if (updated === text) {
+    console.warn(`[release] ${path}: planning anchors already at ${version}; no change made.`);
+    return;
+  }
+  await Deno.writeTextFile(path, updated);
+}
+
 export function nextPrereleaseTag(version: string): string {
   const parts = prereleaseParts(version);
   if (!parts) return releaseTag(version);
@@ -104,6 +145,13 @@ export function bumpProjectConstantsText(text: string, version: string): string 
     updated = updated.replace(
       /NEXT_EXECUTION_VERSION = '[^']+'/u,
       `NEXT_EXECUTION_VERSION = '${next}'`,
+    );
+    // The next public prerelease advances with the same successor; left on the
+    // just-bumped line it binds the published line to next-train wording and
+    // trips the #813 in-flight gate once the publish evidence completes.
+    updated = updated.replace(
+      /NEXT_PUBLIC_PRERELEASE = '[^']+'/u,
+      `NEXT_PUBLIC_PRERELEASE = '${next}'`,
     );
   }
   return updated;
@@ -272,6 +320,25 @@ export function buildVersionAnchorReplacements(
       'docs/current/VERSION_PLAN.md',
       'Next planned train: `$NEXT_CURRENT`',
       'Next planned train: `$NEXT_TARGET`',
+    ],
+    // VERSION_PLAN also carries the STATUS-form repository/registry pair in its
+    // head zone (#1283 wrote them as human copy; the beta.2 prepare left them
+    // stale — #1288). The bare registry rule must follow the "Current npm
+    // registry line" rules above: its from-string is a substring of theirs.
+    [
+      'docs/current/VERSION_PLAN.md',
+      'Repository package line: `$PVT`',
+      'Repository package line: `$TAG`',
+    ],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'npm registry line: `$PVT`',
+      'npm registry line: `$TAG`',
+    ],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'npm registry line: `$PREV_PVT`',
+      'npm registry line: `$TAG`',
     ],
     // Interop example version anchor (check-version-anchors governs it with
     // the registry-style lag allowance): cover both the source-line form and
@@ -447,6 +514,25 @@ export function buildVersionAnchorReplacements(
         `npm registry 行为 \`$TAG\`——预发布版本(dist-tag \`${prereleaseDistTag}\`)`,
       ]);
     }
+    // The next-public-prerelease doc anchors track NEXT_PUBLIC_PRERELEASE,
+    // which the bump advances to the prerelease successor (#1288; #1283 did
+    // this by hand for Beta.1). These strings are already fully resolved —
+    // the placeholder pass below leaves them untouched.
+    const nextTag = nextPrereleaseTag(version);
+    for (
+      const [path, prefix] of [
+        ['docs/current/VERSION_PLAN.md', 'Next planned public train: `'],
+        ['docs/current/VERSION_PLAN.md', 'Next public prerelease: `'],
+        ['docs/status/STATUS.md', 'Next public prerelease: `'],
+        ['docs/roadmap/ROADMAP.md', 'Next public prerelease: `'],
+      ] as const
+    ) {
+      prereleaseRules.push([
+        path,
+        `${prefix}${NEXT_PUBLIC_PRERELEASE}\``,
+        `${prefix}${nextTag}\``,
+      ]);
+    }
   }
   return [...prereleaseRules, ...raw].map(([path, from, to]) => [path, resolve(from), resolve(to)]);
 }
@@ -472,6 +558,13 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
           const bumped = bumpPreviousReleaseThemeText(constants, supersededTheme);
           if (bumped !== undefined) await Deno.writeTextFile(constantsPath, bumped);
         }
+        // Both CURRENT-stamped timeline entries (en + zh) name the package
+        // line; historical entries never use the `version: 'v…'` form, so
+        // every occurrence is a head declaration (#1288: the beta.2 bump
+        // replaced only the en entry and left the zh entry stale for
+        // www:check-truth).
+        await Deno.writeTextFile(path, text.replaceAll(from, to));
+        continue;
       }
       await Deno.writeTextFile(path, text.replace(from, to));
       continue;
