@@ -30,7 +30,7 @@
     "jsr:@std/uuid@^1.0.9": "1.1.1",
     "npm:@babel/core@^7.28.0": "7.29.7",
     "npm:@babel/preset-react@^7.27.1": "7.29.7_@babel+core@7.29.7",
-    "npm:@openelement/ui@0.42": "0.42.0",
+    "npm:@openelement/ui@0.44.0-beta.1": "0.44.0-beta.1",
     "npm:@opentelemetry/api@^1.9.0": "1.9.1",
     "npm:@preact/signals@^2.5.1": "2.9.2_preact@10.29.7__preact-render-to-string@6.7.0_preact-render-to-string@6.7.0__preact@10.29.7",
     "npm:@preact/signals@^2.9.0": "2.9.2_preact@10.29.7__preact-render-to-string@6.7.0_preact-render-to-string@6.7.0__preact@10.29.7",
@@ -771,14 +771,14 @@
         "@jridgewell/sourcemap-codec"
       ]
     },
-    "@openelement/element@0.42.0": {
-      "integrity": "sha512-7FkaBsNcU7rEkeEsbkl+8bHE08xXwykdUmqTaBWHMaG/szjbdP+zPEnin96bD7roEImL/2U/l0PHJKVtXsZMOg==",
+    "@openelement/element@0.44.0-beta.1": {
+      "integrity": "sha512-d6Zzo9ggo3B9DgTU2erk2V+ZNJ2RBk4x6SJ5rA5SVJ7LJr5MRTZSurfGg7HIZP7chCtGdiNGbYQx+cQPrrI7/A==",
       "dependencies": [
         "@preact/signals-core"
       ]
     },
-    "@openelement/ui@0.42.0": {
-      "integrity": "sha512-zVhvGBxb2z3Yru/eoPIcQIp32JRvs3bN6TNxOgEeCig+KnflvaHxHYvQo+s+odDeKvR3Lj+Ax3yE/f2J2rcOcw==",
+    "@openelement/ui@0.44.0-beta.1": {
+      "integrity": "sha512-RrENbWziaKIzZ3om/onHtFPjMbus8ksF18i/NRrcYe6iXRChc5kZWJt/ur8FbrT5v9a7BVgHHYB7QHPjCkt9HQ==",
       "dependencies": [
         "@openelement/element"
       ]
@@ -1283,7 +1283,7 @@
     "dependencies": [
       "jsr:@fresh/core@^2.3.3",
       "jsr:@fresh/plugin-vite@^1.1.2",
-      "npm:@openelement/ui@0.42",
+      "npm:@openelement/ui@0.44.0-beta.1",
       "npm:@preact/signals@^2.9.0",
       "npm:@types/babel__core@^7.20.5",
       "npm:preact@^10.29.1",

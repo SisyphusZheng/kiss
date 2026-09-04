@@ -66,6 +66,13 @@ deno task build
 
 This builds the SPA with Vite and then packages the Deno Desktop app.
 
+> **v0.44 status (#1228):** `deno task build` currently fails closed with
+> OEC9008/OEC9007 — the route modules predate the v0.44 compiled module
+> grammar (runtime top-level statements and multi-statement `render()`
+> bodies). Re-authoring against the grammar is carried to Beta.3 (B3.8); see
+> `docs/current/DENO_DESKTOP_TARGET.md`. `deno task check` and
+> `deno task smoke` stay green and CI-gated via `examples:check`.
+
 To build and open the desktop window:
 
 ```bash
