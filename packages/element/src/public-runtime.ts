@@ -47,7 +47,6 @@ export { injectPropsSafe } from './internal/core/security.ts';
 export type { TrustedHtml } from './internal/core/security.ts';
 export { escapeAttr, escapeHtml, wrapInDocument } from './internal/core/html-escape.ts';
 export type { IslandOptions } from './internal/protocol/island.ts';
-export { DATA_SSR_PROPS } from './internal/protocol/hydration-markers.ts';
 export { StyleSheet } from './internal/core/style-sheet.ts';
 export { createLogger } from './internal/core/logger.ts';
 export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';

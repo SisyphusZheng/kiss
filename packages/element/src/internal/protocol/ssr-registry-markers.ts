@@ -10,7 +10,7 @@
  *
  * Keep the string value stable: it crosses the onion boundary — the marker
  * is written ONLY by adapter-vite (SSR polyfill + generated entry code) and
- * read by element (define-element.ts) and app (preact.ts). There is no
+ * read by app (preact.ts). There is no
  * import edge between the writer and the readers by design (the writer is
  * generated code); this module is the single source for the name so a
  * rename cannot drift silently.

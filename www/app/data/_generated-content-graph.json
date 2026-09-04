@@ -199,7 +199,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "433ceb697678a589512c850165df564e83258e2b317b6ba71abf02af5f938302",
+      "fingerprint": "e5920113e9b6b799476950c20fc6ac98914c6e4fe25b65f3bf42b7c556d19b14",
       "data": {
         "exportClasses": {
           ".": {
@@ -213,7 +213,6 @@
             "ComponentLayer": "internal-importable",
             "Context": "stable-candidate",
             "DANGEROUS_KEYS": "experimental",
-            "DATA_SSR_PROPS": "internal-importable",
             "ERROR_PREFIX": "stable-candidate",
             "ErrorBoundary": "stable-candidate",
             "ErrorTelemetryHook": "stable-candidate",

@@ -148,3 +148,76 @@ Deno.test('package artifacts: rejects adapter tests and fixtures', async () => {
     },
   );
 });
+
+Deno.test('package artifacts: rejects dead v0.43 residue paths (#1273/B2.13)', async () => {
+  await withPackage(
+    '@openelement/element',
+    {
+      'index.js': 'export {};',
+      'src/types.ts': 'export interface ElementDefinition {}',
+      'src/internal/protocol/vnode.ts': 'export interface VNode {}',
+      'src/internal/protocol/prop.ts': 'export type PropDecl = never;',
+      'src/internal/core/dom-utils.ts': 'export function clearChildren() {}',
+      'src/internal/core/dsd-shadow-root.ts': 'export function hasPopulatedShadowRoot() {}',
+    },
+    (root) => {
+      const messages = scanExtractedPackage('@openelement/element', root).violations.map((v) =>
+        v.message
+      );
+      assertEquals(
+        messages.filter((message) =>
+          message === 'dead v0.43 residue must not be published (#1273/B2.13)'
+        ).length,
+        5,
+      );
+    },
+  );
+});
+
+Deno.test('package artifacts: rejects legacy hydration markers in packed sources', async () => {
+  await withPackage(
+    '@openelement/element',
+    {
+      'index.js': 'export {};',
+      'src/internal/protocol/hydration-markers.ts': `
+        export const DATA_SSR_PROPS = 'data-ssr-props';
+        export const DATA_SIGNAL = 'data-signal';
+        export const BRANCH_MARKER_PREFIX = 'oe-branch:';
+      `,
+    },
+    (root) => {
+      const messages = scanExtractedPackage('@openelement/element', root).violations.map((v) =>
+        v.message
+      );
+      assert(messages.includes('dead data-ssr-props channel export (#836, removed in 0.44)'));
+      assert(messages.includes('legacy marker-based hydration attribute'));
+      assert(messages.includes('legacy branch/list hydration comment marker'));
+    },
+  );
+});
+
+Deno.test('package artifacts: marker scan ignores comments and other packages', async () => {
+  await withPackage(
+    '@openelement/element',
+    {
+      'index.js': 'export {};',
+      'src/migration-note.ts': `
+        // The removed channel was documented as data-ssr-props; do not re-add.
+        export const DATA_OE_LIGHT = 'data-oe-light';
+      `,
+    },
+    (root) => {
+      assertEquals(scanExtractedPackage('@openelement/element', root).violations, []);
+    },
+  );
+  await withPackage(
+    '@openelement/app',
+    {
+      'index.js': 'export {};',
+      'src/notes.ts': `export const marker = 'data-signal';`,
+    },
+    (root) => {
+      assertEquals(scanExtractedPackage('@openelement/app', root).violations, []);
+    },
+  );
+});
