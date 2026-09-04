@@ -1,6 +1,7 @@
 ---
 title: 'PWA Support for LessJS SSG'
 date: '2026-05-11'
+lang: 'en'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

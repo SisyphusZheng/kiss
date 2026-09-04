@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0006: 版本号策略 — 从 0.6 到 2.0 的递进路线'
 date: '2026-05-07'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

@@ -16,6 +16,25 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.44.0-beta.1
+
+**First public v0.44 prerelease (dist-tag `beta`; npm `latest` stays on the
+stable 0.43 line).** Framework qualification under a frozen governance
+envelope (ADR-0151): the TSX-to-Part Program compiler, page-route SSR bound
+to the compiled program, and the delivery gates. The authoritative note is
+[`docs/release/v0.44.0-beta.1.md`](./docs/release/v0.44.0-beta.1.md); the
+0.41.0-era npm `beta.1`–`beta.3` artifacts remain withdrawn partial
+publishes, unrelated to this line.
+
+## 0.43.3 / 0.43.2 / 0.43.1 / 0.43.0
+
+**Stable maintenance line (npm `latest`).** Compatible bug, security,
+runtime, documentation and release-truth patches under ADR-0140 — no 0.44
+feature train. Per-release notes:
+[`docs/release/v0.43.0.md`](./docs/release/v0.43.0.md),
+[`v0.43.1`](./docs/release/v0.43.1.md), [`v0.43.2`](./docs/release/v0.43.2.md),
+[`v0.43.3`](./docs/release/v0.43.3.md).
+
 ## 0.42.0
 
 **WC light fullstack, stable.** The stable cut of the 0.42 alpha line — the

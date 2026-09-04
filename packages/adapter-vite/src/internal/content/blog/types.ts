@@ -12,6 +12,12 @@ export interface BlogPostFrontmatter {
   excerpt?: string;
   /** Post type discriminator (e.g. 'adr', 'post') */
   type?: string;
+  /**
+   * Original language of the post body (e.g. 'en', 'zh'). Dispatches are
+   * single-language originals: sites serving multiple locales use this to
+   * mark locale-mismatched renders honestly instead of masquerading.
+   */
+  lang?: string;
 }
 
 /** A fully parsed blog post */

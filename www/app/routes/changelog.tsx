@@ -30,9 +30,9 @@ const content = {
       'is the published stable maintenance baseline on the 0.43 track. The static, request-time, and Universal WC SSR contracts remain frozen under ADR-0119, ADR-0122, and ADR-0135; ADR-0140 admits compatible bug, security, runtime, documentation, and release-truth patches without scheduling a 0.44 feature train.',
     withdrawnHeading: 'Withdrawn partial artifacts',
     withdrawnBody:
-      'The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product lines or upgrade targets.',
+      'The npm 0.41.0-era beta.1–beta.3 artifacts — published under the 0.41 line before its stable cut — are withdrawn partial releases: never a supported product line, never an upgrade path. The current v0.44.0-beta.1 prerelease on dist-tag beta is a separate, unrelated line.',
     footnote:
-      '※ Withdrawn partial artifacts (beta.1–beta.3) stay withdrawn from the active release story. History is kept, not rewritten.',
+      '※ The withdrawn 0.41.0-era npm beta.1–beta.3 partial artifacts stay withdrawn from the active release story. History is kept, not rewritten.',
     loadError:
       '<p>Unable to load the changelog. Read it on <a href="https://github.com/open-element/openelement/blob/main/CHANGELOG.md">GitHub</a>.</p>',
     navRoadmap: 'Roadmap',
@@ -56,9 +56,9 @@ const content = {
       '是 0.43 轨道上已发布的稳定维护基线。静态、请求时与 Universal WC SSR 契约继续受 ADR-0119、ADR-0122 和 ADR-0135 冻结；ADR-0140 允许兼容的 bug、安全、运行时、文档与发布真值 patch，但不预排 0.44 功能列车。',
     withdrawnHeading: '已撤回的残缺产物',
     withdrawnBody:
-      'npm 上的 beta.1–beta.3 产物是已撤回的残缺发布，不是受支持的产品线，也不是升级目标。',
+      'npm 上 0.41.0 时代的 beta.1–beta.3 产物——在 0.41 线正式版之前发布——是已撤回的残缺发布：既非受支持的产品线，也不构成升级路径。当前 dist-tag beta 上的 v0.44.0-beta.1 预发布是独立的线路，与它们无关。',
     footnote:
-      '※ 已撤回的残缺产物（beta.1–beta.3）在活跃发布叙事中保持撤回状态。历史被保留，不被改写。',
+      '※ 已撤回的 0.41.0 时代 npm beta.1–beta.3 残缺产物在活跃发布叙事中保持撤回状态。历史被保留，不被改写。',
     loadError:
       '<p>无法加载 changelog。请到 <a href="https://github.com/open-element/openelement/blob/main/CHANGELOG.md">GitHub</a> 阅读。</p>',
     navRoadmap: 'Roadmap',

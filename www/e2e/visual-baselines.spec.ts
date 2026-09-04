@@ -56,15 +56,9 @@ const viewports = [
 // reviewed baseline. A route whose en/zh renders ever converge again can
 // rejoin a shared set deliberately, not by tolerance accident.
 //
-// /contributing rejoined deliberately (2026-08-23): its copy is English-only
-// by design, so en/zh render byte-identically and per-locale baselines are
-// pure duplication (the duplicate-baseline gate rejects them).
-const sharedLocaleBaselines = new Set<string>([
-  'dark-desktop-contributing',
-  'dark-mobile-contributing',
-  'light-desktop-contributing',
-  'light-mobile-contributing',
-]);
+// /contributing left the shared set (#1307): the page now ships a real zh
+// translation, so en/zh render distinctly and each locale owns a baseline.
+const sharedLocaleBaselines = new Set<string>([]);
 
 for (const locale of ['en', 'zh'] as const) {
   for (const theme of ['dark', 'light'] as const) {

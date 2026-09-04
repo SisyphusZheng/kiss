@@ -12,6 +12,7 @@ export interface GeneratedBlogPost {
     tags?: string[];
     excerpt?: string;
     type?: string;
+    lang?: string;
   };
   content: string;
   html: string;

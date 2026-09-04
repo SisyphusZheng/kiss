@@ -94,9 +94,15 @@ export function generateSitemap(distDir: string, options: SitemapOptions): strin
   // Scan for index.html files
   const htmlPaths = scanHtmlFiles(resolvedDist);
 
+  // 404 pages are never sitemap entries. The default-locale 404 is renamed to
+  // a flat 404.html by the SSG post-processor (so the scan never sees it);
+  // locale-prefixed 404s stay <locale>/404/index.html and would leak without
+  // this symmetric exclusion (#1307).
+  const without404 = htmlPaths.filter((path) => path !== '/404' && !path.endsWith('/404'));
+
   // Filter excluded paths. A pattern matches the path itself or a path
   // below it — excluding `/blog` must not also exclude `/blogroll` (#1039).
-  const includedPaths = htmlPaths.filter((path) => {
+  const includedPaths = without404.filter((path) => {
     return !exclude.some((pattern) =>
       path === pattern || path.startsWith(pattern.endsWith('/') ? pattern : `${pattern}/`)
     );

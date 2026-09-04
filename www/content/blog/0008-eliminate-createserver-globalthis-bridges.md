@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0008: 消除 createServer()、.less/ 临时文件与 globalThis 桥接'
 date: '2026-05-10'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

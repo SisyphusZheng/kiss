@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0024: Standards-first Web Components Renderer Roadmap'
 date: '2026-05-14'
+lang: 'en'
 type: 'adr'
 tags: ['architecture', 'roadmap', 'standards', 'web-components', 'dsd', 'ssg']
 draft: false

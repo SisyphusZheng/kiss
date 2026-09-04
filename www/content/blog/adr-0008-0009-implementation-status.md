@@ -1,6 +1,7 @@
 ﻿---
 title: 'ADR 0008/0009/0010/0011/0012 — Implementation Status'
 date: '2026-05-11'
+lang: 'en'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

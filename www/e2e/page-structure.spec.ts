@@ -128,11 +128,28 @@ test.describe('Unified page structure', () => {
   test('compiled light section frames project named and default content in place', async ({ page }) => {
     await page.goto('/apilist');
     const frames = page.locator('apilist-page open-section-frame[data-oe-light]');
-    await expect(frames).toHaveCount(2);
+    await expect(frames).toHaveCount(4);
     await expect(frames.first().locator('.frame .title')).toContainText(
       'Authoring starts at product packages.',
     );
     await expect(frames.nth(1).locator('.frame .body .registry')).toBeVisible();
+  });
+
+  test('apilist renders the generated export and element reference with stable anchors (#1307)', async ({ page }) => {
+    await page.goto('/apilist');
+    // Every generated searchRecord anchor resolves to a rendered entry.
+    const exportRow = page.locator('#api-adapter-vite-root-buildApp');
+    await expect(exportRow).toBeVisible();
+    await expect(exportRow.locator('.ref-name')).toHaveText('buildApp');
+    const elementRow = page.locator('#ce-open-button');
+    await expect(elementRow).toBeVisible();
+    await expect(elementRow.locator('.ce-tag')).toHaveText('<open-button>');
+    expect(await page.locator('.ref-row').count()).toBeGreaterThan(150);
+    expect(await page.locator('.ce-row').count()).toBe(10);
+    // zh renders the same generated anchors with zh chrome.
+    await page.goto('/zh/apilist');
+    await expect(page.locator('#ce-open-badge')).toBeVisible();
+    await expect(page.locator('.ref-row').first()).toBeVisible();
   });
 
   test('roadmap standards visual renders through the compiled light root', async ({ page }) => {

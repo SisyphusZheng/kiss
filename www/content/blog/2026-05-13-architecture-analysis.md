@@ -1,6 +1,7 @@
 ---
 title: 'LessJS 架构分析报告'
 date: '2026-05-13'
+lang: 'zh'
 type: 'post'
 tags: ['architecture', 'analysis']
 draft: false

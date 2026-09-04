@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0011: 消除最后一个 globalThis 桥接 — closeBundle 内联 Phase 2/3'
 date: '2026-05-10'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

@@ -609,8 +609,12 @@ const wwwCheck: DocsTruthCheck = {
           skip: [/(^|\/)blog(\/|$)/],
         })
       ) {
+        // History surfaces: blog posts are dated records; changelog/migration
+        // name removed APIs by design; apilist renders generated JSDoc
+        // summaries that legitimately quote historical prerelease versions
+        // (#1307 — the reference is generated truth, not authored claims).
         if (
-          /(?:^|\/)(?:(?:blog|changelog)(?:\.html|\/index\.html)|guide\/migration\/index\.html)$/
+          /(?:^|\/)(?:(?:blog|changelog|apilist)(?:\.html|\/index\.html)|guide\/migration\/index\.html)$/
             .test(file)
         ) {
           continue;

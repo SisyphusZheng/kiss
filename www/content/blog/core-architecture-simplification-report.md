@@ -1,6 +1,7 @@
 ﻿---
 title: '@openelement/core 架构简化审查报告'
 date: '2026-05-11'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

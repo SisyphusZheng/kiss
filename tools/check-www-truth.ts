@@ -8,7 +8,13 @@
  *             every internal headerNav href must resolve to a real route.
  *   locale  — no orphan zh content (zh without en), no missing zh
  *             translation for guide/architecture, and no byte-identical
- *             en/zh pair (a duplicated untranslated route).
+ *             en/zh pair (a duplicated untranslated route). Route-level
+ *             pages (#1307): any route module authoring a bilingual
+ *             `content` record must provide a real zh entry — serving
+ *             hard-coded English under /zh masquerades as a translation.
+ *             Blog posts are single-language originals (#1307): every
+ *             post must declare `lang: en|zh` in frontmatter so the route
+ *             can mark the non-matching locale honestly.
  *   roadmap — the roadmap route's CURRENT-stamped entry must name the
  *             current package version tag from tools/project-constants.ts.
  *
@@ -22,6 +28,7 @@ import { scanRoutes } from '../packages/adapter-vite/src/internal/ssg/route-scan
 import { scanNavData } from '../packages/adapter-vite/src/internal/content/nav/scanner.ts';
 import { writeNavModule } from '../packages/adapter-vite/src/internal/content/nav/writer.ts';
 import { PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { walk } from '@std/fs/walk';
 import ts from 'typescript';
 
 const WWW_ROOT = 'www';
@@ -160,6 +167,97 @@ async function checkLocaleAvailability(failures: WwwTruthFailure[]): Promise<voi
   }
 }
 
+// ─── route-level locale honesty (#1307) ─────────────────────────────────────
+
+/**
+ * Route-level pages author their bilingual copy in a top-level `content`
+ * record keyed by locale. When such a record declares `en` but not `zh`, the
+ * route serves English copy under /zh while the document claims lang="zh" —
+ * a masquerade. Fail closed on the missing locale key.
+ */
+export function findRouteLocaleFailures(file: string, source: string): WwwTruthFailure[] {
+  const failures: WwwTruthFailure[] = [];
+  const parsed = parseTypeScript(source, file);
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) && node.name.text === 'content' &&
+      node.initializer
+    ) {
+      let initializer = node.initializer;
+      while (ts.isAsExpression(initializer) || ts.isSatisfiesExpression(initializer)) {
+        initializer = initializer.expression;
+      }
+      if (ts.isObjectLiteralExpression(initializer)) {
+        const keys = new Set(
+          initializer.properties
+            .filter(ts.isPropertyAssignment)
+            .map((property) =>
+              ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)
+                ? property.name.text
+                : undefined
+            )
+            .filter((key): key is string => key !== undefined),
+        );
+        for (const locale of ['en', 'zh']) {
+          if (!keys.has(locale)) {
+            failures.push({
+              file,
+              message: `route-level content record is missing the '${locale}' locale — ` +
+                `the route serves /${locale} and must not masquerade another locale's copy`,
+            });
+          }
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  return failures;
+}
+
+async function checkRouteLevelLocale(failures: WwwTruthFailure[]): Promise<void> {
+  for await (
+    const entry of walk(`${WWW_ROOT}/app/routes`, { includeDirs: false, exts: ['.ts', '.tsx'] })
+  ) {
+    const source = await Deno.readTextFile(entry.path);
+    failures.push(...findRouteLocaleFailures(entry.path, source));
+  }
+}
+
+// ─── blog single-language honesty (#1307) ───────────────────────────────────
+
+/**
+ * Blog dispatches are single-language originals: there is no per-post
+ * translation convention, so every post must declare its language
+ * (`lang: en|zh`) in frontmatter. The blog routes consume the declaration to
+ * mark locale-mismatched renders honestly instead of letting a Chinese URL
+ * present English content as zh (or vice versa).
+ */
+export function blogFrontmatterLang(
+  file: string,
+  markdown: string,
+): WwwTruthFailure[] {
+  const frontmatter = markdown.match(/^﻿?---\r?\n([\s\S]*?)\r?\n---/);
+  const lang = frontmatter?.[1].match(/^lang:\s*['"]?([a-z]{2})['"]?\s*$/m)?.[1];
+  if (lang === 'en' || lang === 'zh') return [];
+  return [{
+    file,
+    message:
+      `blog post must declare its original language as frontmatter 'lang: en' or 'lang: zh'` +
+      (lang ? ` (found '${lang}')` : ' (missing)'),
+  }];
+}
+
+async function checkBlogLanguageDeclaration(failures: WwwTruthFailure[]): Promise<void> {
+  const dir = `${WWW_ROOT}/content/blog`;
+  for await (const entry of Deno.readDir(dir)) {
+    if (!entry.isFile || !entry.name.endsWith('.md')) continue;
+    const markdown = await Deno.readTextFile(`${dir}/${entry.name}`);
+    failures.push(...blogFrontmatterLang(`${dir}/${entry.name}`, markdown));
+  }
+}
+
 // ─── roadmap version agreement ──────────────────────────────────────────────
 
 /** Extract the CURRENT-stamped roadmap entry version through the TS AST. */
@@ -204,6 +302,8 @@ export async function checkWwwTruth(): Promise<WwwTruthFailure[]> {
   const failures: WwwTruthFailure[] = [];
   await checkNav(failures);
   await checkLocaleAvailability(failures);
+  await checkRouteLevelLocale(failures);
+  await checkBlogLanguageDeclaration(failures);
   await checkRoadmap(failures);
   return failures;
 }
@@ -217,5 +317,7 @@ if (import.meta.main) {
     }
     Deno.exit(1);
   }
-  console.log('www truth check passed (nav + locale availability + roadmap).');
+  console.log(
+    'www truth check passed (nav + locale availability + route locale honesty + blog language + roadmap).',
+  );
 }

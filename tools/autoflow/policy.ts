@@ -253,7 +253,9 @@ const GATES: readonly GateDefinition[] = [
     // owned truth — generated nav freshness (byte-identical regeneration of
     // route meta + headerNav), headerNav hrefs resolve to real routes,
     // bilingual locale availability (no orphan/missing/duplicated-untranslated
-    // zh), and the CURRENT roadmap entry names the package version tag.
+    // zh — extended #1307 to route-level content records and the blog
+    // single-language `lang` declaration), and the CURRENT roadmap entry
+    // names the package version tag.
     name: 'www:check-truth',
     command: ['deno', 'task', 'www:check-truth'],
     tiers: ['ci', 'release'],
@@ -266,11 +268,14 @@ const GATES: readonly GateDefinition[] = [
   {
     // #1159 (B2.4): guide/architecture code examples that import
     // @openelement/* must type-check against the real framework sources.
+    // #1307: the TS2304 suppression boundary reads the documented export
+    // names from the generated API reference.
     name: 'content:examples-check',
     command: ['deno', 'task', 'content:examples-check'],
     tiers: ['ci', 'release'],
     triggers: [
       /^www\/content\//,
+      /^www\/app\/data\/_generated-api-reference\.ts$/,
       /^packages\//,
       /^tools\/check-content-examples/,
       /^deno\.json$/,
@@ -434,10 +439,13 @@ const GATES: readonly GateDefinition[] = [
     tiers: ['ci', 'release'],
     // #1159: the build task ends with the built-output internal
     // link/fragment + SEO gate (www:check-links), so checker edits rebuild.
+    // #1307: the build also applies the derived per-route SEO plan
+    // (www:apply-seo) and the link gate asserts the generated reference
+    // anchors against the built apilist pages.
     triggers: [
       /^(packages|www)\//,
       /^deno\.json$/,
-      /^tools\/(?:check-www-links|lib\/www-links)/,
+      /^tools\/(?:check-www-links|lib\/www-links|apply-www-seo|lib\/www-seo)/,
     ],
   },
   {

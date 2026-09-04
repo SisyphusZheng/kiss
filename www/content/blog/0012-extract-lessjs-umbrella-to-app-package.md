@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0012: 将 lessjs() 统一入口从 @openelement/core 拆到 @openelement/app'
 date: '2026-05-10'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

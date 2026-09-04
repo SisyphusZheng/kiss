@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0007: View Transitions + Speculation Rules'
 date: '2026-05-09'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

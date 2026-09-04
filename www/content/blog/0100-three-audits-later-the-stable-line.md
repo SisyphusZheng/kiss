@@ -1,6 +1,7 @@
 ---
 title: 'Three audits later, the stable line'
 date: '2026-07-26'
+lang: 'en'
 type: 'dispatch'
 tags: ['release-truth', 'architecture', 'audit']
 draft: false

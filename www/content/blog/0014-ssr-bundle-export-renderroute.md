@@ -1,6 +1,7 @@
 ---
 title: 'ADR 0014: SSR Bundle 导出 renderRoute() — 消除 build-ssg.ts 的越权访问'
 date: '2026-05-10'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

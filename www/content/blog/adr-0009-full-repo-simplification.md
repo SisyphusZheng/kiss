@@ -1,6 +1,7 @@
 ﻿---
 title: 'LessJS 全仓库简化方案 — ADR 0009'
 date: '2026-05-10'
+lang: 'zh'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false

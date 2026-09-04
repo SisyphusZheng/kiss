@@ -1,6 +1,7 @@
 ---
 title: '@hono/vite-dev-server Evaluation'
 date: '2026-04-28'
+lang: 'en'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
