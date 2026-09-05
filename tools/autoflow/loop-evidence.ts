@@ -126,11 +126,17 @@ export const PR_CI_ARTIFACT_PREFIX = 'pr-full-ci-evidence-';
  * `workspace-qualification` joined the set with #1276 (B1.3-F1): the definePage
  * route SSR tag-mismatch defect shipped because the workspace runtime
  * qualification was not CI-gated.
+ * `bun-serve-smoke` joined the set with #1228 (B2.5): the Bun consumer
+ * qualification is a required `needs` leg of pr-full-ci-evidence. The set MUST
+ * stay in lockstep with the `needs` list of the pr-full-ci-evidence job in
+ * autoflow-ci.yml — pr-ci-workflow.test.ts enforces that equality mechanically
+ * (the Beta.2 dry-run 2026-09-05 failed because this set lagged the workflow).
  */
 export const REQUIRED_PR_CI_JOBS = [
   'dependency-review',
   'autoflow-ci',
   'node-serve-smoke',
+  'bun-serve-smoke',
   'workspace-qualification',
 ] as const;
 
@@ -139,6 +145,7 @@ export function jobIdForDisplayName(name: string): string {
   if (name === PR_CI_EVIDENCE_JOB_NAME) return PR_CI_EVIDENCE_JOB_NAME;
   // Matrix legs expand the display name, e.g. "dist/server Node smoke (Node 24)".
   if (name.startsWith('dist/server Node smoke')) return 'node-serve-smoke';
+  if (name.startsWith('dist/server Bun smoke')) return 'bun-serve-smoke';
   return name;
 }
 
