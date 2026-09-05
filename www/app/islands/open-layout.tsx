@@ -1,15 +1,23 @@
 /** @jsxImportSource @openelement/element */
 /** Compiler-owned WWW app shell (v0.44, ADR-0143). */
 import { defineIslandConfig } from '@openelement/app';
-import { element, OpenElement, property } from '@openelement/element';
+import { computed, element, OpenElement, property } from '@openelement/element';
 import '@openelement/ui/open-theme-toggle';
 import { compiledStyle } from '../site-ui/compiled-style.ts';
+import {
+  buildSidebarRows,
+  type DecoratedHeaderNavLink,
+  decorateHeaderNav,
+  footerColumn,
+  type FooterLink,
+  type HeaderNavLink,
+  layoutChromeStrings,
+  type NavSection,
+  type SidebarRow,
+} from '../site-ui/open-layout-navigation.ts';
 import './open-search.tsx';
 
-interface HeaderNavLink {
-  href: string;
-  label: string;
-}
+type CompiledComputed<T> = ReturnType<typeof computed<T>> & T;
 
 export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
 
@@ -238,11 +246,122 @@ export default class OpenLayout extends OpenElement {
     margin-left: auto;
   }
 
+  /* Sidebar */
+  .docs-sidebar {
+    width: clamp(200px, 20vw, 260px);
+    flex-shrink: 0;
+    border-right: var(--border-size-1) solid var(--border);
+    padding: 2rem 0;
+    overflow-y: auto;
+    height: calc(100vh - var(--nav-height));
+    position: sticky;
+    top: var(--nav-height);
+    scrollbar-width: thin;
+    background: linear-gradient(180deg,color-mix(in srgb,var(--violet-2) 26%,var(--bg-base)),color-mix(in srgb,var(--bg-elevated) 72%,transparent));
+    backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: inset -1px 0 0 color-mix(in srgb,var(--brand) 10%,transparent);
+  }
+  .docs-sidebar[hidden] {
+    display: none;
+  }
+
+  .nav-row[data-kind="section"] {
+    margin: 1.5rem 0 0.5rem;
+  }
+  .nav-row[data-kind="section"]:first-child {
+    margin-top: 0;
+  }
+  .nav-heading {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-size-micro);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--text-muted);
+    padding: 0 1.5rem;
+    user-select: none;
+  }
+
+  .docs-sidebar a,
+  .sidebar-mobile-panel a {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: var(--font-size-tiny);
+    margin: .12rem .7rem;
+    padding: .5rem .8rem;
+    border-left: 2px solid transparent;
+    border-radius: var(--radius-2);
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .docs-sidebar a:hover,
+  .sidebar-mobile-panel a:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+  }
+  .docs-sidebar a[aria-current="page"],
+  .sidebar-mobile-panel a[aria-current="page"] {
+    color: var(--brand);
+    border-left-color: var(--brand);
+    background: var(--brand-subtle);
+    font-weight: 600;
+  }
+  .nav-row[data-kind="section"] a,
+  .nav-row[data-kind="link"] .nav-heading {
+    display: none;
+  }
+
+  /* Mobile section navigation: native details disclosure (#995 idiom, shared
+     with open-page-rail — the compiled shell ships no imperative drawer). */
+  .sidebar-mobile {
+    display: none;
+  }
+
   /* Footer */
   .app-footer {
     border-top: var(--border-size-1) solid var(--border);
     background: color-mix(in srgb, var(--bg-elevated) 58%, transparent);
   }
+  .footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: var(--size-16) var(--size-8);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--size-8);
+  }
+  .footer-heading {
+    display: block;
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--size-4);
+  }
+  .footer-column a {
+    display: block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-body-sm);
+    padding: 4px 0;
+    transition: color 0.15s ease;
+  }
+  .footer-column a:hover {
+    color: var(--text-primary);
+  }
+  .footer-bottom {
+    border-top: var(--border-size-1) solid var(--border);
+    padding: var(--size-4) var(--size-8);
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--size-4);
+    color: var(--text-muted);
+    font-size: var(--font-size-body-sm);
+  }
+
   /* Responsive */
   @media (max-width: 1120px) {
     .header-inner {
@@ -265,8 +384,41 @@ export default class OpenLayout extends OpenElement {
     .header-nav { display: none; }
     .header-right { gap: 4px; }
 
+    .docs-sidebar { display: none; }
+    .sidebar-mobile {
+      display: block;
+      margin: var(--size-4) var(--size-4) 0;
+      padding: var(--size-3);
+      border: var(--border-size-1) solid var(--border);
+      border-radius: var(--radius-2);
+      background: var(--bg-surface);
+    }
+    .sidebar-mobile[hidden] { display: none; }
+    .sidebar-mobile-toggle {
+      cursor: pointer;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: var(--font-size-00);
+      font-weight: var(--font-weight-8);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .sidebar-mobile-panel { padding-block-start: var(--size-3); }
+    .sidebar-mobile .nav-row[data-kind="section"] { margin: 0.5rem 0 0; }
+    .sidebar-mobile .nav-heading { padding: var(--size-2) var(--size-4); }
+    .sidebar-mobile-panel a { padding: 0.5rem 1rem 0.5rem 2rem; }
+
     .layout-main { width: 100%; }
-    .app-footer { padding: 0; }
+    .footer-inner {
+      grid-template-columns: repeat(2, 1fr);
+      padding: var(--size-12) var(--size-4);
+    }
+    .footer-bottom {
+      flex-direction: column;
+      gap: var(--size-2);
+      padding: var(--size-4);
+      text-align: center;
+    }
   }
 
   @media (max-width: 768px) {
@@ -289,6 +441,71 @@ export default class OpenLayout extends OpenElement {
   @property({ reflect: false })
   homeHref = '/';
 
+  @property({ reflect: false })
+  navItems: NavSection[] = [];
+
+  @property({ reflect: false })
+  currentPath = '';
+
+  @property({ reflect: false })
+  locale = 'en';
+
+  @property({ reflect: false })
+  locales: string[] = ['en'];
+
+  @property({ reflect: true })
+  home = false;
+
+  @property({ reflect: false, attribute: false })
+  headerNavItems = computed(() =>
+    decorateHeaderNav(this.headerNav, this.currentPath, this.locale, this.locales)
+  ) as CompiledComputed<DecoratedHeaderNavLink[]>;
+
+  @property({ reflect: false, attribute: false })
+  sidebarLabel = computed(() => layoutChromeStrings(this.locale).sidebarLabel);
+
+  @property({ reflect: false, attribute: false })
+  sidebarToggle = computed(() => layoutChromeStrings(this.locale).sidebarToggle);
+
+  @property({ reflect: false, attribute: false })
+  sidebarRows = computed(() =>
+    buildSidebarRows(this.navItems, this.currentPath, this.locale, this.locales)
+  ) as CompiledComputed<SidebarRow[]>;
+
+  @property({ reflect: false, attribute: false })
+  sidebarHidden = computed(() =>
+    this.home ||
+    buildSidebarRows(this.navItems, this.currentPath, this.locale, this.locales).length === 0
+  );
+
+  @property({ reflect: false, attribute: false })
+  footerTagline = computed(() => layoutChromeStrings(this.locale).footerTagline || this.footerText);
+
+  @property({ reflect: false, attribute: false })
+  footerProductLabel = computed(() => footerColumn(this.locale, this.locales, 'product').label);
+  @property({ reflect: false, attribute: false })
+  footerProductLinks = computed(() =>
+    footerColumn(this.locale, this.locales, 'product').links
+  ) as CompiledComputed<FooterLink[]>;
+  @property({ reflect: false, attribute: false })
+  footerResourcesLabel = computed(() => footerColumn(this.locale, this.locales, 'resources').label);
+  @property({ reflect: false, attribute: false })
+  footerResourcesLinks = computed(() =>
+    footerColumn(this.locale, this.locales, 'resources').links
+  ) as CompiledComputed<FooterLink[]>;
+  @property({ reflect: false, attribute: false })
+  footerCompanyLabel = computed(() => footerColumn(this.locale, this.locales, 'company').label);
+  @property({ reflect: false, attribute: false })
+  footerCompanyLinks = computed(() =>
+    footerColumn(this.locale, this.locales, 'company').links
+  ) as CompiledComputed<FooterLink[]>;
+  @property({ reflect: false, attribute: false })
+  footerLegalLabel = computed(() => footerColumn(this.locale, this.locales, 'legal').label);
+  @property({ reflect: false, attribute: false })
+  footerLegalLinks = computed(() =>
+    footerColumn(this.locale, this.locales, 'legal').links
+  ) as CompiledComputed<FooterLink[]>;
+
   render() {
     return (
       <div class='app-layout' part='container'>
@@ -298,8 +515,15 @@ export default class OpenLayout extends OpenElement {
               <span class='logo-glyph' aria-hidden='true'>OE</span>
             </a>
             <nav class='header-nav' part='nav' aria-label='Primary navigation'>
-              {this.headerNav.map((link) => (
-                <a key={link.href} href={link.href} rel='noopener noreferrer'>{link.label}</a>
+              {this.headerNavItems.map((link) => (
+                <a
+                  key={link.key}
+                  href={link.href}
+                  aria-current={link.current}
+                  rel='noopener noreferrer'
+                >
+                  {link.label}
+                </a>
               ))}
             </nav>
             <div class='header-right'>
@@ -311,8 +535,15 @@ export default class OpenLayout extends OpenElement {
                   <span class='mobile-menu-icon' aria-hidden='true'>☰</span>
                 </summary>
                 <nav class='mobile-menu-panel' aria-label='Mobile navigation'>
-                  {this.headerNav.map((link) => (
-                    <a key={link.href} href={link.href} rel='noopener noreferrer'>{link.label}</a>
+                  {this.headerNavItems.map((link) => (
+                    <a
+                      key={link.key}
+                      href={link.href}
+                      aria-current={link.current}
+                      rel='noopener noreferrer'
+                    >
+                      {link.label}
+                    </a>
                   ))}
                 </nav>
               </details>
@@ -320,14 +551,79 @@ export default class OpenLayout extends OpenElement {
           </div>
         </header>
         <div class='layout-body'>
+          <nav
+            class='docs-sidebar'
+            part='sidebar'
+            aria-label={this.sidebarLabel}
+            hidden={this.sidebarHidden}
+          >
+            {this.sidebarRows.map((row) => (
+              <div key={row.key} class='nav-row' data-kind={row.kind}>
+                <span class='nav-heading'>{row.heading}</span>
+                <a
+                  class='nav-link'
+                  href={row.href}
+                  aria-current={row.current}
+                  rel={row.rel}
+                >
+                  {row.label}
+                </a>
+              </div>
+            ))}
+          </nav>
           <main class='layout-main' part='main'>
+            <details class='sidebar-mobile' hidden={this.sidebarHidden}>
+              <summary class='sidebar-mobile-toggle'>{this.sidebarToggle}</summary>
+              <nav class='sidebar-mobile-panel' aria-label={this.sidebarLabel}>
+                {this.sidebarRows.map((row) => (
+                  <div key={row.key} class='nav-row' data-kind={row.kind}>
+                    <span class='nav-heading'>{row.heading}</span>
+                    <a
+                      class='nav-link'
+                      href={row.href}
+                      aria-current={row.current}
+                      rel={row.rel}
+                    >
+                      {row.label}
+                    </a>
+                  </div>
+                ))}
+              </nav>
+            </details>
             <slot></slot>
           </main>
         </div>
         <footer class='app-footer' part='footer'>
-          <span>{this.footerText}</span>
-          <span aria-hidden='true'>·</span>
-          <a href='https://github.com/open-element/openelement' rel='noopener noreferrer'>GitHub</a>
+          <div class='footer-inner'>
+            <nav class='footer-column' aria-label={this.footerProductLabel}>
+              <span class='footer-heading'>{this.footerProductLabel}</span>
+              {this.footerProductLinks.map((link) => (
+                <a key={link.key} href={link.href} rel={link.rel}>{link.label}</a>
+              ))}
+            </nav>
+            <nav class='footer-column' aria-label={this.footerResourcesLabel}>
+              <span class='footer-heading'>{this.footerResourcesLabel}</span>
+              {this.footerResourcesLinks.map((link) => (
+                <a key={link.key} href={link.href} rel={link.rel}>{link.label}</a>
+              ))}
+            </nav>
+            <nav class='footer-column' aria-label={this.footerCompanyLabel}>
+              <span class='footer-heading'>{this.footerCompanyLabel}</span>
+              {this.footerCompanyLinks.map((link) => (
+                <a key={link.key} href={link.href} rel={link.rel}>{link.label}</a>
+              ))}
+            </nav>
+            <nav class='footer-column' aria-label={this.footerLegalLabel}>
+              <span class='footer-heading'>{this.footerLegalLabel}</span>
+              {this.footerLegalLinks.map((link) => (
+                <a key={link.key} href={link.href} rel={link.rel}>{link.label}</a>
+              ))}
+            </nav>
+          </div>
+          <div class='footer-bottom'>
+            <span>{this.footerTagline}</span>
+            <span class='footer-copyright'>(c) 2026 openElement. MIT License.</span>
+          </div>
         </footer>
       </div>
     );

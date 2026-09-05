@@ -60,6 +60,58 @@ const viewports = [
 // translation, so en/zh render distinctly and each locale owns a baseline.
 const sharedLocaleBaselines = new Set<string>([]);
 
+// #1317 closure: the route sweep above screenshots only the initial viewport
+// (fullPage: false keeps the baseline stable across long pages and the
+// cinematic scroll surfaces), which is exactly how the page-bottom footer
+// regression shipped green. Dedicated chrome element snapshots close that
+// gap: the footer (every layout class) and the docs sidebar (desktop reading
+// layouts) own reviewed baselines without taking on fullPage flakiness.
+const chromeRoutes = [
+  { route: '/', sidebar: false },
+  { route: '/guide/getting-started', sidebar: true },
+  { route: '/architecture/dsd', sidebar: true },
+] as const;
+
+for (const locale of ['en', 'zh'] as const) {
+  for (const theme of ['dark', 'light'] as const) {
+    for (const viewport of viewports) {
+      test(`${locale} ${theme} ${viewport.name} site chrome`, async ({ page, browserName }) => {
+        test.skip(browserName !== 'chromium', 'Chromium owns the committed visual baseline.');
+        await page.setViewportSize(viewport);
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.addInitScript((value) => localStorage.setItem('open-theme', value), theme);
+        for (const { route, sidebar } of chromeRoutes) {
+          const localized = locale === 'en'
+            ? route
+            : route === '/'
+            ? `/${locale}/`
+            : `/${locale}${route}`;
+          await page.goto(localized, { waitUntil: 'networkidle' });
+          await expect(page.locator('open-layout')).toBeVisible();
+          const routeName = route === '/' ? 'home' : route.slice(1).replaceAll('/', '-');
+          const chromeKey = `${locale}-${theme}-${viewport.name}-${routeName}`;
+          const footer = page.locator('.app-footer');
+          await footer.scrollIntoViewIfNeeded();
+          await expect(footer).toHaveScreenshot(`${chromeKey}-footer.png`, {
+            animations: 'disabled',
+            caret: 'hide',
+          });
+          // The sidebar is a desktop layout element; mobile collapses it into
+          // the native disclosure covered semantically by site-chrome.spec.ts.
+          if (sidebar && viewport.name === 'desktop') {
+            const sidebarNav = page.locator('.docs-sidebar');
+            await expect(sidebarNav).toBeVisible();
+            await expect(sidebarNav).toHaveScreenshot(`${chromeKey}-sidebar.png`, {
+              animations: 'disabled',
+              caret: 'hide',
+            });
+          }
+        }
+      });
+    }
+  }
+}
+
 for (const locale of ['en', 'zh'] as const) {
   for (const theme of ['dark', 'light'] as const) {
     for (const viewport of viewports) {

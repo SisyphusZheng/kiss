@@ -72,14 +72,25 @@ test.describe('Accessibility', () => {
     expect(summaryRatio).toBeGreaterThanOrEqual(4.5);
   });
 
-  test('layout footer labels do not create skipped heading levels', async ({ page }) => {
+  test('layout footer restores structured chrome without skipped heading levels', async ({ page }) => {
     await page.goto('/');
     // The shell footer is a contentinfo landmark; its links and any stray
     // headings are user-visible semantics, so query by role, not class.
     const footer = page.getByRole('contentinfo');
     await expect(footer).toHaveCount(1);
+    // Column labels are styled spans by design (the pre-#1317 structure): the
+    // footer stays out of the page heading outline, so zero headings remains
+    // the correct invariant — but it must not be the ONLY assertion. The bare
+    // footer strip that shipped with the compiled-shell refactor passed this
+    // exact check; the structural assertions below close that coverage gap.
     await expect(footer.getByRole('heading')).toHaveCount(0);
-    await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+    await expect(footer.getByRole('navigation')).toHaveCount(4);
+    await expect(
+      footer.getByRole('navigation', { name: 'Resources' }).getByRole('link', { name: 'Guide' }),
+    ).toHaveAttribute('href', '/guide/getting-started');
+    await expect(
+      footer.getByRole('navigation', { name: 'Company' }).getByRole('link', { name: 'GitHub' }),
+    ).toHaveAttribute(
       'href',
       'https://github.com/open-element/openelement',
     );
