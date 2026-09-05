@@ -103,13 +103,16 @@ for (const locale of ['en', 'zh'] as const) {
           }
           // The sidebar is a desktop layout element; mobile collapses it into
           // the native disclosure covered semantically by site-chrome.spec.ts.
-          if (sidebar && viewport.name === 'desktop') {
+          // Its labels come from the untranslated generated nav, so the
+          // sidebar pixels are locale-invariant: the baseline is shot on the
+          // en locale only, keyed by theme x viewport x route.
+          if (sidebar && viewport.name === 'desktop' && locale === 'en') {
             const sidebarNav = page.locator('.docs-sidebar');
             await expect(sidebarNav).toBeVisible();
-            await expect(sidebarNav).toHaveScreenshot(`${chromeKey}-sidebar.png`, {
-              animations: 'disabled',
-              caret: 'hide',
-            });
+            await expect(sidebarNav).toHaveScreenshot(
+              `${theme}-${viewport.name}-${routeName}-sidebar.png`,
+              { animations: 'disabled', caret: 'hide' },
+            );
           }
         }
       });
