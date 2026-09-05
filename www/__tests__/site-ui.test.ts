@@ -33,6 +33,10 @@ Deno.test('open-layout is an explicitly hydrated compiled app-shell island', asy
   // Regions: header nav (desktop + mobile panel), sidebar rows (desktop +
   // mobile disclosure panel) and the four footer link columns.
   assertEquals(result.program.regions.length, 8);
+  // Injected shell props plus the derived chrome state as computed signal
+  // properties (the list-Region grammar requires `.map()` over
+  // `this.<property>`, so the derived sidebar rows / footer columns are
+  // compiled computed fields rather than render locals or accessors).
   assertEquals(
     result.program.metadata.properties.map((property) => property.name),
     [

@@ -447,7 +447,12 @@ export default class OpenLayout extends OpenElement {
   @property({ reflect: false })
   currentPath = '';
 
+  // Re-declares the optional base field (OpenElementConfiguration.locale) as a
+  // compiled @property. The `override` modifier that tsc would demand here is
+  // rejected by the compiled-element grammar (OEC9005 — property fields must be
+  // ordinary initialized fields), so the TS diagnostic is expected.
   @property({ reflect: false })
+  // @ts-expect-error compiled @property shadows the optional base field
   locale = 'en';
 
   @property({ reflect: false })
@@ -455,6 +460,15 @@ export default class OpenLayout extends OpenElement {
 
   @property({ reflect: true })
   home = false;
+
+  // ─── Derived chrome state ────────────────────────────────────────────
+  // The list-Region grammar (OEC9013) requires `.map()` to run over a
+  // `this.<property>`, so the derived rows/links live in computed() signal
+  // properties over the plain shell props. The property-contract layer
+  // guarantees attribute promotion happens before claim-time reads and that
+  // generated field initializers (which only restate the compiled default)
+  // never clobber the promoted attribute values — see facade-host.ts
+  // restatesDefault.
 
   @property({ reflect: false, attribute: false })
   headerNavItems = computed(() =>
