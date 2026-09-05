@@ -4,7 +4,7 @@
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.44.0-beta.1",
   "targetVersion": "0.44.0-beta.2",
-  "status": "failed",
+  "status": "running",
   "startedAt": "2026-09-05T11:57:42.602Z",
   "steps": [
     {
@@ -69,10 +69,10 @@
         "--version",
         "0.44.0-beta.2"
       ],
-      "status": "failed",
-      "startedAt": "2026-09-05T11:59:05.425Z",
-      "completedAt": "2026-09-05T11:59:09.892Z",
-      "exitCode": 1
+      "status": "passed",
+      "startedAt": "2026-09-05T13:27:37.065Z",
+      "completedAt": "2026-09-05T13:27:46.774Z",
+      "exitCode": 0
     },
     {
       "name": "post-publish third-party Web Component smoke",
@@ -81,7 +81,10 @@
         "task",
         "third-party-wc:smoke"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-09-05T13:27:46.775Z",
+      "completedAt": "2026-09-05T13:27:51.975Z",
+      "exitCode": 0
     },
     {
       "name": "stage release evidence",
@@ -91,11 +94,17 @@
         "docs/release/autoflow3/v0.44.0-beta.2.json",
         "docs/release/v0.44.0-beta.2.md"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-09-05T13:27:51.976Z",
+      "completedAt": "2026-09-05T13:27:51.982Z",
+      "exitCode": 0
     },
     {
       "name": "commit release evidence",
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-09-05T13:27:51.996Z",
+      "completedAt": "2026-09-05T13:27:52.008Z",
+      "exitCode": 0
     },
     {
       "name": "tag release",
@@ -116,6 +125,5 @@
       "status": "pending"
     }
   ],
-  "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/33963443572",
-  "completedAt": "2026-09-05T11:59:09.893Z"
+  "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/33963443572"
 }
