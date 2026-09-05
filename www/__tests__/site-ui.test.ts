@@ -30,10 +30,40 @@ Deno.test('open-layout is an explicitly hydrated compiled app-shell island', asy
   assertStringIncludes(source, 'export default class OpenLayout extends OpenElement');
   const result = compileElementProgram(source, url.pathname);
   assertEquals(result.program.tag, 'open-layout');
-  assertEquals(result.program.regions.length, 2);
+  // Regions: header nav (desktop + mobile panel), sidebar rows (desktop +
+  // mobile disclosure panel) and the four footer link columns.
+  assertEquals(result.program.regions.length, 8);
+  // Injected shell props plus the derived chrome state as computed signal
+  // properties (the list-Region grammar requires `.map()` over
+  // `this.<property>`, so the derived sidebar rows / footer columns are
+  // compiled computed fields rather than render locals or accessors).
   assertEquals(
     result.program.metadata.properties.map((property) => property.name),
-    ['headerNav', 'footerText', 'siteName', 'homeHref'],
+    [
+      'headerNav',
+      'footerText',
+      'siteName',
+      'homeHref',
+      'navItems',
+      'currentPath',
+      'locale',
+      'locales',
+      'home',
+      'headerNavItems',
+      'sidebarLabel',
+      'sidebarToggle',
+      'sidebarRows',
+      'sidebarHidden',
+      'footerTagline',
+      'footerProductLabel',
+      'footerProductLinks',
+      'footerResourcesLabel',
+      'footerResourcesLinks',
+      'footerCompanyLabel',
+      'footerCompanyLinks',
+      'footerLegalLabel',
+      'footerLegalLinks',
+    ],
   );
   assertEquals(
     result.program.metadata.properties.find((property) => property.name === 'headerNav')?.attribute,

@@ -127,6 +127,22 @@ function ownDataValue(element: object, name: string): { found: boolean; value?: 
 }
 
 /**
+ * Whether an own data property value merely restates the compiled default
+ * (the generated field initializer's contract, see reconcileOwnProperties)
+ * rather than carrying a real pre-upgrade assignment. Arrays/objects compare
+ * structurally because the compiler default for them is typically an inline
+ * literal evaluated per instance.
+ */
+function restatesDefault(record: CompiledPropertyMetadata, value: unknown): boolean {
+  const fallback = record.default;
+  if (value === fallback) return true;
+  if (Array.isArray(fallback) || (typeof fallback === 'object' && fallback !== null)) {
+    return JSON.stringify(value) === JSON.stringify(fallback);
+  }
+  return false;
+}
+
+/**
  * Create the per-instance property state: one signal per compiled property at
  * its compiled default, plus any property values set as own data properties
  * before upgrade (captured and deleted so the prototype accessors take over;
@@ -150,7 +166,19 @@ export function createFacadePropertyState(
     if (property.computed) continue;
     const own = ownDataValue(element, property.name);
     if (own.found) {
-      pending.set(property.name, own.value);
+      // Generated class-field initializers restate the compiled default
+      // (reconcileOwnProperties' own contract). They are NOT pre-upgrade JS
+      // sets: capturing a restated default into pendingOwnValues would let it
+      // clobber the SSR attribute promotion at connect (applyPendingOwnValues
+      // runs after syncAttributesToSignals), so a computed field deriving from
+      // the property would claim against default-value-derived chrome while
+      // the SSR DOM was rendered from the injected props — the
+      // "[compiled-claim] item attribute drift" seen on every non-default
+      // locale page (#1318). Only a value that actually differs from the
+      // compiled default is a real pre-upgrade set.
+      if (!restatesDefault(property, own.value)) {
+        pending.set(property.name, own.value);
+      }
       delete record[property.name];
     }
     signals[property.name] = signal<unknown>(property.default);
@@ -294,6 +322,12 @@ export function applyPendingOwnValues(state: FacadePropertyState): void {
     const record = state.properties.find((candidate) => candidate.name === name);
     if (record?.computed) continue;
     const sig = record ? state.signals[record.name] : undefined;
+    // A pending null/undefined carries no pre-upgrade assignment intent
+    // (coercePropertyValue would map it to the compiled default): letting it
+    // through would clobber the attribute-promoted value at connect and
+    // desync every computed field deriving from that property (#1318 — the
+    // "[compiled-claim] item attribute drift" on non-default locales).
+    if (value === null || value === undefined) continue;
     if (record && sig) sig.value = coercePropertyValue(record, value);
   }
 }

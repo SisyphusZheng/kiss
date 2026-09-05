@@ -60,6 +60,66 @@ const viewports = [
 // translation, so en/zh render distinctly and each locale owns a baseline.
 const sharedLocaleBaselines = new Set<string>([]);
 
+// #1317 closure: the route sweep above screenshots only the initial viewport
+// (fullPage: false keeps the baseline stable across long pages and the
+// cinematic scroll surfaces), which is exactly how the page-bottom footer
+// regression shipped green. Dedicated chrome element snapshots close that
+// gap: the docs sidebar (desktop reading layouts) owns a reviewed baseline
+// per reading route — its section filtering makes each route's chrome
+// distinct. The footer is route-invariant chrome, so it owns ONE baseline
+// per locale x theme x viewport (shot on the home route); per-route footer
+// snapshots are byte-identical and fail the exact-duplicate baseline gate.
+const chromeRoutes = [
+  { route: '/', sidebar: false, footer: true },
+  { route: '/guide/getting-started', sidebar: true, footer: false },
+  { route: '/architecture/dsd', sidebar: true, footer: false },
+] as const;
+
+for (const locale of ['en', 'zh'] as const) {
+  for (const theme of ['dark', 'light'] as const) {
+    for (const viewport of viewports) {
+      test(`${locale} ${theme} ${viewport.name} site chrome`, async ({ page, browserName }) => {
+        test.skip(browserName !== 'chromium', 'Chromium owns the committed visual baseline.');
+        await page.setViewportSize(viewport);
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.addInitScript((value) => localStorage.setItem('open-theme', value), theme);
+        for (const { route, sidebar, footer } of chromeRoutes) {
+          const localized = locale === 'en'
+            ? route
+            : route === '/'
+            ? `/${locale}/`
+            : `/${locale}${route}`;
+          await page.goto(localized, { waitUntil: 'networkidle' });
+          await expect(page.locator('open-layout')).toBeVisible();
+          const routeName = route === '/' ? 'home' : route.slice(1).replaceAll('/', '-');
+          const chromeKey = `${locale}-${theme}-${viewport.name}-${routeName}`;
+          if (footer) {
+            const footerLoc = page.locator('.app-footer');
+            await footerLoc.scrollIntoViewIfNeeded();
+            await expect(footerLoc).toHaveScreenshot(`${chromeKey}-footer.png`, {
+              animations: 'disabled',
+              caret: 'hide',
+            });
+          }
+          // The sidebar is a desktop layout element; mobile collapses it into
+          // the native disclosure covered semantically by site-chrome.spec.ts.
+          // Its labels come from the untranslated generated nav, so the
+          // sidebar pixels are locale-invariant: the baseline is shot on the
+          // en locale only, keyed by theme x viewport x route.
+          if (sidebar && viewport.name === 'desktop' && locale === 'en') {
+            const sidebarNav = page.locator('.docs-sidebar');
+            await expect(sidebarNav).toBeVisible();
+            await expect(sidebarNav).toHaveScreenshot(
+              `${theme}-${viewport.name}-${routeName}-sidebar.png`,
+              { animations: 'disabled', caret: 'hide' },
+            );
+          }
+        }
+      });
+    }
+  }
+}
+
 for (const locale of ['en', 'zh'] as const) {
   for (const theme of ['dark', 'light'] as const) {
     for (const viewport of viewports) {
