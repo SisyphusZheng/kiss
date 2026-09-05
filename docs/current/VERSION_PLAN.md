@@ -5,7 +5,11 @@ OpenElement = Web Components-native fullstack application framework.
 The published stable line remains the 0.43 series on npm `latest`.
 `v0.44.0-beta.2` is the current public v0.44 prerelease (Beta.2 —
 Productization + Governance Offload) under dist-tag `beta`, succeeding the
-published Beta.1. The next stage is Beta.3 (`v0.44.0-beta.3`) per ADR-0151.
+published Beta.1. The Beta.2 stage continues with three patch checkpoints per
+ADR-0151 (as amended 2026-09-05): `v0.44.0-beta.2.1` (Router convergence) ->
+`v0.44.0-beta.2.2` (Document convergence) -> `v0.44.0-beta.2.3` (repository /
+governance closure), before Beta.3 (`v0.44.0-beta.3`, real workload / formal
+benchmark / hardening).
 
 ADR-0147 defines the Alpha workspace train, which is complete through Alpha.9.
 ADR-0151 retopologizes the release train and supersedes the ADR-0149 five-Beta
@@ -143,4 +147,4 @@ RC1 is the immutable frozen candidate. Any code, dependency, lockfile or artifac
 change after candidate freeze creates a new candidate and repeats qualification. RC
 promotion does not rebuild the artifacts and requires explicit human GO.
 
-`internal alpha.1-alpha.9 workspaces (complete) -> internal alpha.10 truth closure (current) -> beta.1 framework qualification + governance freeze -> beta.2 productization + governance offload -> beta.3 final hardening + formal benchmark + real SaaS qualification -> RC1 frozen candidate / soak -> Stable/1.0 decision on Beta.3 evidence`
+`internal alpha.1-alpha.9 workspaces (complete) -> internal alpha.10 truth closure (complete) -> beta.1 framework qualification + governance freeze (published) -> beta.2 productization + governance offload (published) -> beta.2.1 router convergence -> beta.2.2 document convergence -> beta.2.3 repository/governance closure (cumulative Beta.2 verifier) -> beta.3 final hardening + formal benchmark + real SaaS qualification -> RC1 frozen candidate / soak -> Stable/1.0 decision on Beta.3 evidence`

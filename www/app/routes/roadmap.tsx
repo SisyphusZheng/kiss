@@ -43,6 +43,15 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       status: 'prerelease',
     },
     {
+      version: 'v0.44.0-beta.2.1 → 2.3',
+      theme: 'Beta.2 patch checkpoints',
+      copy:
+        'Patch releases inside the Beta.2 stage: Router convergence (upstream URLPatternList + one RouteResolution), Document convergence (one resolved page meaning, post-build SEO rewriting removed) and repository/governance closure. Beta.3 keeps its real-workload and formal-benchmark theme.',
+      state: 'next',
+      stamp: 'NEXT',
+      status: 'patch train',
+    },
+    {
       version: 'v0.44 alpha',
       theme: 'compiled OpenElement foundations',
       copy:
@@ -93,6 +102,15 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       state: 'next',
       stamp: 'CURRENT',
       status: '预发布',
+    },
+    {
+      version: 'v0.44.0-beta.2.1 → 2.3',
+      theme: 'Beta.2 补丁检查点',
+      copy:
+        'Beta.2 阶段内的补丁发布：Router 收敛（上游 URLPatternList + 单一 RouteResolution）、Document 收敛（单一页面语义，移除构建后 SEO 改写）与仓库/治理关闭。Beta.3 保持真实负载与正式基准主题。',
+      state: 'next',
+      stamp: 'NEXT',
+      status: '补丁序列',
     },
     {
       version: 'v0.44 alpha',
