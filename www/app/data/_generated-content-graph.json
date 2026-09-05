@@ -2934,15 +2934,15 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "106b5f3b46968db360501d47b2e95d25ee501bdac4719fbc5d98959e82712d64",
+      "fingerprint": "d04fd9c640690c1850f753c68c41591b2a3ee20be4158dbab6e69f53bdaeda30",
       "data": {
         "activeTarget": "v0.44.0-beta.2",
-        "latestLandedTrain": "v0.44.0-beta.1",
+        "latestLandedTrain": "v0.44.0-beta.2",
         "maturity": "beta",
         "nextPlannedTrain": "v0.44.0-beta.3",
-        "publishedVersion": "0.44.0-beta.1",
+        "publishedVersion": "0.44.0-beta.2",
         "schemaVersion": 1,
-        "sourceVersion": "0.44.0-beta.1"
+        "sourceVersion": "0.44.0-beta.2"
       }
     },
     {
@@ -4304,6 +4304,20 @@
       }
     },
     {
+      "id": "release:v0.44.0-beta.2",
+      "kind": "release",
+      "locale": "en",
+      "source": {
+        "path": "docs/release/v0.44.0-beta.2.md"
+      },
+      "alternates": [],
+      "references": [],
+      "fingerprint": "f7fc852f757500a45533200ab49cead269b44a98c64bb3a1855cbcae7bf2b436",
+      "data": {
+        "title": "v0.44.0-beta.2"
+      }
+    },
+    {
       "id": "roadmap:en:0",
       "kind": "roadmap-entry",
       "locale": "en",
@@ -4343,14 +4357,14 @@
         }
       ],
       "references": [],
-      "fingerprint": "72655ea8c619853b8799ebe6b0d40cb7de8b057ae165047961b3e7ca6460fcd5",
+      "fingerprint": "ca9405d28097662e697184d5faec58608c0c3149375ef12031be57bca520a261",
       "data": {
-        "copy": "Architecture constitution, governance offload, unified Content Graph and a production-shaped TSX-to-Part Program compiler spike.",
+        "copy": "Patch releases inside the Beta.2 stage: Router convergence (upstream URLPatternList + one RouteResolution), Document convergence (one resolved page meaning, post-build SEO rewriting removed) and repository/governance closure. Beta.3 keeps its real-workload and formal-benchmark theme.",
         "stamp": "NEXT",
         "state": "next",
-        "status": "active",
-        "theme": "compiled OpenElement foundations",
-        "version": "v0.44 alpha"
+        "status": "patch train",
+        "theme": "Beta.2 patch checkpoints",
+        "version": "v0.44.0-beta.2.1 → 2.3"
       }
     },
     {
@@ -4368,13 +4382,14 @@
         }
       ],
       "references": [],
-      "fingerprint": "5f573614956d968e8ba2cf3b7071eb896821452a7e879b5c07f44ca0e6d44056",
+      "fingerprint": "9b1d07676bf9fb9cafa81b3f4e1d2e0a7d9055cb69ecfa5b309907d1826be497",
       "data": {
-        "copy": "Standard decorators, the OpenElement kernel, replaceable Signals, fixed Parts, dynamic Regions, DSD serialization and existing-DOM claim converge on one program.",
-        "state": "planned",
-        "status": "planned sequence",
-        "theme": "Element, Parts and claim",
-        "version": "compiler → claim"
+        "copy": "Architecture constitution, governance offload, unified Content Graph and a production-shaped TSX-to-Part Program compiler spike.",
+        "stamp": "NEXT",
+        "state": "next",
+        "status": "active",
+        "theme": "compiled OpenElement foundations",
+        "version": "v0.44 alpha"
       }
     },
     {
@@ -4382,7 +4397,7 @@
       "kind": "roadmap-entry",
       "locale": "en",
       "source": {
-        "line": 62,
+        "line": 63,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4392,13 +4407,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "6ed1955a2945eacc303be891b8ce8ff4a4d8d68da0c1ca9eecd2bce85b749838",
+      "fingerprint": "d26f37d0e76f1b093074a91aba42291b9de31ed8a0ae1892301ed409090a68d1",
       "data": {
-        "copy": "Zero-runtime static output, generated Island delivery, App/build convergence, old-path removal, ecosystem interop and real-application qualification.",
+        "copy": "Standard decorators, the OpenElement kernel, replaceable Signals, fixed Parts, dynamic Regions, DSD serialization and existing-DOM claim converge on one program.",
         "state": "planned",
         "status": "planned sequence",
-        "theme": "delivery, migration and qualification",
-        "version": "delivery → qualification"
+        "theme": "Element, Parts and claim",
+        "version": "compiler → claim"
       }
     },
     {
@@ -4406,7 +4421,7 @@
       "kind": "roadmap-entry",
       "locale": "en",
       "source": {
-        "line": 70,
+        "line": 71,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4416,13 +4431,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "f6b8f558d78419249f4db0959afacaea7444d1adc25f83642b8414e29498f7a6",
+      "fingerprint": "d6d51cc6809ab9c65d4d6b643b0fa9d955bdd5db63c91fad0ec219b495a13f90",
       "data": {
-        "copy": "Entered only after the complete architecture, correctness, delivery, portability, documentation, governance and real-application gate passes. Any public or architecture change returns to alpha.",
+        "copy": "Zero-runtime static output, generated Island delivery, App/build convergence, old-path removal, ecosystem interop and real-application qualification.",
         "state": "planned",
-        "status": "gated",
-        "theme": "frozen candidate",
-        "version": "v0.44 release candidate"
+        "status": "planned sequence",
+        "theme": "delivery, migration and qualification",
+        "version": "delivery → qualification"
       }
     },
     {
@@ -4430,7 +4445,7 @@
       "kind": "roadmap-entry",
       "locale": "en",
       "source": {
-        "line": 78,
+        "line": 79,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4440,7 +4455,31 @@
         }
       ],
       "references": [],
-      "fingerprint": "78c65dda44467efa3f2921a4c7f9f0f8667b16820ac59d3cb413fbcca40f1d3d",
+      "fingerprint": "d4023cd855697b3ddd2354aec48bf8e76aab5029e3856890b30ff0f3c26189ef",
+      "data": {
+        "copy": "Entered only after the complete architecture, correctness, delivery, portability, documentation, governance and real-application gate passes. Any public or architecture change returns to alpha.",
+        "state": "planned",
+        "status": "gated",
+        "theme": "frozen candidate",
+        "version": "v0.44 release candidate"
+      }
+    },
+    {
+      "id": "roadmap:en:6",
+      "kind": "roadmap-entry",
+      "locale": "en",
+      "source": {
+        "line": 87,
+        "path": "www/app/routes/roadmap.tsx"
+      },
+      "alternates": [
+        {
+          "locale": "zh",
+          "id": "roadmap:zh:6"
+        }
+      ],
+      "references": [],
+      "fingerprint": "7249f7f4096c341bfc9184945e5a44e880c1fb4172c93003bfe892ca6ade35df",
       "data": {
         "copy": "Release only after external production users prove that the Element, App and Build interfaces need no further architecture change.",
         "state": "planned",
@@ -4454,7 +4493,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 88,
+        "line": 97,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4464,7 +4503,7 @@
         }
       ],
       "references": [],
-      "fingerprint": "419a38f9e9d289a7b466492d5ad8597b6a5f7e2145a2e2aad456f11e5a4c160c",
+      "fingerprint": "4aa0d1aadfad3c3c1f6877f7adf042da8d392a508d93e3e2a869953466c7a045",
       "data": {
         "copy": "编译型线路的第二个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它验证外部用户能否真正使用并维护该框架——打包消费者资格验证、派生真相发布门禁，以及向三角色发布循环的治理减负（ADR-0151）。",
         "stamp": "CURRENT",
@@ -4479,7 +4518,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 97,
+        "line": 106,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4489,7 +4528,32 @@
         }
       ],
       "references": [],
-      "fingerprint": "fee34e082165548f0dc795378f7ec431214f168bf04ce3ac949d6cc2c85982b9",
+      "fingerprint": "79cd3ebd2337dbffccbc02b47e6dc3e42c757063d5ff5aafc59da3402f4f5a48",
+      "data": {
+        "copy": "Beta.2 阶段内的补丁发布：Router 收敛（上游 URLPatternList + 单一 RouteResolution）、Document 收敛（单一页面语义，移除构建后 SEO 改写）与仓库/治理关闭。Beta.3 保持真实负载与正式基准主题。",
+        "stamp": "NEXT",
+        "state": "next",
+        "status": "补丁序列",
+        "theme": "Beta.2 补丁检查点",
+        "version": "v0.44.0-beta.2.1 → 2.3"
+      }
+    },
+    {
+      "id": "roadmap:zh:2",
+      "kind": "roadmap-entry",
+      "locale": "zh",
+      "source": {
+        "line": 115,
+        "path": "www/app/routes/roadmap.tsx"
+      },
+      "alternates": [
+        {
+          "locale": "en",
+          "id": "roadmap:en:2"
+        }
+      ],
+      "references": [],
+      "fingerprint": "6b209d333175fa8eb3b81ebca281dd9640e1e746b497b35e96d4cf8c18a37068",
       "data": {
         "copy": "冻结架构宪法、治理减负、统一 Content Graph，并完成具备生产形态的 TSX 到 Part Program 编译器纵切。",
         "stamp": "NEXT",
@@ -4500,35 +4564,11 @@
       }
     },
     {
-      "id": "roadmap:zh:2",
-      "kind": "roadmap-entry",
-      "locale": "zh",
-      "source": {
-        "line": 106,
-        "path": "www/app/routes/roadmap.tsx"
-      },
-      "alternates": [
-        {
-          "locale": "en",
-          "id": "roadmap:en:2"
-        }
-      ],
-      "references": [],
-      "fingerprint": "a4d34f526d154fed27a81f337256d0d1548dc11dc02123a417f52b1b7940f16b",
-      "data": {
-        "copy": "标准装饰器、OpenElement 内核、可替换 Signal、固定 Part、动态 Region、DSD 序列化与已有 DOM claim 收束到同一程序。",
-        "state": "planned",
-        "status": "规划序列",
-        "theme": "Element、Parts 与 claim",
-        "version": "编译器 → claim"
-      }
-    },
-    {
       "id": "roadmap:zh:3",
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 114,
+        "line": 124,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4538,13 +4578,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "dc24d443366e4fdd5540e7bd05d0143ee0117642865a08b08fd1f1681c173d26",
+      "fingerprint": "7b452d7e4d878d2fb42eedfce88cf51a4b9f424fc3490c36301b135be0dab123",
       "data": {
-        "copy": "零运行时静态输出、生成式 Island 交付、App/构建收束、旧路径删除、生态互操作与真实应用验证。",
+        "copy": "标准装饰器、OpenElement 内核、可替换 Signal、固定 Part、动态 Region、DSD 序列化与已有 DOM claim 收束到同一程序。",
         "state": "planned",
         "status": "规划序列",
-        "theme": "交付、迁移与验证",
-        "version": "交付 → 资格验证"
+        "theme": "Element、Parts 与 claim",
+        "version": "编译器 → claim"
       }
     },
     {
@@ -4552,7 +4592,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 122,
+        "line": 132,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4562,13 +4602,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "e1b7063ac189356f52c4ca8e43879afad762a12b84acacb6a1d67dd0229c5ddd",
+      "fingerprint": "54d1120a71366c6538573e99dcf1ac1aa8528a060b71d01dd09c86378e1848ce",
       "data": {
-        "copy": "只有架构、正确性、交付、可移植性、文档、治理与真实应用门禁全部通过才可进入；任何公开面或架构变化都会退回 alpha。",
+        "copy": "零运行时静态输出、生成式 Island 交付、App/构建收束、旧路径删除、生态互操作与真实应用验证。",
         "state": "planned",
-        "status": "受门禁约束",
-        "theme": "冻结候选",
-        "version": "v0.44 发布候选"
+        "status": "规划序列",
+        "theme": "交付、迁移与验证",
+        "version": "交付 → 资格验证"
       }
     },
     {
@@ -4576,7 +4616,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 130,
+        "line": 140,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4586,7 +4626,31 @@
         }
       ],
       "references": [],
-      "fingerprint": "e7932dadfc583068de482691f5534651977d17eca0984e367a1459d6a2ae889a",
+      "fingerprint": "bfefe74aa5516a701b1a4a37f7db5bfdb3f380d67a1c426caadb0b917090805f",
+      "data": {
+        "copy": "只有架构、正确性、交付、可移植性、文档、治理与真实应用门禁全部通过才可进入；任何公开面或架构变化都会退回 alpha。",
+        "state": "planned",
+        "status": "受门禁约束",
+        "theme": "冻结候选",
+        "version": "v0.44 发布候选"
+      }
+    },
+    {
+      "id": "roadmap:zh:6",
+      "kind": "roadmap-entry",
+      "locale": "zh",
+      "source": {
+        "line": 148,
+        "path": "www/app/routes/roadmap.tsx"
+      },
+      "alternates": [
+        {
+          "locale": "en",
+          "id": "roadmap:en:6"
+        }
+      ],
+      "references": [],
+      "fingerprint": "bb0baf487e2421d8e541a0beb9d99bdb4e28a49692a432982f41d66229d673f3",
       "data": {
         "copy": "只有当外部生产用户证明 Element、App 与 Build 接口不再需要架构变更时，才发布。",
         "state": "planned",
