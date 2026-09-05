@@ -187,3 +187,28 @@ Deno.test('B2.12 (#1187): publication authenticates with npm Trusted Publishing/
   // npmjs registry configuration (registry config, not auth).
   assertStringIncludes(source, "registry-url: 'https://registry.npmjs.org'");
 });
+
+Deno.test(
+  'release-lane: REQUIRED_PR_CI_JOBS stays in lockstep with the pr-full-ci-evidence needs list',
+  async () => {
+    // The Beta.2 dry-run (2026-09-05) failed closed because bun-serve-smoke
+    // joined the workflow `needs` (B2.5) without joining the evidence
+    // validator's required set: the independently resolved run then carried a
+    // job "outside the required set". This guard makes the desync a test
+    // failure at development time, not a failed publish attempt.
+    const { REQUIRED_PR_CI_JOBS } = await import('../loop-evidence.ts');
+    const source = await Deno.readTextFile(CI_WORKFLOW_PATH);
+    const doc = parse(source);
+    const job = jobsOf(doc)['pr-full-ci-evidence'];
+    assert(job, 'autoflow-ci.yml lacks the pr-full-ci-evidence aggregation job');
+    const needs = job.needs ?? [];
+    const needsSet = [...needs].sort();
+    const requiredSet = [...REQUIRED_PR_CI_JOBS].sort();
+    assertEquals(
+      needsSet,
+      requiredSet,
+      'the pr-full-ci-evidence needs list and REQUIRED_PR_CI_JOBS must be identical sets: ' +
+        'update loop-evidence.ts (and this test) together with autoflow-ci.yml',
+    );
+  },
+);
