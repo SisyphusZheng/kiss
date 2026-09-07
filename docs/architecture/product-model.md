@@ -1,13 +1,14 @@
 # Product model
 
-OpenElement has three products: **Element**, **UI** and **Router**. This is the
+OpenElement has two core products: **Element** and **Router**. UI is dogfood
+and a reference implementation, not a third core product. This is the
 accepted target under [ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md);
 Beta.2.x issues track implementation. It does not claim all target APIs already ship.
 
 | Product                | Responsibility                                                                                                        | Dependency boundary                                             |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | Element                | Compiled Web Components, reactivity, lifecycle, server serialization, fresh DOM and existing-DOM claim/update, styles | Independent component execution foundation                      |
-| UI                     | Selected reusable components, interaction, accessibility, themes and composition                                      | Element; Router optional                                        |
+| UI (reference)         | Dogfood components demonstrating interaction, accessibility, themes and composition                                   | Element; Router optional                                        |
 | Router: Route Mode     | Explicit records, matching/resolution, HTTP and browser integration entry points                                      | Matching core independent of Element, Hono, Vite and filesystem |
 | Router: Framework Mode | File routing by default, page data/forms/errors, layouts, Document, SSR/SSG, navigation and Vite integration          | Same Router core plus Element; UI optional                      |
 
@@ -28,6 +29,26 @@ not extra product lines. Current packages remain `element`, `app`, `adapter-vite
 Product count is not npm package count.
 
 The initial application target is HTML-first content and dynamic business pages,
-forms and local interactive components. UI stays selected; a full design system,
+forms and local interactive components. UI stays a selected dogfood/reference surface; a full design system,
 generic RPC/ORM/cache/queue framework and comprehensive offline application data
 layer are outside this convergence sprint.
+
+## Standalone delivery and reference applications
+
+Element must be independently authored, built, packed and consumed from plain HTML
+without Router or private workspace dependencies. Its compiler remains private,
+with a versioned artifact contract; build integration delivers the compiler through
+an explicit tooling entry. Runtime/browser/type entry graphs must exclude Vite,
+TypeScript compiler and Node-only implementation. Framework tooling reuses the same
+Element compilation path; it does not own Element language semantics.
+
+UI supplies selected dogfood components. The website and a representative consumer
+supply reference application evidence. Their defects can reveal core blockers, but
+component count, UI redesign, replacement with Web Awesome, and reference-site
+expansion are not independent Beta.2.x release objectives. The existing ui package
+may remain published; product demotion is not a package removal or migration claim.
+
+Foreign Custom Elements are opaque browser-standard boundaries. OE binds host
+properties/attributes/events/slots without compiling their internals. Foreign SSR
+and hydration require an explicit supported integration; DSD alone is not a shared
+hydration protocol. No mandatory Web Awesome dependency or wrapper library.

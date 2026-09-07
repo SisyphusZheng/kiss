@@ -1,4 +1,4 @@
-# ADR-0152: Three products, owned routing core and public 1.0 Alpha
+# ADR-0152: Element / Router cores, reference UI and public 1.0 Alpha
 
 - Status: ACCEPTED (2026-09-07, explicit maintainer direction)
 - Supersedes: ADR-0151's future release topology; upstream-only URLPatternList
@@ -20,9 +20,10 @@ This is a timebox target, not proof that implementation or publication is comple
 
 ### Products and dependencies
 
-The products are Element, UI and Router. Element owns compiled Web Components
-execution, serialization and DOM claim/update. UI is a selected component library
-built on Element, independent of Router. Router has two modes:
+The core products are Element and Router. UI is dogfood and a reference implementation. Element owns compiled Web Components
+execution, serialization and DOM claim/update. UI is a selected component reference
+built on Element, independent of Router. It validates authoring, interoperability
+and real application use; it does not promise a comprehensive design system. Router has two modes:
 
 - Route Mode consumes explicit records; its matching core is independent of
   Element, Hono, Vite and filesystem access.
@@ -40,6 +41,29 @@ stay separate. Public browser projections exclude server handlers and host bindi
 Products are not package counts. Existing `app`, `adapter-vite` and `create` remain
 implementation/distribution/tooling surfaces until a justified migration changes
 exports. No mandatory package renaming or new broad UI design system is implied.
+
+### Maintainer refinement: two core products and independent Element delivery
+
+The 2026-09-07 follow-up refines the earlier three-product wording: Element and
+Router are the core products; Framework Mode belongs to Router. UI is dogfood and
+reference implementation, alongside the website/representative consumer application.
+Its current package may remain available without an independent design-system
+roadmap. Do not force two physical npm packages or replace all UI in this sprint.
+
+The private compiler has an explicit distribution path through Element tooling;
+published artifacts cannot depend on unpublished workspaces. Compiler and runtime
+meet at versioned generated artifacts. Router tooling reuses Element's build path,
+never defines component semantics or ships a duplicate compiler. Separate build,
+browser, server and declaration entry graphs; preserve source maps and compiler
+source diagnostics. Public tooling subpaths are permitted without publishing a
+stable compiler API or hiding Vite behind a second configuration system.
+
+Standalone qualification means author -> compile -> pack -> ordinary HTML consumer,
+without Router or a workspace alias. A lightweight Element runtime dependency is
+allowed; compiler/Node/Vite code must not leak into browser output or browser types.
+Foreign CE property/attribute/event/upgrade boundaries need real browser evidence.
+Internal foreign SSR/hydration remains component-specific, not a universal DSD
+promise. Broader React/Vue/etc. integration matrices are Alpha follow-up work.
 
 ### URLPatternList is an owned core asset
 

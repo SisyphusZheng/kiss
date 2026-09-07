@@ -20,7 +20,7 @@ Current execution direction is owned by
 convergence -> public 1.0 Alpha -> evidence-gated RC/Stable. Actual version and
 publication facts remain in `docs/release/release-state.json`.
 
-The products are Element, UI and Router. Supporting packages are not additional
+The core products are Element and Router. UI is dogfood and a reference implementation. Supporting packages are not additional
 product lines. Cleanup is part of every replacement, beginning in Beta.2.1.
 Historic v0.44 Alpha workspace instructions do not govern public 1.0 Alpha.
 

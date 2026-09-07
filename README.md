@@ -22,8 +22,9 @@ current proven scope = static-first applications with fullstack output paths
 Source package line: `0.44.0-beta.2` (`v0.44.0-beta.2`).
 npm registry line: `v0.44.0-beta.2` (prerelease, dist-tag `beta`); npm `latest` remains the stable `0.43.3` line.
 
-The accepted product direction is **Element / UI / Router**, with Route Mode
-and Framework Mode sharing one core. [Product boundaries](docs/architecture/product-model.md)
+The accepted core products are **Element / Router**, with Route Mode
+and Framework Mode sharing one Router core. UI is dogfood and a reference
+implementation, not a third core product. [Product boundaries](docs/architecture/product-model.md)
 and [the active plan](docs/current/VERSION_PLAN.md) distinguish planned convergence
 from the currently shipped package surface.
 

@@ -12,7 +12,7 @@ Stable `1.0.0` remains unscheduled.
 
 Execution follows [PROJECT_WORKFLOW.md](../governance/PROJECT_WORKFLOW.md).
 
-OpenElement's products are **Element / UI / Router**. See the
+OpenElement's core products are **Element / Router**; UI is dogfood and a reference implementation. See the
 [product model](../architecture/product-model.md) and accepted
 [ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md).
 
@@ -20,9 +20,11 @@ OpenElement's products are **Element / UI / Router**. See the
 
 The published Beta.2 baseline is followed by three convergence checkpoints:
 
-1. **Beta.2.1:** general Router core, self-maintained URLPatternList, explicit and
+1. **Beta.2.1:** core product boundaries and standalone Element delivery contract,
+   general Router core, self-maintained URLPatternList, explicit and
    file-generated records, shared resolution and immediate cleanup.
-2. **Beta.2.2:** Framework Mode page/form/navigation lifecycle, Document, Element
+2. **Beta.2.2:** standalone Element packed-consumer proof, Framework Mode
+   page/form/navigation lifecycle, Document, Element
    and Vite integration, with replacement-time cleanup.
 3. **Beta.2.3:** remaining repository/governance reduction and real-application
    admission evidence.

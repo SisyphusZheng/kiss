@@ -23,7 +23,7 @@ and immutable release records; this plan describes intended work, not release pr
 
 ## Objective and scope
 
-Converge Element / selected UI / Router, with Route Mode explicit records and
+Converge Element and Router, with UI as dogfood/reference, with Route Mode explicit records and
 Framework Mode file-generated records sharing one routing core. Own URLPatternList
 as a strategic asset; reuse existing Element/app/Vite implementation. Continuously
 remove displaced semantic owners and operational machinery. Enter real application
@@ -34,11 +34,11 @@ work through an evidence-gated public `1.0.0-alpha.1`.
 Three working days from implementation start, not three elapsed days from this
 planning PR. An elapsed deadline does not complete an issue or authorize release.
 
-| Checkpoint       | Target                          | Work and evidence                                                                                                                 |
-| ---------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Beta.2.1 / Day 1 | Router/core + cleanup           | #1320: records/products #1338, owned fork #1324, resolution #1325, release semantics #1323; early Cloudflare/Vite page/form spike |
-| Beta.2.2 / Day 2 | Framework/Document + cleanup    | #1321: real flow #1339, resolved Document #1326, public metadata projections #1327                                                |
-| Beta.2.3 / Day 3 | Remaining cleanup and admission | #1322: #1328-#1334, #1156, #1188/#1189 residual scope; Alpha admission #1340                                                      |
+| Checkpoint       | Target                          | Work and evidence                                                                                                                                                |
+| ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beta.2.1 / Day 1 | Router/core + cleanup           | #1320: core products/records/Element delivery contract #1338, owned fork #1324, resolution #1325, release semantics #1323; early Cloudflare/Vite page/form spike |
+| Beta.2.2 / Day 2 | Framework/Document + cleanup    | #1321: standalone Element + reference application flow #1339, resolved Document #1326, public metadata projections #1327                                         |
+| Beta.2.3 / Day 3 | Remaining cleanup and admission | #1322: #1328-#1334, #1156, #1188/#1189 residual scope; Alpha admission #1340                                                                                     |
 
 Every replacement removes its obsolete path and dependent wrappers/checkers/docs
 with regression evidence. Day 3 does not postpone cleanup from earlier changes.
@@ -47,13 +47,22 @@ Examples remain frozen in this sprint; #1311 is carried to public Alpha.
 
 ## Non-goals
 
-UI expansion, a complete design system, full URLPattern reimplementation,
+UI expansion or wholesale replacement, a complete design system, public compiler API,
+mandatory two-package consolidation, full URLPattern reimplementation,
 speculative matcher acceleration, native/WASM ports, complex incremental table
 mutation, generic bundler/platform expansion, RPC/ORM/queue/cache frameworks,
 comprehensive offline data handling, arbitrary directory/filename refactoring.
 
 ## Acceptance
 
+- Element independently compiles/packs and runs in a plain HTML consumer without
+  Router or private workspace imports. The private compiler is delivered through
+  tooling; its versioned artifacts work with the admitted runtime. Browser JS and
+  type graphs exclude compiler/Vite/Node-only dependencies.
+- UI and the representative application provide dogfood/reference evidence, not a
+  third product-release checklist. Existing UI remains usable; no forced replacement.
+- Foreign CE host binding/upgrade behavior is tested; internal foreign SSR/hydration
+  is supported only through an explicit integration, not inferred from DSD.
 - Both route sources use one table; deterministic composition and conflict rules.
 - URLPatternList agrees with the ordered reference oracle; safe conservative
   matching is allowed, silent false negatives are not.
