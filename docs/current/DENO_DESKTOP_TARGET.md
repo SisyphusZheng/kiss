@@ -67,7 +67,7 @@ plain modules is mechanical, but the `render()` bodies then fail OEC9007
 re-authoring of nine large renders against the compiled grammar with no
 browser E2E safety net — not a bounded fix. The ruling: the desktop examples
 are **excluded from qualifying consumer evidence** and the re-authoring is
-carried to Beta.3 (B3.8).
+carried to public 1.0 Alpha (#1311); examples remain frozen during Beta.2.x.
 
 `deno task check` and `deno task smoke` stay green and CI-gated
 (`examples:check`), so the examples still qualify the SPA runtime, loaders,

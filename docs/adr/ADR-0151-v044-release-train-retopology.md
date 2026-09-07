@@ -1,5 +1,7 @@
 # ADR-0151: v0.44 release train retopology
 
+> Future release scheduling is superseded by [ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md). Historical execution and release evidence below are retained; they do not schedule public 1.0 Alpha.
+
 - Status: ACCEPTED (2026-09-02, maintainer directive)
 - Date: 2026-09-02
 - Supersedes: the Beta-topology portion of ADR-0149 — the five-Beta mapping is

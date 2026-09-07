@@ -3,7 +3,7 @@
 > Status: Mandatory POLICY for the v0.44 train, binding from Beta.1 (Framework
 > Qualification + Governance Freeze) onward. Adopted under ADR-0151 as the
 > Beta.1 release-contract instrument. Part of #1187 (Beta.1 slice per the
-> thinker's 2026-09-03 scope rulings; the Beta.3 hardening remainder stays
+> thinker's 2026-09-03 scope rulings; the 1.0 Alpha hardening remainder stays
 > open). Refs stage #1150, umbrella #1155.
 
 This contract specifies the release-binding rules that
@@ -103,8 +103,8 @@ floor. Flaky or unavailable infrastructure is BLOCKED, never PASS.
 enforced procedurally through the closure report on the stage issue: the
 thinker verifies the three GOs and the §3.2 fields against durable records
 before preparing closure. The machine-readable closure-evidence gate (the
-PR #1191 lineage) is explicitly Beta.3 scope: PR #1191 stays unmerged and is
-carried to Beta.3 unchanged per its own deferral condition and the thinker's
+PR #1191 lineage) is explicitly 1.0 Alpha scope: PR #1191 stays unmerged and is
+carried to 1.0 Alpha unchanged per its own deferral condition and the thinker's
 2026-09-03 amendment ruling on #1187. Nothing in this contract merges,
 rebases or modifies that tooling.
 
@@ -112,8 +112,8 @@ rebases or modifies that tooling.
 
 §5.1. `v0.44.0-beta.1` publishes under a prerelease dist-tag (for example
 `beta`), never under `latest`. The `latest` dist-tag stays on the stable
-0.43.x line until a Stable/1.0 decision is earned on Beta.3 evidence
-(ADR-0151 §5).
+0.43.x line until a Stable/1.0 decision is earned on 1.0 Alpha evidence
+(ADR-0152).
 
 §5.2. The git tag and the GitHub Release notes for every v0.44 prerelease
 must state that the release is a prerelease published under a prerelease

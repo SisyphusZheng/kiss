@@ -1,45 +1,26 @@
 # OpenElement status
 
-Updated: 2026-09-02
+Repository package line: `v0.44.0-beta.2`
+npm registry line: `v0.44.0-beta.2` (prerelease, dist-tag `beta`)
+Active release target: `v0.44.0-beta.2.1`
+Latest landed train: `v0.44.0-beta.2`
+Next planned train: `v0.44.0-beta.2.1`
+The npm `latest` dist-tag stays stable at `0.43.3`; Stable `1.0.0` is unscheduled.
 
-- Repository package line: `v0.44.0-beta.2`
-- npm registry line: `v0.44.0-beta.2` (prerelease, dist-tag `beta`)
-- Latest landed train: `v0.44.0-beta.2`
-- Active release target: `v0.44.0-beta.2`
-- Next planned train: `v0.44.0-beta.3`
-- Next public prerelease: `v0.44.0-beta.3`
-- Published stable package line: `v0.43.3` on npm `latest`
-- Current development mode: public Beta train — Beta.1 published as a
-  prerelease under dist-tag `beta`; Beta.2 in flight, next stage Beta.3
-  (ADR-0151)
-- Minimum branch rules: active on `dev` and `main` through ruleset `21775463`
-- Deferred hardening: #1192 Beta.3 with #1156 #1187 #1188 #1189
-- Long-term `1.0.0` target: unscheduled
+Execution follows [PROJECT_WORKFLOW.md](../governance/PROJECT_WORKFLOW.md).
 
-Contributor execution follows
-[PROJECT_WORKFLOW.md](../governance/PROJECT_WORKFLOW.md). The authoritative active
-contract is [VERSION_PLAN.md](../current/VERSION_PLAN.md).
+Current version and publication facts are owned by
+[release-state.json](../release/release-state.json) and the corresponding immutable
+release records. Package manifests own source package versions.
 
-## Current position
+The accepted development direction is Beta.2.1 Router/core, Beta.2.2
+Framework/Document and Beta.2.3 cleanup closure, followed by public 1.0 Alpha.
+See [VERSION_PLAN.md](../current/VERSION_PLAN.md),
+[ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md) and
+[Project 3](https://github.com/orgs/open-element/projects/3) for scope and live work.
+This planning update is not an implementation-completion or publication claim.
 
-PR #1194 landed the earlier acceleration baseline at exact SHA
-`e3e7b8ae5ddc7faddb8267c36494be73f18701e8` with 9/9 PR checks green. ADR-0147
-supersedes that baseline's Alpha execution topology with the workspace train.
-
-PR #1195 landed the corrected workspace train at exact SHA
-`cdfcb5433e58f9fde68377afc12643b045bfd385`. The exact #1193 closure SHA freezes the
-collaboration contract and executable ownership map and is the alpha.1-alpha.7 common
-base.
-
-Alpha.1 through Alpha.10 are complete: the parallel workspaces, the Alpha.8
-integration, the ADR-0150 Alpha.9 semantic convergence and the Alpha.10 Truth
-Closure checkpoint (umbrella issue #1155, issue tree #1209 through #1220,
-verifier PASS at #1150) all closed with their recorded evidence. Alpha
-checkpoints were internal-only: no tag, npm publication, GitHub Release,
-dist-tag change, `main` promotion or external release claim.
-
-Beta.1 (`v0.44.0-beta.1`) is published as the first public v0.44 prerelease
-under dist-tag `beta` — the first phase of the
-thinker/implementer/fresh-verifier release loop. The npm `latest`
-dist-tag stays stable at
-`0.43.3` until an explicitly approved 0.44 Stable release.
+Historical v0.44 internal Alpha workspaces are complete; their evidence stays in
+issues and release history. Upcoming public 1.0 Alpha is a separate release phase.
+Existing exact-SHA CI, provenance, protected promotion and release GO requirements
+continue under [RELEASE_POLICY.md](../governance/RELEASE_POLICY.md).

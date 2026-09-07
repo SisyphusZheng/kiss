@@ -13,7 +13,7 @@ product code; where it and an accepted ADR disagree, the ADR wins until amended.
 Authority chain, highest first:
 
 1. accepted current ADRs (ADR-0146 three-role control plane, ADR-0148 compiler
-   boundary, ADR-0151 release-train topology, and their predecessors);
+   boundary, ADR-0152 release-train topology, and their predecessors);
 2. this constitution;
 3. `docs/current/VERSION_PLAN.md` and the governance SOPs
    (`PROJECT_WORKFLOW.md`, `RELEASE_POLICY.md`, `V044_ISSUE_SOP.md`,
@@ -22,12 +22,10 @@ Authority chain, highest first:
 
 ## §1 Purpose and scope
 
-The v0.44 train exists to prove one question per phase (ADR-0151): Beta.1 asks
-whether the framework itself is trustworthy. Trust requires that every semantic
-surface has exactly one owner, that every duplicate-looking implementation can
-defend itself, and that every contribution carries evidence a fresh reviewer
-can rerun. This constitution freezes those rules at Beta.1 so that the Beta.1
-hostile audit (#1222) and every later phase audit against a stable text.
+The active train is governed by ADR-0152: Beta.2.1 converges Router/core,
+Beta.2.2 converges Framework/Document, and Beta.2.3 closes remaining cleanup and
+Alpha admission. Cleanup starts with each replacement. Public 1.0 Alpha owns
+extended real-application qualification; RC/Stable remain evidence-gated.
 
 This document governs process and semantics. It authorizes no tag, release,
 package publication, dist-tag change or `main` promotion; release authority
@@ -196,7 +194,7 @@ the primary enforcers, and audit issues such as #1222 apply this text to the
 exact candidate SHA. A phase that closes with an unresolved §4.3 failure or a
 §5.4 violation has not closed.
 
-§6.3. Beta.1 freezes this text. Beta.2 and Beta.3 may amend it only through
+§6.3. Beta.1 freezes this text. Beta.2.x and public 1.0 Alpha may amend it only through
 the §6.1 path; the full #1188 consolidation (ADR classification, contributor
-information architecture, path migration) remains Beta.3 scope and does not
+information architecture, path migration) is continuous Beta.2.x cleanup scope and does not
 relax any rule here in the meantime.
