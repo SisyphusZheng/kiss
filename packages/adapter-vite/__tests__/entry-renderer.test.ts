@@ -916,7 +916,7 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   // #568: action POSTs carry a default body limit.
   assertStringIncludes(code, '__bodyLimit({ maxSize: 10 * 1024 * 1024');
   // #572: non-GET/POST methods on page routes are a defined 405.
-  assertStringIncludes(code, "c.text('Method Not Allowed', 405, { Allow: 'GET, POST' })");
+  assertStringIncludes(code, "app.all('*', __createRouteMiddleware([");
 });
 
 Deno.test('renderEntry: action protocol is emitted once for many routes (#1098)', () => {

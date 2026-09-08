@@ -13,6 +13,7 @@ Deno.test('parseVersion parses stable and prerelease versions', () => {
     minor: 41,
     patch: 0,
     prerelease: 'alpha',
+    identifiers: ['alpha', '7'],
     prereleaseNumber: 7,
   });
 });

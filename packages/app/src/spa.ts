@@ -102,6 +102,12 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let rootEl: Element | null = null;
   let submitHandler: ((e: Event) => void) | null = null;
   let renderId = 0;
+  let execution = new AbortController();
+  function cancelPending(): void {
+    execution.abort();
+    execution = new AbortController();
+    renderId++;
+  }
   let currentLoaderData: unknown;
   let currentLoaderError: unknown;
   let currentActionData: unknown;
@@ -122,16 +128,24 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
    * channel with the original error so the error projector can read its 404
    * status/message — mirroring the server chain.
    */
-  async function runLoader(): Promise<{ data: unknown; error?: unknown; redirected?: boolean }> {
+  async function runLoader(
+    ticket = renderId,
+  ): Promise<{ data: unknown; error?: unknown; redirected?: boolean }> {
     if (!router) return { data: undefined };
     const route = router.currentRoute;
     if (!route?.loader) return { data: undefined };
     try {
-      return { data: await route.loader({ params: router.params }) };
+      return {
+        data: await route.loader({
+          params: router.params,
+          searchParams: router.searchParams,
+          signal: execution.signal,
+        }),
+      };
     } catch (err) {
       if (isOpenElementRedirect(err)) {
         // Skip navigation if the app was disposed while the loader awaited.
-        if (router) await router.navigate(err.location);
+        if (router && ticket === renderId) await router.navigate(err.location);
         return { data: undefined, redirected: true };
       }
       if (isOpenElementNotFound(err)) {
@@ -255,6 +269,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       const outcome = classifyActionResult(
         await route.action({
           params: router.params,
+          searchParams: router.searchParams,
+          signal: execution.signal,
           formData: createFormData(form),
         }),
       );
@@ -265,7 +281,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       if (isOpenElementRedirect(err)) {
         // PRG: navigate to the redirect target; its own render cycle renders
         // the destination. Skip if the app was disposed while awaiting.
-        if (router) await router.navigate(err.location);
+        if (router && currentRender === renderId) await router.navigate(err.location);
         return;
       }
       if (isOpenElementNotFound(err)) {
@@ -280,6 +296,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       actionData = normalizeActionFailure(err, development, log.error);
     }
 
+    if (currentRender !== renderId || !router || !rootEl) return;
     // Re-run loader for fresh data
     const { data: loaderData, error: loaderError, redirected } = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
@@ -311,6 +328,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     router = createRouter({
       mode: options.routerMode ?? 'auto',
       routes: options.routes ?? [],
+      onPending: cancelPending,
       onChange: renderRoute,
     });
 
@@ -329,6 +347,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   }
 
   function dispose(): void {
+    execution.abort();
     // Remove form submit listener
     renderId++;
     if (submitHandler && rootEl) {

@@ -6,6 +6,7 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
     '.': 'src/index.ts',
     'cli/build': 'src/cli/build.ts',
     'cli/start': 'src/cli/start.ts',
+    'element': 'src/element.ts',
     'nitro-mount': 'src/nitro-mount.ts',
     'sitemap': 'src/sitemap.ts',
   },
@@ -14,6 +15,8 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
     'i18n': 'src/i18n.ts',
     'model': 'src/model.ts',
     'preact': 'src/preact.ts',
+    'router': 'src/router.ts',
+    'router/http': 'src/router-http.ts',
     'spa': 'src/spa.ts',
   },
   'create': {

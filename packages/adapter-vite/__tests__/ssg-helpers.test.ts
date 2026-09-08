@@ -3,7 +3,6 @@ import {
   renderRequestTimeServerModule,
   renderStandaloneServerModule,
   resolveDynamicRoutePath,
-  routePatternToURLPatternPath,
 } from '../src/internal/ssg/ssg-helpers.ts';
 import { parseRouteFilePath } from '../src/internal/ssg/route-scanner.ts';
 import { cacheControlFor, contentTypeFor } from '../src/internal/static-serve.ts';
@@ -41,14 +40,6 @@ Deno.test('resolveDynamicRoutePath resolves catch-all values and consumes the re
 Deno.test('resolveDynamicRoutePath rejects traversal segments inside catch-all values (#1022)', () => {
   assertThrows(() => resolveDynamicRoutePath('/docs/:path{.+}', ['path'], { path: 'a/../b' }));
   assertThrows(() => resolveDynamicRoutePath('/docs/:path{.+}', ['path'], { path: '..' }));
-});
-
-Deno.test('routePatternToURLPatternPath covers exact, param and catch-all patterns (#556, #856)', () => {
-  // Exact and plain param segments are already valid URLPattern pathnames.
-  assertEquals(routePatternToURLPatternPath('/form'), '/form');
-  assertEquals(routePatternToURLPatternPath('/item/:id'), '/item/:id');
-  // The Hono-style `:name{regex}` catch-all rewrites to URLPattern `:name(regex)`.
-  assertEquals(routePatternToURLPatternPath('/docs/:path{.+}'), '/docs/:path(.+)');
 });
 
 Deno.test('request-time client injection embeds portable tolerant helper and preserves statusText (#1103)', () => {

@@ -13,10 +13,11 @@ import {
 
 const routes: RouteConfig[] = [{ path: '/items/:id', tagName: 'item-page' }];
 
-Deno.test('client router decodes path parameters and gives path values precedence', () => {
+Deno.test('client router keeps decoded path parameters separate from query', () => {
   const match = matchRoute('/items/hello%20world', '?id=query&view=full', routes);
   assertEquals(match?.params.id, 'hello world');
-  assertEquals(match?.params.view, 'full');
+  assertEquals(match?.params.view, undefined);
+  assertEquals(match?.searchParams.get('view'), 'full');
 });
 
 Deno.test('client router decodes query components exactly once', () => {
@@ -27,15 +28,15 @@ Deno.test('client router decodes query components exactly once', () => {
     ['?value=%2B', '+'],
   ] as const;
   for (const [search, expected] of cases) {
-    assertEquals(matchRoute('/items/id', search, routes)?.params.value, expected);
+    assertEquals(matchRoute('/items/id', search, routes)?.searchParams.get('value'), expected);
   }
 });
 
 Deno.test('client router preserves malformed query escapes without aborting matching', () => {
   const match = matchRoute('/items/id', '?bad=%&also=%2&key%=value%', routes);
-  assertEquals(match?.params.bad, '%');
-  assertEquals(match?.params.also, '%2');
-  assertEquals(match?.params['key%'], 'value%');
+  assertEquals(match?.searchParams.get('bad'), '%');
+  assertEquals(match?.searchParams.get('also'), '%2');
+  assertEquals(match?.searchParams.get('key%'), 'value%');
 });
 
 interface ExpectedRouteMatch {
@@ -178,7 +179,7 @@ const semanticCases: Array<{
     search: '?id=query&view=first&view=last&encoded=a%2Bb+two',
     expected: {
       route: 'item-page',
-      params: { id: 'hello world', view: 'last', encoded: 'a+b two' },
+      params: { id: 'hello world' },
     },
   },
   {
@@ -187,7 +188,7 @@ const semanticCases: Array<{
     search: '?bad=%&also=%2&key%=value%',
     expected: {
       route: 'item-page',
-      params: { bad: '%', also: '%2', 'key%': 'value%', id: 'id' },
+      params: { id: 'id' },
     },
   },
   {
@@ -298,8 +299,7 @@ Deno.test('RouteTable rejects malformed URLPattern patterns consistently', () =>
 Deno.test('RouteTable classifies methods, HEAD, base paths, and trailing-slash policy', () => {
   type MethodRoute = RouteConfig & { methods: readonly string[] };
   const methodRoutes: MethodRoute[] = [
-    { path: '/items/:id', tagName: 'item-get', methods: ['GET'] },
-    { path: '/items/:id', tagName: 'item-post', methods: ['POST'] },
+    { path: '/items/:id', tagName: 'item', methods: ['GET', 'POST'] },
   ];
   const tables = [
     new RouteTable(methodRoutes, URLPatternPolyfillConstructor, {
@@ -318,9 +318,9 @@ Deno.test('RouteTable classifies methods, HEAD, base paths, and trailing-slash p
   ];
 
   const expected = [
-    { kind: 'match', route: 'item-get', params: { id: 'a b' } },
-    { kind: 'match', route: 'item-get', params: { id: 'a b' } },
-    { kind: 'match', route: 'item-post', params: { id: 'a b' } },
+    { kind: 'match', route: 'item', params: { id: 'a b' } },
+    { kind: 'match', route: 'item', params: { id: 'a b' } },
+    { kind: 'match', route: 'item', params: { id: 'a b' } },
     { kind: 'method-not-allowed', allow: ['GET', 'HEAD', 'POST'] },
     { kind: 'not-found' },
   ];
@@ -363,7 +363,13 @@ Deno.test('client router dispose removes event listeners and double dispose is s
   const removed: EventListener[] = [];
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
-    value: { protocol: 'https:', pathname: '/', search: '', hash: '' },
+    value: {
+      protocol: 'https:',
+      href: 'https://router.test/',
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
   });
   Object.defineProperty(globalThis, 'history', {
     configurable: true,
@@ -402,7 +408,13 @@ Deno.test('client router guard redirect limit rejects redirect loops', async () 
   const originalHistory = Object.getOwnPropertyDescriptor(globalThis, 'history');
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
-    value: { protocol: 'https:', pathname: '/', search: '', hash: '' },
+    value: {
+      protocol: 'https:',
+      href: 'https://router.test/',
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
   });
   Object.defineProperty(globalThis, 'history', {
     configurable: true,
@@ -961,6 +973,9 @@ function installFakeHistoryStack(initialEntries: string[]) {
     configurable: true,
     value: {
       protocol: 'https:',
+      get href() {
+        return currentUrl().href;
+      },
       get pathname() {
         return currentUrl().pathname;
       },

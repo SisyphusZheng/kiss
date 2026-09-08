@@ -1,5 +1,6 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
 import {
+  assertPublicReleaseVersion,
   compareVersions as compareLineVersions,
   FIRST_TAGGED_VERSION,
   nextPatchVersion as nextLinePatchVersion,
@@ -143,6 +144,7 @@ export function createReleaseEvidence(
   targetVersion: string,
   approvalId?: string,
 ): ReleaseEvidence {
+  assertPublicReleaseVersion(targetVersion);
   const now = new Date().toISOString();
   return {
     id: `${kind}-${releaseTag(targetVersion)}-${now.replace(/[:.]/g, '-')}`,

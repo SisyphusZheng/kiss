@@ -104,7 +104,7 @@ Deno.test('definePage() attaches the descriptor to the compiled class and return
   const props = () => ({});
   const error = () => ({});
   const result = definePage(Page, {
-    route: { path: '/', id: 'home' },
+    route: { id: 'home' },
     head: {
       title: 'Home',
       description: 'Application API',
@@ -120,7 +120,7 @@ Deno.test('definePage() attaches the descriptor to the compiled class and return
   const descriptor = (Page as unknown as { openElementPage: Record<string, unknown> })
     .openElementPage;
   assertEquals(descriptor.kind, 'page');
-  assertEquals(descriptor.route, { path: '/', id: 'home' });
+  assertEquals(descriptor.route, { id: 'home' });
   assertEquals(descriptor.head, {
     title: 'Home',
     description: 'Application API',

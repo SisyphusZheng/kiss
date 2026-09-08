@@ -16,7 +16,12 @@ import {
   PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION_TAG,
 } from '../project-constants.ts';
-import { prereleaseChannel, prereleaseParts } from '../lib/version.ts';
+import {
+  nextPatchVersion,
+  nextProductStageVersion,
+  prereleaseChannel,
+  prereleaseParts,
+} from '../lib/version.ts';
 
 export function releaseTag(version: string): string {
   return `v${version}`;
@@ -107,7 +112,9 @@ export async function updatePrepareReleaseState(version: string): Promise<void> 
 export function nextPrereleaseTag(version: string): string {
   const parts = prereleaseParts(version);
   if (!parts) return releaseTag(version);
-  return `v${parts.base}-${parts.name}.${parts.num + 1}`;
+  return releaseTag(
+    version === '0.44.0-beta.2.3' ? nextProductStageVersion(version) : nextPatchVersion(version),
+  );
 }
 
 /**

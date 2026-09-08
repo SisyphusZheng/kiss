@@ -51,7 +51,6 @@ const PAGE_SOURCE = `
 import { definePage } from '@openelement/app';
 
 export default definePage({
-  route: { path: '/' },
   render() {
     return (
       <main>

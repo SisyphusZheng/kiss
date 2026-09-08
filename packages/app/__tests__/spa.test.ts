@@ -111,7 +111,8 @@ Deno.test('defineApp mounts loader data and route context through the page props
     routes: [{
       path: '/articles/:slug',
       tagName: 'article-page',
-      loader: ({ params }) => Promise.resolve({ title: `${params.slug}:${params.preview}` }),
+      loader: ({ params, searchParams }) =>
+        Promise.resolve({ title: `${params.slug}:${searchParams.get('preview')}` }),
     }],
   });
   try {
@@ -121,13 +122,13 @@ Deno.test('defineApp mounts loader data and route context through the page props
     assertEquals(calls.normal.length, 1);
     const context = calls.normal[0];
     assertEquals(context.data, { title: 'hello:yes' });
-    assertEquals(context.params, { slug: 'hello', preview: 'yes' });
+    assertEquals(context.params, { slug: 'hello' });
     assertEquals(context.request?.url, 'https://example.test/articles/hello?preview=yes');
     assertEquals(context.route, { path: '/articles/:slug' });
     // The projected values landed on the host as pre-connect own properties.
     assertEquals(hosts.length, 1);
     assertEquals(hosts[0].slug, 'hello');
-    assertEquals(hosts[0].preview, 'yes');
+    assertEquals(hosts[0].preview, undefined);
     assertEquals(hosts[0].title, 'hello:yes');
   } finally {
     app.dispose();
@@ -761,3 +762,59 @@ Deno.test('defineApp routes action notFound() to the page error projector (#731)
     restoreRegistry();
   }
 });
+
+for (const operation of ['loader', 'action'] as const) {
+  Deno.test(`SPA aborts superseded ${operation} and ignores its late redirect`, async () => {
+    const hosts: Record<string, unknown>[] = [];
+    let submit: ((event: Event) => void) | undefined;
+    let release!: () => void;
+    let signal: AbortSignal | undefined;
+    const pending = new Promise<void>((resolve) => release = resolve);
+    const root = {
+      innerHTML: '',
+      addEventListener(type: string, handler: (event: Event) => void) {
+        if (type === 'submit') submit = handler;
+      },
+      removeEventListener() {},
+      appendChild(host: Record<string, unknown>) {
+        hosts.push(host);
+        return host;
+      },
+    };
+    const env = stubNavigableEnvironment(root, '/');
+    const delayed = async (context: { signal: AbortSignal }) => {
+      signal = context.signal;
+      await pending;
+      redirect('/stale');
+    };
+    const app = defineApp({
+      mode: 'spa',
+      routerMode: 'history',
+      routes: [
+        { path: '/', tagName: 'home-page', [operation]: delayed },
+        { path: '/new', tagName: 'new-page', loader: () => Promise.resolve({ page: 'new' }) },
+        { path: '/stale', tagName: 'stale-page', loader: () => Promise.resolve({ page: 'stale' }) },
+      ],
+    });
+    try {
+      app.mount('#app');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (operation === 'action') {
+        const event = new Event('submit', { cancelable: true });
+        Object.defineProperty(event, 'target', { value: { tagName: 'FORM' } });
+        submit!(event);
+      }
+      assertEquals(signal?.aborted, false);
+      await app.router!.navigate('/new');
+      assertEquals(signal?.aborted, true);
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      assertEquals(env.pushed, ['/new']);
+      assertEquals(app.router!.currentPath, '/new');
+      assertEquals(hosts.at(-1)?.page, 'new');
+    } finally {
+      app.dispose();
+      env.restore();
+    }
+  });
+}

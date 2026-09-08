@@ -32,3 +32,12 @@ Independent application qualification binds to the candidate's exact SHA, packag
 bytes, integrity records and provenance. Any candidate-byte change invalidates its
 qualification for promotion and requires a new qualified candidate. Stable admission
 requires the separate human GO and final gate #37; Alpha is not a stability claim.
+
+Version parsing and comparison live in `tools/lib/version.ts`. It accepts
+SemVer prerelease identifiers in sequence (numeric identifiers compare
+numerically); build metadata and v-prefixed input remain unsupported and core
+numbers must be safe integers. Formatting retains every identifier. Checkpoint
+succession stops at beta.2.3; the separate admitted product-stage successor is
+1.0.0-alpha.1. Planning this successor never executes a bump or publication.
+Historical 0.44.0-alpha.0 through alpha.10 remain unpublishable; public 1.0 Alpha
+still requires all standing exact-SHA release gates.

@@ -25,6 +25,7 @@ import {
   type ReleaseEvidence,
   renderClosureSection,
   renderReleaseNote,
+  resolvePatchTargetVersion,
   resumeEvidenceFromPrior,
   verifyMainCiSuccessForHead,
   verifyPrepareRecord,
@@ -358,7 +359,7 @@ Deno.test('advancePrepareReleaseStateText: prepare advances the planning anchors
   // check-release-truth pins the planning pair to ACTIVE/NEXT_EXECUTION_VERSION,
   // which the bump advances; prepare must move them with the bump.
   assertEquals(state.activeTarget, 'v0.44.0-beta.2');
-  assertEquals(state.nextPlannedTrain, 'v0.44.0-beta.3');
+  assertEquals(state.nextPlannedTrain, 'v0.44.0-beta.2.1');
   // The published-line fields stay finalize-owned
   // (advancePublishedReleaseStateText): prepare leaves the prepare-window lag.
   assertEquals(state.sourceVersion, '0.44.0-beta.1');
@@ -1539,5 +1540,26 @@ Deno.test('foldStarterLockfileIntoBumpCommit: a clean lockfile is a no-op (#1083
       await foldStarterLockfileIntoBumpCommit(() => Promise.resolve());
       assertEquals(await git('.', ['rev-parse', 'HEAD']), head);
     },
+  );
+});
+
+Deno.test('Beta checkpoint prepare, public-stage planning and retry preserve the source/published window', () => {
+  const published = {
+    schemaVersion: 1,
+    sourceVersion: '0.44.0-beta.2',
+    publishedVersion: '0.44.0-beta.2',
+    latestLandedTrain: 'v0.44.0-beta.2',
+    activeTarget: 'v0.44.0-beta.2.1',
+    nextPlannedTrain: 'v0.44.0-beta.2.1',
+    maturity: 'beta',
+  };
+  const prepared = advancePrepareReleaseStateText(JSON.stringify(published), '0.44.0-beta.2.1');
+  assertEquals(advancePrepareReleaseStateText(prepared, '0.44.0-beta.2.1'), prepared);
+  assertEquals(JSON.parse(prepared).publishedVersion, published.publishedVersion);
+  assertEquals(JSON.parse(prepared).nextPlannedTrain, 'v0.44.0-beta.2.2');
+  assertEquals(nextPrereleaseTag('0.44.0-beta.2.3'), 'v1.0.0-alpha.1');
+  assertEquals(
+    resolvePatchTargetVersion('0.44.0-beta.2.1', { kind: 'patch-release', status: 'failed' }),
+    { targetVersion: '0.44.0-beta.2.1', resumed: true },
   );
 });

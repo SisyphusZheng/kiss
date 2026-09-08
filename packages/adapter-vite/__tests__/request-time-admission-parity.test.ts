@@ -21,8 +21,9 @@
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import { join } from '@std/path';
 import { Hono } from 'hono';
+import { createRouteMiddleware } from '../../app/src/router-http.ts';
 import { RouteTable } from '../../app/src/internal/router/route-table.ts';
-import { normalizeRoutePatternForURLPattern } from '@openelement/element/build-utils';
+import { normalizeRoutePatternForURLPattern } from '@openelement/app/router';
 import { renderRequestTimeServerModule } from '../src/internal/ssg/ssg-helpers.ts';
 
 interface CorpusRoute {
@@ -167,7 +168,7 @@ const CORPUS: CorpusCase[] = [
         pathname: '/item/42',
         search: '?id=query-loses&extra=query-wins',
         winner: '/item/:id',
-        params: { id: '42', extra: 'query-wins' },
+        params: { id: '42' },
       },
     ],
   },
@@ -236,17 +237,21 @@ function derivedAdmission(routes: CorpusRoute[], pathname: string): boolean {
  */
 function honoEntryFor(routes: CorpusRoute[]): Hono {
   const app = new Hono();
-  for (const route of routes) {
-    const methods = route.methods ?? ['GET'];
-    const handler = (c: { req: { param: () => Record<string, string> } }) =>
-      new Response(JSON.stringify({ path: route.path, params: c.req.param() }), {
-        headers: { 'content-type': 'application/json' },
-      });
-    app.on([...methods], route.path, handler);
-    if (methods.includes('POST')) {
-      app.all(route.path, () => new Response('Method Not Allowed', { status: 405 }));
-    }
-  }
+  app.all(
+    '*',
+    createRouteMiddleware(routes.map((route) => ({
+      path: route.path,
+      handlers: Object.fromEntries(
+        (route.methods ?? ['GET']).map((
+          method,
+        ) => [
+          method,
+          (c: import('hono').Context) =>
+            c.json({ path: route.path, params: c.get('routeResolution').params }),
+        ]),
+      ),
+    }))),
+  );
   return app;
 }
 

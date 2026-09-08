@@ -3,6 +3,8 @@
   "version": "0.44.0-beta.2",
   "exports": {
     ".": "./src/index.ts",
+    "./router/http": "./src/router-http.ts",
+    "./router": "./src/router.ts",
     "./model": "./src/model.ts",
     "./spa": "./src/spa.ts",
     "./i18n": "./src/i18n.ts",

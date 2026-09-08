@@ -2,8 +2,8 @@
  * Canonical prerelease/version truth (#1231 M16; umbrella #1155).
  *
  * This module is the ONE implementation of the release line-version contract
- * `x.y.z` or `x.y.z-<label>.<n>` (semver without build metadata, `v` prefixes
- * or multi-part prereleases). Every consumer — bump-version, the release
+ * `x.y.z` with optional SemVer prerelease identifiers (without build metadata
+ * or `v` prefixes; core numbers must be safe integers). Every consumer — bump-version, the release
  * autoflow, the npm release verifier and the docs/version gates — imports from
  * here instead of re-rolling its own parse/compare regex.
  *
@@ -30,28 +30,41 @@ export interface LineVersion {
   prerelease?: string;
   /** Prerelease sequence number; 0 for stable lines. */
   prereleaseNumber: number;
+  /** Ordered SemVer identifiers, retained losslessly. */
+  identifiers?: readonly string[];
 }
 
-// Strict x.y.z(-label.n): numeric identifiers carry no leading zeros (semver
-// rule), the label is alphabetic, and there is no build metadata or prefix.
 const LINE_VERSION_RE =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([A-Za-z]+)\.(0|[1-9]\d*))?$/u;
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u;
 
-/** Strict parse; throws on anything outside the line-version contract. */
+/** SemVer prereleases, intentionally excluding build metadata and v prefixes. */
 export function parseLineVersion(version: string): LineVersion {
   const match = version.match(LINE_VERSION_RE);
-  if (!match) {
-    throw new Error(`Invalid semver version: ${version}`);
-  }
-  const [, major, minor, patch, label, num] = match;
-  const parsed: LineVersion = {
+  if (!match) throw new Error(`Invalid semver version: ${version}`);
+  const [, major, minor, patch, pre] = match;
+  const identifiers = pre?.split('.');
+  if (
+    [major, minor, patch].some((n) => !Number.isSafeInteger(Number(n))) ||
+    identifiers?.some((id) => /^0\d+$/.test(id))
+  ) throw new Error(`Invalid semver version: ${version}`);
+  return {
     major: Number(major),
     minor: Number(minor),
     patch: Number(patch),
-    prereleaseNumber: num === undefined ? 0 : Number(num),
+    prereleaseNumber: identifiers && /^\d+$/.test(identifiers[1] ?? '')
+      ? Number(identifiers[1])
+      : 0,
+    ...(identifiers ? { prerelease: identifiers[0], identifiers } : {}),
   };
-  if (label !== undefined) parsed.prerelease = label;
-  return parsed;
+}
+
+export function formatLineVersion(version: LineVersion): string {
+  const base = `${version.major}.${version.minor}.${version.patch}`;
+  return version.identifiers
+    ? `${base}-${version.identifiers.join('.')}`
+    : version.prerelease
+    ? `${base}-${version.prerelease}.${version.prereleaseNumber}`
+    : base;
 }
 
 /** Non-throwing variant for gates that probe arbitrary strings. */
@@ -110,9 +123,17 @@ export function compareVersions(a: string, b: string): number {
   if (pa.prerelease === undefined && pb.prerelease === undefined) return 0;
   if (pa.prerelease === undefined) return 1;
   if (pb.prerelease === undefined) return -1;
-  if (pa.prerelease !== pb.prerelease) return pa.prerelease < pb.prerelease ? -1 : 1;
-  if (pa.prereleaseNumber !== pb.prereleaseNumber) {
-    return pa.prereleaseNumber < pb.prereleaseNumber ? -1 : 1;
+  const left = pa.identifiers!;
+  const right = pb.identifiers!;
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    if (left[i] === undefined) return -1;
+    if (right[i] === undefined) return 1;
+    if (left[i] === right[i]) continue;
+    const ln = /^\d+$/.test(left[i]);
+    const rn = /^\d+$/.test(right[i]);
+    if (ln !== rn) return ln ? -1 : 1;
+    if (ln && left[i].length !== right[i].length) return left[i].length < right[i].length ? -1 : 1;
+    return left[i] < right[i] ? -1 : 1;
   }
   return 0;
 }
@@ -123,10 +144,15 @@ export function compareVersions(a: string, b: string): number {
  */
 export function nextPatchVersion(version: string): string {
   const parsed = parseLineVersion(version);
-  if (parsed.prerelease !== undefined) {
-    return `${parsed.major}.${parsed.minor}.${parsed.patch}-${parsed.prerelease}.${
-      parsed.prereleaseNumber + 1
-    }`;
+  if (version === '0.44.0-beta.2' || version.startsWith('0.44.0-beta.2.')) {
+    return nextCheckpointVersion(version);
+  }
+  if (parsed.identifiers) {
+    const ids = [...parsed.identifiers];
+    const last = ids[ids.length - 1];
+    if (/^\d+$/.test(last)) ids[ids.length - 1] = String(BigInt(last) + 1n);
+    else ids.push('1');
+    return formatLineVersion({ ...parsed, identifiers: ids });
   }
   return `${parsed.major}.${parsed.minor}.${parsed.patch + 1}`;
 }
@@ -134,4 +160,50 @@ export function nextPatchVersion(version: string): string {
 /** Accepts the operator shorthand `x.y.z-alphaN` and normalizes to `x.y.z-alpha.N`. */
 export function normalizeReleaseVersion(version: string): string {
   return version.replace(/-(alpha|beta|rc)(\d+)$/u, '-$1.$2');
+}
+
+/** Engineering checkpoints are deliberately finite, distinct from SemVer order. */
+export function nextCheckpointVersion(version: string): string {
+  const checkpoints = ['0.44.0-beta.2', '0.44.0-beta.2.1', '0.44.0-beta.2.2', '0.44.0-beta.2.3'];
+  const index = checkpoints.indexOf(version);
+  if (index < 0 || index === checkpoints.length - 1) {
+    throw new Error(`No next Beta checkpoint for ${version}; product-stage admission is required`);
+  }
+  return checkpoints[index + 1];
+}
+
+/** Approved product-stage transition; this function grants no release authority. */
+export function nextProductStageVersion(version: string): string {
+  if (version === '0.44.0-beta.2.3') return '1.0.0-alpha.1';
+  throw new Error(`No admitted product-stage successor for ${version}`);
+}
+
+export function isInternalAlphaWorkspace(version: string): boolean {
+  const parsed = tryParseLineVersion(version);
+  return parsed?.major === 0 && parsed.minor === 44 && parsed.patch === 0 &&
+    parsed.identifiers?.length === 2 && parsed.prerelease === 'alpha' &&
+    /^\d+$/.test(parsed.identifiers[1]) && parsed.prereleaseNumber <= 10;
+}
+
+/** Previous numeric prerelease on the same line, including Beta checkpoints. */
+export function previousPrereleaseVersion(version: string): string | null {
+  const parsed = parseLineVersion(version);
+  if (!parsed.identifiers || !prereleaseChannel(version)) return null;
+  const ids = [...parsed.identifiers];
+  const last = ids[ids.length - 1];
+  if (!/^\d+$/.test(last)) return null;
+  const n = BigInt(last);
+  if (n <= 1n) {
+    if (ids.length <= 2) return null;
+    ids.pop();
+  } else ids[ids.length - 1] = String(n - 1n);
+  return formatLineVersion({ ...parsed, identifiers: ids });
+}
+
+/** Admission classification only: all existing verification gates still apply. */
+export function assertPublicReleaseVersion(version: string): void {
+  parseLineVersion(version);
+  if (isInternalAlphaWorkspace(version)) {
+    throw new Error(`Historical internal Alpha workspace is not publishable: ${version}`);
+  }
 }

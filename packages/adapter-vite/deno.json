@@ -3,6 +3,7 @@
   "version": "0.44.0-beta.2",
   "exports": {
     ".": "./src/index.ts",
+    "./element": "./src/element.ts",
     "./nitro-mount": "./src/nitro-mount.ts",
     "./sitemap": "./src/sitemap.ts",
     "./cli/build": "./src/cli/build.ts",

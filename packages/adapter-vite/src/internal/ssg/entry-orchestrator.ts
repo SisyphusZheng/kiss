@@ -49,6 +49,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   const ssrAdmissionPlan = desc.ssrAdmissionPlan;
   for (const island of desc.islands) validateIslandModuleSpecifier(island.modulePath);
 
+  lines.push(
+    "import { createRouteMiddleware as __createRouteMiddleware } from '@openelement/app/router/http';",
+  );
+
   // --- Imports ---
   for (const imp of desc.imports) {
     lines.push(renderImport(imp));
@@ -318,6 +322,11 @@ export function renderEntry(desc: EntryDescriptor): string {
     renderApiRoute(lines, route);
   }
 
+  lines.push(
+    `const __pageHandlers = Object.fromEntries(${
+      JSON.stringify(desc.pageRoutes.map((r) => r.path))
+    }.map(path => [path, {}]));`,
+  );
   // --- Page routes ---
   const docConfig = {
     title: desc.document.title,
@@ -333,6 +342,18 @@ export function renderEntry(desc: EntryDescriptor): string {
   for (const route of desc.pageRoutes) {
     renderActionRoute(lines, route, desc.renderers, docConfig, desc.isSSG);
   }
+
+  lines.push(`app.all('*', __createRouteMiddleware([`);
+  for (const route of desc.pageRoutes) {
+    lines.push(
+      `  { id: ${JSON.stringify(route.filePath)}, path: ${
+        JSON.stringify(route.path)
+      }, handlers: __pageHandlers[${JSON.stringify(route.path)}] },`,
+    );
+  }
+  lines.push(
+    `], { methodNotAllowed: (c, allow) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Method Not Allowed', 405, { Allow: allow.join(', ') }); } }));`,
+  );
 
   // --- Styled 404 (#923): unmatched paths render the /404 page ---
   const notFoundPage = desc.pageRoutes.find((r) => r.path === '/404');

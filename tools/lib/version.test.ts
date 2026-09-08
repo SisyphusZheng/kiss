@@ -1,12 +1,18 @@
 import { assert, assertEquals, assertThrows } from '@std/assert';
 import {
+  assertPublicReleaseVersion,
   compareVersions,
   FIRST_TAGGED_VERSION,
+  formatLineVersion,
+  isInternalAlphaWorkspace,
+  nextCheckpointVersion,
   nextPatchVersion,
+  nextProductStageVersion,
   normalizeReleaseVersion,
   parseLineVersion,
   prereleaseChannel,
   prereleaseParts,
+  previousPrereleaseVersion,
   tryParseLineVersion,
 } from './version.ts';
 
@@ -22,12 +28,15 @@ Deno.test('parseLineVersion parses stable and prerelease line versions', () => {
     minor: 44,
     patch: 0,
     prerelease: 'beta',
+    identifiers: ['beta', '1'],
     prereleaseNumber: 1,
   });
 });
 
 Deno.test('parseLineVersion rejects non-line versions', () => {
-  for (const bad of ['1.2', 'v1.2.3', '1.2.3+build', '1.2.3-alpha', '1.2.3-alpha.1.x', '01.2.3']) {
+  for (
+    const bad of ['1.2', 'v1.2.3', '1.2.3+build', '1.2.3-alpha..1', '1.2.3-alpha.01', '01.2.3']
+  ) {
     assertThrows(() => parseLineVersion(bad), Error, 'Invalid semver', bad);
     assertEquals(tryParseLineVersion(bad), undefined, bad);
   }
@@ -72,4 +81,47 @@ Deno.test('prereleaseChannel names only publishable channels', () => {
 Deno.test('FIRST_TAGGED_VERSION is the immutable-tag policy boundary (#855)', () => {
   assertEquals(FIRST_TAGGED_VERSION, '0.41.0-alpha.14');
   assert(tryParseLineVersion(FIRST_TAGGED_VERSION) !== undefined);
+});
+
+Deno.test('Beta checkpoint SemVer precedence includes all identifiers', () => {
+  const chain = [
+    '0.44.0-beta.2',
+    '0.44.0-beta.2.1',
+    '0.44.0-beta.2.9',
+    '0.44.0-beta.2.10',
+    '0.44.0-beta.3',
+    '0.44.0',
+    '1.0.0-alpha.1',
+  ];
+  for (let i = 1; i < chain.length; i++) assertEquals(compareVersions(chain[i - 1], chain[i]), -1);
+  assertEquals(prereleaseChannel('0.44.0-beta.2.1'), 'beta');
+  assertEquals(prereleaseChannel('1.0.0-alpha.1'), 'alpha');
+});
+
+Deno.test('checkpoint and product stage succession are different operations', () => {
+  assertEquals(nextCheckpointVersion('0.44.0-beta.2'), '0.44.0-beta.2.1');
+  assertEquals(nextCheckpointVersion('0.44.0-beta.2.1'), '0.44.0-beta.2.2');
+  assertEquals(nextCheckpointVersion('0.44.0-beta.2.2'), '0.44.0-beta.2.3');
+  assertThrows(() => nextPatchVersion('0.44.0-beta.2.3'));
+  assertEquals(nextProductStageVersion('0.44.0-beta.2.3'), '1.0.0-alpha.1');
+  assertEquals(isInternalAlphaWorkspace('0.44.0-alpha.10'), true);
+  assertEquals(isInternalAlphaWorkspace('1.0.0-alpha.1'), false);
+  for (
+    const version of [
+      '1.2.3-alpha',
+      '1.2.3-alpha.1.x',
+      '0.44.0-beta.2.10',
+      '1.2.3-12345678901234567890',
+    ]
+  ) assertEquals(formatLineVersion(parseLineVersion(version)), version);
+  assertEquals(compareVersions('1.2.3-9', '1.2.3-10'), -1);
+  assertEquals(compareVersions('1.2.3-1', '1.2.3-a'), -1);
+});
+
+Deno.test('release predecessor retains checkpoint identifiers and historic workspace prohibition is scoped', () => {
+  assertEquals(previousPrereleaseVersion('0.44.0-beta.2.2'), '0.44.0-beta.2.1');
+  assertEquals(previousPrereleaseVersion('0.44.0-beta.2.1'), '0.44.0-beta.2');
+  assertEquals(previousPrereleaseVersion('1.0.0-alpha.1'), null);
+  assertThrows(() => assertPublicReleaseVersion('0.44.0-alpha.10'));
+  assertPublicReleaseVersion('1.0.0-alpha.1');
 });

@@ -1,7 +1,7 @@
 import {
   type PrereleaseChannel,
   prereleaseChannel,
-  prereleaseParts,
+  previousPrereleaseVersion,
   tryParseLineVersion,
 } from './version.ts';
 
@@ -67,10 +67,7 @@ export function prereleaseTag(version: string): PrereleaseChannel | null {
 // #869-2.5: the version immediately before the target on the same line, so a
 // release can never skip a number (alpha.8-style hole).
 export function previousPrerelease(version: string): string | null {
-  const parts = prereleaseParts(version);
-  const channel = prereleaseChannel(version);
-  if (!parts || !channel || parts.num <= 1) return null;
-  return `${parts.base}-${channel}.${parts.num - 1}`;
+  return previousPrereleaseVersion(version);
 }
 
 async function verifyField(

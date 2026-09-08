@@ -5,7 +5,7 @@
  * This module sits at the bottom of the dependency graph.
  */
 
-import { normalizeRoutePatternForURLPattern } from '@openelement/element/build-utils';
+import { normalizeRoutePatternForURLPattern } from '@openelement/app/router';
 import { walkHtmlFileEntries } from '../html-files.ts';
 import { NODE_BRIDGE_EMBEDDED_FUNCTIONS } from '../node-bridge.ts';
 
@@ -96,21 +96,6 @@ interface RequestTimeRoutePattern {
 }
 
 /**
- * Translate a request-time route pattern ('/item/:id', '/docs/:path{.+}')
- * into a WHATWG URLPattern pathname (#856, ADR-0123). The framework dialect
- * is already URLPattern-shaped except for the Hono-style `:name{regex}`
- * catch-all emitted by the route scanner (#812), which rewrites to the
- * URLPattern `:name(regex)` form. Used to generate the self-contained
- * admission predicate inside dist/server/index.js (#556, narrowed by #1215):
- * hosts get a dispatch predicate instead of re-implementing pattern matching
- * against the raw ':param' strings in server-manifest.json.
- *
- * The implementation is shared with the app client router through
- * @openelement/element/build-utils (#1103).
- */
-export const routePatternToURLPatternPath = normalizeRoutePatternForURLPattern;
-
-/**
  * Serialize the request-time admission patterns embedded in the generated
  * server entry (#1215). Declaration order is preserved and irrelevant: the
  * predicate is a boolean OR, so no precedence rule is derived here.
@@ -118,7 +103,7 @@ export const routePatternToURLPatternPath = normalizeRoutePatternForURLPattern;
 function renderRequestTimeAdmissionPatterns(routes: RequestTimeRoutePattern[]): string {
   return routes
     .map((route) => {
-      const pattern = JSON.stringify(routePatternToURLPatternPath(route.path));
+      const pattern = JSON.stringify(normalizeRoutePatternForURLPattern(route.path));
       return `  new URLPattern({ pathname: ${pattern} }),`;
     })
     .join('\n');

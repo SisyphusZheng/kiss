@@ -23,7 +23,7 @@ import {
   stageCompiledPackWorkspace,
 } from './lib/compiled-pack-staging.ts';
 import { npmView } from './lib/npm-release-verifier.ts';
-import { prereleaseChannel } from './lib/version.ts';
+import { assertPublicReleaseVersion, prereleaseChannel } from './lib/version.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
@@ -175,7 +175,7 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
   }
 }
 
-async function packPackage(
+export async function packPackage(
   pkg: PackageInfo,
   dependencies: Record<string, string>,
   allPackages: PackageInfo[],
@@ -239,6 +239,21 @@ async function packPackage(
       ...dependencies,
       ...(pkgJson.dependencies ?? {}),
     };
+    // Standalone Element authors install tooling without Router/UI. Framework
+    // consumers supply these optional peers through their own app dependencies.
+    if (pkg.name === '@openelement/adapter-vite') {
+      for (const name of ['@openelement/app', '@openelement/ui']) {
+        const version = pkgJson.dependencies[name];
+        if (version) {
+          delete pkgJson.dependencies[name];
+          pkgJson.peerDependencies = { ...pkgJson.peerDependencies, [name]: version };
+          pkgJson.peerDependenciesMeta = {
+            ...pkgJson.peerDependenciesMeta,
+            [name]: { optional: true },
+          };
+        }
+      }
+    }
     Deno.writeTextFileSync(pkgJsonPath, formatJson(pkgJson));
     await runCommand('tar', ['-czf', out, '-C', tmp, 'package'], { env: tarEnv });
   } finally {
@@ -275,6 +290,7 @@ export async function publishPackage(
   dryRun: boolean,
   io: PublishPackageIo = defaultPublishPackageIo,
 ): Promise<void> {
+  assertPublicReleaseVersion(pkg.version);
   const tar = tarballPath(pkg);
   if (await io.versionExists(pkg.name, pkg.version)) {
     io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
