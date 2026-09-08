@@ -20,20 +20,17 @@ OpenElement's core products are **Element / Router**; UI is dogfood and a refere
 
 The published Beta.2 baseline is followed by three convergence checkpoints:
 
-1. **Beta.2.1:** core product boundaries and standalone Element delivery contract,
-   general Router core, self-maintained URLPatternList, explicit and
-   file-generated records, shared resolution and immediate cleanup.
-2. **Beta.2.2:** standalone Element packed-consumer proof, Framework Mode
-   page/form/navigation lifecycle, Document, Element
-   and Vite integration, with replacement-time cleanup.
-3. **Beta.2.3:** remaining repository/governance reduction and real-application
-   admission evidence.
-4. **Public 1.0 Alpha:** real application development, compatibility fixes,
-   measured optimization and extended qualification.
+1. **Beta.2.1:** independently maintained URLPatternList fork, one Router resolution,
+   SSG/navigation repairs, standalone Element delivery and prerelease tooling.
+2. **Beta.2.2:** first-class Native/Lit Framework Mode target: shared application
+   flow, renderer-specific SSR/client continuation, Document and public metadata.
+3. **Beta.2.3:** dual-mode hardening, independent packed consumers, runtime matrices,
+   documentation, remaining cleanup and Alpha admission.
+4. **Public 1.0 Alpha:** real application development and extended qualification.
 5. **1.0 RC / Stable:** separately evidence-gated and unscheduled.
 
-Target three working days from implementation start to a usable real-app slice.
-This is not a guarantee of full migration or permission to skip a release blocker.
+Acceptance checkpoints replace the former three-day schedule. Lit is planned support,
+not an already-qualified feature. No automatic Beta.2.4 or deadline waiver.
 The [active plan](../current/VERSION_PLAN.md) owns scope and acceptance;
 [the issue map](./v0.44.0-ISSUES.md) links execution work. Every replacement includes
 removing displaced code, callers, obsolete checks and duplicated current facts.

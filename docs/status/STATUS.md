@@ -14,7 +14,7 @@ Current version and publication facts are owned by
 release records. Package manifests own source package versions.
 
 The accepted development direction is Beta.2.1 Router/core, Beta.2.2
-Framework/Document and Beta.2.3 cleanup closure, followed by public 1.0 Alpha.
+Native/Lit Framework Mode and Beta.2.3 dual-mode hardening/cleanup closure, followed by public 1.0 Alpha.
 See [VERSION_PLAN.md](../current/VERSION_PLAN.md),
 [ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md) and
 [Project 3](https://github.com/orgs/open-element/projects/3) for scope and live work.

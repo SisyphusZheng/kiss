@@ -12,9 +12,9 @@
 
 Current package/tool boundaries obscure product responsibilities. Repeated route,
 request, document and governance owners increase maintenance work. The maintainer
-approved a three-working-day convergence target using existing implementations,
+originally approved a three-working-day convergence target using existing implementations,
 with continuous deletion and a real application slice before public Alpha admission.
-This is a timebox target, not proof that implementation or publication is complete.
+The 2026-09-08 refinement below replaces that schedule with acceptance checkpoints.
 
 ## Decision
 
@@ -28,7 +28,7 @@ and real application use; it does not promise a comprehensive design system. Rou
 - Route Mode consumes explicit records; its matching core is independent of
   Element, Hono, Vite and filesystem access.
 - Framework Mode defaults to file routing and adds page data, forms, Document,
-  Element rendering, navigation, SSR/SSG and official Vite integration. UI is optional.
+  Native or Lit rendering integration, navigation, SSR/SSG and official Vite integration. UI is optional; Lit support is an acceptance target, not shipped evidence.
 
 Explicit and generated records converge on one RouteTable/RouteResolution.
 File paths own generated route paths; no duplicate `route.path` declaration.
@@ -65,7 +65,7 @@ Foreign CE property/attribute/event/upgrade boundaries need real browser evidenc
 Internal foreign SSR/hydration remains component-specific, not a universal DSD
 promise. Broader React/Vue/etc. integration matrices are Alpha follow-up work.
 
-### URLPatternList is an owned core asset
+### URLPatternList is an independently maintained generic fork
 
 Start from Justin Fagnani's `url-pattern-list` v0.5.0, source commit
 `4911e649cc11860c7da90c9d0d9b05626c5cbb83`, with verified MIT attribution and a
@@ -92,7 +92,8 @@ References: [Justin's source](https://github.com/justinfagnani/url-pattern-list)
 Hono owns HTTP Context/middleware/Response integration without a second page
 winner. Useful page-data/form abstractions share one request lifecycle; preserve
 validation errors, status, redirects and serialization boundaries. Document owns
-resolved page meaning; Element serializes it. Layouts compose presentation without
+resolved page meaning; each qualified rendering integration owns serialization. Native
+reuses Element; Lit does not depend on the Native compiled-artifact protocol. Layouts compose presentation without
 a second data scheduler. Vite owns the official build/development integration.
 
 SSG may read external build-time data; personalized results must not become public
@@ -119,8 +120,8 @@ release gates remain; no replacement historical-topology checker is introduced.
 ```text
 published v0.44.0-beta.2
   -> beta.2.1 Router/core + continuous cleanup
-  -> beta.2.2 Framework/Document + continuous cleanup
-  -> beta.2.3 cleanup closure + application admission
+  -> beta.2.2 Native/Lit Framework Mode + Document + continuous cleanup
+  -> beta.2.3 dual-mode hardening + cleanup closure + application admission
   -> public v1.0.0-alpha.1 and subsequent Alpha iterations
   -> evidence-gated v1.0.0-rc.1
   -> separately admitted Stable
@@ -130,12 +131,32 @@ The former Beta.3 lane becomes 1.0 Alpha; its unfinished work remains tracked.
 Historic v0.44 alpha workspace IDs remain internal/unpublished. Public 1.0 Alpha
 uses npm `alpha`; npm `latest` stays on the last admitted stable release.
 
-Target three working days from implementation start: Day 1 core plus a minimal
-Cloudflare/Vite spike, Day 2 representative Framework flow, Day 3 remaining cleanup
-and admission evidence. Intermediate public Beta checkpoints retain release gates;
-development may proceed on an accepted contract without waiting for publication.
-No automatic deadline waiver or Beta.2.4. A preview may enter real application work
-while release blockers remain explicitly open; it is not a completed Beta release.
+The 2026-09-08 maintainer refinement replaces the three-day target with acceptance
+checkpoints: Beta.2.1 foundation/fork/repairs, Beta.2.2 Native/Lit Framework Mode,
+Beta.2.3 dual-mode hardening and cleanup/admission. No automatic Beta.2.4 or deadline
+waiver. The active version plan owns the detailed scope and matrix.
+
+### Maintainer refinement: fork governance and Lit (2026-09-08)
+
+Maintain `open-element/url-pattern-list` as a public source-traceable fork with its
+own qualified releases. OE pins a built package version and removes its embedded
+production duplicate. Generic fixes/tests/benchmarks go upstream without blocking
+OE delivery; returning to the official dependency is optional. RouteRecord, HTTP,
+loader/action and rendering lifecycle never enter this generic library. Ordered
+first-match is a legitimate generic capability, not an OE-only concern.
+
+Native and Lit are first-class Router Framework Mode targets. Prove both complete
+application flows before extracting a minimal shared execution protocol. Rendering,
+SSR and client continuation remain integration-specific. Formal support requires
+packed consumers, documentation and an explicit runtime matrix; DSD/CEM do not prove
+hydration or provider compatibility. No third renderer or speculative public adapter
+framework is required. Product independence is proven through dependency graphs.
+
+Native navigation owns only admitted application navigation: unowned POST forms,
+fragments in history mode and reload remain browser-owned. SSG discovers canonical
+records, not Hono's incidental route list. Every mounted lifecycle gets a fresh
+controller. Final review must actually execute; the #1343 insufficient-balance
+comment is missing review evidence even if its workflow wrapper is green.
 
 ## Acceptance and consequences
 

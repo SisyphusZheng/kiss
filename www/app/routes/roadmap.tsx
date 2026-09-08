@@ -32,125 +32,108 @@ interface RoadmapListItem {
 }
 
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
-  en: [
+  'en': [
     {
-      version: 'v0.44.0-beta.2',
-      theme: 'productization + governance offload',
-      copy:
-        'The second public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It proves external users can really use and maintain the framework — packaged-consumer qualification, derived-truth release gates and governance offload onto the three-role release loop (ADR-0151).',
-      state: 'next',
-      stamp: 'CURRENT',
-      status: 'prerelease',
+      'version': 'v0.44.0-beta.2',
+      'theme': 'Published baseline',
+      'copy':
+        'The compiled prerelease baseline remains on npm beta; the stable 0.43 line retains latest. Future checkpoint plans are not publication evidence.',
+      'state': 'next',
+      'stamp': 'CURRENT',
+      'status': 'prerelease',
     },
     {
-      version: 'v0.44.0-beta.2.1 → 2.3',
-      theme: 'Beta.2 patch checkpoints',
-      copy:
-        'Patch releases inside the Beta.2 stage: Router convergence (upstream URLPatternList + one RouteResolution), Document convergence (one resolved page meaning, post-build SEO rewriting removed) and repository/governance closure. Beta.3 keeps its real-workload and formal-benchmark theme.',
-      state: 'next',
-      stamp: 'NEXT',
-      status: 'patch train',
+      'version': 'v0.44.0-beta.2.1',
+      'theme': 'Router foundation and independent Element',
+      'copy':
+        'Maintain a public URLPatternList fork; unify route resolution; repair SSG and browser navigation boundaries; qualify standalone Element and prerelease tooling.',
+      'state': 'next',
+      'stamp': 'NEXT',
+      'status': 'planned acceptance checkpoint',
     },
     {
-      version: 'v0.44 alpha',
-      theme: 'compiled OpenElement foundations',
-      copy:
-        'Architecture constitution, governance offload, unified Content Graph and a production-shaped TSX-to-Part Program compiler spike.',
-      state: 'next',
-      stamp: 'NEXT',
-      status: 'active',
+      'version': 'v0.44.0-beta.2.2',
+      'theme': 'Native and Lit Framework Mode',
+      'copy':
+        'Prove loader, SSR, client continuation, navigation and actions with Native and Lit; derive a minimal shared protocol and public Document/SEO/search/sitemap metadata. Lit is a support target, not an already-shipped claim.',
+      'state': 'planned',
+      'status': 'planned',
     },
     {
-      version: 'compiler → claim',
-      theme: 'Element, Parts and claim',
-      copy:
-        'Standard decorators, the OpenElement kernel, replaceable Signals, fixed Parts, dynamic Regions, DSD serialization and existing-DOM claim converge on one program.',
-      state: 'planned',
-      status: 'planned sequence',
+      'version': 'v0.44.0-beta.2.3',
+      'theme': 'Dual-mode qualification',
+      'copy':
+        'Qualify independent packed consumers, runtime/browser matrices, output and resource cleanup; reconcile documentation and complete remaining cleanup. No deadline waiver or automatic beta.2.4.',
+      'state': 'planned',
+      'status': 'evidence-gated',
     },
     {
-      version: 'delivery → qualification',
-      theme: 'delivery, migration and qualification',
-      copy:
-        'Zero-runtime static output, generated Island delivery, App/build convergence, old-path removal, ecosystem interop and real-application qualification.',
-      state: 'planned',
-      status: 'planned sequence',
+      'version': 'v1.0.0-alpha.1',
+      'theme': 'Public Alpha admission',
+      'copy':
+        'Enter real application development only after final-SHA CI, actual review, fresh verifier and admission evidence; retain extended workload and benchmark qualification.',
+      'state': 'planned',
+      'status': 'planned',
     },
     {
-      version: 'v0.44 release candidate',
-      theme: 'frozen candidate',
-      copy:
-        'Entered only after the complete architecture, correctness, delivery, portability, documentation, governance and real-application gate passes. Any public or architecture change returns to alpha.',
-      state: 'planned',
-      status: 'gated',
-    },
-    {
-      version: 'v1.0.0',
-      theme: 'stable five-package product',
-      copy:
-        'Release only after external production users prove that the Element, App and Build interfaces need no further architecture change.',
-      state: 'planned',
-      status: 'direction',
+      'version': 'v1.0 RC / Stable',
+      'theme': 'Separately admitted releases',
+      'copy':
+        'Freeze an RC after Alpha evidence; Stable requires its own human GO. Element and Router are two products, not a mandatory package count.',
+      'state': 'planned',
+      'status': 'unscheduled',
     },
   ],
-  zh: [
+  'zh': [
     {
-      version: 'v0.44.0-beta.2',
-      theme: '产品化 + 治理减负',
-      copy:
-        '编译型线路的第二个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它验证外部用户能否真正使用并维护该框架——打包消费者资格验证、派生真相发布门禁，以及向三角色发布循环的治理减负（ADR-0151）。',
-      state: 'next',
-      stamp: 'CURRENT',
-      status: '预发布',
+      'version': 'v0.44.0-beta.2',
+      'theme': '已发布基线',
+      'copy':
+        '编译型预发布基线保持 npm beta；稳定 0.43 线保持 latest。后续检查点规划不代表已经发布。',
+      'state': 'next',
+      'stamp': 'CURRENT',
+      'status': '预发布',
     },
     {
-      version: 'v0.44.0-beta.2.1 → 2.3',
-      theme: 'Beta.2 补丁检查点',
-      copy:
-        'Beta.2 阶段内的补丁发布：Router 收敛（上游 URLPatternList + 单一 RouteResolution）、Document 收敛（单一页面语义，移除构建后 SEO 改写）与仓库/治理关闭。Beta.3 保持真实负载与正式基准主题。',
-      state: 'next',
-      stamp: 'NEXT',
-      status: '补丁序列',
+      'version': 'v0.44.0-beta.2.1',
+      'theme': 'Router 地基与独立 Element',
+      'copy':
+        '自主维护公开 URLPatternList fork；统一路由决议；修复 SSG 和浏览器导航边界；验证独立 Element 与预发布工具链。',
+      'state': 'next',
+      'stamp': 'NEXT',
+      'status': '计划验收检查点',
     },
     {
-      version: 'v0.44 alpha',
-      theme: '编译型 OpenElement 地基',
-      copy:
-        '冻结架构宪法、治理减负、统一 Content Graph，并完成具备生产形态的 TSX 到 Part Program 编译器纵切。',
-      state: 'next',
-      stamp: 'NEXT',
-      status: '执行中',
+      'version': 'v0.44.0-beta.2.2',
+      'theme': 'Native 与 Lit Framework Mode',
+      'copy':
+        '以 Native 和 Lit 跑通 loader、SSR、客户端接续、导航及 action，提炼最小共享协议和 Document/SEO/search/sitemap 元数据。Lit 是正式支持目标，尚非已交付声明。',
+      'state': 'planned',
+      'status': '规划中',
     },
     {
-      version: '编译器 → claim',
-      theme: 'Element、Parts 与 claim',
-      copy:
-        '标准装饰器、OpenElement 内核、可替换 Signal、固定 Part、动态 Region、DSD 序列化与已有 DOM claim 收束到同一程序。',
-      state: 'planned',
-      status: '规划序列',
+      'version': 'v0.44.0-beta.2.3',
+      'theme': '双模式资格验证',
+      'copy':
+        '验证独立打包消费者、运行时与浏览器矩阵、产物和资源清理，同步文档并完成剩余清理。期限不豁免验收，不自动追加 beta.2.4。',
+      'state': 'planned',
+      'status': '按证据准入',
     },
     {
-      version: '交付 → 资格验证',
-      theme: '交付、迁移与验证',
-      copy:
-        '零运行时静态输出、生成式 Island 交付、App/构建收束、旧路径删除、生态互操作与真实应用验证。',
-      state: 'planned',
-      status: '规划序列',
+      'version': 'v1.0.0-alpha.1',
+      'theme': '公开 Alpha 准入',
+      'copy':
+        '最终提交通过 CI、实际审查、独立验证和准入后进入真实应用开发；延续真实负载与正式基准验证。',
+      'state': 'planned',
+      'status': '规划中',
     },
     {
-      version: 'v0.44 发布候选',
-      theme: '冻结候选',
-      copy:
-        '只有架构、正确性、交付、可移植性、文档、治理与真实应用门禁全部通过才可进入；任何公开面或架构变化都会退回 alpha。',
-      state: 'planned',
-      status: '受门禁约束',
-    },
-    {
-      version: 'v1.0.0',
-      theme: '稳定的五包产品',
-      copy: '只有当外部生产用户证明 Element、App 与 Build 接口不再需要架构变更时，才发布。',
-      state: 'planned',
-      status: '方向',
+      'version': 'v1.0 RC / Stable',
+      'theme': '分别准入',
+      'copy':
+        'Alpha 证据充分后冻结 RC；Stable 另需人工 GO。Element 与 Router 是两个产品，不强制两个发布包。',
+      'state': 'planned',
+      'status': '未定日期',
     },
   ],
 };
