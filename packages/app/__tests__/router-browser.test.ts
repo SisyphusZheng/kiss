@@ -135,3 +135,105 @@ Deno.test({
     }
   },
 });
+
+Deno.test({
+  name: 'Navigation API: native POST / fragment / reload stay browser-owned (three browsers)',
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
+    const root = new URL('../../../', import.meta.url).pathname.replace(/\/$/, '');
+    const source =
+      `import {createRouter} from '/@fs/${root}/packages/app/src/internal/router/client-router.ts';
+      window.pending=0; window.guards=0; window.changes=[];
+      window.router=createRouter({mode:'history', routes:[
+        {path:'/',tagName:'home-page'}, {path:'/a',tagName:'a-page'}, {path:'/submit',tagName:'submit-page'}
+      ],onPending:()=>window.pending++,onChange:()=>window.changes.push(window.router.currentPath)});`;
+    const seen: Array<{ method: string; url: string; body: string }> = [];
+    const server = await createServer({
+      root,
+      configFile: false,
+      optimizeDeps: { noDiscovery: true, include: [] },
+      logLevel: 'error',
+      resolve: { alias: generateWorkspaceAliases(root) },
+      server: { host: '127.0.0.1', port: 0 },
+      plugins: [{
+        name: 'ownership-proof',
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            if (req.url === '/proof2.js') {
+              res.setHeader('content-type', 'text/javascript');
+              res.end(source);
+              return;
+            }
+            if (req.method === 'POST' && req.url === '/submit') {
+              let body = '';
+              req.on('data', (chunk) => body += chunk);
+              req.on('end', () => {
+                seen.push({ method: req.method!, url: req.url!, body });
+                res.setHeader('content-type', 'text/html');
+                res.end('<body>submitted</body>');
+              });
+              return;
+            }
+            if (req.headers.accept?.includes('text/html')) {
+              res.setHeader('content-type', 'text/html');
+              res.end(
+                '<script type="module" src="/proof2.js"></script>' +
+                  '<form method="post" action="/submit"><input name="field" value="hello"/><button type="submit" id="submit">go</button></form>' +
+                  '<a href="#section" id="frag">frag</a><div style="height:3000px"></div><div id="section">target</div>',
+              );
+              return;
+            }
+            next();
+          });
+        },
+      }],
+    });
+    await server.listen();
+    try {
+      const address = server.httpServer!.address() as { port: number };
+      for (const type of [chromium, firefox, webkit]) {
+        seen.length = 0;
+        const browser = await type.launch({ headless: true });
+        try {
+          const page = await browser.newPage();
+          page.setDefaultTimeout(10_000);
+          await page.goto(`http://127.0.0.1:${address.port}/a`);
+          await page.waitForFunction('window.router');
+          // Fragment: native scroll preserved, no guard/pending/change, no server hit.
+          await page.click('#frag');
+          await page.waitForFunction('location.hash === "#section"');
+          assertEquals(await page.evaluate('location.pathname'), '/a', type.name());
+          assertEquals(await page.evaluate('window.router.currentPath'), '/a', type.name());
+          assertEquals(await page.evaluate('window.pending'), 0, type.name());
+          assertEquals(await page.evaluate('window.changes.length'), 0, type.name());
+          assertEquals(Number(await page.evaluate('scrollY')) > 0, true, type.name());
+          assertEquals(seen.length, 0, type.name());
+          // Reload: full document load through the browser, fresh router after.
+          await page.reload({ waitUntil: 'domcontentloaded' });
+          await page.waitForFunction('window.router');
+          assertEquals(await page.evaluate('window.router.currentPath'), '/a', type.name());
+          // Real form POST: method/body reach the server; the SPA never
+          // converts it into a GET page navigation (full document load).
+          await page.evaluate('location.hash=""');
+          await Promise.all([
+            page.waitForURL('**/submit'),
+            page.click('#submit'),
+          ]);
+          assertEquals(await page.evaluate('location.pathname'), '/submit', type.name());
+          assertEquals(seen.length, 1, type.name());
+          assertEquals(seen[0].method, 'POST', type.name());
+          assertEquals(seen[0].body.includes('field=hello'), true, type.name());
+          assertEquals(await page.evaluate('document.body.textContent'), 'submitted', type.name());
+          console.log(
+            `${type.name()} ${browser.version()}: POST/fragment/reload browser-owned PASS`,
+          );
+        } finally {
+          await browser.close();
+        }
+      }
+    } finally {
+      await server.close();
+    }
+  },
+});

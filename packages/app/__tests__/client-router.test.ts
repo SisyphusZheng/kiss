@@ -1321,6 +1321,175 @@ Deno.test('client router popstate with a synchronously-throwing guard fails open
   }
 });
 
+// ─── Native navigation ownership: POST / fragment / reload stay browser-owned ───
+
+interface FakeNavigateEvent {
+  destination: { url: string };
+  canIntercept: boolean;
+  downloadRequest: unknown;
+  sourceElement: { hasAttribute: (name: string) => boolean } | null;
+  signal: AbortSignal;
+  info: unknown;
+  formData?: FormData | null;
+  method?: string;
+  navigationType?: string;
+  intercepted: boolean;
+  intercept(options: { handler: () => Promise<void> }): void;
+}
+
+function installFakeNavigation() {
+  const descriptors = {
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+    navigation: Object.getOwnPropertyDescriptor(globalThis, 'navigation'),
+  };
+  const listeners = new Map<string, EventListener[]>();
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'http:',
+      origin: 'http://router.test',
+      href: 'http://router.test/a',
+      pathname: '/a',
+      search: '',
+      hash: '',
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: { pushState() {}, replaceState() {} },
+  });
+  const fakeNavigation = {
+    addEventListener(type: string, listener: EventListener) {
+      listeners.set(type, [...(listeners.get(type) ?? []), listener]);
+    },
+    removeEventListener(type: string, listener: EventListener) {
+      listeners.set(type, (listeners.get(type) ?? []).filter((entry) => entry !== listener));
+    },
+  };
+  Object.defineProperty(globalThis, 'navigation', { configurable: true, value: fakeNavigation });
+  const makeEvent = (
+    overrides: Partial<FakeNavigateEvent> & { destination: { url: string } },
+  ): FakeNavigateEvent => ({
+    canIntercept: true,
+    downloadRequest: null,
+    sourceElement: null,
+    signal: new AbortController().signal,
+    info: undefined,
+    intercepted: false,
+    intercept(_options: { handler: () => Promise<void> }) {
+      (this as FakeNavigateEvent).intercepted = true;
+    },
+    ...overrides,
+  });
+  return {
+    fire(event: FakeNavigateEvent) {
+      for (const listener of listeners.get('navigate') ?? []) {
+        (listener as (e: unknown) => void)(event);
+      }
+    },
+    makeEvent,
+    restore() {
+      for (const [key, descriptor] of Object.entries(descriptors)) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else delete (globalThis as Record<string, unknown>)[key];
+      }
+    },
+  };
+}
+
+Deno.test('native POST with formData stays browser-owned: no pending, no intercept', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [{ path: '/a', tagName: 'a-page' }],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({
+      destination: { url: 'http://router.test/a' },
+      formData: new FormData(),
+    });
+    nav.fire(event);
+    assertEquals(event.intercepted, false);
+    assertEquals(pending, 0);
+    assertEquals(router.currentPath, '/a');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+Deno.test('native fragment-only navigation stays browser-owned without cancelling loaders', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  let guards = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page', guard: () => (guards++, Promise.resolve(true)) },
+    ],
+    onPending: () => void pending++,
+    onChange: () => void pending++,
+  });
+  try {
+    const event = nav.makeEvent({ destination: { url: 'http://router.test/a#section' } });
+    nav.fire(event);
+    assertEquals(event.intercepted, false);
+    assertEquals(pending, 0);
+    assertEquals(guards, 0);
+    assertEquals(router.currentPath, '/a');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+Deno.test('native reload stays browser-owned', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [{ path: '/a', tagName: 'a-page' }],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({
+      destination: { url: 'http://router.test/a' },
+      navigationType: 'reload',
+    });
+    nav.fire(event);
+    assertEquals(event.intercepted, false);
+    assertEquals(pending, 0);
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+Deno.test('native same-origin GET without formData still intercepts', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page' },
+      { path: '/b', tagName: 'b-page' },
+    ],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({ destination: { url: 'http://router.test/b' } });
+    nav.fire(event);
+    assertEquals(event.intercepted, true);
+    assertEquals(pending, 1);
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
 Deno.test('client router never leaks unhandled rejections across dispose and guard-failure storms (#1146-3d)', async () => {
   const trap = trapUnhandledRejections();
   const browser = installFakeBrowser('/public');

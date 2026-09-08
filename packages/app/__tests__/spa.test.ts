@@ -763,6 +763,158 @@ Deno.test('defineApp routes action notFound() to the page error projector (#731)
   }
 });
 
+// ─── Each mount gets a fresh execution controller ───
+
+Deno.test('defineApp mount gives a live signal, dispose aborts it, remount gives a fresh live signal', async () => {
+  const signals: AbortSignal[] = [];
+  const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: ({ signal }) => {
+        signals.push(signal);
+        return Promise.resolve({ page: 'home' });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 1);
+    assertEquals(signals[0].aborted, false);
+    const signal1 = signals[0];
+    app.dispose();
+    assertEquals(signal1.aborted, true);
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 2);
+    const signal2 = signals[1];
+    assertEquals(signal2 === signal1, false);
+    assertEquals(signal2.aborted, false);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp direct remount aborts the stale loader and never commits its late result', async () => {
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => release = resolve);
+  const seen: Array<{ signal: AbortSignal; value: string }> = [];
+  const hosts: Record<string, unknown>[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let first = true;
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: ({ signal }) => {
+        if (first) {
+          first = false;
+          seen.push({ signal, value: 'stale' });
+          return pending.then(() => ({ page: 'stale' }));
+        }
+        seen.push({ signal, value: 'fresh' });
+        return Promise.resolve({ page: 'fresh' });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Direct remount without an explicit dispose: the stale mount aborts.
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(seen.length, 2);
+    assertEquals(seen[0].signal.aborted, true);
+    assertEquals(seen[1].signal.aborted, false);
+    assertEquals(seen[0].signal === seen[1].signal, false);
+    // The stale loader resolves late: it must not overwrite the fresh render.
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.at(-1)?.page, 'fresh');
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp remount gives actions a fresh live signal', async () => {
+  let submit: ((event: Event) => void) | undefined;
+  const signals: AbortSignal[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild() {},
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: () => Promise.resolve({ page: 'home' }),
+      action: ({ signal }) => {
+        signals.push(signal);
+        return Promise.resolve({ saved: true });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    submit?.(
+      {
+        target: { tagName: 'FORM' },
+        composedPath: () => [],
+        preventDefault() {},
+      } as unknown as Event,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 1);
+    assertEquals(signals[0].aborted, false);
+    const signal1 = signals[0];
+    app.dispose();
+    assertEquals(signal1.aborted, true);
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    submit?.(
+      {
+        target: { tagName: 'FORM' },
+        composedPath: () => [],
+        preventDefault() {},
+      } as unknown as Event,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 2);
+    assertEquals(signals[1] === signal1, false);
+    assertEquals(signals[1].aborted, false);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
 for (const operation of ['loader', 'action'] as const) {
   Deno.test(`SPA aborts superseded ${operation} and ignores its late redirect`, async () => {
     const hosts: Record<string, unknown>[] = [];

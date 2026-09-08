@@ -317,6 +317,10 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     if (router) {
       dispose();
     }
+    // Each mount gets a fresh execution controller: the previous mount's
+    // signal stays aborted (stale loaders/actions must not commit) while the
+    // new mount's initial loader/action runs un-aborted.
+    execution = new AbortController();
     renderId++;
 
     const el = document.querySelector(selector);

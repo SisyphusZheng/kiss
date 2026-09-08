@@ -356,6 +356,35 @@ export function createRouter(options: RouterOptions): RouterInstance {
   }
 
   function onNativeNavigate(event: NavigateEvent): void {
+    // Ownership before side effects: our own programmatic navigations opt
+    // into SPA handling; browser-driven POST/fragment/reload default to the
+    // browser. No onPending, no ticket bump, no intercept for those.
+    const isOwn = (event as NavigateEvent & { info?: unknown }).info === checkedNavigation;
+    if (!isOwn) {
+      // Native POST forms carry formData: leave to browser/server unless an
+      // explicit action-navigation protocol claims them (none yet — the SPA
+      // submit handler owns in-page actions via preventDefault, so no
+      // navigate event fires there; this guard covers the rest).
+      const formData = (event as NavigateEvent & { formData?: FormData | null }).formData;
+      const eventMethod = (event as NavigateEvent & { method?: string }).method;
+      if (formData != null || eventMethod === 'POST') return;
+      // Reload defaults to the browser; app data refresh never poses as reload.
+      const navigationType = (event as NavigateEvent & { navigationType?: string }).navigationType;
+      if (navigationType === 'reload') return;
+      // Fragment-only in history mode: preserve native scroll, don't cancel
+      // unrelated loaders or run guard/loader/render. Hash-router semantics
+      // are separate (nativeNavigation is history-only).
+      try {
+        const probe = new URL(event.destination.url);
+        if (
+          probe.origin === location.origin &&
+          probe.pathname === location.pathname &&
+          probe.search === location.search
+        ) return;
+      } catch {
+        // Malformed destination URL falls through to normal handling below.
+      }
+    }
     const target = new URL(event.destination.url);
     // Firefox can emit a follow-up navigate with downloadRequest=null for
     // the same download anchor. Preserve the originating element's policy.
