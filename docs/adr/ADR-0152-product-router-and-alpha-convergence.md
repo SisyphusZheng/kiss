@@ -174,3 +174,22 @@ Release automation must implement the new successor/channel distinction (#1323,
 versions, publish artifacts, grant Stable readiness, or claim runtime migration
 has already happened. Planning may change now while code still implements the
 published baseline; outstanding implementation is visible in the issue graph.
+
+## Alpha/RC refinement (2026-09-08)
+
+The maintainer approves evidence-driven Alpha architecture iteration followed by RC
+contract freeze. #1179 real application qualification starts after Alpha admission,
+not after RC; #1243 admits RC and #1178 freezes its artifacts. #1234 freezes each
+qualification round's identity, not the entire Alpha design. Candidate changes require
+explicit evidence invalidation/requalification; no mixed-artifact PASS claim.
+
+Native/Lit share application semantics but have separate renderer/runtime qualification.
+Element JFB is not Router/Lit evidence. Independent onboarding, promised migrations and
+fork maintenance are Alpha qualification obligations. One substantial application plus
+equivalent journeys in the other mode suffices; two full SaaS products are not required.
+
+RC freezes the admitted public contracts, supported matrix and exact dependency set.
+Keep fourteen-day soak, install/upgrade/security, triage and human GO. Architecture
+changes return to Alpha; fixes/dependency updates create new qualified candidates.
+Stable is 1.0.0 with the actual admitted packages. Old 0.44/five-package/0.41-waiver
+wording does not govern this release; historical evidence remains unchanged.

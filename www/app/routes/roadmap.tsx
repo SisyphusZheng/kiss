@@ -71,7 +71,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v1.0.0-alpha.1',
       'theme': 'Public Alpha admission',
       'copy':
-        'Enter real application development only after final-SHA CI, actual review, fresh verifier and admission evidence; retain extended workload and benchmark qualification.',
+        'After Alpha admission, use real applications to refine APIs and architecture; qualify independent consumers, Native/Lit capabilities, performance and fork maintenance against identified artifact rounds.',
       'state': 'planned',
       'status': 'planned',
     },
@@ -79,7 +79,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v1.0 RC / Stable',
       'theme': 'Separately admitted releases',
       'copy':
-        'Freeze an RC after Alpha evidence; Stable requires its own human GO. Element and Router are two products, not a mandatory package count.',
+        'Freeze contracts and dependencies after Alpha evidence; require at least fourteen days of RC soak, install/upgrade/security qualification and human GO. Element and Router do not mandate a package count.',
       'state': 'planned',
       'status': 'unscheduled',
     },
@@ -123,7 +123,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v1.0.0-alpha.1',
       'theme': '公开 Alpha 准入',
       'copy':
-        '最终提交通过 CI、实际审查、独立验证和准入后进入真实应用开发；延续真实负载与正式基准验证。',
+        'Alpha 准入后以真实应用反馈修正接口与架构；按明确产物轮次验证独立消费者、Native/Lit 能力、性能与 fork 维护。',
       'state': 'planned',
       'status': '规划中',
     },
@@ -131,7 +131,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v1.0 RC / Stable',
       'theme': '分别准入',
       'copy':
-        'Alpha 证据充分后冻结 RC；Stable 另需人工 GO。Element 与 Router 是两个产品，不强制两个发布包。',
+        'Alpha 证据充分后冻结接口与依赖，完成至少十四天 RC 持续运行及安装、升级、安全验证后取得人工 GO。两个产品不强制两个发布包。',
       'state': 'planned',
       'status': '未定日期',
     },

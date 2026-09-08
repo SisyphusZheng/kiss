@@ -26,8 +26,12 @@ The published Beta.2 baseline is followed by three convergence checkpoints:
    flow, renderer-specific SSR/client continuation, Document and public metadata.
 3. **Beta.2.3:** dual-mode hardening, independent packed consumers, runtime matrices,
    documentation, remaining cleanup and Alpha admission.
-4. **Public 1.0 Alpha:** real application development and extended qualification.
-5. **1.0 RC / Stable:** separately evidence-gated and unscheduled.
+4. **Public 1.0 Alpha:** real application feedback may revise APIs/architecture;
+   qualify independent consumers, Native/Lit matrices, performance and fork maintenance
+   against identified artifact rounds.
+5. **1.0 RC / Stable:** freeze admitted contracts/dependencies, reuse the real product
+   for at least fourteen days of RC soak, verify install/upgrade/security and obtain
+   human GO; separately evidence-gated and unscheduled.
 
 Acceptance checkpoints replace the former three-day schedule. Lit is planned support,
 not an already-qualified feature. No automatic Beta.2.4 or deadline waiver.
@@ -47,3 +51,8 @@ The old Beta.3 lane is superseded; its open qualification work moves to 1.0 Alph
 Historical internal v0.44 Alpha workspaces remain unpublished historical work IDs.
 Upcoming 1.0 Alpha is public and uses npm `alpha`; `latest` remains the admitted
 stable line. Changing this roadmap does not publish a version or complete a task.
+
+Alpha product validation (#1179) precedes RC admission (#1243) and freeze (#1178).
+RC soak (#1244) reuses that application; it does not postpone first product use until
+RC. The [active plan](../current/VERSION_PLAN.md) defines artifact-round and migration
+requirements. Historical 0.44 RC and 0.41 Stable exceptions are not current gates.

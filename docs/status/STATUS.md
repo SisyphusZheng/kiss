@@ -24,3 +24,8 @@ Historical v0.44 internal Alpha workspaces are complete; their evidence stays in
 issues and release history. Upcoming public 1.0 Alpha is a separate release phase.
 Existing exact-SHA CI, provenance, protected promotion and release GO requirements
 continue under [RELEASE_POLICY.md](../governance/RELEASE_POLICY.md).
+
+Public Alpha permits application-driven API/architecture iteration against identified
+qualification rounds. RC admission follows that evidence, then freezes exact public
+contracts/dependencies and requires at least fourteen days of soak plus upgrade/security
+qualification and human GO. See the active plan; no RC date or Stable readiness is claimed.

@@ -109,6 +109,58 @@ Cleanup accompanies every replacement; #1328-#1334, #1156, #1188/#1189 and #1192
 retain their distinct obligations. Do not silently defer an existing acceptance
 criterion or close an umbrella because one slice passed.
 
+## Public 1.0 Alpha: validate the product contract
+
+After #1340 admission, Alpha uses an independent real application (#1179) to test
+whether product boundaries and APIs survive actual use. Alpha may revise architecture
+and public interfaces with migration guidance; it is not an early RC freeze. Use one
+substantial application in one mode and equivalent critical journeys in the other;
+two complete SaaS implementations are not required.
+
+#1234 identifies immutable artifacts/hashes/dependencies for each qualification round.
+Fixes create new rounds and an evidence-impact assessment; invalidate affected results
+and rerun required checks. Never combine different artifacts into a fictitious passing
+candidate. Final RC admission evidence must cover the actual admission candidate.
+
+- #1240 qualifies independent install/start/develop/build/deploy/upgrade and diagnostics
+  for Element standalone, Router Route Mode, Native and Lit Framework Mode, building on
+  Beta fixtures without substituting them for independent-repository evidence.
+- #1241 owns mode-by-capability-by-runtime support; Native evidence does not qualify Lit.
+- #1239/#1242 cover shared execution errors/cancellation and each renderer's long-running
+  cleanup; retain leak bounds for DOM, listeners, effects, subscriptions and caches.
+- #1235 is Element JFB evidence only; #1236 separates Router/application overhead from
+  Native and Lit rendering/SSR/build costs. #1237 optimizes measured bottlenecks only.
+- #1238 rechecks build/static-serving audit findings against current artifacts and
+  preserves containment, concurrent-build integrity and predictable failure behavior.
+- #1243 requires a fork maintenance exercise: generic regression -> fix -> fork package
+  release -> OE dependency upgrade -> regression qualification. Upstream response is
+  not a gate. #1187 binds release evidence to exact OE and dependency artifacts.
+
+## RC and Stable: freeze and qualify the admitted contract
+
+Dependency chain: #1340 -> #1179 and required #1234-#1242/#1187 -> #1243 RC admission
+-> #1178 artifact freeze -> #1244 soak / #1245 install-security / #1246 triage
+-> #1180 human GO -> #37 Stable closure. Alpha application validation never waits for RC.
+
+#1178 freezes Element APIs/generated-artifact compatibility, Router/application protocol,
+Native/Lit entry points, supported capability/runtime matrix, package hashes and the
+qualified matching-fork/Lit dependency set. Independent dependency releases do not force
+lockstep OE publication. Updating a candidate dependency creates a new artifact and
+invalidates affected qualification. Architecture/public-contract changes return to Alpha.
+
+Preserve at least fourteen days of RC soak with no unresolved P0/P1 regression, using
+#1179's application on frozen RC artifacts and equivalent journeys in the other mode.
+Record candidate changes and their effect on soak; no silent reuse of invalid evidence.
+#1245 retains fresh install, promised stable/Beta/Alpha migrations, stable-to-compiled
+rehearsal, exports/types/maps, production/static output, integrity/security/provenance.
+#1246 classifies every RC issue; minor cleanup stays post-1.0, supported-mode blockers
+cannot be waived because the other renderer passes.
+
+#1180/#37 require human GO and consistent npm/tag/Release/provenance before closure.
+The intended Stable target is 1.0.0 and the actually admitted package set, not legacy
+0.44.0/five-package wording. Historical 0.41 exceptions and a seven-day post-release
+watch do not substitute for current RC qualification. RC/Stable remain unscheduled.
+
 ## Non-goals
 
 A third Framework Mode, automatic framework detection/plugin marketplace, another
