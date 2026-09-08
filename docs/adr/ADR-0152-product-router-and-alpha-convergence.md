@@ -12,9 +12,9 @@
 
 Current package/tool boundaries obscure product responsibilities. Repeated route,
 request, document and governance owners increase maintenance work. The maintainer
-approved a three-working-day convergence target using existing implementations,
+originally approved a three-working-day convergence target using existing implementations,
 with continuous deletion and a real application slice before public Alpha admission.
-This is a timebox target, not proof that implementation or publication is complete.
+The 2026-09-08 refinement below replaces that schedule with acceptance checkpoints.
 
 ## Decision
 
@@ -28,7 +28,7 @@ and real application use; it does not promise a comprehensive design system. Rou
 - Route Mode consumes explicit records; its matching core is independent of
   Element, Hono, Vite and filesystem access.
 - Framework Mode defaults to file routing and adds page data, forms, Document,
-  Element rendering, navigation, SSR/SSG and official Vite integration. UI is optional.
+  Native or Lit rendering integration, navigation, SSR/SSG and official Vite integration. UI is optional; Lit support is an acceptance target, not shipped evidence.
 
 Explicit and generated records converge on one RouteTable/RouteResolution.
 File paths own generated route paths; no duplicate `route.path` declaration.
@@ -65,7 +65,7 @@ Foreign CE property/attribute/event/upgrade boundaries need real browser evidenc
 Internal foreign SSR/hydration remains component-specific, not a universal DSD
 promise. Broader React/Vue/etc. integration matrices are Alpha follow-up work.
 
-### URLPatternList is an owned core asset
+### URLPatternList is an independently maintained generic fork
 
 Start from Justin Fagnani's `url-pattern-list` v0.5.0, source commit
 `4911e649cc11860c7da90c9d0d9b05626c5cbb83`, with verified MIT attribution and a
@@ -92,7 +92,8 @@ References: [Justin's source](https://github.com/justinfagnani/url-pattern-list)
 Hono owns HTTP Context/middleware/Response integration without a second page
 winner. Useful page-data/form abstractions share one request lifecycle; preserve
 validation errors, status, redirects and serialization boundaries. Document owns
-resolved page meaning; Element serializes it. Layouts compose presentation without
+resolved page meaning; each qualified rendering integration owns serialization. Native
+reuses Element; Lit does not depend on the Native compiled-artifact protocol. Layouts compose presentation without
 a second data scheduler. Vite owns the official build/development integration.
 
 SSG may read external build-time data; personalized results must not become public
@@ -119,8 +120,8 @@ release gates remain; no replacement historical-topology checker is introduced.
 ```text
 published v0.44.0-beta.2
   -> beta.2.1 Router/core + continuous cleanup
-  -> beta.2.2 Framework/Document + continuous cleanup
-  -> beta.2.3 cleanup closure + application admission
+  -> beta.2.2 Native/Lit Framework Mode + Document + continuous cleanup
+  -> beta.2.3 dual-mode hardening + cleanup closure + application admission
   -> public v1.0.0-alpha.1 and subsequent Alpha iterations
   -> evidence-gated v1.0.0-rc.1
   -> separately admitted Stable
@@ -130,12 +131,32 @@ The former Beta.3 lane becomes 1.0 Alpha; its unfinished work remains tracked.
 Historic v0.44 alpha workspace IDs remain internal/unpublished. Public 1.0 Alpha
 uses npm `alpha`; npm `latest` stays on the last admitted stable release.
 
-Target three working days from implementation start: Day 1 core plus a minimal
-Cloudflare/Vite spike, Day 2 representative Framework flow, Day 3 remaining cleanup
-and admission evidence. Intermediate public Beta checkpoints retain release gates;
-development may proceed on an accepted contract without waiting for publication.
-No automatic deadline waiver or Beta.2.4. A preview may enter real application work
-while release blockers remain explicitly open; it is not a completed Beta release.
+The 2026-09-08 maintainer refinement replaces the three-day target with acceptance
+checkpoints: Beta.2.1 foundation/fork/repairs, Beta.2.2 Native/Lit Framework Mode,
+Beta.2.3 dual-mode hardening and cleanup/admission. No automatic Beta.2.4 or deadline
+waiver. The active version plan owns the detailed scope and matrix.
+
+### Maintainer refinement: fork governance and Lit (2026-09-08)
+
+Maintain `open-element/url-pattern-list` as a public source-traceable fork with its
+own qualified releases. OE pins a built package version and removes its embedded
+production duplicate. Generic fixes/tests/benchmarks go upstream without blocking
+OE delivery; returning to the official dependency is optional. RouteRecord, HTTP,
+loader/action and rendering lifecycle never enter this generic library. Ordered
+first-match is a legitimate generic capability, not an OE-only concern.
+
+Native and Lit are first-class Router Framework Mode targets. Prove both complete
+application flows before extracting a minimal shared execution protocol. Rendering,
+SSR and client continuation remain integration-specific. Formal support requires
+packed consumers, documentation and an explicit runtime matrix; DSD/CEM do not prove
+hydration or provider compatibility. No third renderer or speculative public adapter
+framework is required. Product independence is proven through dependency graphs.
+
+Native navigation owns only admitted application navigation: unowned POST forms,
+fragments in history mode and reload remain browser-owned. SSG discovers canonical
+records, not Hono's incidental route list. Every mounted lifecycle gets a fresh
+controller. Final review must actually execute; the #1343 insufficient-balance
+comment is missing review evidence even if its workflow wrapper is green.
 
 ## Acceptance and consequences
 
@@ -153,3 +174,39 @@ Release automation must implement the new successor/channel distinction (#1323,
 versions, publish artifacts, grant Stable readiness, or claim runtime migration
 has already happened. Planning may change now while code still implements the
 published baseline; outstanding implementation is visible in the issue graph.
+
+## Alpha/RC refinement (2026-09-08)
+
+The maintainer approves evidence-driven Alpha architecture iteration followed by RC
+contract freeze. #1179 real application qualification starts after Alpha admission,
+not after RC; #1243 admits RC and #1178 freezes its artifacts. #1234 freezes each
+qualification round's identity, not the entire Alpha design. Candidate changes require
+explicit evidence invalidation/requalification; no mixed-artifact PASS claim.
+
+Native/Lit share application semantics but have separate renderer/runtime qualification.
+Element JFB is not Router/Lit evidence. Independent onboarding, promised migrations and
+fork maintenance are Alpha qualification obligations. One substantial application plus
+equivalent journeys in the other mode suffices; two full SaaS products are not required.
+
+RC freezes the admitted public contracts, supported matrix and exact dependency set.
+Keep fourteen-day soak, install/upgrade/security, triage and human GO. Architecture
+changes return to Alpha; fixes/dependency updates create new qualified candidates.
+Stable is 1.0.0 with the actual admitted packages. Old 0.44/five-package/0.41-waiver
+wording does not govern this release; historical evidence remains unchanged.
+
+## Upstream-contribution priority in Beta.2.x (2026-09-08)
+
+The maintainer prioritizes the path most likely to yield sustained useful upstream
+contributions over locally optimal speed or configuration size. Select WTR for browser
+conformance because Lit/Modern Web share it; qualify with the existing compiled ESM
+path and retain Playwright application E2E/Deno runtime tests. A lower-glue alternative
+alone does not overturn this selection. Concrete correctness/distribution/integration
+blockers require an explicit plan reassessment.
+
+Keep recipient-native harnesses: Node tests for URLPatternList, WTR for Lit/browser
+reproductions and Oxc's tests for compiler fixes. Preserve fork provenance and minimize
+unnecessary divergence. Record generic reproduction/patch boundaries and OE-only
+semantics, with no PR quota, invented bug or dependency on upstream response. Local
+truth consolidation may have no upstream patch. Beta.2.2 Oxc/TS7 work is feasibility;
+full backend migration remains a separately qualified Alpha change. Existing #1343
+correctness/review blockers and release gates are unchanged.

@@ -20,20 +20,21 @@ OpenElement's core products are **Element / Router**; UI is dogfood and a refere
 
 The published Beta.2 baseline is followed by three convergence checkpoints:
 
-1. **Beta.2.1:** core product boundaries and standalone Element delivery contract,
-   general Router core, self-maintained URLPatternList, explicit and
-   file-generated records, shared resolution and immediate cleanup.
-2. **Beta.2.2:** standalone Element packed-consumer proof, Framework Mode
-   page/form/navigation lifecycle, Document, Element
-   and Vite integration, with replacement-time cleanup.
-3. **Beta.2.3:** remaining repository/governance reduction and real-application
-   admission evidence.
-4. **Public 1.0 Alpha:** real application development, compatibility fixes,
-   measured optimization and extended qualification.
-5. **1.0 RC / Stable:** separately evidence-gated and unscheduled.
+1. **Beta.2.1:** independently maintained URLPatternList fork, one Router resolution,
+   SSG/navigation repairs, standalone Element delivery and prerelease tooling.
+2. **Beta.2.2:** first-class Native/Lit Framework Mode target: shared application
+   flow, renderer-specific SSR/client continuation, Document and public metadata.
+3. **Beta.2.3:** dual-mode hardening, independent packed consumers, runtime matrices,
+   documentation, remaining cleanup and Alpha admission.
+4. **Public 1.0 Alpha:** real application feedback may revise APIs/architecture;
+   qualify independent consumers, Native/Lit matrices, performance and fork maintenance
+   against identified artifact rounds.
+5. **1.0 RC / Stable:** freeze admitted contracts/dependencies, reuse the real product
+   for at least fourteen days of RC soak, verify install/upgrade/security and obtain
+   human GO; separately evidence-gated and unscheduled.
 
-Target three working days from implementation start to a usable real-app slice.
-This is not a guarantee of full migration or permission to skip a release blocker.
+Acceptance checkpoints replace the former three-day schedule. Lit is planned support,
+not an already-qualified feature. No automatic Beta.2.4 or deadline waiver.
 The [active plan](../current/VERSION_PLAN.md) owns scope and acceptance;
 [the issue map](./v0.44.0-ISSUES.md) links execution work. Every replacement includes
 removing displaced code, callers, obsolete checks and duplicated current facts.
@@ -50,3 +51,20 @@ The old Beta.3 lane is superseded; its open qualification work moves to 1.0 Alph
 Historical internal v0.44 Alpha workspaces remain unpublished historical work IDs.
 Upcoming 1.0 Alpha is public and uses npm `alpha`; `latest` remains the admitted
 stable line. Changing this roadmap does not publish a version or complete a task.
+
+Alpha product validation (#1179) precedes RC admission (#1243) and freeze (#1178).
+RC soak (#1244) reuses that application; it does not postpone first product use until
+RC. The [active plan](../current/VERSION_PLAN.md) defines artifact-round and migration
+requirements. Historical 0.44 RC and 0.41 Stable exceptions are not current gates.
+
+## Beta.2.x contribution strategy
+
+Prefer infrastructure that enables sustained upstream contributions, even when local
+setup is not minimal. Beta.2.1 establishes the source-traceable matching fork and generic
+tooling inventory; Beta.2.2 uses WTR for Native/Lit browser conformance and bounded
+Oxc/TS7 feasibility; Beta.2.3 removes replaced mocks, fixtures and generic wrappers
+with behavior preserved. Full compiler-backend migration remains Alpha work.
+
+Follow each upstream's harness, keep OE-specific semantics local, and prepare real
+reproductions/small patches. No PR-count target or upstream-merge release dependency.
+See the [deletion and contribution map](../architecture/infrastructure-reduction.md).
