@@ -24,3 +24,5 @@ Public docs sitemap/search are generated from eligible route/catalog metadata un
 [#1327](https://github.com/open-element/openelement/issues/1327). Do not hand-maintain
 XML or publish planned APIs as implemented documentation. SSG discovery repair is a
 Beta.2.1 prerequisite; metadata convergence remains Beta.2.2.
+
+- [Infrastructure reduction audit and WTR pilot](./infrastructure-reduction.md)

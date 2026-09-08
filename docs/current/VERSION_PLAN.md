@@ -206,3 +206,12 @@ this must be resolved before merging #1343, not postponed until Beta.2.3. Do not
 silently change model/provider or treat an unavailable review as GO. Final HEAD needs
 actual review, full CI and fresh verifier evidence. Confirming #1342 ancestry does
 not mean that baseline CI passed. Planning edits do not repair #1343's product defects.
+
+## Infrastructure reduction proposal
+
+The [source audit](../architecture/infrastructure-reduction.md) identifies deletion
+candidates under #1156/#1333/#1332/#1334. WTR is preferred for a bounded browser
+conformance pilot, with Playwright E2E and Deno pure/runtime tests retained. Lit
+upstream alignment helps browser reproductions; URLPatternList keeps its upstream
+Node test conventions. This proposal does not claim a runner/backend migration has
+passed or require Oxc/TS7 before current correctness fixes.
