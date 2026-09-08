@@ -46,7 +46,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.1',
       'theme': 'Router foundation and independent Element',
       'copy':
-        'Maintain a public URLPatternList fork; unify route resolution; repair SSG and browser navigation boundaries; qualify standalone Element and prerelease tooling.',
+        'Maintain an upstream-traceable URLPatternList fork and prepare generic contributions; unify route resolution; repair SSG and browser navigation boundaries; qualify standalone Element and prerelease tooling.',
       'state': 'next',
       'stamp': 'NEXT',
       'status': 'planned acceptance checkpoint',
@@ -55,7 +55,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.2',
       'theme': 'Native and Lit Framework Mode',
       'copy':
-        'Prove loader, SSR, client continuation, navigation and actions with Native and Lit; derive a minimal shared protocol and public Document/SEO/search/sitemap metadata. Lit is a support target, not an already-shipped claim.',
+        'Use WTR for upstream-aligned browser conformance; prove loader, SSR, client continuation, navigation and actions with Native and Lit; derive a minimal shared protocol and public Document/SEO/search/sitemap metadata. Lit is a support target, not an already-shipped claim.',
       'state': 'planned',
       'status': 'planned',
     },
@@ -98,7 +98,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.1',
       'theme': 'Router 地基与独立 Element',
       'copy':
-        '自主维护公开 URLPatternList fork；统一路由决议；修复 SSG 和浏览器导航边界；验证独立 Element 与预发布工具链。',
+        '维护可追溯上游的 URLPatternList fork，准备通用贡献；统一路由决议；修复 SSG 和浏览器导航边界；验证独立 Element 与预发布工具链。',
       'state': 'next',
       'stamp': 'NEXT',
       'status': '计划验收检查点',
@@ -107,7 +107,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.2',
       'theme': 'Native 与 Lit Framework Mode',
       'copy':
-        '以 Native 和 Lit 跑通 loader、SSR、客户端接续、导航及 action，提炼最小共享协议和 Document/SEO/search/sitemap 元数据。Lit 是正式支持目标，尚非已交付声明。',
+        '采用便于贡献上游的 WTR 浏览器测试，以 Native 和 Lit 跑通 loader、SSR、客户端接续、导航及 action，提炼最小共享协议和 Document/SEO/search/sitemap 元数据。Lit 是正式支持目标，尚非已交付声明。',
       'state': 'planned',
       'status': '规划中',
     },

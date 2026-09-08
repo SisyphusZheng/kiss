@@ -210,8 +210,43 @@ not mean that baseline CI passed. Planning edits do not repair #1343's product d
 ## Infrastructure reduction proposal
 
 The [source audit](../architecture/infrastructure-reduction.md) identifies deletion
-candidates under #1156/#1333/#1332/#1334. WTR is preferred for a bounded browser
-conformance pilot, with Playwright E2E and Deno pure/runtime tests retained. Lit
+candidates under #1156/#1333/#1332/#1334. WTR is the selected browser-conformance direction, qualified through a bounded
+pilot, with Playwright E2E and Deno pure/runtime tests retained. Lit
 upstream alignment helps browser reproductions; URLPatternList keeps its upstream
 Node test conventions. This proposal does not claim a runner/backend migration has
 passed or require Oxc/TS7 before current correctness fixes.
+
+## Beta.2.x upstream-contribution priority (maintainer-approved)
+
+Tool selection prioritizes a credible, repeatable path to useful upstream contributions,
+not minimum local configuration, maximum speed or maximum deletion count. Additional
+local integration effort is acceptable when it produces recipient-native reproductions
+and maintainable generic patches. Correctness, supported behavior, provenance and release
+requirements remain hard constraints. No PR-count target or upstream-response gate.
+
+| Checkpoint | Upstream-oriented work                                                                                          | Ownership and acceptance                                                                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beta.2.1   | Preserve source/history/test conventions in the matching fork; inventory generic infrastructure already adopted | #1324 keeps Node-native upstream tests and independent releases; #1156 separates generic tooling from OE rules. Current #1343 repairs/review remain first.                                                                    |
+| Beta.2.2   | WTR component conformance and Native/Lit integration reproductions                                              | #1333 pilots WTR with compiled ESM and all three browsers; #1339 separates generic Lit/WTR failures from Router integration defects. Oxc/TS7 feasibility is scoped under #1156, with no production backend migration implied. |
+| Beta.2.3   | Consolidate browser fixtures/runner wrappers and retire replaced generic infrastructure                         | #1333/#1332 preserve coverage and fail-closed CI; #1156/#1330/#1331 retain thin OE rules only; #1327/#1334 remove duplicate writable truth before retiring checks.                                                            |
+
+WTR is selected for alignment with Lit/Modern Web. Vitest is not an equal-default
+alternative chosen merely for less glue; reconsider only if a concrete correctness,
+distribution or sustainable-integration blocker is documented and the plan is revised.
+Retain Playwright full-document E2E and Deno pure/runtime tests. Do not force WTR onto
+URLPatternList's Node tests or Oxc's own harness. Reuse official compilation; no new
+OE compiler API or permanent browser-runner abstraction.
+
+Each migration identifies the recipient project, upstream source/version, generic
+reproduction in its native harness, intended patch boundary and OE-only remainder.
+Actual generic defects should be prepared for contribution under the repository's
+contribution/authorization process. Do not invent defects or send cosmetic churn to
+satisfy a gate. When no upstream defect exists, record why local cleanup is sufficient.
+Upstream acceptance/timing never blocks OE release; sustained useful contributions,
+not merged-PR totals, are the objective.
+
+Oxc/TS7 work during Beta is feasibility and boundary validation: decorators, diagnostics,
+source maps, Deno resolution, declaration delivery and official build integration.
+Full backend replacement remains separately evidence-gated in Alpha; it must not
+expand #1343 or delay an existing correctness repair. No tool/fork is claimed installed
+or qualified by this planning change.

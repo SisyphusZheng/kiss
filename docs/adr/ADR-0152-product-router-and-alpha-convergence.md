@@ -193,3 +193,20 @@ Keep fourteen-day soak, install/upgrade/security, triage and human GO. Architect
 changes return to Alpha; fixes/dependency updates create new qualified candidates.
 Stable is 1.0.0 with the actual admitted packages. Old 0.44/five-package/0.41-waiver
 wording does not govern this release; historical evidence remains unchanged.
+
+## Upstream-contribution priority in Beta.2.x (2026-09-08)
+
+The maintainer prioritizes the path most likely to yield sustained useful upstream
+contributions over locally optimal speed or configuration size. Select WTR for browser
+conformance because Lit/Modern Web share it; qualify with the existing compiled ESM
+path and retain Playwright application E2E/Deno runtime tests. A lower-glue alternative
+alone does not overturn this selection. Concrete correctness/distribution/integration
+blockers require an explicit plan reassessment.
+
+Keep recipient-native harnesses: Node tests for URLPatternList, WTR for Lit/browser
+reproductions and Oxc's tests for compiler fixes. Preserve fork provenance and minimize
+unnecessary divergence. Record generic reproduction/patch boundaries and OE-only
+semantics, with no PR quota, invented bug or dependency on upstream response. Local
+truth consolidation may have no upstream patch. Beta.2.2 Oxc/TS7 work is feasibility;
+full backend migration remains a separately qualified Alpha change. Existing #1343
+correctness/review blockers and release gates are unchanged.

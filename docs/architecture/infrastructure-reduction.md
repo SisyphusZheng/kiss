@@ -1,6 +1,6 @@
 # Infrastructure reduction: responsibility audit
 
-Decision proposal, 2026-09-08. Inspected planning checkout `75a05c3c`; this is a
+Maintainer-approved contribution priority and migration plan, 2026-09-08. Inspected planning checkout `75a05c3c`; this is a
 bounded source audit, not completed migration or a whole-repository deletion count.
 The separate #1343 implementation branch must be rechecked before applying changes.
 Tracking: #1156 (generic infrastructure), #1333 (test/consumer consolidation),
@@ -8,11 +8,13 @@ Tracking: #1156 (generic infrastructure), #1333 (test/consumer consolidation),
 
 ## Recommendation
 
-Prefer Web Test Runner (WTR) for the first browser-conformance migration pilot.
-Retain Playwright Test for application/navigation/SSR/deployed-artifact E2E and
-Deno tests for pure algorithms and required Deno behavior. Do not add Vitest in
-parallel for the same browser responsibility. WTR adoption is conditional on the
-pilot removing meaningful infrastructure without introducing another OE compiler.
+Select Web Test Runner (WTR) for browser conformance, qualified first through a bounded
+pilot. The primary selection criterion is sustained useful upstream contribution,
+not least local glue or fastest local execution. Retain Playwright Test for full
+application/navigation/SSR E2E and Deno tests for pure algorithms/runtime contracts.
+Additional integration effort may be justified by portable upstream reproductions;
+correctness and sustainable integration remain requirements. Do not introduce a
+second OE compiler or permanent runner framework.
 
 Lit upstream uses WTR with Playwright Chromium/Firefox/WebKit launchers and WTR SSR
 integration middleware. Shared test style reduces the effort to send independent
@@ -68,10 +70,24 @@ at implementation time; filenames alone do not establish redundancy.
    Short migration coexistence has an explicit completion boundary; no permanent
    second browser-conformance runner or new runner abstraction.
 
-If precompilation/watch/source-map integration creates substantial duplicate build
-machinery, compare Vitest Browser Mode using the existing Vite plugin before choosing.
-The comparison is a bounded alternative, not permission to adopt both indefinitely.
+WTR is the selected direction. Less Vite configuration alone does not justify switching
+to Vitest. Reconsider only after documenting a concrete correctness, distribution or
+sustainable-integration blocker and revising the plan; do not permanently adopt both.
 No pilot was executed in this audit; runner installation and migration remain open.
+
+## Contribution acceptance
+
+For each migration identify the upstream recipient, source version, its native test
+harness, portable reproducer, proposed generic patch and OE-only remainder. Useful
+fixes should be prepared for upstream contribution; no invented bug, cosmetic PR quota
+or merge-count target. A contribution-ready patch can be reviewed independently of OE.
+If no upstream change is necessary, record local deletion/standard-tool adoption as
+such. Upstream response or acceptance does not block OE's release.
+
+WTR/Lit is the browser-test path; URLPatternList retains Node test conventions; Oxc
+contributions use its own test suite; generic package/graph/link gaps go to the tool
+that owns them. Version/metadata duplication may be entirely local cleanup. Do not
+force every deletion to produce a public PR.
 
 ## Priorities
 
@@ -82,6 +98,8 @@ No pilot was executed in this audit; runner installation and migration remain op
   component conformance away from simulated platform implementations.
 - Beta.2.3: #1333 closes qualified test/fixture consolidation; #1332 removes obsolete
   execution wrappers; #1334/#1327 remove duplicated truth before deleting checks.
+- Beta.2.2: #1156 scopes Oxc/TS7 feasibility (decorators, diagnostics, source maps,
+  declarations and Deno resolution) without changing the production backend.
 - Alpha: Oxc/TS7 backend migration follows its own correctness/diagnostics/artifact
   evidence. Do not couple all infrastructure changes into one mandatory mega-migration.
 

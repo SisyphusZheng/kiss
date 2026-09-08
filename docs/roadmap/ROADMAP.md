@@ -56,3 +56,15 @@ Alpha product validation (#1179) precedes RC admission (#1243) and freeze (#1178
 RC soak (#1244) reuses that application; it does not postpone first product use until
 RC. The [active plan](../current/VERSION_PLAN.md) defines artifact-round and migration
 requirements. Historical 0.44 RC and 0.41 Stable exceptions are not current gates.
+
+## Beta.2.x contribution strategy
+
+Prefer infrastructure that enables sustained upstream contributions, even when local
+setup is not minimal. Beta.2.1 establishes the source-traceable matching fork and generic
+tooling inventory; Beta.2.2 uses WTR for Native/Lit browser conformance and bounded
+Oxc/TS7 feasibility; Beta.2.3 removes replaced mocks, fixtures and generic wrappers
+with behavior preserved. Full compiler-backend migration remains Alpha work.
+
+Follow each upstream's harness, keep OE-specific semantics local, and prepare real
+reproductions/small patches. No PR-count target or upstream-merge release dependency.
+See the [deletion and contribution map](../architecture/infrastructure-reduction.md).
