@@ -26,6 +26,10 @@ async function pathExists(path: string): Promise<boolean> {
 function createMockBundle(overrides: Partial<SsrBundle> = {}): SsrBundle {
   const app = new Hono();
   app.get('/', (c) => c.text('ok'));
+  // Mock dispatcher must serve every static routeInfo path: SSG discovers
+  // from routeInfo and renders through the real dispatcher (Beta.2.1), so a
+  // routeInfo path missing from the app is a real 404, not a silent skip.
+  app.get('/about', (c) => c.text('about ok'));
   return {
     default: app,
     routeInfo: [
@@ -666,5 +670,51 @@ export default app;
     assertEquals('matchRequestTimeRoute' in mod, false);
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('SSG discovers static pages from route records behind the unified HTTP middleware', async () => {
+  const { createRouteMiddleware } = await import('@openelement/app/router/http');
+  const root = await Deno.makeTempDir({ prefix: 'oe-record-ssg-' });
+  const app = new Hono();
+  let dynamicCalls = 0;
+  app.all(
+    '*',
+    createRouteMiddleware([
+      { id: 'index.tsx', path: '/', handlers: { GET: (c) => c.html('<main>record home</main>') } },
+      {
+        id: 'live.tsx',
+        path: '/live',
+        handlers: {
+          GET: (c) => {
+            dynamicCalls++;
+            return c.html('live');
+          },
+        },
+      },
+    ]),
+  );
+  try {
+    await ssgRender(
+      createMockBundle({
+        default: app,
+        routeInfo: [
+          { path: '/', tagName: 'home-page', isDynamic: false, paramNames: [] },
+          {
+            path: '/live',
+            tagName: 'live-page',
+            isDynamic: false,
+            paramNames: [],
+            rendering: 'dynamic',
+          },
+        ],
+      }),
+      { root, outDir: 'dist' },
+    );
+    assertStringIncludes(await Deno.readTextFile(`${root}/dist/index.html`), 'record home');
+    assertEquals(dynamicCalls, 0);
+    assertEquals(await pathExists(`${root}/dist/live/index.html`), false);
+  } finally {
+    await Deno.remove(root, { recursive: true });
   }
 });
