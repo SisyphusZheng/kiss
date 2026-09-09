@@ -23,6 +23,15 @@ Beta.2.1/2.2/2.3 convergence is followed by public `1.0.0-alpha.1`, using npm
 `alpha`. The `latest` dist-tag remains on the last admitted stable release.
 Release automation must implement this distinction before publication (#1323/#1334).
 
+Version parsing and comparison live in `tools/lib/version.ts`. It accepts
+SemVer prerelease identifiers in sequence (numeric identifiers compare
+numerically); build metadata and v-prefixed input remain unsupported and core
+numbers must be safe integers. Formatting retains every identifier. Checkpoint
+succession stops at beta.2.3; the separate admitted product-stage successor is
+1.0.0-alpha.1. Planning this successor never executes a bump or publication.
+Historical 0.44.0-alpha.0 through alpha.10 remain unpublishable; public 1.0 Alpha
+still requires all standing exact-SHA release gates.
+
 The three-working-day implementation target is not a release waiver. A blocked
 candidate stays unpublished with explicit remaining issues. Public Beta checkpoints
 and public 1.0 Alpha retain the existing exact-SHA and release GO requirements.
@@ -32,12 +41,3 @@ Independent application qualification binds to the candidate's exact SHA, packag
 bytes, integrity records and provenance. Any candidate-byte change invalidates its
 qualification for promotion and requires a new qualified candidate. Stable admission
 requires the separate human GO and final gate #37; Alpha is not a stability claim.
-
-Version parsing and comparison live in `tools/lib/version.ts`. It accepts
-SemVer prerelease identifiers in sequence (numeric identifiers compare
-numerically); build metadata and v-prefixed input remain unsupported and core
-numbers must be safe integers. Formatting retains every identifier. Checkpoint
-succession stops at beta.2.3; the separate admitted product-stage successor is
-1.0.0-alpha.1. Planning this successor never executes a bump or publication.
-Historical 0.44.0-alpha.0 through alpha.10 remain unpublishable; public 1.0 Alpha
-still requires all standing exact-SHA release gates.
