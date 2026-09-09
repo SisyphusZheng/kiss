@@ -1,5 +1,5 @@
-import { assertEquals } from '@std/assert';
-import { RouteTable } from '../src/internal/router/route-table.ts';
+import { assertEquals, assertThrows } from '@std/assert';
+import { type RouteRecord, RouteTable } from '../src/internal/router/route-table.ts';
 
 Deno.test('URL winner precedes method dispatch, including overlapping explicit records', () => {
   const routes = [
@@ -46,4 +46,35 @@ Deno.test('resolution snapshots and full URL component patterns preserve URLPatt
     new RouteTable([{ path: '//a' }]).match(new URL('https://shop.example//a'))?.route.path,
     '//a',
   );
+});
+
+Deno.test('path is the only pathname truth: pattern.pathname is rejected, not silently honored', () => {
+  // Type level: checked against RouteRecord explicitly, RoutePatternComponents
+  // omits pathname — the @ts-expect-error pins that this cannot compile.
+  const typed: RouteRecord[] = [{
+    path: '/users/:id',
+    pattern: {
+      // @ts-expect-error pathname is omitted from RoutePatternComponents
+      pathname: '/posts/:slug',
+      hostname: 'example.com',
+    },
+  }];
+  assertThrows(() => new RouteTable(typed), TypeError, 'only pathname truth');
+  // A runtime-only caller (plain JS) is rejected the same way.
+  assertThrows(
+    () =>
+      new RouteTable([{
+        path: '/users/:id',
+        pattern: { pathname: '/posts/:slug' } as never,
+      }]),
+    TypeError,
+    'only pathname truth',
+  );
+  // And the surviving components still match with path-owned pathname.
+  const table = new RouteTable([{
+    path: '/users/:id',
+    pattern: { hostname: 'example.com' },
+  }]);
+  assertEquals(table.match(new URL('https://example.com/users/7'))?.params.id, '7');
+  assertEquals(table.match(new URL('https://other.example/users/7')), null);
 });

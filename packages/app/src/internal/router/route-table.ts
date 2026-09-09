@@ -3,11 +3,19 @@ import { normalizeRoutePatternForURLPattern } from './route-pattern.ts';
 import { URLPatternList } from './url-pattern-list/index.ts';
 import { URLPattern as URLPatternPolyfill } from 'urlpattern-polyfill';
 
+/**
+ * Non-pathname URL components for explicit Route Mode (protocol, hostname,
+ * port, search, hash, …). `path` is the single pathname truth: a record
+ * whose pattern disagrees on pathname would fork route identity, so the
+ * type omits it and the constructor rejects it at runtime (#1325).
+ */
+export type RoutePatternComponents = Omit<URLPatternInit, 'pathname'>;
+
 export interface RouteRecord {
   path: string;
   id?: string;
-  /** Full URL component patterns for explicit Route Mode. */
-  pattern?: URLPatternInit;
+  /** Full URL component patterns for explicit Route Mode, minus pathname. */
+  pattern?: RoutePatternComponents;
   methods?: readonly string[];
 }
 
@@ -104,7 +112,14 @@ export class RouteTable<T extends RouteRecord> {
       const id = route.id ?? String(index);
       if (ids.has(id)) throw new TypeError(`Duplicate route identity: ${id}`);
       ids.add(id);
-      let pathname = route.pattern?.pathname ?? normalizeRoutePatternForURLPattern(route.path);
+      // JS callers bypass the Omit type; pathname must never have a second
+      // owner, so reject it at runtime rather than silently overriding.
+      if (route.pattern && Object.hasOwn(route.pattern, 'pathname')) {
+        throw new TypeError(
+          `Route "${route.path}": pattern.pathname is not allowed; \`path\` is the only pathname truth`,
+        );
+      }
+      let pathname = normalizeRoutePatternForURLPattern(route.path);
       if (options.trailingSlash === 'ignore' && pathname.length > 1 && pathname.endsWith('/')) {
         pathname = pathname.slice(0, -1);
       }
