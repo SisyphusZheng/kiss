@@ -88,3 +88,31 @@ Deno.test('www-truth: current version is not flagged (bare, v-prefixed, short)',
     assertEquals(code, 0);
   });
 });
+
+Deno.test('www-truth: approved planned chain versions are not flagged (ADR-0152)', async () => {
+  // The roadmap page lists the approved forward chain as planned entries:
+  // beta.2.1…beta.2.3 and the admitted product-stage successor 1.0.0-alpha.1.
+  // Planned future releases are not retired current claims.
+  await withFixture(
+    'export const x = "planned: v0.44.0-beta.2.1, v0.44.0-beta.2.2, v0.44.0-beta.2.3, v1.0.0-alpha.1";\n',
+    ({ code, stderr }) => {
+      assertEquals(code, 0, stderr);
+    },
+  );
+});
+
+Deno.test('www-truth: unapproved future prerelease is flagged', async () => {
+  // beta.3 is not on the approved chain (no automatic Beta.2.4-style drift).
+  await withFixture('export const x = "v0.44.0-beta.3";\n', ({ code, stderr }) => {
+    assertEquals(code, 1);
+    assert(stderr.includes('retired prerelease current claim'));
+  });
+});
+
+Deno.test('www-truth: historical internal alpha workspace is flagged', async () => {
+  // 0.44.0-alpha.7 is a retired internal workspace, never a public plan entry.
+  await withFixture('export const x = "v0.44.0-alpha.7";\n', ({ code, stderr }) => {
+    assertEquals(code, 1);
+    assert(stderr.includes('retired prerelease current claim'));
+  });
+});
