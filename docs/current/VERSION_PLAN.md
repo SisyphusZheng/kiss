@@ -201,10 +201,13 @@ stable until separately admitted Stable publication; RC/Stable remain unschedule
 
 The [PR #1343 review failure](https://github.com/open-element/openelement/pull/1343#issuecomment-5579272257)
 reports `APIError: Insufficient Balance`. A successful wrapper job is not completed
-review evidence. #1332 owns restoring effective review and fail-closed error reporting;
-this must be resolved before merging #1343, not postponed until Beta.2.3. Do not
-silently change model/provider or treat an unavailable review as GO. Final HEAD needs
-actual review, full CI and fresh verifier evidence. Confirming #1342 ancestry does
+review evidence, and a provider error is never counted as review. Per the 2026-09-09
+maintainer decision, the third-party AI review job is supplemental and non-blocking:
+the outcome gate (tools/check-review-outcome.ts) detects and reports a missing or
+errored review as a warning without failing CI. Restoring provider availability
+(DeepSeek balance) is an external billing action tracked in #1332. Merges rely on
+required CI gates, human review and the fresh verifier — not on this supplemental
+signal. Do not silently change model/provider. Confirming #1342 ancestry does
 not mean that baseline CI passed. Planning edits do not repair #1343's product defects.
 
 ## Infrastructure reduction proposal

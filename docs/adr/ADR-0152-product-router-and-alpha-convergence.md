@@ -155,8 +155,11 @@ framework is required. Product independence is proven through dependency graphs.
 Native navigation owns only admitted application navigation: unowned POST forms,
 fragments in history mode and reload remain browser-owned. SSG discovers canonical
 records, not Hono's incidental route list. Every mounted lifecycle gets a fresh
-controller. Final review must actually execute; the #1343 insufficient-balance
-comment is missing review evidence even if its workflow wrapper is green.
+controller. Supplemental AI review counts as evidence only when it actually
+executes — the #1343 insufficient-balance comment was missing review evidence even
+though its workflow wrapper was green. Per the 2026-09-09 maintainer refinement,
+that review signal is non-blocking for CI; detecting and reporting a missing or
+errored review remains mandatory, and provider restoration is an external action.
 
 ## Acceptance and consequences
 
