@@ -225,6 +225,60 @@ jobs:
           curl -sf http://127.0.0.1:4893/ | grep -q 'request-time fixture home'
           curl -sf http://127.0.0.1:4893/live | grep -q 'request-time live'
 
+  # #1343 (Beta.2.1): the dedicated release-qualification lane. One job that
+  # executes the Beta.2.1 contract on the exact candidate SHA — live npm
+  # provenance of the pinned url-pattern-list fork, checkpoint version
+  # semantics, Router/SSG unit legs, the navigation suite on Chromium +
+  # Firefox + WebKit, the request-time fixture on all three engines, the
+  # packed starter/UI/standalone-Element consumers — and only then writes the
+  # machine-readable v044-beta21-qualification.json artifact. Runtime floors
+  # (Node 20 fail-fast, Node 24, Bun, workerd) are consumed from the trusted
+  # needs results of the same-SHA runtime jobs.
+  beta21-qualification:
+    name: beta21-qualification
+    if: github.event_name == 'pull_request'
+    needs: [
+      node-serve-smoke,
+      bun-serve-smoke,
+      workspace-qualification,
+    ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # #1156 R11: same exact-SHA expression as every required job.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-deno-workspace
+      # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+      - name: Install Playwright browsers
+        run: ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
+      - name: Beta 2.1 qualification lane
+        env:
+          CI: 'true'
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: deno task v044:beta21:qualification
+      - name: Upload Beta 2.1 qualification artifact
+        if: success()
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: v044-beta21-qualification-${{ github.event.pull_request.head.sha || github.sha }}
+          path: v044-beta21-qualification.json
+          # A missing record means the lane failed open — fail the job.
+          if-no-files-found: error
+          retention-days: 90
+
   # #1156 (ADR-0146): one deterministic exact-SHA PR full-CI evidence artifact.
   # This job runs only for pull requests and only after every required
   # full-matrix job succeeded (default needs gating — no `if: always()`), so a
@@ -241,6 +295,7 @@ jobs:
       node-serve-smoke,
       bun-serve-smoke,
       workspace-qualification,
+      beta21-qualification,
     ]
     runs-on: ubuntu-latest
     timeout-minutes: 5

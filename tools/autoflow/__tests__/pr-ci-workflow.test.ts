@@ -40,6 +40,7 @@ Deno.test('R7 probe 4: the PR workflow aggregates exact-SHA evidence after the f
       'node-serve-smoke',
       'bun-serve-smoke',
       'workspace-qualification',
+      'beta21-qualification',
     ],
     'the aggregation job must depend on every required full-matrix job (and therefore run only after successful needs)',
   );
@@ -79,6 +80,7 @@ Deno.test('R11: every repository-dependent required job checks out and attests t
       'node-serve-smoke',
       'bun-serve-smoke',
       'workspace-qualification',
+      'beta21-qualification',
       'pr-full-ci-evidence',
     ]
   ) {

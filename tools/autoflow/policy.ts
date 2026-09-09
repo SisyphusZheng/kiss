@@ -311,6 +311,23 @@ const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // #1324 (Beta.2.1): the Router's URL pattern ownership lives in the
+    // published @openelement/url-pattern-list fork. Prove the exact pin, the
+    // lockfile resolution and the live registry artifact (metadata +
+    // integrity-verified tarball) in authoritative CI. Network-scoped to the
+    // npm registry host; deliberately not in the push tier (offline-by-default).
+    name: 'url-pattern-list:provenance',
+    command: ['deno', 'task', 'url-pattern-list:provenance'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^deno\.json$/,
+      /^deno\.lock$/,
+      /^packages\/app\/deno\.json$/,
+      /^packages\/app\/src\/internal\/router\//,
+      /^tools\/check-url-pattern-list-release(?:\.test)?\.ts$/,
+    ],
+  },
+  {
     name: 'release:evidence:check',
     command: ['deno', 'task', 'release:evidence:check'],
     tiers: ['ci', 'release'],
