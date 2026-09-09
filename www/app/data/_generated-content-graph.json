@@ -1840,7 +1840,7 @@
       ],
       "references": [],
       "route": "/guide/configuration",
-      "fingerprint": "277e4e28695e002532cfb54a21b9b55df847a3ebe9935409d40989b621887da7",
+      "fingerprint": "2d5246cf8c40166ea39559ab2b25e6fddf4d9cb06af734b0cdb7a8d7c0b7c006",
       "data": {
         "lede": "Configuration stays close to the route, build or package surface it affects.",
         "order": 70,
@@ -1862,7 +1862,7 @@
       ],
       "references": [],
       "route": "/guide/configuration",
-      "fingerprint": "b50cc7b053c08795ba1b6b489b99350ebfa379a1072e4e507351fdf28ff33c58",
+      "fingerprint": "83c29aff2f2e5b7619d302fe61bff1ed4554aa307db948d62eb95d8beea6588a",
       "data": {
         "lede": "配置贴近它所影响的 route、build 或 package 表面。",
         "order": 70,

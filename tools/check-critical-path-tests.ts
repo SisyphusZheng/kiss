@@ -190,7 +190,7 @@ const suites: Suite[] = [
       'dispose removes event listeners',
       'double dispose is safe',
       'redirect limit rejects redirect loops',
-      'decodes path parameters',
+      'decoded path parameters',
     ],
   },
   {

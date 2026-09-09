@@ -106,6 +106,8 @@ export function createRouter(options: RouterOptions): RouterInstance {
   let currentParams: Record<string, string> = Object.create(null);
   let currentSearchParams = new URLSearchParams();
   const checkedNavigation = Object.freeze({});
+  /** One-shot URL of the router's own guard-veto restore (Navigation API path). */
+  let pendingRestoreUrl: string | null = null;
   const nativeNavigation = mode === 'history' && typeof navigation !== 'undefined'
     ? navigation
     : undefined;
@@ -166,16 +168,29 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
   /**
    * Restore the entry the user came from after a guard vetoed a
-   * browser-driven navigation. replaceState — not pushState (#1036): pushing
-   * left the vetoed entry sitting directly below the restored copy, so the
-   * next back re-landed on the vetoed URL and bounced again, trapping every
-   * earlier entry behind it (the user could never back out past the guard).
-   * Rewriting the vetoed entry instead collapses the dead stop, and
-   * replaceState does not fire popstate/hashchange, so restoring cannot
-   * re-enter commitBrowserNavigation.
+   * browser-driven navigation. The vetoed entry is rewritten, not pushed
+   * (#1036): pushing left the vetoed entry sitting directly below the
+   * restored copy, so the next back re-landed on the vetoed URL and bounced
+   * again, trapping every earlier entry behind the guard (the user could
+   * never back out past the guard). Under the Navigation API the rewrite
+   * goes through a marked replace navigation; elsewhere history.replaceState
+   * fires no popstate/hashchange. Neither re-enters commitBrowserNavigation
+   * for the router's own restore.
    */
   function restoreBlockedEntry(): void {
-    history.replaceState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+    const url = mode === 'hash' ? toHashUrl(currentPath) : currentPath;
+    if (nativeNavigation) {
+      // An intercepted traverse must be superseded by a real navigation to
+      // leave the vetoed URL. history.replaceState fires a navigate event
+      // (navigationType "replace") for it; the one-shot URL marker lets
+      // onNativeNavigate recognize that event as the router's own restore
+      // and intercept it without rematch/notify — an unintercepted replace
+      // races the in-flight traverse and does not land.
+      pendingRestoreUrl = url;
+      history.replaceState(null, '', url);
+      return;
+    }
+    history.replaceState(null, '', url);
   }
 
   async function commitNavigation(
@@ -359,7 +374,22 @@ export function createRouter(options: RouterOptions): RouterInstance {
     // Ownership before side effects: our own programmatic navigations opt
     // into SPA handling; browser-driven POST/fragment/reload default to the
     // browser. No onPending, no ticket bump, no intercept for those.
-    const isOwn = (event as NavigateEvent & { info?: unknown }).info === checkedNavigation;
+    const eventInfo = (event as NavigateEvent & { info?: unknown }).info;
+    if (pendingRestoreUrl !== null) {
+      // The navigate event fired by our own guard-veto replaceState: intercept
+      // so the vetoed traverse stays superseded, but never rematch/notify —
+      // the router state already describes the restored URL. A genuine
+      // navigation clears a stale marker via the URL/type match.
+      const navigationType = (event as NavigateEvent & { navigationType?: string }).navigationType;
+      const matches = eventInfo === undefined && navigationType === 'replace' &&
+        new URL(event.destination.url).href === new URL(pendingRestoreUrl, location.href).href;
+      pendingRestoreUrl = null;
+      if (matches) {
+        event.intercept({ handler: () => {} });
+        return;
+      }
+    }
+    const isOwn = eventInfo === checkedNavigation;
     if (!isOwn) {
       // Native POST forms carry formData: leave to browser/server unless an
       // explicit action-navigation protocol claims them (none yet — the SPA
