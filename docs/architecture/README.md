@@ -26,3 +26,5 @@ XML or publish planned APIs as implemented documentation. SSG discovery repair i
 Beta.2.1 prerequisite; metadata convergence remains Beta.2.2.
 
 - [Infrastructure reduction audit and WTR pilot](./infrastructure-reduction.md)
+- [Beta preparation and Alpha maturation execution map](./alpha-maturation.md):
+  concrete Oxc/TS7 experiments, WTR/platform contracts, ownership and exit rules.

@@ -200,15 +200,13 @@ historic v0.44 alpha.0-alpha.10 remain unpublished workspace history. `latest` s
 stable until separately admitted Stable publication; RC/Stable remain unscheduled.
 
 The [PR #1343 review failure](https://github.com/open-element/openelement/pull/1343#issuecomment-5579272257)
-reports `APIError: Insufficient Balance`. A successful wrapper job is not completed
-review evidence, and a provider error is never counted as review. Per the 2026-09-09
-maintainer decision, the third-party AI review job is supplemental and non-blocking:
-the outcome gate (tools/check-review-outcome.ts) detects and reports a missing or
-errored review as a warning without failing CI. Restoring provider availability
-(the review provider's balance) is an external billing action tracked in #1332. Merges rely on
-required CI gates, human review and the fresh verifier — not on this supplemental
-signal. Do not silently change model/provider. Confirming #1342 ancestry does
-not mean that baseline CI passed. Planning edits do not repair #1343's product defects.
+reports `APIError: Insufficient Balance`. Under the maintainer-approved 2026-09-09
+policy, third-party AI review is supplemental and non-blocking. #1332 owns visible
+provider/API error reporting; wrapper SUCCESS is never counted as completed review.
+Provider failure contributes zero independent review evidence, but does not by itself
+block merge. Required CI, the fresh verifier and human review remain actual merge
+gates. Do not silently change model/provider or spend money to restore availability.
+Recheck the final candidate; planning changes are not implementation or passing-CI proof.
 
 ## Infrastructure reduction proposal
 
@@ -227,11 +225,11 @@ local integration effort is acceptable when it produces recipient-native reprodu
 and maintainable generic patches. Correctness, supported behavior, provenance and release
 requirements remain hard constraints. No PR-count target or upstream-response gate.
 
-| Checkpoint | Upstream-oriented work                                                                                          | Ownership and acceptance                                                                                                                                                                                                      |
-| ---------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Beta.2.1   | Preserve source/history/test conventions in the matching fork; inventory generic infrastructure already adopted | #1324 keeps Node-native upstream tests and independent releases; #1156 separates generic tooling from OE rules. Current #1343 repairs/review remain first.                                                                    |
-| Beta.2.2   | WTR component conformance and Native/Lit integration reproductions                                              | #1333 pilots WTR with compiled ESM and all three browsers; #1339 separates generic Lit/WTR failures from Router integration defects. Oxc/TS7 feasibility is scoped under #1156, with no production backend migration implied. |
-| Beta.2.3   | Consolidate browser fixtures/runner wrappers and retire replaced generic infrastructure                         | #1333/#1332 preserve coverage and fail-closed CI; #1156/#1330/#1331 retain thin OE rules only; #1327/#1334 remove duplicate writable truth before retiring checks.                                                            |
+| Checkpoint | Upstream-oriented work                                                                                          | Ownership and acceptance                                                                                                                                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beta.2.1   | Preserve source/history/test conventions in the matching fork; inventory generic infrastructure already adopted | #1324 keeps Node-native upstream tests and independent releases; #1156 separates generic tooling from OE rules. Current #1343 correctness gates remain; AI review follows the non-blocking policy above.                                                 |
+| Beta.2.2   | WTR component conformance and Native/Lit integration reproductions                                              | #1333 pilots WTR with compiled ESM and all three browsers; #1339 separates generic Lit/WTR failures from Router integration defects. Oxc/TS7 executable migration preparation is scoped under #1156; production frontend replacement remains Alpha work. |
+| Beta.2.3   | Consolidate browser fixtures/runner wrappers and retire replaced generic infrastructure                         | #1333/#1332 preserve coverage and fail-closed CI; #1156/#1330/#1331 retain thin OE rules only; #1327/#1334 remove duplicate writable truth before retiring checks.                                                                                       |
 
 WTR is selected for alignment with Lit/Modern Web. Vitest is not an equal-default
 alternative chosen merely for less glue; reconsider only if a concrete correctness,
@@ -248,8 +246,38 @@ satisfy a gate. When no upstream defect exists, record why local cleanup is suff
 Upstream acceptance/timing never blocks OE release; sustained useful contributions,
 not merged-PR totals, are the objective.
 
-Oxc/TS7 work during Beta is feasibility and boundary validation: decorators, diagnostics,
-source maps, Deno resolution, declaration delivery and official build integration.
+Oxc/TS7 work during Beta produces reproducible migration preparation: a representative
+TSX-to-PartProgram experiment, differential corpus, CLI type/declaration and packed
+consumer checks, source maps, Deno resolution and official build integration.
 Full backend replacement remains separately evidence-gated in Alpha; it must not
 expand #1343 or delay an existing correctness repair. No tool/fork is claimed installed
 or qualified by this planning change.
+
+## Approved maturation scope (2026-09-09)
+
+Public 1.0 Alpha is an independently installable Web Platform-first framework with
+compiled Web Components and a shared Native/Lit routing/application protocol. UI
+remains reference/dogfood. Real application use begins at the public Alpha baseline
+and continues through upgrades; Oxc and TS7 are implementation directions, not claims
+of currently delivered product capability.
+
+Beta.2.1 keeps its existing delivery/repair scope. Its inventory distinguishes already
+adopted upstream infrastructure, duplicate local machinery and necessary OE semantics.
+Beta.2.2 pairs WTR browser contracts with bounded Oxc/TS7 migration preparation (#1156)
+and a platform audit in Native/Lit journeys (#1339). Beta.2.3 removes only qualified
+replacements, verifies independent artifacts and hands off explicit adopt/defer/reject
+results. Experimental success or full compiler migration is not a new alpha.1 gate;
+existing correctness/security failures remain governed by existing release criteria.
+
+Alpha actively pursues Oxc syntax-frontend and TS7 type/declaration adoption under
+#1156, independently qualified rather than bundled into a mandatory rewrite. Existing
+PartProgram, provenance/admission and Router semantics remain OE-owned. TypeChecker
+consumers and Deno checking/packing are separate from the TS7 CLI. A temporary comparison
+harness has an exit; no permanent dual production frontend or public generic AST API.
+A documented blocker may defer adoption without automatically blocking RC. #1243
+requires adopted changes to have one production owner and current artifact evidence.
+
+The [maturation execution map](../architecture/alpha-maturation.md) defines concrete
+experiments, platform tiers, deletion receipts, contribution boundaries and stop rules.
+It refines #1156/#1333/#1339/#1330/#1331/#1332/#1327 and Alpha qualification issues.
+No new alpha.2/alpha.3 numbering target or promise of a final large rewrite is made.

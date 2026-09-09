@@ -55,7 +55,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.2',
       'theme': 'Native and Lit Framework Mode',
       'copy':
-        'Use WTR for upstream-aligned browser conformance; prove loader, SSR, client continuation, navigation and actions with Native and Lit; derive a minimal shared protocol and public Document/SEO/search/sitemap metadata. Lit is a support target, not an already-shipped claim.',
+        'Use WTR for upstream-aligned browser conformance; prove loader, SSR, client continuation, navigation and actions with Native and Lit; derive a minimal shared protocol and public Document/SEO/search/sitemap metadata; prepare bounded Oxc/TS7 migration experiments. Lit is a support target, not an already-shipped claim.',
       'state': 'planned',
       'status': 'planned',
     },
@@ -63,7 +63,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.3',
       'theme': 'Dual-mode qualification',
       'copy':
-        'Qualify independent packed consumers, runtime/browser matrices, output and resource cleanup; reconcile documentation and complete remaining cleanup. No deadline waiver or automatic beta.2.4.',
+        'Qualify independent packed consumers, runtime/browser matrices, output and resource cleanup; remove qualified duplicate infrastructure, reconcile documentation and record Alpha migration decisions. No deadline waiver or automatic beta.2.4.',
       'state': 'planned',
       'status': 'evidence-gated',
     },
@@ -71,7 +71,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v1.0.0-alpha.1',
       'theme': 'Public Alpha admission',
       'copy':
-        'After Alpha admission, use real applications to refine APIs and architecture; qualify independent consumers, Native/Lit capabilities, performance and fork maintenance against identified artifact rounds.',
+        'Start real application use with the public baseline: independently consumable Element and Router with Native/Lit application flows. Actively qualify Oxc/TS7 adoption and platform reductions through subsequent Alpha upgrades; APIs may evolve with migration guidance.',
       'state': 'planned',
       'status': 'planned',
     },
@@ -107,7 +107,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.2',
       'theme': 'Native 与 Lit Framework Mode',
       'copy':
-        '采用便于贡献上游的 WTR 浏览器测试，以 Native 和 Lit 跑通 loader、SSR、客户端接续、导航及 action，提炼最小共享协议和 Document/SEO/search/sitemap 元数据。Lit 是正式支持目标，尚非已交付声明。',
+        '采用便于贡献上游的 WTR 浏览器测试，以 Native 和 Lit 跑通 loader、SSR、客户端接续、导航及 action，提炼最小共享协议和 Document/SEO/search/sitemap 元数据，并完成有界 Oxc/TS7 迁移试验。Lit 是正式支持目标，尚非已交付声明。',
       'state': 'planned',
       'status': '规划中',
     },
@@ -115,7 +115,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v0.44.0-beta.2.3',
       'theme': '双模式资格验证',
       'copy':
-        '验证独立打包消费者、运行时与浏览器矩阵、产物和资源清理，同步文档并完成剩余清理。期限不豁免验收，不自动追加 beta.2.4。',
+        '验证独立打包消费者、运行时与浏览器矩阵、产物和资源清理，删除已验证的重复基础设施、同步文档并明确 Alpha 迁移决定。期限不豁免验收，不自动追加 beta.2.4。',
       'state': 'planned',
       'status': '按证据准入',
     },
@@ -123,7 +123,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       'version': 'v1.0.0-alpha.1',
       'theme': '公开 Alpha 准入',
       'copy':
-        'Alpha 准入后以真实应用反馈修正接口与架构；按明确产物轮次验证独立消费者、Native/Lit 能力、性能与 fork 维护。',
+        '从公开基线开始在真实应用中使用可独立消费的 Element 与 Router，验证 Native/Lit 应用流程；后续 Alpha 积极验证 Oxc/TS7 采用和平台替代，接口调整提供迁移说明。',
       'state': 'planned',
       'status': '规划中',
     },

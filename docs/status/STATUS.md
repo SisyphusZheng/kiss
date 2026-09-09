@@ -29,3 +29,9 @@ Public Alpha permits application-driven API/architecture iteration against ident
 qualification rounds. RC admission follows that evidence, then freezes exact public
 contracts/dependencies and requires at least fourteen days of soak plus upgrade/security
 qualification and human GO. See the active plan; no RC date or Stable readiness is claimed.
+
+The 2026-09-09 refinement makes Beta.2.2 tooling preparation executable and puts
+qualified replacement deletion in Beta.2.3. Public Alpha actively pursues Oxc/TS7
+adoption alongside real application upgrades; neither migration is claimed complete.
+See the [maturation map](../architecture/alpha-maturation.md). Beta.2.1 scope and
+existing alpha.1 admission requirements remain unchanged.

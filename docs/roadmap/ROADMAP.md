@@ -62,9 +62,22 @@ requirements. Historical 0.44 RC and 0.41 Stable exceptions are not current gate
 Prefer infrastructure that enables sustained upstream contributions, even when local
 setup is not minimal. Beta.2.1 establishes the source-traceable matching fork and generic
 tooling inventory; Beta.2.2 uses WTR for Native/Lit browser conformance and bounded
-Oxc/TS7 feasibility; Beta.2.3 removes replaced mocks, fixtures and generic wrappers
+Oxc/TS7 executable migration preparation; Beta.2.3 removes replaced mocks, fixtures and generic wrappers
 with behavior preserved. Full compiler-backend migration remains Alpha work.
 
 Follow each upstream's harness, keep OE-specific semantics local, and prepare real
 reproductions/small patches. No PR-count target or upstream-merge release dependency.
 See the [deletion and contribution map](../architecture/infrastructure-reduction.md).
+
+## Executable preparation and public Alpha
+
+Beta.2.2 now makes preparation concrete: WTR form/focus/lifecycle contracts, a bounded
+Oxc TSX-to-PartProgram comparison and TS7 CLI/declaration/pack-consumer results. Beta.2.3
+removes qualified duplicate implementations and records explicit migration decisions.
+Beta.2.1 delivery scope and alpha.1 admission gates are unchanged.
+
+Public Alpha is an independently consumable Element/Router framework for real Native/Lit
+applications. It actively pursues Oxc/TS7 adoption and useful platform substitutions,
+with application upgrades from the baseline, not after all migrations. Tool adoption
+is independently qualified; unsupported experiments need not delay RC. See the
+[maturation execution map](../architecture/alpha-maturation.md).
