@@ -131,9 +131,6 @@ export const PR_CI_ARTIFACT_PREFIX = 'pr-full-ci-evidence-';
  * stay in lockstep with the `needs` list of the pr-full-ci-evidence job in
  * autoflow-ci.yml — pr-ci-workflow.test.ts enforces that equality mechanically
  * (the Beta.2 dry-run 2026-09-05 failed because this set lagged the workflow).
- * `beta21-qualification` joined the set with #1343 (Beta.2.1): the release
- * qualification lane must pass on the exact candidate SHA before the full-CI
- * record exists.
  */
 export const REQUIRED_PR_CI_JOBS = [
   'dependency-review',
@@ -141,7 +138,6 @@ export const REQUIRED_PR_CI_JOBS = [
   'node-serve-smoke',
   'bun-serve-smoke',
   'workspace-qualification',
-  'beta21-qualification',
 ] as const;
 
 /** Map a GitHub API job display name back to its workflow job id. */

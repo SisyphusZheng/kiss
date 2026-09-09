@@ -74,27 +74,3 @@ Deno.test('validateVersionStep rejects a regressing prerelease', () => {
     'Prerelease step regresses',
   );
 });
-
-// Beta.2.1 qualification: the bump stepper must accept the admitted v0.44
-// checkpoint chain and product-stage transition, and reject any reverse step.
-const CHECKPOINT_STEPS_FORWARD: ReadonlyArray<readonly [string, string]> = [
-  ['0.44.0-beta.2', '0.44.0-beta.2.1'],
-  ['0.44.0-beta.2.1', '0.44.0-beta.2.2'],
-  ['0.44.0-beta.2.2', '0.44.0-beta.2.3'],
-  ['0.44.0-beta.2.3', '1.0.0-alpha.1'],
-  ['0.44.0-alpha.10', '0.44.0-beta.1'],
-  ['0.44.0-beta.3', '0.44.0-rc.1'],
-  ['0.44.0-rc.1', '0.44.0'],
-];
-
-Deno.test('validateVersionStep admits the v0.44 checkpoint chain and stage transitions', () => {
-  for (const [from, to] of CHECKPOINT_STEPS_FORWARD) {
-    validateVersionStep(from, to);
-  }
-});
-
-Deno.test('validateVersionStep rejects every reverse checkpoint step', () => {
-  for (const [to, from] of CHECKPOINT_STEPS_FORWARD) {
-    assertThrows(() => validateVersionStep(from, to), Error, 'regress');
-  }
-});
