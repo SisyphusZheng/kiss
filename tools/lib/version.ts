@@ -28,7 +28,13 @@ export interface LineVersion {
   patch: number;
   /** Prerelease label (`alpha`, `beta`, `rc`, …); absent for stable lines. */
   prerelease?: string;
-  /** Prerelease sequence number; 0 for stable lines. */
+  /**
+   * Legacy channel-level convenience: the SECOND prerelease identifier when
+   * numeric (`0.44.0-beta.2.3` → 2), else 0. This is NOT the full prerelease
+   * identity — multi-identifier checkpoints (beta.2.1) live only in
+   * `identifiers`; succession and comparison must go through `identifiers`,
+   * `compareVersions`, `nextCheckpointVersion` or `nextProductStageVersion`.
+   */
   prereleaseNumber: number;
   /** Ordered SemVer identifiers, retained losslessly. */
   identifiers?: readonly string[];
