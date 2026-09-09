@@ -23,7 +23,7 @@ import {
   stageCompiledPackWorkspace,
 } from './lib/compiled-pack-staging.ts';
 import { npmView } from './lib/npm-release-verifier.ts';
-import { prereleaseChannel } from './lib/version.ts';
+import { assertPublicReleaseVersion, prereleaseChannel } from './lib/version.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
@@ -93,12 +93,21 @@ function parseNpmSpec(value: string, label: string): { name: string; version: st
   const match = value.match(/^npm:(@[^/]+\/[^@/]+|[^@/]+)(?:@(\^?[\d.]+(?:-[\w.]+)?))?/);
   if (!match) return null;
   const name = match[1];
-  if (name.startsWith('@openelement/')) return null;
   const version = match[2]?.replace(/^\^/, '');
   if (!version) {
     throw new Error(`npm dependency '${name}' (${label}) has no version; add an explicit version.`);
   }
   return { name, version };
+}
+
+/**
+ * Published dependency range for an external npm dep. The OE-maintained
+ * matching fork is consumed as an exact qualified version only (#1324 —
+ * consumers must not float past the qualified artifact); every other
+ * external dep keeps the caret policy.
+ */
+function publishRange(spec: { name: string; version: string }): string {
+  return spec.name === '@openelement/url-pattern-list' ? spec.version : `^${spec.version}`;
 }
 
 export function deriveDependencies(
@@ -111,16 +120,20 @@ export function deriveDependencies(
   const denoJson = io.readPkgJson(pkg.dir);
   const imports = denoJson.imports ?? {};
   const sourceSpecifiers = new Set<string>();
+  const byName = new Map(allPackages.map((p) => [p.name, p]));
 
-  // External npm dependencies from deno.json imports.
+  // External npm dependencies from deno.json imports. Workspace members are
+  // resolved internally (source-import loop below), never as external npm
+  // deps; the maintained url-pattern-list fork shares the @openelement scope
+  // but is published outside the workspace, so it lands here exactly (#1324).
   for (const value of Object.values(imports)) {
     if (typeof value !== 'string') continue;
     const spec = parseNpmSpec(value, `${pkg.name} deno.json`);
-    if (spec) deps[spec.name] = `^${spec.version}`;
+    if (!spec || byName.has(spec.name)) continue;
+    if (spec) deps[spec.name] = publishRange(spec);
   }
 
   // Internal workspace dependencies from source imports.
-  const byName = new Map(allPackages.map((p) => [p.name, p]));
   for (const text of io.readSrcFiles(pkg.dir)) {
     for (const { value } of extractStaticModuleSpecifiers(text)) sourceSpecifiers.add(value);
     for (const specifier of extractOpenImports(text)) {
@@ -142,7 +155,7 @@ export function deriveDependencies(
     const value = rootImports[specifier];
     if (typeof value !== 'string') continue;
     const spec = parseNpmSpec(value, `${pkg.name} root import`);
-    if (spec) deps[spec.name] = `^${spec.version}`;
+    if (spec) deps[spec.name] = publishRange(spec);
   }
 
   return deps;
@@ -175,7 +188,7 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
   }
 }
 
-async function packPackage(
+export async function packPackage(
   pkg: PackageInfo,
   dependencies: Record<string, string>,
   allPackages: PackageInfo[],
@@ -239,6 +252,21 @@ async function packPackage(
       ...dependencies,
       ...(pkgJson.dependencies ?? {}),
     };
+    // Standalone Element authors install tooling without Router/UI. Framework
+    // consumers supply these optional peers through their own app dependencies.
+    if (pkg.name === '@openelement/adapter-vite') {
+      for (const name of ['@openelement/app', '@openelement/ui']) {
+        const version = pkgJson.dependencies[name];
+        if (version) {
+          delete pkgJson.dependencies[name];
+          pkgJson.peerDependencies = { ...pkgJson.peerDependencies, [name]: version };
+          pkgJson.peerDependenciesMeta = {
+            ...pkgJson.peerDependenciesMeta,
+            [name]: { optional: true },
+          };
+        }
+      }
+    }
     Deno.writeTextFileSync(pkgJsonPath, formatJson(pkgJson));
     await runCommand('tar', ['-czf', out, '-C', tmp, 'package'], { env: tarEnv });
   } finally {
@@ -275,6 +303,7 @@ export async function publishPackage(
   dryRun: boolean,
   io: PublishPackageIo = defaultPublishPackageIo,
 ): Promise<void> {
+  assertPublicReleaseVersion(pkg.version);
   const tar = tarballPath(pkg);
   if (await io.versionExists(pkg.name, pkg.version)) {
     io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);

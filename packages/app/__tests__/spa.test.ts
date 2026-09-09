@@ -111,7 +111,8 @@ Deno.test('defineApp mounts loader data and route context through the page props
     routes: [{
       path: '/articles/:slug',
       tagName: 'article-page',
-      loader: ({ params }) => Promise.resolve({ title: `${params.slug}:${params.preview}` }),
+      loader: ({ params, searchParams }) =>
+        Promise.resolve({ title: `${params.slug}:${searchParams.get('preview')}` }),
     }],
   });
   try {
@@ -121,14 +122,60 @@ Deno.test('defineApp mounts loader data and route context through the page props
     assertEquals(calls.normal.length, 1);
     const context = calls.normal[0];
     assertEquals(context.data, { title: 'hello:yes' });
-    assertEquals(context.params, { slug: 'hello', preview: 'yes' });
+    assertEquals(context.params, { slug: 'hello' });
     assertEquals(context.request?.url, 'https://example.test/articles/hello?preview=yes');
     assertEquals(context.route, { path: '/articles/:slug' });
     // The projected values landed on the host as pre-connect own properties.
     assertEquals(hosts.length, 1);
     assertEquals(hosts[0].slug, 'hello');
-    assertEquals(hosts[0].preview, 'yes');
+    assertEquals(hosts[0].preview, undefined);
     assertEquals(hosts[0].title, 'hello:yes');
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});
+
+Deno.test('defineApp loader searchParams is a copy: mutation cannot pollute router state or the address bar', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'article-page': Page });
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: unknown) {
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/articles/hello?preview=yes');
+  let loaderParams: URLSearchParams | undefined;
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/articles/:slug',
+      tagName: 'article-page',
+      loader: ({ searchParams }) => {
+        loaderParams = searchParams;
+        searchParams.set('preview', 'hacked');
+        searchParams.append('injected', '1');
+        return Promise.resolve({ title: searchParams.get('preview') });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The loader saw and used its own mutable copy.
+    assertEquals(loaderParams?.get('preview'), 'hacked');
+    assertEquals(calls.normal[0].data, { title: 'hacked' });
+    // The router's canonical snapshot is unpolluted...
+    assertEquals(app.router?.searchParams.get('preview'), 'yes');
+    assertEquals(app.router?.searchParams.has('injected'), false);
+    // ...and so is the address bar.
+    assertEquals(env.location.search, '?preview=yes');
   } finally {
     app.dispose();
     env.restore();
@@ -755,6 +802,319 @@ Deno.test('defineApp routes action notFound() to the page error projector (#731)
     assertEquals(calls.errors[0].context.data, { page: 'home' });
     assertEquals(env.pushed, []);
     assertEquals(app.router?.currentPath, '/');
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});
+
+// ─── Each mount gets a fresh execution controller ───
+
+Deno.test('defineApp mount gives a live signal, dispose aborts it, remount gives a fresh live signal', async () => {
+  const signals: AbortSignal[] = [];
+  const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: ({ signal }) => {
+        signals.push(signal);
+        return Promise.resolve({ page: 'home' });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 1);
+    assertEquals(signals[0].aborted, false);
+    const signal1 = signals[0];
+    app.dispose();
+    assertEquals(signal1.aborted, true);
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 2);
+    const signal2 = signals[1];
+    assertEquals(signal2 === signal1, false);
+    assertEquals(signal2.aborted, false);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp direct remount aborts the stale loader and never commits its late result', async () => {
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => release = resolve);
+  const seen: Array<{ signal: AbortSignal; value: string }> = [];
+  const hosts: Record<string, unknown>[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let first = true;
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: ({ signal }) => {
+        if (first) {
+          first = false;
+          seen.push({ signal, value: 'stale' });
+          return pending.then(() => ({ page: 'stale' }));
+        }
+        seen.push({ signal, value: 'fresh' });
+        return Promise.resolve({ page: 'fresh' });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Direct remount without an explicit dispose: the stale mount aborts.
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(seen.length, 2);
+    assertEquals(seen[0].signal.aborted, true);
+    assertEquals(seen[1].signal.aborted, false);
+    assertEquals(seen[0].signal === seen[1].signal, false);
+    // The stale loader resolves late: it must not overwrite the fresh render.
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.at(-1)?.page, 'fresh');
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp remount gives actions a fresh live signal', async () => {
+  let submit: ((event: Event) => void) | undefined;
+  const signals: AbortSignal[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild() {},
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: () => Promise.resolve({ page: 'home' }),
+      action: ({ signal }) => {
+        signals.push(signal);
+        return Promise.resolve({ saved: true });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    submit?.(
+      {
+        target: { tagName: 'FORM' },
+        composedPath: () => [],
+        preventDefault() {},
+      } as unknown as Event,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 1);
+    assertEquals(signals[0].aborted, false);
+    const signal1 = signals[0];
+    app.dispose();
+    assertEquals(signal1.aborted, true);
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    submit?.(
+      {
+        target: { tagName: 'FORM' },
+        composedPath: () => [],
+        preventDefault() {},
+      } as unknown as Event,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(signals.length, 2);
+    assertEquals(signals[1] === signal1, false);
+    assertEquals(signals[1].aborted, false);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+for (const operation of ['loader', 'action'] as const) {
+  Deno.test(`SPA aborts superseded ${operation} and ignores its late redirect`, async () => {
+    const hosts: Record<string, unknown>[] = [];
+    let submit: ((event: Event) => void) | undefined;
+    let release!: () => void;
+    let signal: AbortSignal | undefined;
+    const pending = new Promise<void>((resolve) => release = resolve);
+    const root = {
+      innerHTML: '',
+      addEventListener(type: string, handler: (event: Event) => void) {
+        if (type === 'submit') submit = handler;
+      },
+      removeEventListener() {},
+      appendChild(host: Record<string, unknown>) {
+        hosts.push(host);
+        return host;
+      },
+    };
+    const env = stubNavigableEnvironment(root, '/');
+    const delayed = async (context: { signal: AbortSignal }) => {
+      signal = context.signal;
+      await pending;
+      redirect('/stale');
+    };
+    const app = defineApp({
+      mode: 'spa',
+      routerMode: 'history',
+      routes: [
+        { path: '/', tagName: 'home-page', [operation]: delayed },
+        { path: '/new', tagName: 'new-page', loader: () => Promise.resolve({ page: 'new' }) },
+        { path: '/stale', tagName: 'stale-page', loader: () => Promise.resolve({ page: 'stale' }) },
+      ],
+    });
+    try {
+      app.mount('#app');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (operation === 'action') {
+        const event = new Event('submit', { cancelable: true });
+        Object.defineProperty(event, 'target', { value: { tagName: 'FORM' } });
+        submit!(event);
+      }
+      assertEquals(signal?.aborted, false);
+      await app.router!.navigate('/new');
+      assertEquals(signal?.aborted, true);
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      assertEquals(env.pushed, ['/new']);
+      assertEquals(app.router!.currentPath, '/new');
+      assertEquals(hosts.at(-1)?.page, 'new');
+    } finally {
+      app.dispose();
+      env.restore();
+    }
+  });
+}
+
+// ─── #1343 review (P2): vetoed navigation preserves pending renders ─────
+//
+// A guard-vetoed navigation never owned intent, so it must not abort the
+// current route's in-flight render: cancellation happens when a navigation
+// takes ownership, not when an attempt starts.
+
+Deno.test('guard-vetoed navigation preserves the pending initial loader render (#1343 review)', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'home-page': Page, 'blocked-page': Page });
+  const hosts: Record<string, unknown>[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let resolveLoader!: (value: unknown) => void;
+  const loaderResult = new Promise((resolve) => {
+    resolveLoader = resolve;
+  });
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      { path: '/', tagName: 'home-page', loader: () => loaderResult },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+    ],
+  });
+  try {
+    app.mount('#app');
+    // The initial loader is pending; the vetoed navigation must not cancel it.
+    await app.router!.navigate('/blocked');
+    assertEquals(app.router!.currentPath, '/');
+    assertEquals(hosts.length, 0, 'nothing rendered yet — the loader is still pending');
+    resolveLoader({ title: 'home' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 1, 'the pending initial render commits after the veto');
+    assertEquals(hosts[0].title, 'home');
+    assertEquals(calls.errors, []);
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});
+
+Deno.test('guard-vetoed navigation preserves a pending subsequent render (#1343 review)', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({
+    'home-page': Page,
+    'slow-page': Page,
+    'blocked-page': Page,
+  });
+  const hosts: Record<string, unknown>[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let resolveSlow!: (value: unknown) => void;
+  const slowResult = new Promise((resolve) => {
+    resolveSlow = resolve;
+  });
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      { path: '/', tagName: 'home-page', loader: () => Promise.resolve({ title: 'home' }) },
+      { path: '/slow', tagName: 'slow-page', loader: () => slowResult },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+    ],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 1, 'home rendered');
+    // An ownership-taking navigation commits and starts the target's render…
+    await app.router!.navigate('/slow');
+    assertEquals(app.router!.currentPath, '/slow');
+    // …which stays alive when a later navigation is vetoed mid-flight.
+    await app.router!.navigate('/blocked');
+    assertEquals(app.router!.currentPath, '/slow');
+    resolveSlow({ title: 'slow' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 2, 'the pending /slow render commits after the veto');
+    assertEquals(hosts[1].title, 'slow');
+    assertEquals(calls.errors, []);
   } finally {
     app.dispose();
     env.restore();

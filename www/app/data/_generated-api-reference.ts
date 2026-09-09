@@ -12,6 +12,7 @@ export const apiReference = {
         ".",
         "cli/build",
         "cli/start",
+        "element",
         "nitro-mount",
         "sitemap"
       ],
@@ -320,6 +321,23 @@ export const apiReference = {
           "exports": []
         },
         {
+          "subpath": "element",
+          "label": "element",
+          "exports": [
+            {
+              "name": "element",
+              "kind": "function",
+              "summary": "",
+              "source": {
+                "path": "packages/adapter-vite/src/internal/compiler/plugin.ts",
+                "line": 87
+              },
+              "stability": "experimental",
+              "anchor": "api-adapter-vite-element-element"
+            }
+          ]
+        },
+        {
           "subpath": "nitro-mount",
           "label": "nitro-mount",
           "exports": [
@@ -396,6 +414,8 @@ export const apiReference = {
         ".",
         "model",
         "preact",
+        "router",
+        "router/http",
         "spa"
       ],
       "internalSubpaths": [
@@ -489,7 +509,7 @@ export const apiReference = {
               "summary": "Validate and register an island delivery descriptor; returns the normalized config.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 493
+                "line": 497
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-defineIslandConfig"
@@ -500,7 +520,7 @@ export const apiReference = {
               "summary": "Attach a page descriptor to a compiled page element class.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 320
+                "line": 319
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-definePage"
@@ -511,7 +531,7 @@ export const apiReference = {
               "summary": "Return a structured action failure with an HTTP status and typed data payload.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 166
+                "line": 165
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-fail"
@@ -522,7 +542,7 @@ export const apiReference = {
               "summary": "Type guard for {@linkcode OpenElementActionFailure}, including its duck-typed cross-realm shape.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 171
+                "line": 170
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-isActionFailure"
@@ -533,7 +553,7 @@ export const apiReference = {
               "summary": "Per-island delivery configuration (SSR/DSD participation and hydration strategy).",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 422
+                "line": 426
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-IslandConfig"
@@ -544,7 +564,7 @@ export const apiReference = {
               "summary": "Delivery strategy for an island: a hydration trigger or media-gated loading.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 419
+                "line": 423
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-IslandDeliveryStrategy"
@@ -555,7 +575,7 @@ export const apiReference = {
               "summary": "Type guard for {@linkcode OpenElementNotFound}, including its duck-typed cross-realm shape.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 130
+                "line": 129
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-isOpenElementNotFound"
@@ -566,7 +586,7 @@ export const apiReference = {
               "summary": "Type guard for {@linkcode OpenElementRedirect}, including its duck-typed cross-realm shape.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 114
+                "line": 113
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-isOpenElementRedirect"
@@ -599,7 +619,7 @@ export const apiReference = {
               "summary": "Throw an {@linkcode OpenElementNotFound} to render the 404 path.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 109
+                "line": 108
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-notFound"
@@ -610,7 +630,7 @@ export const apiReference = {
               "summary": "Expected-failure channel for actions (0.42.0-alpha.2, ADR-0120): validation failures RETURN `fail(status, data)` — never throw — so the server can answer 422 with the form re-rendered and the submitted values echoed back. Thrown values keep the exception channel (redirect/notFound/error page).",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 147
+                "line": 146
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-OpenElementActionFailure"
@@ -621,7 +641,7 @@ export const apiReference = {
               "summary": "Not-found signal thrown from a loader to render the route's 404 path.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 88
+                "line": 87
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-OpenElementNotFound"
@@ -632,7 +652,7 @@ export const apiReference = {
               "summary": "The page descriptor the pipeline reads (`module.default.openElementPage`). Attached to the compiled page class by definePage(); the class owns the render program, so the descriptor carries metadata and projectors only.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 275
+                "line": 274
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-OpenElementPageDescriptor"
@@ -643,7 +663,7 @@ export const apiReference = {
               "summary": "Redirect signal thrown from a loader/action to short-circuit rendering with an HTTP redirect.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 60
+                "line": 59
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-OpenElementRedirect"
@@ -665,7 +685,7 @@ export const apiReference = {
               "summary": "A compiled element class carrying the page descriptor static.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 288
+                "line": 287
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-PageComponentConstructor"
@@ -676,7 +696,7 @@ export const apiReference = {
               "summary": "Maps a caught render/loader/action failure onto the error variant of the page's compiled properties. Its presence declares that the page's compiled markup carries an error variant (the generated entry renders the page with these props and status 500 — the POST/GET error-boundary channel of ADR-0121 §7); without it the generic status page answers.",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 251
+                "line": 250
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-PageErrorProjector"
@@ -687,7 +707,7 @@ export const apiReference = {
               "summary": "The request-scoped context handed to a page's props projector. Everything a compiled page can render must pass through here: the compiled render() only reads `this.<property>`, so the projector is the single deterministic seam that maps loader data, action data, params and request onto the page's compiled properties (v0.44, ADR-0143).",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 219
+                "line": 218
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-PagePropsContext"
@@ -698,7 +718,7 @@ export const apiReference = {
               "summary": "Maps the request-scoped context onto the page's compiled properties. Declared as part of the page descriptor; the generated server entry and the SPA bootstrap call it per render and feed the result to renderDsd() props (server) or pre-connect property sets (SPA).",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 239
+                "line": 238
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-PagePropsProjector"
@@ -731,7 +751,7 @@ export const apiReference = {
               "summary": "Throw an {@linkcode OpenElementRedirect} for `location` (status must be a real 3xx).",
               "source": {
                 "path": "packages/app/src/authoring.ts",
-                "line": 104
+                "line": 103
               },
               "stability": "stable-candidate",
               "anchor": "api-app-root-redirect"
@@ -890,6 +910,95 @@ export const apiReference = {
               },
               "stability": "stable-candidate",
               "anchor": "api-app-preact-PreactIslandOptions"
+            }
+          ]
+        },
+        {
+          "subpath": "router",
+          "label": "router",
+          "exports": [
+            {
+              "name": "RouteMatch",
+              "kind": "interface",
+              "summary": "",
+              "source": {
+                "path": "packages/app/src/internal/router/route-table.ts",
+                "line": 22
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-RouteMatch"
+            },
+            {
+              "name": "RouteRecord",
+              "kind": "interface",
+              "summary": "",
+              "source": {
+                "path": "packages/app/src/internal/router/route-table.ts",
+                "line": 14
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-RouteRecord"
+            },
+            {
+              "name": "RouteResolution",
+              "kind": "type",
+              "summary": "",
+              "source": {
+                "path": "packages/app/src/internal/router/route-table.ts",
+                "line": 30
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-RouteResolution"
+            },
+            {
+              "name": "RouteTable",
+              "kind": "class",
+              "summary": "",
+              "source": {
+                "path": "packages/app/src/internal/router/route-table.ts",
+                "line": 90
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-RouteTable"
+            },
+            {
+              "name": "RouteTableOptions",
+              "kind": "interface",
+              "summary": "",
+              "source": {
+                "path": "packages/app/src/internal/router/route-table.ts",
+                "line": 35
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-RouteTableOptions"
+            }
+          ]
+        },
+        {
+          "subpath": "router/http",
+          "label": "router/http",
+          "exports": [
+            {
+              "name": "createRouteMiddleware",
+              "kind": "function",
+              "summary": "Mount after host middleware/routes; unmatched URLs continue to the host.",
+              "source": {
+                "path": "packages/app/src/router-http.ts",
+                "line": 11
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-http-createRouteMiddleware"
+            },
+            {
+              "name": "HttpRouteRecord",
+              "kind": "interface",
+              "summary": "",
+              "source": {
+                "path": "packages/app/src/router-http.ts",
+                "line": 6
+              },
+              "stability": "experimental",
+              "anchor": "api-app-router-http-HttpRouteRecord"
             }
           ]
         },
@@ -2537,6 +2646,12 @@ export const apiReference = {
   "searchRecords": [
     {
       "route": "/apilist",
+      "anchor": "api-adapter-vite-element-element",
+      "title": "element (@openelement/adapter-vite/element)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
       "anchor": "api-adapter-vite-nitro-mount-createOpenElementNitroHandler",
       "title": "createOpenElementNitroHandler (@openelement/adapter-vite/nitro-mount)",
       "kind": "api"
@@ -2977,6 +3092,48 @@ export const apiReference = {
       "route": "/apilist",
       "anchor": "api-app-root-SpaLoaderContext",
       "title": "SpaLoaderContext (@openelement/app/root)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-http-createRouteMiddleware",
+      "title": "createRouteMiddleware (@openelement/app/router/http)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-http-HttpRouteRecord",
+      "title": "HttpRouteRecord (@openelement/app/router/http)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-RouteMatch",
+      "title": "RouteMatch (@openelement/app/router)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-RouteRecord",
+      "title": "RouteRecord (@openelement/app/router)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-RouteResolution",
+      "title": "RouteResolution (@openelement/app/router)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-RouteTable",
+      "title": "RouteTable (@openelement/app/router)",
+      "kind": "api"
+    },
+    {
+      "route": "/apilist",
+      "anchor": "api-app-router-RouteTableOptions",
+      "title": "RouteTableOptions (@openelement/app/router)",
       "kind": "api"
     },
     {

@@ -30,7 +30,7 @@ interface PackageJson {
   [key: string]: unknown;
 }
 
-import { type LineVersion, parseLineVersion } from './lib/version.ts';
+import { compareVersions, type LineVersion, parseLineVersion } from './lib/version.ts';
 import { getArg } from './lib/process.ts';
 
 // Canonical prerelease/version truth lives in tools/lib/version.ts (#1231
@@ -40,36 +40,16 @@ export type ParsedVersion = LineVersion;
 
 export const parseVersion = parseLineVersion;
 
-const PRERELEASE_RANK: Record<string, number> = {
-  alpha: 1,
-  beta: 2,
-  rc: 3,
-};
-
 export function validateVersionStep(fromVersion: string, toVersion: string): void {
-  const from = parseVersion(fromVersion);
-  const to = parseVersion(toVersion);
-
-  const fromBase = from.major * 1_000_000 + from.minor * 1_000 + from.patch;
-  const toBase = to.major * 1_000_000 + to.minor * 1_000 + to.patch;
-  if (toBase < fromBase) {
+  if (compareVersions(toVersion, fromVersion) < 0) {
+    const from = parseVersion(fromVersion);
+    const to = parseVersion(toVersion);
+    const sameBase = from.major === to.major && from.minor === to.minor && from.patch === to.patch;
     throw new Error(
-      `Version step regresses the release base: ${fromVersion} → ${toVersion}`,
+      sameBase
+        ? `Prerelease step regresses: ${fromVersion} → ${toVersion}`
+        : `Version step regresses the release base: ${fromVersion} → ${toVersion}`,
     );
-  }
-
-  // Same-base prerelease steps must not move backwards (e.g. beta → alpha).
-  if (toBase === fromBase && from.prerelease && to.prerelease) {
-    const fromRank = PRERELEASE_RANK[from.prerelease] ?? 99;
-    const toRank = PRERELEASE_RANK[to.prerelease] ?? 99;
-    if (
-      toRank < fromRank ||
-      (toRank === fromRank && to.prereleaseNumber < from.prereleaseNumber)
-    ) {
-      throw new Error(
-        `Prerelease step regresses: ${fromVersion} → ${toVersion}`,
-      );
-    }
   }
 }
 

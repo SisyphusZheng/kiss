@@ -234,10 +234,10 @@ Deno.test('renderEntry: page routes use SSR helper and wrapInDocument', () => {
   const desc = buildEntryDescriptor(sampleRoutes);
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, 'app.get("/",');
+  assertStringIncludes(code, '__pageHandlers["/"].GET = [');
   // v0.5.0: __ssr takes route params as second arg for SSR-time data access
   assertStringIncludes(code, '__ssr(tag');
-  assertStringIncludes(code, 'c.req.param()');
+  assertStringIncludes(code, "c.get('routeResolution').params");
   // v0.3.4: SSR automatically registers page components for Shadow DOM rendering
   assertStringIncludes(code, 'customElements.define(');
   // v0.5.0: DSD renderer uses customElements.get(tag) to find component class
@@ -296,8 +296,8 @@ Deno.test('buildEntryDescriptor + renderEntry: end-to-end produces runnable code
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(code, 'export default app');
   assertStringIncludes(code, 'app.route("/api/hello"');
-  assertStringIncludes(code, 'app.get("/",');
-  assertStringIncludes(code, 'app.get("/about",');
+  assertStringIncludes(code, '__pageHandlers["/"].GET = [');
+  assertStringIncludes(code, '__pageHandlers["/about"].GET = [');
   // No process.env call in non-comment lines
   const codeLines = code.split('\n').filter((l) => !l.trimStart().startsWith('//'));
   assertEquals(codeLines.some((l) => l.includes('process.env')), false);

@@ -77,6 +77,28 @@ async function runGuardOnBack(
       replaces.push(String(nextUrl));
       return originalReplace(state, title, nextUrl);
     }) as typeof history.replaceState;
+    // With the Navigation API active the router commits programmatic
+    // navigations through navigation.navigate() and restores vetoed entries
+    // through navigation.updateCurrentEntry(); neither reaches the legacy
+    // history spies above, so observe them at the API surface instead.
+    const nav = (window as unknown as {
+      navigation?: {
+        navigate(url: string, options?: { history?: string }): unknown;
+        updateCurrentEntry(options: { url: string }): unknown;
+      };
+    }).navigation;
+    const originalApiNavigate = nav?.navigate.bind(nav);
+    const originalApiUpdate = nav?.updateCurrentEntry.bind(nav);
+    if (nav && originalApiNavigate && originalApiUpdate) {
+      nav.navigate = (url: string, options?: { history?: string }) => {
+        (options?.history === 'replace' ? replaces : pushes).push(String(url));
+        return originalApiNavigate(url, options);
+      };
+      nav.updateCurrentEntry = (options: { url: string }) => {
+        replaces.push(String(options.url));
+        return originalApiUpdate(options);
+      };
+    }
 
     const waitFor = async (condition: () => boolean): Promise<void> => {
       for (let attempt = 0; attempt < 200; attempt++) {
@@ -131,6 +153,10 @@ async function runGuardOnBack(
       router.dispose();
       history.pushState = originalPush;
       history.replaceState = originalReplace;
+      if (nav && originalApiNavigate && originalApiUpdate) {
+        nav.navigate = originalApiNavigate;
+        nav.updateCurrentEntry = originalApiUpdate;
+      }
     }
   }, { code: bundle, mode: options.mode, blocked: options.blocked });
 }

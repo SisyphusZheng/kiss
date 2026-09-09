@@ -329,18 +329,22 @@ export async function scanRoutes(
     }
   }
 
-  // Sort routes: static paths first, then dynamic
+  // Generated order: special files last; static, parameters, catch-all;
+  // ties use code-point path/file ordering independent of machine locale.
   entries.sort((a, b) => {
-    // Special files go to the end
-    if (a.special || b.special) {
-      if (a.special && !b.special) return 1;
-      if (!a.special && b.special) return -1;
-      return 0;
-    }
-    const aDynamic = a.path.includes(':');
-    const bDynamic = b.path.includes(':');
-    if (aDynamic !== bDynamic) return aDynamic ? 1 : -1;
-    return a.path.localeCompare(b.path);
+    const rank = (r: RouteEntry) =>
+      r.special ? 3 : !r.path.includes(':') ? 0 : r.path.includes('{.+}') ? 2 : 1;
+    const difference = rank(a) - rank(b);
+    if (difference) return difference;
+    return a.path < b.path
+      ? -1
+      : a.path > b.path
+      ? 1
+      : a.filePath < b.filePath
+      ? -1
+      : a.filePath > b.filePath
+      ? 1
+      : 0;
   });
 
   // #1029: pathToVarName folds '/', '-', and '_' into '_', so paths like
@@ -350,6 +354,25 @@ export async function scanRoutes(
   // both source paths. Checked once at the top-level call (recursion passes a
   // non-empty baseDir).
   if (baseDir === '') {
+    const seenPaths = new Map<string, string>();
+    for (const entry of entries) {
+      if (entry.special) continue;
+      // Only compare the scanner's bracket-file grammar; no regex-language
+      // equivalence or arbitrary overlap rejection is attempted.
+      const shape = parseRouteFilePath(
+        entry.filePath.replace(/\[\.\.\.[^\]]+\]/g, '[...param]').replace(
+          /\[(?!\.\.\.)[^\]]+\]/g,
+          '[param]',
+        ),
+      );
+      const previous = seenPaths.get(shape);
+      if (previous) {
+        throw new Error(
+          `Equivalent route files: '${previous}' and '${entry.filePath}' produce '${shape}'`,
+        );
+      }
+      seenPaths.set(shape, entry.filePath);
+    }
     const seenVarNames = new Map<string, string>();
     for (const entry of entries) {
       const existing = seenVarNames.get(entry.varName);

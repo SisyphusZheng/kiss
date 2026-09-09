@@ -3,12 +3,15 @@
   "version": "0.44.0-beta.2",
   "exports": {
     ".": "./src/index.ts",
+    "./router/http": "./src/router-http.ts",
+    "./router": "./src/router.ts",
     "./model": "./src/model.ts",
     "./spa": "./src/spa.ts",
     "./i18n": "./src/i18n.ts",
     "./preact": "./src/preact.ts"
   },
   "imports": {
+    "@openelement/url-pattern-list": "npm:@openelement/url-pattern-list@0.6.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
   },
   "publish": {

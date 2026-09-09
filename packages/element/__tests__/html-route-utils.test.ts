@@ -1,17 +1,5 @@
 import { assertEquals, assertStringIncludes } from '@std/assert';
-import { insertBeforeBodyClose, normalizeRoutePatternForURLPattern } from '../src/build-utils.ts';
-
-Deno.test('shared route normalizer preserves params and converts Hono catch-alls (#1103)', () => {
-  assertEquals(normalizeRoutePatternForURLPattern('/item/:id'), '/item/:id');
-  assertEquals(
-    normalizeRoutePatternForURLPattern('/docs/:path{.+}'),
-    '/docs/:path(.+)',
-  );
-  assertEquals(
-    normalizeRoutePatternForURLPattern('/org/:org/repo/:path{.*}'),
-    '/org/:org/repo/:path(.*)',
-  );
-});
+import { insertBeforeBodyClose } from '../src/build-utils.ts';
 
 Deno.test('shared body injector handles tolerant close tags and missing body (#1103)', () => {
   const tag = '<script type="module" src="/client.js"></script>';

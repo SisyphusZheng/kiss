@@ -13,10 +13,11 @@ import {
 
 const routes: RouteConfig[] = [{ path: '/items/:id', tagName: 'item-page' }];
 
-Deno.test('client router decodes path parameters and gives path values precedence', () => {
+Deno.test('client router keeps decoded path parameters separate from query', () => {
   const match = matchRoute('/items/hello%20world', '?id=query&view=full', routes);
   assertEquals(match?.params.id, 'hello world');
-  assertEquals(match?.params.view, 'full');
+  assertEquals(match?.params.view, undefined);
+  assertEquals(match?.searchParams.get('view'), 'full');
 });
 
 Deno.test('client router decodes query components exactly once', () => {
@@ -27,15 +28,15 @@ Deno.test('client router decodes query components exactly once', () => {
     ['?value=%2B', '+'],
   ] as const;
   for (const [search, expected] of cases) {
-    assertEquals(matchRoute('/items/id', search, routes)?.params.value, expected);
+    assertEquals(matchRoute('/items/id', search, routes)?.searchParams.get('value'), expected);
   }
 });
 
 Deno.test('client router preserves malformed query escapes without aborting matching', () => {
   const match = matchRoute('/items/id', '?bad=%&also=%2&key%=value%', routes);
-  assertEquals(match?.params.bad, '%');
-  assertEquals(match?.params.also, '%2');
-  assertEquals(match?.params['key%'], 'value%');
+  assertEquals(match?.searchParams.get('bad'), '%');
+  assertEquals(match?.searchParams.get('also'), '%2');
+  assertEquals(match?.searchParams.get('key%'), 'value%');
 });
 
 interface ExpectedRouteMatch {
@@ -178,7 +179,7 @@ const semanticCases: Array<{
     search: '?id=query&view=first&view=last&encoded=a%2Bb+two',
     expected: {
       route: 'item-page',
-      params: { id: 'hello world', view: 'last', encoded: 'a+b two' },
+      params: { id: 'hello world' },
     },
   },
   {
@@ -187,7 +188,7 @@ const semanticCases: Array<{
     search: '?bad=%&also=%2&key%=value%',
     expected: {
       route: 'item-page',
-      params: { bad: '%', also: '%2', 'key%': 'value%', id: 'id' },
+      params: { id: 'id' },
     },
   },
   {
@@ -298,8 +299,7 @@ Deno.test('RouteTable rejects malformed URLPattern patterns consistently', () =>
 Deno.test('RouteTable classifies methods, HEAD, base paths, and trailing-slash policy', () => {
   type MethodRoute = RouteConfig & { methods: readonly string[] };
   const methodRoutes: MethodRoute[] = [
-    { path: '/items/:id', tagName: 'item-get', methods: ['GET'] },
-    { path: '/items/:id', tagName: 'item-post', methods: ['POST'] },
+    { path: '/items/:id', tagName: 'item', methods: ['GET', 'POST'] },
   ];
   const tables = [
     new RouteTable(methodRoutes, URLPatternPolyfillConstructor, {
@@ -318,9 +318,9 @@ Deno.test('RouteTable classifies methods, HEAD, base paths, and trailing-slash p
   ];
 
   const expected = [
-    { kind: 'match', route: 'item-get', params: { id: 'a b' } },
-    { kind: 'match', route: 'item-get', params: { id: 'a b' } },
-    { kind: 'match', route: 'item-post', params: { id: 'a b' } },
+    { kind: 'match', route: 'item', params: { id: 'a b' } },
+    { kind: 'match', route: 'item', params: { id: 'a b' } },
+    { kind: 'match', route: 'item', params: { id: 'a b' } },
     { kind: 'method-not-allowed', allow: ['GET', 'HEAD', 'POST'] },
     { kind: 'not-found' },
   ];
@@ -363,7 +363,13 @@ Deno.test('client router dispose removes event listeners and double dispose is s
   const removed: EventListener[] = [];
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
-    value: { protocol: 'https:', pathname: '/', search: '', hash: '' },
+    value: {
+      protocol: 'https:',
+      href: 'https://router.test/',
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
   });
   Object.defineProperty(globalThis, 'history', {
     configurable: true,
@@ -402,7 +408,13 @@ Deno.test('client router guard redirect limit rejects redirect loops', async () 
   const originalHistory = Object.getOwnPropertyDescriptor(globalThis, 'history');
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
-    value: { protocol: 'https:', pathname: '/', search: '', hash: '' },
+    value: {
+      protocol: 'https:',
+      href: 'https://router.test/',
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
   });
   Object.defineProperty(globalThis, 'history', {
     configurable: true,
@@ -961,6 +973,9 @@ function installFakeHistoryStack(initialEntries: string[]) {
     configurable: true,
     value: {
       protocol: 'https:',
+      get href() {
+        return currentUrl().href;
+      },
       get pathname() {
         return currentUrl().pathname;
       },
@@ -1306,6 +1321,290 @@ Deno.test('client router popstate with a synchronously-throwing guard fails open
   }
 });
 
+// ─── Native navigation ownership: POST / fragment / reload stay browser-owned ───
+
+interface FakeNavigateEvent {
+  destination: { url: string };
+  canIntercept: boolean;
+  downloadRequest: unknown;
+  sourceElement: { hasAttribute: (name: string) => boolean } | null;
+  signal: AbortSignal;
+  info: unknown;
+  formData?: FormData | null;
+  method?: string;
+  navigationType?: string;
+  intercepted: boolean;
+  intercept(options: { handler: () => Promise<void> }): void;
+  /** The captured intercept handler; runHandler drives it to completion. */
+  runHandler(): Promise<void>;
+}
+
+function installFakeNavigation() {
+  const descriptors = {
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+    navigation: Object.getOwnPropertyDescriptor(globalThis, 'navigation'),
+  };
+  const listeners = new Map<string, EventListener[]>();
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'http:',
+      origin: 'http://router.test',
+      href: 'http://router.test/a',
+      pathname: '/a',
+      search: '',
+      hash: '',
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: { pushState() {}, replaceState() {} },
+  });
+  const fakeNavigation = {
+    addEventListener(type: string, listener: EventListener) {
+      listeners.set(type, [...(listeners.get(type) ?? []), listener]);
+    },
+    removeEventListener(type: string, listener: EventListener) {
+      listeners.set(type, (listeners.get(type) ?? []).filter((entry) => entry !== listener));
+    },
+  };
+  Object.defineProperty(globalThis, 'navigation', { configurable: true, value: fakeNavigation });
+  const makeEvent = (
+    overrides: Partial<FakeNavigateEvent> & { destination: { url: string } },
+  ): FakeNavigateEvent => ({
+    canIntercept: true,
+    downloadRequest: null,
+    sourceElement: null,
+    signal: new AbortController().signal,
+    info: undefined,
+    intercepted: false,
+    intercept(this: FakeNavigateEvent, options: { handler: () => Promise<void> }) {
+      this.intercepted = true;
+      this.runHandler = () => options.handler();
+    },
+    runHandler: () => Promise.resolve(),
+    ...overrides,
+  });
+  return {
+    fire(event: FakeNavigateEvent) {
+      for (const listener of listeners.get('navigate') ?? []) {
+        (listener as (e: unknown) => void)(event);
+      }
+    },
+    makeEvent,
+    restore() {
+      for (const [key, descriptor] of Object.entries(descriptors)) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else delete (globalThis as Record<string, unknown>)[key];
+      }
+    },
+  };
+}
+
+Deno.test('native POST with formData stays browser-owned: no pending, no intercept', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [{ path: '/a', tagName: 'a-page' }],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({
+      destination: { url: 'http://router.test/a' },
+      formData: new FormData(),
+    });
+    nav.fire(event);
+    assertEquals(event.intercepted, false);
+    assertEquals(pending, 0);
+    assertEquals(router.currentPath, '/a');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+Deno.test('native fragment-only navigation stays browser-owned without cancelling loaders', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  let guards = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page', guard: () => (guards++, Promise.resolve(true)) },
+    ],
+    onPending: () => void pending++,
+    onChange: () => void pending++,
+  });
+  try {
+    const event = nav.makeEvent({ destination: { url: 'http://router.test/a#section' } });
+    nav.fire(event);
+    assertEquals(event.intercepted, false);
+    assertEquals(pending, 0);
+    assertEquals(guards, 0);
+    assertEquals(router.currentPath, '/a');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+Deno.test('native reload stays browser-owned', () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [{ path: '/a', tagName: 'a-page' }],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({
+      destination: { url: 'http://router.test/a' },
+      navigationType: 'reload',
+    });
+    nav.fire(event);
+    assertEquals(event.intercepted, false);
+    assertEquals(pending, 0);
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+Deno.test('native same-origin GET without formData still intercepts', async () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page' },
+      { path: '/b', tagName: 'b-page' },
+    ],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({ destination: { url: 'http://router.test/b' } });
+    nav.fire(event);
+    assertEquals(event.intercepted, true);
+    // Cancellation fires at the ownership point — inside the intercepted
+    // handler after the (here absent) guard resolves — not at event time, so
+    // a vetoed traversal cancels nothing (#1343 review).
+    assertEquals(pending, 0);
+    await event.runHandler();
+    assertEquals(pending, 1);
+    assertEquals(router.currentPath, '/b');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+// #1343 review (P2): a guard-vetoed navigation never owned intent, so it must
+// leave pending execution (the current route's in-flight render) untouched.
+// Cancellation is retained exactly when a navigation takes ownership.
+
+Deno.test('guard-vetoed programmatic navigation never cancels pending execution (#1343 review)', async () => {
+  const browser = installFakeBrowser('/current');
+  let pending = 0;
+  let changes = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/current', tagName: 'current-page' },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+      { path: '/allowed', tagName: 'allowed-page' },
+    ],
+    onPending: () => {
+      pending++;
+    },
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    await router.navigate('/blocked');
+    assertEquals(pending, 0, 'a vetoed navigation must not invalidate pending execution');
+    assertEquals(changes, 0);
+    assertEquals(router.currentPath, '/current');
+    await router.navigate('/allowed');
+    assertEquals(pending, 1, 'an ownership-taking navigation cancels pending execution once');
+    assertEquals(changes, 1);
+    assertEquals(router.currentPath, '/allowed');
+    await router.replace('/blocked');
+    assertEquals(pending, 1, 'a vetoed replace cancels nothing');
+    assertEquals(router.currentPath, '/allowed');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('guard-vetoed popstate never cancels pending execution (#1343 review)', async () => {
+  const browser = installFakeBrowser('/public');
+  let pending = 0;
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/protected', tagName: 'protected-page', guard: () => Promise.resolve(false) },
+      { path: '/open', tagName: 'open-page' },
+    ],
+    onPending: () => {
+      pending++;
+      events.push('pending');
+    },
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    // The browser itself moved onto the guarded URL; the veto restores the
+    // previous entry without cancelling the current route's pending render.
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, []);
+    assertEquals(pending, 0);
+    assertEquals(router.currentPath, '/public');
+    assertEquals(browser.path(), '/public');
+    // An allowed traversal still cancels pending execution exactly once.
+    browser.jumpTo('/open');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, ['pending', 'change']);
+    assertEquals(router.currentPath, '/open');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('guard-vetoed native traverse never cancels pending execution (#1343 review)', async () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page' },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+    ],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({ destination: { url: 'http://router.test/blocked' } });
+    nav.fire(event);
+    assertEquals(event.intercepted, true);
+    await event.runHandler();
+    assertEquals(pending, 0, 'a vetoed native traverse must not invalidate pending execution');
+    assertEquals(router.currentPath, '/a');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
 Deno.test('client router never leaks unhandled rejections across dispose and guard-failure storms (#1146-3d)', async () => {
   const trap = trapUnhandledRejections();
   const browser = installFakeBrowser('/public');
@@ -1358,5 +1657,31 @@ Deno.test('client router never leaks unhandled rejections across dispose and gua
     router.dispose();
     browser.restore();
     trap.restore();
+  }
+});
+
+Deno.test('client router searchParams are per-reader snapshots, never shared mutable state', async () => {
+  const browser = installFakeBrowser('/items/1?view=full');
+  const router = createRouter({
+    mode: 'history',
+    routes: [{ path: '/items/:id', tagName: 'item-page' }],
+  });
+  try {
+    assertEquals(router.searchParams.get('view'), 'full');
+    // Mutating a returned snapshot cannot reach the router's own state...
+    const leaked = router.searchParams;
+    leaked.set('view', 'hacked');
+    leaked.append('injected', '1');
+    assertEquals(router.searchParams.get('view'), 'full');
+    assertEquals(router.searchParams.has('injected'), false);
+    // ...nor the address bar...
+    assertEquals(browser.path(), '/items/1?view=full');
+    // ...nor the snapshots of subsequent navigations.
+    await router.navigate('/items/2?view=mini');
+    assertEquals(router.searchParams.get('view'), 'mini');
+    assertEquals(router.searchParams.has('injected'), false);
+  } finally {
+    router.dispose();
+    browser.restore();
   }
 });

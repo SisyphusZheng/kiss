@@ -37,11 +37,13 @@ import { formatError } from '@openelement/element';
  * Explicit dependency-direction rules: each package may only depend on the
  * listed workspace packages (element and create sit at the leaves/edge and
  * depend on nothing). Any other @openelement/* cross-package edge is an error.
+ * The url-pattern-list edge is the externally published, OE-maintained
+ * matching fork (ADR-0152/#1324) — a dependency boundary, not a second matcher.
  */
 export const ALLOWED_DEPENDENCY_DIRECTION: Readonly<Record<string, readonly string[]>> = {
   '@openelement/element': [],
   '@openelement/ui': ['@openelement/element'],
-  '@openelement/app': ['@openelement/element'],
+  '@openelement/app': ['@openelement/element', '@openelement/url-pattern-list'],
   '@openelement/adapter-vite': ['@openelement/element', '@openelement/app', '@openelement/ui'],
   '@openelement/create': [],
 };
@@ -152,6 +154,10 @@ function validateInternalRanges(
         );
         continue;
       }
+      // OE-scope packages published outside the workspace (the maintained
+      // url-pattern-list fork, #1324) carry their own release line; only
+      // workspace members must track the train version.
+      if (!packages.some((member) => member.name === parsed.packageName)) continue;
       if (parsed.version !== releaseVersion) {
         failures.push(
           `${pkg.dir}/deno.json import "${key}" points to ${parsed.packageName}@${parsed.version}; ` +

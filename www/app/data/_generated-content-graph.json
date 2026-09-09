@@ -11,7 +11,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "e83c514b94742e596ed86745ae0ac26852b866a116795e2d2e43bee45edfc3c7",
+      "fingerprint": "db8c9f9571d837dd83ec5b3f586f319d27c8a7ef37a76c3b5f41dad50fc6cd99",
       "data": {
         "exportClasses": {
           ".": {
@@ -64,6 +64,9 @@
           "cli/start": {
             "extractServeMode": "internal-importable"
           },
+          "element": {
+            "element": "experimental"
+          },
           "nitro-mount": {
             "NitroRequestEvent": "stable-candidate",
             "OpenElementNitroMountOptions": "stable-candidate",
@@ -80,7 +83,8 @@
           "nitro-mount",
           "cli/build",
           "cli/start",
-          "sitemap"
+          "sitemap",
+          "element"
         ]
       }
     },
@@ -93,7 +97,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "ac439e6933989a37c2dbade4a11515f59b8c4a5a632ac77ea9b8f1fa469e7d80",
+      "fingerprint": "c565e942a928801ba6bbe0edc22cf626fdbfbad675a99c29c830de00cb59a17b",
       "data": {
         "exportClasses": {
           ".": {
@@ -154,6 +158,18 @@
             "PreactIslandOptions": "stable-candidate",
             "definePreactIsland": "stable-candidate"
           },
+          "router": {
+            "RouteMatch": "experimental",
+            "RouteRecord": "experimental",
+            "RouteResolution": "experimental",
+            "RouteTable": "experimental",
+            "RouteTableOptions": "experimental",
+            "normalizeRoutePatternForURLPattern": "internal-importable"
+          },
+          "router/http": {
+            "HttpRouteRecord": "experimental",
+            "createRouteMiddleware": "experimental"
+          },
           "spa": {
             "SpaAppInstance": "stable-candidate",
             "defineApp": "stable-candidate"
@@ -166,7 +182,9 @@
           ".",
           "model",
           "spa",
-          "preact"
+          "preact",
+          "router",
+          "router/http"
         ]
       }
     },
@@ -199,7 +217,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "e5920113e9b6b799476950c20fc6ac98914c6e4fe25b65f3bf42b7c556d19b14",
+      "fingerprint": "a805de5e39acde8136edb01af5f726c7ef0e08bd09c76486bb3db7a7039528ca",
       "data": {
         "exportClasses": {
           ".": {
@@ -287,7 +305,6 @@
             "createRuntimeAdapter": "internal-importable",
             "formatJson": "internal-importable",
             "insertBeforeBodyClose": "internal-importable",
-            "normalizeRoutePatternForURLPattern": "internal-importable",
             "normalizeSeparators": "internal-importable",
             "pathToTagName": "internal-importable",
             "transformIslandSource": "internal-importable"
@@ -1823,7 +1840,7 @@
       ],
       "references": [],
       "route": "/guide/configuration",
-      "fingerprint": "277e4e28695e002532cfb54a21b9b55df847a3ebe9935409d40989b621887da7",
+      "fingerprint": "2d5246cf8c40166ea39559ab2b25e6fddf4d9cb06af734b0cdb7a8d7c0b7c006",
       "data": {
         "lede": "Configuration stays close to the route, build or package surface it affects.",
         "order": 70,
@@ -1845,7 +1862,7 @@
       ],
       "references": [],
       "route": "/guide/configuration",
-      "fingerprint": "b50cc7b053c08795ba1b6b489b99350ebfa379a1072e4e507351fdf28ff33c58",
+      "fingerprint": "83c29aff2f2e5b7619d302fe61bff1ed4554aa307db948d62eb95d8beea6588a",
       "data": {
         "lede": "配置贴近它所影响的 route、build 或 package 表面。",
         "order": 70,

@@ -76,10 +76,10 @@ function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContex
     // ADR-0121 (#568): conservative default body limit on action POSTs;
     // larger uploads belong on API routes with explicit limits.
     lines.push(
-      `app.post(${pathLiteral}, __bodyLimit({ maxSize: 10 * 1024 * 1024, onError: (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Payload Too Large', 413); } }), async (c) => {`,
+      `__pageHandlers[${pathLiteral}].POST = [__bodyLimit({ maxSize: 10 * 1024 * 1024, onError: (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Payload Too Large', 413); } }), async (c) => {`,
     );
   } else {
-    lines.push(`app.get(${pathLiteral}, async (c) => {`);
+    lines.push(`__pageHandlers[${pathLiteral}].GET = [async (c) => {`);
   }
   // ADR-0129: one mutable response-header channel per request, shared by the
   // loader and the action (the spread into the action context carries the
@@ -105,7 +105,7 @@ function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContex
     lines.push(`  const __actionState = { isFetch: false };`);
   }
   lines.push(`  try {`);
-  lines.push(`    __params = c.req.param() || {}`);
+  lines.push(`    __params = c.get('routeResolution').params`);
   lines.push(`    const __loadContext = {`);
   lines.push(`      params: __params,`);
   lines.push(`      request: c.req.raw,`);
@@ -321,7 +321,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   // ADR-0129: close the handler-body IIFE and merge the response-header
   // channel into whatever response the body produced.
   lines.push(`  })(), __responseHeaders);`);
-  lines.push(`})`);
+  lines.push(`}];`);
   lines.push('');
 }
 
@@ -371,16 +371,6 @@ export function renderActionRoute(
   isSSG: boolean,
 ): void {
   renderRouteHandler(lines, { method: 'post', route, renderers, docConfig, isSSG });
-  // ADR-0121 (#572): only GET/POST are defined for page routes — other
-  // methods get a defined 405 instead of the server fallback 404. The
-  // method-specific handlers above are registered first and win for
-  // GET/POST/HEAD. no-store/Vary apply to the 405 as well (#586).
-  lines.push(
-    `app.all(${
-      quoteGeneratedJavaScriptValue(route.path)
-    }, (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }); });`,
-  );
-  lines.push('');
 }
 
 /**

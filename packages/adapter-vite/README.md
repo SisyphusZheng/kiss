@@ -99,7 +99,7 @@ Phase 2: client island entry and browser chunks
 - Otherwise the adapter writes a _fallback shell_: a bare `<div id="root">`
   plus a `console.info` placeholder script. It is a build marker so the
   output directory is servable — not a runnable app. Either way, a route
-  manifest module (`route-manifest.ts`, exporting `routeManifest`) is
+  manifest module (`route-manifest.ts`, exporting ordered `routeRecords`) is
   written next to it for client-side routing; import it from your bootstrap
   as `../dist/route-manifest.ts`.
 
@@ -150,3 +150,16 @@ and only then update config and generated registration.
 ## License
 
 MIT
+
+### Standalone Element authoring
+
+Install Element, Vite and this adapter; import `element` from
+`@openelement/adapter-vite/element` and put `element()` in Vite's `plugins`.
+This entry does not load Router, SSG or deployment tooling. Router is an optional
+peer; Framework applications install `@openelement/app` explicitly.
+
+Keep the decorated component in a `.tsx` module and register its exported class
+from a separate JS entry. Use a Vite library build to bundle that entry, then
+load the resulting JS from ordinary HTML. The consumer needs the bundled Element
+runtime, not the compiler. `deno run -A tools/consumer-packaged-element.ts` in the
+repository exercises this path using packed artifacts.

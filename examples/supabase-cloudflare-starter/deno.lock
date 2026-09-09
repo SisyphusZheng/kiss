@@ -8,6 +8,7 @@
     "jsr:@std/path@1": "1.1.5",
     "jsr:@std/path@^1.1.5": "1.1.5",
     "jsr:@std/semver@1": "1.0.8",
+    "npm:@openelement/url-pattern-list@0.6.0": "0.6.0",
     "npm:@playwright/test@1.59.1": "1.59.1",
     "npm:@preact/signals-core@^1.12.1": "1.14.4",
     "npm:@preact/signals@^2.9.0": "2.10.1_preact@10.29.8__preact-render-to-string@6.7.0_preact-render-to-string@6.7.0__preact@10.29.8",
@@ -21,6 +22,7 @@
     "npm:pdf-parse@^1.1.1": "1.1.4",
     "npm:pdfjs-dist@4.8.69": "4.8.69",
     "npm:preact@^10.28.0": "10.29.8_preact-render-to-string@6.7.0",
+    "npm:typescript@^5.9.0": "5.9.3",
     "npm:urlpattern-polyfill@10.1.0": "10.1.0",
     "npm:valibot@^1.1.0": "1.4.2_typescript@5.9.3",
     "npm:vite@8.0.16": "8.0.16_esbuild@0.25.12_jiti@2.7.0_yaml@2.9.0",
@@ -633,6 +635,9 @@
         "@emnapi/runtime@1.10.0",
         "@tybys/wasm-util"
       ]
+    },
+    "@openelement/url-pattern-list@0.6.0": {
+      "integrity": "sha512-djz6c4tih8BL1lonjr41iuoWGGF5pOgldEE0wOB/hzLLB4rS1MQHRQ2X3zM2XxnB6SX5Fphxx7uwTN/+ZDH//g=="
     },
     "@oxc-project/types@0.133.0": {
       "integrity": "sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA=="
@@ -1924,6 +1929,7 @@
       },
       "jsr:@openelement/app@0.44.0-beta.2": {
         "dependencies": [
+          "npm:@openelement/url-pattern-list@0.6.0",
           "npm:preact-render-to-string@^6.5.0"
         ]
       },

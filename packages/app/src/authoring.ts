@@ -36,7 +36,6 @@ type PageRenderingMode = 'static' | 'dynamic';
 export type PageMeta = Record<string, unknown>;
 
 interface PageRouteIntent {
-  path?: string;
   id?: string;
   params?: readonly string[];
 }
@@ -346,6 +345,11 @@ export function definePage<
         `${ERROR_PREFIX} definePage() does not accept top-level "${key}". ` +
           'Use only route, head, renderIntent, props, and error. Compiled pages render from ' +
           'their Part Program — there is no render() function field (v0.44).',
+      );
+    }
+    if (descriptor.route && Object.hasOwn(descriptor.route, 'path')) {
+      throw new Error(
+        `${ERROR_PREFIX} definePage route.path is not supported; the route file owns its URL path.`,
       );
     }
     if (descriptor.props !== undefined && typeof descriptor.props !== 'function') {

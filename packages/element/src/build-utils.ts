@@ -13,9 +13,6 @@ export { formatJson } from './public-build-runtime.ts';
 export { normalizeSeparators, pathToTagName } from './public-build-runtime.ts';
 export { SsrRenderError } from './public-build-runtime.ts';
 export { transformIslandSource } from './public-build-runtime.ts';
-export {
-  insertBeforeBodyClose,
-  normalizeRoutePatternForURLPattern,
-} from './public-build-runtime.ts';
+export { insertBeforeBodyClose } from './public-build-runtime.ts';
 export type { OpenElementRequestHandler, RuntimeContext } from './public-build-runtime.ts';
 export { composeFetchMiddleware, createRuntimeAdapter } from './public-build-runtime.ts';

@@ -100,10 +100,11 @@ export interface RouteHandlerSlice {
   body: string;
 }
 
-// The generated entry (dist/server/entry.js) is bundled but not minified:
-// framework route registrations sit at column 0 with double-quoted paths,
-// while hono's doc-comment examples are indented and single-quoted.
-const ROUTE_REGISTRATION = /^app\.(get|post)\("([^"]+)"/gm;
+// The generated entry (dist/server/entry.js) dispatches through one unified
+// `app.all('*', …)`: per-route handlers live in the generated `__pageHandlers`
+// method table, keyed by a double-quoted path literal. The reserved identifier
+// and assignment shape survive bundling; doc-comment mentions lack `= [`.
+const ROUTE_REGISTRATION = /__pageHandlers\["((?:[^"\\]|\\.)*)"\]\.(GET|POST)\s*=\s*\[/g;
 
 /** Slice the generated entry into per-route handler bodies. */
 export function sliceRouteHandlers(entrySource: string): RouteHandlerSlice[] {
@@ -114,8 +115,8 @@ export function sliceRouteHandlers(entrySource: string): RouteHandlerSlice[] {
     const start = match.index!;
     const end = index + 1 < matches.length ? matches[index + 1].index! : entrySource.length;
     handlers.push({
-      method: match[1] as 'get' | 'post',
-      path: match[2],
+      method: match[2].toLowerCase() as 'get' | 'post',
+      path: JSON.parse(`"${match[1]}"`) as string,
       line: entrySource.slice(0, start).split('\n').length,
       body: entrySource.slice(start, end),
     });

@@ -123,7 +123,6 @@ export function getStaticPaths(): Array<Record<string, string>> {
 }
 
 export default definePage(BlogPostPage, {
-  route: { path: '/blog/:slug' },
   renderIntent: { mode: 'static' },
   props({ params }) {
     const post = getPostBySlug(params.slug);

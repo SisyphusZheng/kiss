@@ -2,7 +2,7 @@
 // (packages/adapter-vite/__fixtures__/nitro-proof/nitro.config.ts) — keep it
 // and its imports (./lib/version.ts) free of jsr:/npm: imports.
 
-import { prereleaseParts } from './lib/version.ts';
+import { previousPrereleaseVersion } from './lib/version.ts';
 
 export const PACKAGE_VERSION = '0.44.0-beta.2';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
@@ -93,11 +93,12 @@ export function stalePackageVersionClaims(): string[] {
   const claims = [PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG];
   // Canonical prerelease truth lives in ./lib/version.ts (import-free, so this
   // module stays loadable by Nitro/jiti under Node).
-  const parts = prereleaseParts(PREVIOUS_PACKAGE_VERSION);
-  if (parts) {
-    for (let n = parts.num - 1; n >= 1; n--) {
-      claims.push(`${parts.base}-${parts.name}.${n}`, `v${parts.base}-${parts.name}.${n}`);
-    }
+  for (
+    let previous = previousPrereleaseVersion(PREVIOUS_PACKAGE_VERSION);
+    previous !== null;
+    previous = previousPrereleaseVersion(previous)
+  ) {
+    claims.push(previous, `v${previous}`);
   }
   return claims;
 }

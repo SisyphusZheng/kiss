@@ -148,8 +148,43 @@ export async function ssgRender(
   // not receive the request path) and surface them in the build summary.
   const staticNon200: Array<{ path: string; status: number }> = [];
   const warnings: string[] = [];
+  // Beta.2.1 (#1325): the unified entry serves pages behind a single
+  // app.all('*', dispatcher), so app.routes no longer enumerates pages and
+  // hono/ssg discovers nothing. Project eligible static pages from canonical
+  // routeInfo for DISCOVERY ONLY — matching/rendering still runs through the
+  // real app.fetch/request (unified dispatcher). The dummy handler is never
+  // executed; its arity only keeps hono's isMiddleware filter from dropping
+  // the enumerated path. Host routes coexisting on the app are preserved
+  // as-is; the wildcard dispatcher itself is not a discoverable page.
+  const eligibleStaticPaths = routeInfo
+    .filter((r) => r.rendering !== 'dynamic' && !r.isDynamic)
+    .map((r) => r.path);
+  const preservedHostRoutes = (app.routes ?? []).filter(
+    (r) => r.path !== '*' && r.path !== '/*',
+  );
+  // Dedupe only against host entries hono/ssg would itself discover
+  // (filterStaticGenerateRoutes: method GET/ALL, non-middleware handler).
+  // An exact-path middleware (`app.use('/about', …)`, method ALL, arity 2) or
+  // a method-only host registration (POST/…) is filtered out of SSG discovery
+  // by hono — letting it suppress the canonical GET entry silently dropped the
+  // page from the build while the build reported success (review, #1343).
+  const preservedPaths = new Set(
+    preservedHostRoutes
+      .filter((r) =>
+        (r.method === 'GET' || r.method === 'ALL') &&
+        typeof r.handler === 'function' && r.handler.length <= 1
+      )
+      .map((r) => r.path),
+  );
+  const discoveryHandler = () => {};
+  const discoveryRoutes = [
+    ...preservedHostRoutes,
+    ...eligibleStaticPaths
+      .filter((p) => !preservedPaths.has(p))
+      .map((path) => ({ method: 'GET', handler: discoveryHandler, path })),
+  ];
   const recordingApp: SsgHonoApp = {
-    routes: app.routes,
+    routes: discoveryRoutes,
     fetch: (request, ...args) => app.fetch(request, ...args),
     request: async (input, ...args) => {
       const response = await app.request(input, ...args);

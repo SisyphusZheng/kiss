@@ -309,7 +309,7 @@ test.describe('protocol hardening (ADR-0121, 0.42.0-alpha.5)', () => {
   test('non-GET/POST methods are a defined 405 with Allow (#572)', async ({ request }) => {
     const response = await request.put('/form', { data: 'x=1' });
     expect(response.status()).toBe(405);
-    expect(response.headers()['allow']).toBe('GET, POST');
+    expect(response.headers()['allow']).toBe('GET, HEAD, POST');
   });
 
   test('POST takes the same error-boundary channel as GET (#551)', async ({ request }) => {

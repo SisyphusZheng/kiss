@@ -12,13 +12,13 @@ authoring modes = Basic Element standalone + full application
 
 ## Current five-package surface
 
-| Package                     | Responsibility                                                                 | Supported public interface                                        |
-| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`, `sanitize` |
-| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                                    |
-| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `sitemap`          |
-| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                                 |
-| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                              |
+| Package                     | Responsibility                                                                 | Supported public interface                                          |
+| --------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`, `sanitize`   |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`, `router`, `router/http`             |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `element`, `nitro-mount`, `cli/build`, `cli/start`, `sitemap` |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                                   |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                                |
 
 Responsibility wording follows [`STACK_CONTRACT.md`](./STACK_CONTRACT.md),
 the source of truth for the five-package responsibility table.
@@ -61,24 +61,63 @@ promise and are not application-authoring surface.
 <!-- package-surface-map
 {
   "@openelement/element": {
-    "supported": [".", "jsx-runtime", "jsx-dev-runtime", "build-utils", "sanitize"],
+    "supported": [
+      ".",
+      "jsx-runtime",
+      "jsx-dev-runtime",
+      "build-utils",
+      "sanitize"
+    ],
     "internal": []
   },
   "@openelement/app": {
-    "supported": [".", "model", "spa", "preact"],
-    "internal": ["i18n"]
+    "supported": [
+      ".",
+      "model",
+      "spa",
+      "preact",
+      "router",
+      "router/http"
+    ],
+    "internal": [
+      "i18n"
+    ]
   },
   "@openelement/adapter-vite": {
-    "supported": [".", "nitro-mount", "cli/build", "cli/start", "sitemap"],
+    "supported": [
+      ".",
+      "nitro-mount",
+      "cli/build",
+      "cli/start",
+      "sitemap",
+      "element"
+    ],
     "internal": []
   },
   "@openelement/create": {
-    "supported": ["."],
+    "supported": [
+      "."
+    ],
     "internal": []
   },
   "@openelement/ui": {
-    "supported": [".", "open-badge", "open-button", "open-callout", "open-card", "open-code-block", "open-dialog", "open-dropdown", "open-input", "open-props-tokens", "open-tabs", "open-theme-toggle"],
-    "internal": ["open-props-tokens.js"]
+    "supported": [
+      ".",
+      "open-badge",
+      "open-button",
+      "open-callout",
+      "open-card",
+      "open-code-block",
+      "open-dialog",
+      "open-dropdown",
+      "open-input",
+      "open-props-tokens",
+      "open-tabs",
+      "open-theme-toggle"
+    ],
+    "internal": [
+      "open-props-tokens.js"
+    ]
   }
 }
 -->
@@ -86,7 +125,7 @@ promise and are not application-authoring surface.
 - `@openelement/element/build-utils` (alpha.17): build-time helpers
   (`transformIslandSource`, `formatJson`,
   `pathToTagName`, `normalizeSeparators`, `insertBeforeBodyClose`,
-  `normalizeRoutePatternForURLPattern`, `SsrRenderError`,
+  `SsrRenderError`,
   `createRuntimeAdapter`, `composeFetchMiddleware` and the runtime handler
   types) for build adapters.
   They were removed from the element root export; application code must not
@@ -112,7 +151,7 @@ promise and are not application-authoring surface.
   supported implementations through named public modules and never name an
   `internal/` module specifier.
 - `@openelement/app/i18n` is the optional locale-expansion integration point.
-- App's router implementation (`internal/router`) is not exported; the router
+- `@openelement/app/router` exports pure Route Mode matching; `router/http` adds Hono execution. Private tree/parser details remain unexported. The browser router
   types (`RouteConfig`, `RouterInstance`, `RouterMode`) were removed from the
   app root export in alpha.17 — SPA consumers derive the instance from
   `ReturnType<typeof defineApp>` and the options from
@@ -264,7 +303,6 @@ classified name missing from the prose fails the gate.
       "createRuntimeAdapter": "internal-importable",
       "formatJson": "internal-importable",
       "insertBeforeBodyClose": "internal-importable",
-      "normalizeRoutePatternForURLPattern": "internal-importable",
       "normalizeSeparators": "internal-importable",
       "OpenElementRequestHandler": "internal-importable",
       "pathToTagName": "internal-importable",
@@ -335,6 +373,18 @@ classified name missing from the prose fails the gate.
       "definePreactIsland": "stable-candidate",
       "PreactIslandConstructor": "stable-candidate",
       "PreactIslandOptions": "stable-candidate"
+    },
+    "router": {
+      "RouteTable": "experimental",
+      "RouteRecord": "experimental",
+      "RouteMatch": "experimental",
+      "RouteResolution": "experimental",
+      "RouteTableOptions": "experimental",
+      "normalizeRoutePatternForURLPattern": "internal-importable"
+    },
+    "router/http": {
+      "createRouteMiddleware": "experimental",
+      "HttpRouteRecord": "experimental"
     }
   },
   "@openelement/adapter-vite": {
@@ -396,6 +446,9 @@ classified name missing from the prose fails the gate.
     "cli/build": {},
     "cli/start": {
       "extractServeMode": "internal-importable"
+    },
+    "element": {
+      "element": "experimental"
     }
   },
   "@openelement/create": {
@@ -471,7 +524,7 @@ classified name missing from the prose fails the gate.
 | `jsx-runtime`     | stable-candidate    | `Fragment`, `jsx`, `JSX`, `jsxs`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `jsx-dev-runtime` | stable-candidate    | `Fragment`, `JSX`, `jsxDEV`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `sanitize`        | stable-candidate    | `isSafeUrl`, `sanitizeHtml`, `SanitizeOptions`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `build-utils`     | internal-importable | `composeFetchMiddleware`, `createRuntimeAdapter`, `formatJson`, `insertBeforeBodyClose`, `normalizeRoutePatternForURLPattern`, `normalizeSeparators`, `OpenElementRequestHandler`, `pathToTagName`, `RuntimeContext`, `SsrRenderError`, `transformIslandSource`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `build-utils`     | internal-importable | `composeFetchMiddleware`, `createRuntimeAdapter`, `formatJson`, `insertBeforeBodyClose`, `normalizeSeparators`, `OpenElementRequestHandler`, `pathToTagName`, `RuntimeContext`, `SsrRenderError`, `transformIslandSource`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ### `@openelement/app`
 
@@ -628,7 +681,7 @@ Earlier removed product experiments and adapters remain historical only:
 - Element owns the browser/runtime implementation and runtime contracts.
 - `@preact/signals-core` is Element's internal signal engine, not a consumer
   OpenElement package surface.
-- App owns routing and application semantics; its router is internal.
+- App owns routing and application semantics; its pure router and HTTP integration have separate entry points.
 - Adapter Vite owns content, static generation, deployment and build contracts.
 - Create templates and current docs may import only retained product packages.
 - Runtime-free packages (`element`, `app`, `ui`) contain no Deno or Node host API
@@ -646,3 +699,43 @@ export stability classification above are checked together by
 `deno task package-surface:check`. Historical
 ADR and release evidence retain their original package names; they are not
 current usage documentation.
+
+## Beta.2.1 entry migration (ADR-0152)
+
+`@openelement/app/router` owns records, ordered resolution, separate pathname
+captures and `URLSearchParams`. Its dependency graph excludes Element/Hono/Vite.
+`@openelement/app/router/http` provides `createRouteMiddleware`, mounted after
+host middleware/API routes; URL winner precedes method dispatch. Records group
+method handlers, explicit HEAD wins, implicit HEAD uses GET, 405 lists only the
+selected record's methods (sorted uppercase, with implicit HEAD). Missing URLs
+continue to the host. `methods` defaults to GET in the pure table.
+
+The Element build-utils route normalizer moves to App/router. Generated SPA
+manifests now export ordered `routeRecords` (id/path/methods/load), replacing the
+path-keyed `routeManifest`. File identity is its normalized relative source path;
+file routes sort static, parameter, catch-all, then code-point path/file order.
+`definePage().route.path` is removed: filenames own Framework URLs. SPA loaders
+and actions receive `searchParams` separately; params no longer project query
+values onto a component.
+
+`@openelement/adapter-vite/element` exports `element()` for standalone authoring.
+Use that plugin with Vite's normal library build, and register the exported class
+in a separate ordinary JS entry. Compiler/runtime communicate through existing
+versioned Part Programs; the semantic compiler remains private and is delivered
+inside the tooling package. Router is an optional peer of adapter-vite; Framework
+applications must install App themselves. Standalone authors install Element,
+adapter-vite and Vite; bundled plain-HTML consumers need only the resulting JS.
+The packed consumer proof checks registration, event updates, source maps and
+browser JS/declaration graphs; this is not full Beta.2.2 qualification.
+
+Navigation API is used where present; history fallback remains for hosts without
+it and file:// hash mode retains its demonstrated existing use. Matching is the
+same RouteTable in every driver. Chromium 147, Firefox 148 and WebKit 26.4 are the
+local test environments, not a newly promised minimum browser version.
+
+| Subpath           | Classification      | Named exports                                                                     |
+| ----------------- | ------------------- | --------------------------------------------------------------------------------- |
+| App `router`      | experimental        | `RouteTable`, `RouteRecord`, `RouteMatch`, `RouteResolution`, `RouteTableOptions` |
+| App `router`      | internal-importable | `normalizeRoutePatternForURLPattern`                                              |
+| App `router/http` | experimental        | `createRouteMiddleware`, `HttpRouteRecord`                                        |
+| Adapter `element` | experimental        | `element`                                                                         |

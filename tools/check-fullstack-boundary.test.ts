@@ -58,17 +58,16 @@ Deno.test('fullstack-boundary: sb_secret_ key material and JWT-shaped tokens are
   assertEquals(issues[1].message.includes('JWT'), true);
 });
 
-Deno.test('fullstack-boundary: sliceRouteHandlers ignores indented doc-comment examples', () => {
+Deno.test('fullstack-boundary: sliceRouteHandlers slices the generated page-handler table', () => {
   const source = [
-    " * app.post('/entry', async (c) => {",
-    'app.get("/notes", async (c) => {',
+    'const __pageHandlers = {};',
+    '// __pageHandlers["/entry"].GET mentioned without assignment must not match',
+    '__pageHandlers["/notes"].GET = [async (c) => {',
     '\tc.header("Cache-Control", "no-store");',
-    '});',
-    'app.post("/login", bodyLimit({',
+    '}];',
+    '__pageHandlers["/login"].POST = [__bodyLimit({ maxSize: 1024 }), async (c) => {',
     '\tc.header("Cache-Control", "no-store");',
-    '}), async (c) => {',
-    '\tc.header("Cache-Control", "no-store");',
-    '});',
+    '}];',
   ].join('\n');
   const handlers = sliceRouteHandlers(source);
   assertEquals(handlers.length, 2);
@@ -90,22 +89,22 @@ Deno.test('fullstack-boundary: parseRequestTimeRoutePaths reads the generated ad
 
 Deno.test('fullstack-boundary: no-store baseline with the #943 private relaxation passes', () => {
   const entry = [
-    'app.get("/notes", async (c) => {',
+    '__pageHandlers["/notes"].GET = [async (c) => {',
     '\tc.header("Cache-Control", "no-store");',
     '\tif (ok) c.header("Cache-Control", "private, no-cache");',
-    '});',
-    'app.post("/notes", bodyLimit({}), async (c) => {',
+    '}];',
+    '__pageHandlers["/notes"].POST = [__bodyLimit({}), async (c) => {',
     '\tc.header("Cache-Control", "no-store");',
-    '});',
+    '}];',
   ].join('\n');
   assertEquals(findCacheBoundaryIssues(entry, ['/notes']), []);
 });
 
 Deno.test('fullstack-boundary: a handler without the no-store baseline is flagged', () => {
   const entry = [
-    'app.get("/notes", async (c) => {',
+    '__pageHandlers["/notes"].GET = [async (c) => {',
     '\treturn c.html("notes");',
-    '});',
+    '}];',
   ].join('\n');
   const issues = findCacheBoundaryIssues(entry, ['/notes']);
   assertEquals(issues.length, 1);
@@ -115,10 +114,10 @@ Deno.test('fullstack-boundary: a handler without the no-store baseline is flagge
 
 Deno.test('fullstack-boundary: a publicly cacheable emission is flagged', () => {
   const entry = [
-    'app.get("/notes", async (c) => {',
+    '__pageHandlers["/notes"].GET = [async (c) => {',
     '\tc.header("Cache-Control", "no-store");',
     '\tc.header("Cache-Control", "public, max-age=60");',
-    '});',
+    '}];',
   ].join('\n');
   const issues = findCacheBoundaryIssues(entry, ['/notes']);
   assertEquals(issues.length, 1);
