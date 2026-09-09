@@ -1,6 +1,6 @@
 /** Route identity, URL winner and HTTP policy; URLPatternList owns indexing. */
+import { URLPatternList } from '@openelement/url-pattern-list';
 import { normalizeRoutePatternForURLPattern } from './route-pattern.ts';
-import { URLPatternList } from './url-pattern-list/index.ts';
 import { URLPattern as URLPatternPolyfill } from 'urlpattern-polyfill';
 
 /**
@@ -108,7 +108,7 @@ export class RouteTable<T extends RouteRecord> {
       ),
     );
     const ids = new Set<string>();
-    this.#list = new URLPatternList(this.routes.map((route, index) => {
+    const entries = this.routes.map((route, index) => {
       const id = route.id ?? String(index);
       if (ids.has(id)) throw new TypeError(`Duplicate route identity: ${id}`);
       ids.add(id);
@@ -124,7 +124,10 @@ export class RouteTable<T extends RouteRecord> {
         pathname = pathname.slice(0, -1);
       }
       return [new Pattern({ ...route.pattern, pathname }), { route, id }] as const;
-    }));
+    });
+    const list = new URLPatternList<{ route: T; id: string }>();
+    for (const [pattern, value] of entries) list.addPattern(pattern, value);
+    this.#list = list;
   }
 
   #url(input: string | URL, search: string): URL | undefined {

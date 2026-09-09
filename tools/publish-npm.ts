@@ -93,12 +93,21 @@ function parseNpmSpec(value: string, label: string): { name: string; version: st
   const match = value.match(/^npm:(@[^/]+\/[^@/]+|[^@/]+)(?:@(\^?[\d.]+(?:-[\w.]+)?))?/);
   if (!match) return null;
   const name = match[1];
-  if (name.startsWith('@openelement/')) return null;
   const version = match[2]?.replace(/^\^/, '');
   if (!version) {
     throw new Error(`npm dependency '${name}' (${label}) has no version; add an explicit version.`);
   }
   return { name, version };
+}
+
+/**
+ * Published dependency range for an external npm dep. The OE-maintained
+ * matching fork is consumed as an exact qualified version only (#1324 —
+ * consumers must not float past the qualified artifact); every other
+ * external dep keeps the caret policy.
+ */
+function publishRange(spec: { name: string; version: string }): string {
+  return spec.name === '@openelement/url-pattern-list' ? spec.version : `^${spec.version}`;
 }
 
 export function deriveDependencies(
@@ -111,16 +120,20 @@ export function deriveDependencies(
   const denoJson = io.readPkgJson(pkg.dir);
   const imports = denoJson.imports ?? {};
   const sourceSpecifiers = new Set<string>();
+  const byName = new Map(allPackages.map((p) => [p.name, p]));
 
-  // External npm dependencies from deno.json imports.
+  // External npm dependencies from deno.json imports. Workspace members are
+  // resolved internally (source-import loop below), never as external npm
+  // deps; the maintained url-pattern-list fork shares the @openelement scope
+  // but is published outside the workspace, so it lands here exactly (#1324).
   for (const value of Object.values(imports)) {
     if (typeof value !== 'string') continue;
     const spec = parseNpmSpec(value, `${pkg.name} deno.json`);
-    if (spec) deps[spec.name] = `^${spec.version}`;
+    if (!spec || byName.has(spec.name)) continue;
+    if (spec) deps[spec.name] = publishRange(spec);
   }
 
   // Internal workspace dependencies from source imports.
-  const byName = new Map(allPackages.map((p) => [p.name, p]));
   for (const text of io.readSrcFiles(pkg.dir)) {
     for (const { value } of extractStaticModuleSpecifiers(text)) sourceSpecifiers.add(value);
     for (const specifier of extractOpenImports(text)) {
@@ -142,7 +155,7 @@ export function deriveDependencies(
     const value = rootImports[specifier];
     if (typeof value !== 'string') continue;
     const spec = parseNpmSpec(value, `${pkg.name} root import`);
-    if (spec) deps[spec.name] = `^${spec.version}`;
+    if (spec) deps[spec.name] = publishRange(spec);
   }
 
   return deps;

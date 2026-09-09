@@ -11,6 +11,7 @@
     "./examples/deno-desktop-mastodon"
   ],
   "imports": {
+    "@openelement/url-pattern-list": "npm:@openelement/url-pattern-list@0.6.0",
     "@std/fs/walk": "jsr:@std/fs@^1.0.0/walk",
     "@std/fs": "jsr:@std/fs@^1.0.0",
     "@std/path": "jsr:@std/path@^1.0.0",

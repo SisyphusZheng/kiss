@@ -11,6 +11,7 @@
     "./preact": "./src/preact.ts"
   },
   "imports": {
+    "@openelement/url-pattern-list": "npm:@openelement/url-pattern-list@0.6.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
   },
   "publish": {

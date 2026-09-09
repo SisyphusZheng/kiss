@@ -42,6 +42,20 @@ Deno.test('deriveDependencies includes an external npm dependency with a version
   assertEquals(deps, { react: '^18.2.0' });
 });
 
+Deno.test('deriveDependencies pins the maintained matching fork exactly (#1324)', () => {
+  const localIo: DeriveDepsIo = {
+    ...io,
+    readPkgJson: () => ({
+      imports: {
+        '@openelement/url-pattern-list': 'npm:@openelement/url-pattern-list@0.6.0',
+      },
+    }),
+  };
+  const deps = deriveDependencies(pkg('@openelement/app', '0.44.0'), [], localIo);
+  // Exact, never a caret range: consumers must not float past the qualified artifact.
+  assertEquals(deps, { '@openelement/url-pattern-list': '0.6.0' });
+});
+
 Deno.test('deriveDependencies throws when an npm dependency has no version', () => {
   const localIo: DeriveDepsIo = {
     ...io,

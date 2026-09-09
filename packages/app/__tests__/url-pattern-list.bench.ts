@@ -4,7 +4,7 @@
  * fork: open-element/url-pattern-list BENCHMARKS.md (Node, GC-controlled).
  */
 import { RouteTable, URLPatternPolyfillConstructor } from '../src/internal/router/route-table.ts';
-import { URLPatternList } from '../src/internal/router/url-pattern-list/index.ts';
+import { URLPatternList } from '@openelement/url-pattern-list';
 
 async function main(): Promise<void> {
   const base = '0d826954cb96b3a9306119830defd6000a798c95';
@@ -27,7 +27,7 @@ async function main(): Promise<void> {
       JSON.stringify({
         deno: Deno.version,
         baseline: base,
-        memory: 'NOT MEASURED: no reliable per-index isolation',
+        memory: 'measured in the fork: open-element/url-pattern-list BENCHMARKS.md',
         samples: 5,
         lookupsPerSample: 100,
       }),
@@ -47,7 +47,8 @@ async function main(): Promise<void> {
           entries = paths.map((pathname, i) =>
             [new URLPatternPolyfillConstructor({ pathname }), i] as const
           );
-          list = new URLPatternList(entries);
+          list = new URLPatternList();
+          for (const [pattern, value] of entries) list.addPattern(pattern, value);
           build.push(performance.now() - start);
         }
         const oldBuild = performance.now();

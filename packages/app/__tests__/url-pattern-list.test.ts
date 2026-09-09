@@ -1,6 +1,15 @@
 import { assertEquals, assertStrictEquals, assertThrows } from '@std/assert';
-import { URLPatternList } from '../src/internal/router/url-pattern-list/index.ts';
+import { type ListPattern, URLPatternList } from '@openelement/url-pattern-list';
 import { URLPatternPolyfillConstructor } from '../src/internal/router/route-table.ts';
+
+/** Build a list from entry pairs (the package registers via addPattern). */
+function listFromEntries<T>(
+  entries: Iterable<readonly [ListPattern, T]>,
+): URLPatternList<T> {
+  const list = new URLPatternList<T>();
+  for (const [pattern, value] of entries) list.addPattern(pattern, value);
+  return list;
+}
 
 const constructors = [
   ['polyfill', URLPatternPolyfillConstructor],
@@ -67,10 +76,16 @@ for (const [name, Pattern] of constructors) {
     for (const first of patterns) {
       for (const second of patterns) {
         const entries = [[first, {}], [second, {}]] as const;
-        const list = new URLPatternList(entries);
+        const list = listFromEntries(entries);
         for (const input of inputs) {
           const url = new URL(input, 'https://example.com');
+          // Upstream-aligned contract: when match() is given a baseURL, exec
+          // receives it too, so result.inputs carries the caller's arguments.
           const expected = entries.map(([pattern, value]) => ({
+            result: pattern.exec(url.href, 'https://example.com'),
+            value,
+          })).find((r) => r.result);
+          const expectedNoBase = entries.map(([pattern, value]) => ({
             result: pattern.exec(url.href),
             value,
           })).find((r) => r.result);
@@ -81,7 +96,7 @@ for (const [name, Pattern] of constructors) {
             `${name}: ${first.pathname}, ${second.pathname}, ${input}`,
           );
           assertStrictEquals(actual?.value, expected?.value);
-          assertEquals(list.match(url)?.result ?? null, expected?.result ?? null);
+          assertEquals(list.match(url)?.result ?? null, expectedNoBase?.result ?? null);
         }
       }
     }
@@ -96,7 +111,7 @@ for (const [name, Pattern] of constructors) {
       [new CasePattern({ pathname: '/Case' }, { ignoreCase: true }), 1],
       [new Pattern({ pathname: '/case', search: '', hash: '', port: '' }), 2],
     ] as const;
-    const list = new URLPatternList(entries);
+    const list = listFromEntries(entries);
     for (
       const input of [
         'https://example.com/case',
@@ -122,7 +137,7 @@ for (const [name, Pattern] of constructors) {
       });
       const input = `https://example.com/shared/${next() % 35}`;
       const mismatch = (candidate: typeof entries) => {
-        const actual = new URLPatternList(candidate).match(input);
+        const actual = listFromEntries(candidate).match(input);
         const expected = candidate.map(([pattern, value]) => ({
           result: pattern.exec(input),
           value,
@@ -158,7 +173,7 @@ Deno.test('URLPatternList invalid URL boundary is consistent for empty and popul
   for (
     const entries of [[], [[new URLPatternPolyfillConstructor({ pathname: '*' }), 1] as const]]
   ) {
-    const list = new URLPatternList(entries);
+    const list = listFromEntries(entries);
     assertThrows(() => list.match('/relative'), TypeError);
     assertThrows(() => list.match('http://['), TypeError);
     assertEquals(list.match('https://example.com')?.value ?? null, entries.length ? 1 : null);
