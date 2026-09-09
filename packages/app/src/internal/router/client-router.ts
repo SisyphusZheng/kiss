@@ -467,7 +467,10 @@ export function createRouter(options: RouterOptions): RouterInstance {
       return currentRoute;
     },
     get searchParams(): URLSearchParams {
-      return currentSearchParams;
+      // Mutable interface over an immutable snapshot: every reader (and each
+      // loader/action context) gets its own copy, so user code can never
+      // rewrite the router's canonical state behind the address bar.
+      return new URLSearchParams(currentSearchParams);
     },
     get params(): Record<string, string> {
       return currentParams;

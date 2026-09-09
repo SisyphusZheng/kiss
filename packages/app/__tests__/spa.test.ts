@@ -137,6 +137,52 @@ Deno.test('defineApp mounts loader data and route context through the page props
   }
 });
 
+Deno.test('defineApp loader searchParams is a copy: mutation cannot pollute router state or the address bar', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'article-page': Page });
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: unknown) {
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/articles/hello?preview=yes');
+  let loaderParams: URLSearchParams | undefined;
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/articles/:slug',
+      tagName: 'article-page',
+      loader: ({ searchParams }) => {
+        loaderParams = searchParams;
+        searchParams.set('preview', 'hacked');
+        searchParams.append('injected', '1');
+        return Promise.resolve({ title: searchParams.get('preview') });
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The loader saw and used its own mutable copy.
+    assertEquals(loaderParams?.get('preview'), 'hacked');
+    assertEquals(calls.normal[0].data, { title: 'hacked' });
+    // The router's canonical snapshot is unpolluted...
+    assertEquals(app.router?.searchParams.get('preview'), 'yes');
+    assertEquals(app.router?.searchParams.has('injected'), false);
+    // ...and so is the address bar.
+    assertEquals(env.location.search, '?preview=yes');
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});
+
 Deno.test('defineApp rejects missing targets and safely remounts and redisposes', () => {
   const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
   let found = false;

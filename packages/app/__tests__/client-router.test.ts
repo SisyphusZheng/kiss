@@ -1544,3 +1544,29 @@ Deno.test('client router never leaks unhandled rejections across dispose and gua
     trap.restore();
   }
 });
+
+Deno.test('client router searchParams are per-reader snapshots, never shared mutable state', async () => {
+  const browser = installFakeBrowser('/items/1?view=full');
+  const router = createRouter({
+    mode: 'history',
+    routes: [{ path: '/items/:id', tagName: 'item-page' }],
+  });
+  try {
+    assertEquals(router.searchParams.get('view'), 'full');
+    // Mutating a returned snapshot cannot reach the router's own state...
+    const leaked = router.searchParams;
+    leaked.set('view', 'hacked');
+    leaked.append('injected', '1');
+    assertEquals(router.searchParams.get('view'), 'full');
+    assertEquals(router.searchParams.has('injected'), false);
+    // ...nor the address bar...
+    assertEquals(browser.path(), '/items/1?view=full');
+    // ...nor the snapshots of subsequent navigations.
+    await router.navigate('/items/2?view=mini');
+    assertEquals(router.searchParams.get('view'), 'mini');
+    assertEquals(router.searchParams.has('injected'), false);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
