@@ -42,6 +42,18 @@ const entries = {
   assertEquals(roadmapCurrentVersion('const entries = {};'), undefined);
 });
 
+Deno.test('roadmapCurrentVersion: quoted property keys parse the same (#1343)', () => {
+  const source = `
+const entries = {
+  en: [
+    { 'version': 'v0.44.0-beta.2', 'theme': 'x', 'state': 'next', 'stamp': 'CURRENT' },
+    { 'version': 'v0.43.3', 'theme': 'y', 'state': 'stable' },
+  ],
+};
+`;
+  assertEquals(roadmapCurrentVersion(source), 'v0.44.0-beta.2');
+});
+
 Deno.test('findRouteLocaleFailures: an en-only content record fails (#1307)', () => {
   const masquerade = `
 const content = {
