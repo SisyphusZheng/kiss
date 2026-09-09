@@ -8,7 +8,7 @@
 DOM 是默认服务端表示；交互区域按需升级。
 
 源码包行为 `0.44.0-beta.2.1`（`v0.44.0-beta.2.1`）——当前公开 v0.44 预发布线
-（Beta.2：产品化 + 治理减负，ADR-0151）。
+（Beta.2.1：Router 地基与独立 Element，ADR-0152）。
 npm registry 行为 `v0.44.0-beta.2.1`——预发布版本(dist-tag `beta`)；npm `latest` 仍为
 已发布的稳定 0.43 线。
 

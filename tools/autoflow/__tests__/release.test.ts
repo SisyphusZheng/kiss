@@ -62,8 +62,10 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // anchors appear twice: once for the current-tag form and once for the
   // lag-state previous-tag form (#754). The interop example anchor likewise
   // covers the source-line and lagging npm-published forms. Stable targets add
-  // the equivalent two forms for PUBLISHED_STABLE_VERSION.
-  assertEquals(reps.length, 43);
+  // the equivalent two forms for PUBLISHED_STABLE_VERSION. The roadmap rule is
+  // the single quoted-key `'version': …` form (#1343: the unquoted and
+  // `phase.version` forms no longer exist in the file).
+  assertEquals(reps.length, 42);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -237,11 +239,11 @@ Deno.test('buildVersionAnchorReplacements: prerelease bumps rewrite the registry
   );
 
   // Stable targets never touch the dist-tag annotation: a stable cut IS the
-  // latest line, and the rule surface stays at the exact 43 entries.
+  // latest line, and the rule surface stays at the exact 42 entries.
   assertFalse(
     buildVersionAnchorReplacements('9.9.9').some(([, f]) => f.includes('dist-tag')),
   );
-  assertEquals(buildVersionAnchorReplacements('9.9.9').length, 43);
+  assertEquals(buildVersionAnchorReplacements('9.9.9').length, 42);
 });
 
 Deno.test('buildVersionAnchorReplacements: every target carries the previous or current line', () => {
