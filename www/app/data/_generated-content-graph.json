@@ -2418,7 +2418,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "79bb5438d23059ad4f97e3d5f8c6351c198c30ef6715b6c573afe625589d899e",
+      "fingerprint": "2ecbb586483ed06d61a731d9f3817ad491950ccc9a784ce1cb76682628cf0710",
       "data": {}
     },
     {
@@ -2951,12 +2951,12 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "9e4cdf31236adc5e35c8bd1a092814e5781721f34a929ec855c972b7707ae454",
+      "fingerprint": "7da3f43cc8ab998a51686b86548f7efa1f0a3f78d74c5b9e89654040233b1ae1",
       "data": {
         "activeTarget": "v0.44.0-beta.2.1",
         "latestLandedTrain": "v0.44.0-beta.2",
         "maturity": "beta",
-        "nextPlannedTrain": "v0.44.0-beta.2.1",
+        "nextPlannedTrain": "v0.44.0-beta.2.2",
         "publishedVersion": "0.44.0-beta.2",
         "schemaVersion": 1,
         "sourceVersion": "0.44.0-beta.2"
