@@ -718,3 +718,91 @@ Deno.test('SSG discovers static pages from route records behind the unified HTTP
     await Deno.remove(root, { recursive: true });
   }
 });
+
+// #1343 review (P2): exact-path middleware and method-only host registrations
+// are filtered out of hono/ssg discovery (method ALL + arity 2, or non-GET),
+// so they must not suppress the canonical GET discovery entry for the same
+// path — otherwise the page silently vanishes from a successful build.
+Deno.test('SSG keeps canonical pages discoverable behind exact-path host middleware (#1343)', async () => {
+  const { createRouteMiddleware } = await import('@openelement/app/router/http');
+  const root = await Deno.makeTempDir({ prefix: 'oe-mw-ssg-' });
+  const app = new Hono();
+  let middlewareCalls = 0;
+  // Host middleware on the exact canonical path: preserved as host behavior,
+  // but not an SSG-discoverable page entry.
+  app.use('/about', async (_c, next) => {
+    middlewareCalls++;
+    await next();
+  });
+  app.all(
+    '*',
+    createRouteMiddleware([
+      { id: 'index.tsx', path: '/', handlers: { GET: (c) => c.html('<main>home</main>') } },
+      {
+        id: 'about.tsx',
+        path: '/about',
+        handlers: { GET: (c) => c.html('<main>canonical about</main>') },
+      },
+    ]),
+  );
+  try {
+    await ssgRender(
+      createMockBundle({
+        default: app,
+        routeInfo: [
+          { path: '/', tagName: 'home-page', isDynamic: false, paramNames: [] },
+          { path: '/about', tagName: 'about-page', isDynamic: false, paramNames: [] },
+        ],
+      }),
+      { root, outDir: 'dist' },
+    );
+    assertStringIncludes(
+      await Deno.readTextFile(`${root}/dist/about/index.html`),
+      'canonical about',
+    );
+    // Host behavior is preserved: the middleware really ran for the page fetch.
+    assert(middlewareCalls > 0, 'host middleware must execute for /about');
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('SSG keeps canonical pages discoverable behind method-only host routes (#1343)', async () => {
+  const { createRouteMiddleware } = await import('@openelement/app/router/http');
+  const root = await Deno.makeTempDir({ prefix: 'oe-postonly-ssg-' });
+  const app = new Hono();
+  // A POST-only host route on the canonical path is not a GET page entry.
+  app.post('/contact', (c) => c.json({ ok: true }));
+  app.all(
+    '*',
+    createRouteMiddleware([
+      { id: 'index.tsx', path: '/', handlers: { GET: (c) => c.html('<main>home</main>') } },
+      {
+        id: 'contact.tsx',
+        path: '/contact',
+        handlers: { GET: (c) => c.html('<main>canonical contact</main>') },
+      },
+    ]),
+  );
+  try {
+    await ssgRender(
+      createMockBundle({
+        default: app,
+        routeInfo: [
+          { path: '/', tagName: 'home-page', isDynamic: false, paramNames: [] },
+          { path: '/contact', tagName: 'contact-page', isDynamic: false, paramNames: [] },
+        ],
+      }),
+      { root, outDir: 'dist' },
+    );
+    assertStringIncludes(
+      await Deno.readTextFile(`${root}/dist/contact/index.html`),
+      'canonical contact',
+    );
+    // The host POST route still answers through the real dispatcher.
+    const posted = await app.request('/contact', { method: 'POST' });
+    assertEquals(posted.status, 200);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});

@@ -162,7 +162,20 @@ export async function ssgRender(
   const preservedHostRoutes = (app.routes ?? []).filter(
     (r) => r.path !== '*' && r.path !== '/*',
   );
-  const preservedPaths = new Set(preservedHostRoutes.map((r) => r.path));
+  // Dedupe only against host entries hono/ssg would itself discover
+  // (filterStaticGenerateRoutes: method GET/ALL, non-middleware handler).
+  // An exact-path middleware (`app.use('/about', …)`, method ALL, arity 2) or
+  // a method-only host registration (POST/…) is filtered out of SSG discovery
+  // by hono — letting it suppress the canonical GET entry silently dropped the
+  // page from the build while the build reported success (review, #1343).
+  const preservedPaths = new Set(
+    preservedHostRoutes
+      .filter((r) =>
+        (r.method === 'GET' || r.method === 'ALL') &&
+        typeof r.handler === 'function' && r.handler.length <= 1
+      )
+      .map((r) => r.path),
+  );
   const discoveryHandler = () => {};
   const discoveryRoutes = [
     ...preservedHostRoutes,

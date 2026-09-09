@@ -241,12 +241,19 @@ export function createRouter(options: RouterOptions): RouterInstance {
     if (disposed || (ticket !== undefined && ticket !== programmaticNavigationSeq)) return;
     const url = mode === 'hash' ? toHashUrl(path) : path;
     if (nativeNavigation) {
+      // Under the Navigation API the commit point is the navigate event:
+      // onPending fires when onNativeNavigate intercepts it (the guard above
+      // already passed), so a vetoed navigation cancels nothing.
       await nativeNavigation.navigate(url, {
         history: navOptions.replace ? 'replace' : 'push',
         info: checkedNavigation,
       }).finished;
       return;
     }
+    // Ownership point: every guard passed and this navigation still holds the
+    // latest ticket. Only now is pending execution invalidated — a navigation
+    // that was vetoed above never owned intent and left it running (#1343).
+    options.onPending?.();
     if (navOptions.replace) {
       history.replaceState(null, '', url);
     } else {
@@ -268,12 +275,13 @@ export function createRouter(options: RouterOptions): RouterInstance {
   let programmaticNavigationSeq = 0;
 
   function navigate(path: string): Promise<void> {
-    options.onPending?.();
+    // No onPending here: pending execution is cancelled at the ownership
+    // point (guard passed, latest ticket held), never on a navigation attempt
+    // a guard may still veto (#1343 review).
     return commitNavigation(path, { replace: false }, ++programmaticNavigationSeq);
   }
 
   function replace(path: string): Promise<void> {
-    options.onPending?.();
     return commitNavigation(path, { replace: true }, ++programmaticNavigationSeq);
   }
 
@@ -324,6 +332,10 @@ export function createRouter(options: RouterOptions): RouterInstance {
         }
       }
       if (disposed || ticket !== programmaticNavigationSeq) return;
+      // Ownership point (see commitNavigation): the guard allowed this
+      // traversal, so pending execution for the previous route is cancelled
+      // now — and only now.
+      options.onPending?.();
       rematch(landed);
       notifyChange();
     } finally {
@@ -339,7 +351,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
   function onBrowserNavigation(): void {
     if (disposed) return;
-    options.onPending?.();
+    // No onPending at event time: the guard in commitBrowserNavigation may
+    // veto this traversal, and a veto must leave the current route's pending
+    // render untouched (#1343 review).
     const ticket = ++programmaticNavigationSeq;
     browserNavigationQueue = browserNavigationQueue
       .then(() =>
@@ -424,7 +438,14 @@ export function createRouter(options: RouterOptions): RouterInstance {
       target.origin !== location.origin ||
       !resolveTarget(target)
     ) return;
-    options.onPending?.();
+    if (isOwn) {
+      // Programmatic commit under the Navigation API: the guard already
+      // passed in commitNavigation, so this is the ownership point.
+      // Browser-driven traverses instead cancel pending execution in
+      // commitBrowserNavigation after their guard resolves — an intercepted
+      // traverse that is vetoed cancels nothing (#1343 review).
+      options.onPending?.();
+    }
     const ticket = ++programmaticNavigationSeq;
     event.signal.addEventListener('abort', () => {
       if (ticket === programmaticNavigationSeq) programmaticNavigationSeq++;

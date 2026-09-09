@@ -1016,3 +1016,108 @@ for (const operation of ['loader', 'action'] as const) {
     }
   });
 }
+
+// ─── #1343 review (P2): vetoed navigation preserves pending renders ─────
+//
+// A guard-vetoed navigation never owned intent, so it must not abort the
+// current route's in-flight render: cancellation happens when a navigation
+// takes ownership, not when an attempt starts.
+
+Deno.test('guard-vetoed navigation preserves the pending initial loader render (#1343 review)', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({ 'home-page': Page, 'blocked-page': Page });
+  const hosts: Record<string, unknown>[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let resolveLoader!: (value: unknown) => void;
+  const loaderResult = new Promise((resolve) => {
+    resolveLoader = resolve;
+  });
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      { path: '/', tagName: 'home-page', loader: () => loaderResult },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+    ],
+  });
+  try {
+    app.mount('#app');
+    // The initial loader is pending; the vetoed navigation must not cancel it.
+    await app.router!.navigate('/blocked');
+    assertEquals(app.router!.currentPath, '/');
+    assertEquals(hosts.length, 0, 'nothing rendered yet — the loader is still pending');
+    resolveLoader({ title: 'home' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 1, 'the pending initial render commits after the veto');
+    assertEquals(hosts[0].title, 'home');
+    assertEquals(calls.errors, []);
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});
+
+Deno.test('guard-vetoed navigation preserves a pending subsequent render (#1343 review)', async () => {
+  const calls: ProbeCalls = { normal: [], errors: [] };
+  const Page = defineProbePage(calls);
+  const restoreRegistry = stubRegistry({
+    'home-page': Page,
+    'slow-page': Page,
+    'blocked-page': Page,
+  });
+  const hosts: Record<string, unknown>[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: Record<string, unknown>) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let resolveSlow!: (value: unknown) => void;
+  const slowResult = new Promise((resolve) => {
+    resolveSlow = resolve;
+  });
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      { path: '/', tagName: 'home-page', loader: () => Promise.resolve({ title: 'home' }) },
+      { path: '/slow', tagName: 'slow-page', loader: () => slowResult },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+    ],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 1, 'home rendered');
+    // An ownership-taking navigation commits and starts the target's render…
+    await app.router!.navigate('/slow');
+    assertEquals(app.router!.currentPath, '/slow');
+    // …which stays alive when a later navigation is vetoed mid-flight.
+    await app.router!.navigate('/blocked');
+    assertEquals(app.router!.currentPath, '/slow');
+    resolveSlow({ title: 'slow' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 2, 'the pending /slow render commits after the veto');
+    assertEquals(hosts[1].title, 'slow');
+    assertEquals(calls.errors, []);
+  } finally {
+    app.dispose();
+    env.restore();
+    restoreRegistry();
+  }
+});

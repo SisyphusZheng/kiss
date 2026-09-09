@@ -1335,6 +1335,8 @@ interface FakeNavigateEvent {
   navigationType?: string;
   intercepted: boolean;
   intercept(options: { handler: () => Promise<void> }): void;
+  /** The captured intercept handler; runHandler drives it to completion. */
+  runHandler(): Promise<void>;
 }
 
 function installFakeNavigation() {
@@ -1377,9 +1379,11 @@ function installFakeNavigation() {
     signal: new AbortController().signal,
     info: undefined,
     intercepted: false,
-    intercept(_options: { handler: () => Promise<void> }) {
-      (this as FakeNavigateEvent).intercepted = true;
+    intercept(this: FakeNavigateEvent, options: { handler: () => Promise<void> }) {
+      this.intercepted = true;
+      this.runHandler = () => options.handler();
     },
+    runHandler: () => Promise.resolve(),
     ...overrides,
   });
   return {
@@ -1468,7 +1472,7 @@ Deno.test('native reload stays browser-owned', () => {
   }
 });
 
-Deno.test('native same-origin GET without formData still intercepts', () => {
+Deno.test('native same-origin GET without formData still intercepts', async () => {
   const nav = installFakeNavigation();
   let pending = 0;
   const router = createRouter({
@@ -1483,7 +1487,118 @@ Deno.test('native same-origin GET without formData still intercepts', () => {
     const event = nav.makeEvent({ destination: { url: 'http://router.test/b' } });
     nav.fire(event);
     assertEquals(event.intercepted, true);
+    // Cancellation fires at the ownership point — inside the intercepted
+    // handler after the (here absent) guard resolves — not at event time, so
+    // a vetoed traversal cancels nothing (#1343 review).
+    assertEquals(pending, 0);
+    await event.runHandler();
     assertEquals(pending, 1);
+    assertEquals(router.currentPath, '/b');
+  } finally {
+    router.dispose();
+    nav.restore();
+  }
+});
+
+// #1343 review (P2): a guard-vetoed navigation never owned intent, so it must
+// leave pending execution (the current route's in-flight render) untouched.
+// Cancellation is retained exactly when a navigation takes ownership.
+
+Deno.test('guard-vetoed programmatic navigation never cancels pending execution (#1343 review)', async () => {
+  const browser = installFakeBrowser('/current');
+  let pending = 0;
+  let changes = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/current', tagName: 'current-page' },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+      { path: '/allowed', tagName: 'allowed-page' },
+    ],
+    onPending: () => {
+      pending++;
+    },
+    onChange: () => {
+      changes++;
+    },
+  });
+  try {
+    await router.navigate('/blocked');
+    assertEquals(pending, 0, 'a vetoed navigation must not invalidate pending execution');
+    assertEquals(changes, 0);
+    assertEquals(router.currentPath, '/current');
+    await router.navigate('/allowed');
+    assertEquals(pending, 1, 'an ownership-taking navigation cancels pending execution once');
+    assertEquals(changes, 1);
+    assertEquals(router.currentPath, '/allowed');
+    await router.replace('/blocked');
+    assertEquals(pending, 1, 'a vetoed replace cancels nothing');
+    assertEquals(router.currentPath, '/allowed');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('guard-vetoed popstate never cancels pending execution (#1343 review)', async () => {
+  const browser = installFakeBrowser('/public');
+  let pending = 0;
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/protected', tagName: 'protected-page', guard: () => Promise.resolve(false) },
+      { path: '/open', tagName: 'open-page' },
+    ],
+    onPending: () => {
+      pending++;
+      events.push('pending');
+    },
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    // The browser itself moved onto the guarded URL; the veto restores the
+    // previous entry without cancelling the current route's pending render.
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, []);
+    assertEquals(pending, 0);
+    assertEquals(router.currentPath, '/public');
+    assertEquals(browser.path(), '/public');
+    // An allowed traversal still cancels pending execution exactly once.
+    browser.jumpTo('/open');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, ['pending', 'change']);
+    assertEquals(router.currentPath, '/open');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('guard-vetoed native traverse never cancels pending execution (#1343 review)', async () => {
+  const nav = installFakeNavigation();
+  let pending = 0;
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/a', tagName: 'a-page' },
+      { path: '/blocked', tagName: 'blocked-page', guard: () => Promise.resolve(false) },
+    ],
+    onPending: () => pending++,
+  });
+  try {
+    const event = nav.makeEvent({ destination: { url: 'http://router.test/blocked' } });
+    nav.fire(event);
+    assertEquals(event.intercepted, true);
+    await event.runHandler();
+    assertEquals(pending, 0, 'a vetoed native traverse must not invalidate pending execution');
+    assertEquals(router.currentPath, '/a');
   } finally {
     router.dispose();
     nav.restore();
