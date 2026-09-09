@@ -205,7 +205,7 @@ review evidence, and a provider error is never counted as review. Per the 2026-0
 maintainer decision, the third-party AI review job is supplemental and non-blocking:
 the outcome gate (tools/check-review-outcome.ts) detects and reports a missing or
 errored review as a warning without failing CI. Restoring provider availability
-(DeepSeek balance) is an external billing action tracked in #1332. Merges rely on
+(the review provider's balance) is an external billing action tracked in #1332. Merges rely on
 required CI gates, human review and the fresh verifier — not on this supplemental
 signal. Do not silently change model/provider. Confirming #1342 ancestry does
 not mean that baseline CI passed. Planning edits do not repair #1343's product defects.

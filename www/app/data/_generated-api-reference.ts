@@ -923,7 +923,7 @@ export const apiReference = {
               "summary": "",
               "source": {
                 "path": "packages/app/src/internal/router/route-table.ts",
-                "line": 14
+                "line": 22
               },
               "stability": "experimental",
               "anchor": "api-app-router-RouteMatch"
@@ -934,7 +934,7 @@ export const apiReference = {
               "summary": "",
               "source": {
                 "path": "packages/app/src/internal/router/route-table.ts",
-                "line": 6
+                "line": 14
               },
               "stability": "experimental",
               "anchor": "api-app-router-RouteRecord"
@@ -945,7 +945,7 @@ export const apiReference = {
               "summary": "",
               "source": {
                 "path": "packages/app/src/internal/router/route-table.ts",
-                "line": 22
+                "line": 30
               },
               "stability": "experimental",
               "anchor": "api-app-router-RouteResolution"
@@ -956,7 +956,7 @@ export const apiReference = {
               "summary": "",
               "source": {
                 "path": "packages/app/src/internal/router/route-table.ts",
-                "line": 82
+                "line": 90
               },
               "stability": "experimental",
               "anchor": "api-app-router-RouteTable"
@@ -967,7 +967,7 @@ export const apiReference = {
               "summary": "",
               "source": {
                 "path": "packages/app/src/internal/router/route-table.ts",
-                "line": 27
+                "line": 35
               },
               "stability": "experimental",
               "anchor": "api-app-router-RouteTableOptions"
