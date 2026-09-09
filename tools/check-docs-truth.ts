@@ -32,6 +32,8 @@ import { roadmapEntryTheme } from './autoflow/release.ts';
 import {
   compareVersions,
   FIRST_TAGGED_VERSION,
+  nextCheckpointVersion,
+  nextProductStageVersion,
   PRERELEASE_CHANNELS,
   prereleaseSequence,
 } from './lib/version.ts';
@@ -395,13 +397,40 @@ const escapedRegistryVersion = PREVIOUS_PACKAGE_VERSION.replaceAll('.', '\\.');
 const currentAlphaNumber = prereleaseSequence(PACKAGE_VERSION, 'alpha');
 const registryAlphaNumber = prereleaseSequence(PREVIOUS_PACKAGE_VERSION, 'alpha');
 const allowedAlphaNumbers = [currentAlphaNumber, registryAlphaNumber].filter(Boolean).join('|');
+// The approved forward chain (ADR-0152 checkpoints + admitted product-stage
+// successor, owned by lib/version.ts) names planned future releases, not
+// retired claims: exempt exactly those versions; unapproved prereleases
+// (e.g. 0.44.0-beta.3, historical 0.44.0-alpha.N) stay forbidden.
+function plannedChainVersions(from: string): string[] {
+  const planned: string[] = [];
+  let cursor = from;
+  for (;;) {
+    try {
+      cursor = nextCheckpointVersion(cursor);
+    } catch {
+      break;
+    }
+    planned.push(cursor);
+  }
+  try {
+    planned.push(nextProductStageVersion(cursor));
+  } catch {
+    // No admitted product-stage successor on this line.
+  }
+  return planned;
+}
+const escapedPlannedChain = plannedChainVersions(PACKAGE_VERSION)
+  .map((version) => `(?!v?${version.replaceAll('.', '\\.')}(?!\\d))`)
+  .join('');
 const retiredFullForm =
-  `(?!v?${escapedCurrentVersion}(?!\\d))(?!v?${escapedRegistryVersion}(?!\\d))v?\\d+\\.\\d+\\.\\d+-(?:${
+  `(?!v?${escapedCurrentVersion}(?!\\d))(?!v?${escapedRegistryVersion}(?!\\d))${escapedPlannedChain}v?\\d+\\.\\d+\\.\\d+-(?:${
     PRERELEASE_CHANNELS.join('|')
   })\\.\\d+(?!\\d)`;
+// `(?<!-)`: an alpha.N shorthand preceded by `-` is part of a full version
+// (e.g. 1.0.0-alpha.1) and is governed by the full-form rule alone.
 const retiredShortForm = allowedAlphaNumbers
-  ? `\\balpha\\.(?!(?:${allowedAlphaNumbers})(?!\\d))\\d+(?!\\d)`
-  : `\\balpha\\.\\d+(?!\\d)`;
+  ? `(?<!-)\\balpha\\.(?!(?:${allowedAlphaNumbers})(?!\\d))\\d+(?!\\d)`
+  : `(?<!-)\\balpha\\.\\d+(?!\\d)`;
 const activeRetiredPattern = new RegExp(`(?:${retiredFullForm}|${retiredShortForm})`, 'iu');
 
 const removedPackageAlternation = REMOVED_PACKAGE_NAMES
