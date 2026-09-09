@@ -1,18 +1,21 @@
 /**
- * #1332 / #1343 merge prerequisite: the third-party AI review job
- * (opencode-review.yml) must actually execute its review.
+ * #1332: outcome gate for the third-party AI review job (opencode-review.yml).
  *
- * The review action posts its result as a PR comment and exits 0 even when the
- * provider call fails — the observed #1343 failure posted `APIError:
- * Insufficient Balance` while the workflow wrapper stayed green. A successful
- * wrapper job is therefore not review evidence. This gate fails closed:
+ * The review is supplemental and non-blocking (maintainer decision 2026-09-09):
+ * the workflow downgrades this gate's verdict to a warning annotation. What must
+ * never happen is a silent green: the review action posts provider errors as PR
+ * comments while exiting 0 — the observed #1343 failure posted `APIError:
+ * Insufficient Balance` under a successful wrapper. A successful wrapper job is
+ * therefore not review evidence, and a provider error contributes zero review
+ * evidence. This gate fails its own exit code (the workflow chooses not to
+ * propagate that to a job failure) when:
  *
- *   a) the review step's own outcome must be `success`;
- *   b) a review comment attributable to this workflow run (the action links
- *      its `actions/runs/<id>` URL) must exist on the PR;
- *   c) that comment must not match provider/API error signatures.
+ *   a) the review step's own outcome is not `success`;
+ *   b) no review comment attributable to this workflow run exists on the PR
+ *      (the action links its `actions/runs/<id>` URL);
+ *   c) that comment matches provider/API error signatures.
  *
- * Unverifiable means failed, never assumed green. The token comes from
+ * Unverifiable means reported, never assumed green. The token comes from
  * GITHUB_TOKEN or GH_TOKEN and is never printed. The workflow grants the job
  * `issues: read`/`pull-requests: write` via its existing permissions.
  *
