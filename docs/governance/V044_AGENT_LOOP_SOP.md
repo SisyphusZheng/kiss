@@ -68,7 +68,8 @@ The thinker performs these checks before selecting work:
 1. Confirm the task model is the configured thinker model and reasoning effort is
    `low`. If the host cannot prove this, report the configuration requirement and stop.
 2. Read the files in the execution plan's required order.
-3. Run `deno task v044:orchestration:check`.
+3. Run `deno task workflow:check` and the current release/version checks. The
+   completed Alpha workspace topology is no longer a current workflow gate.
 4. Run `deno task v044:executor:check`.
 5. Inspect `git status --short`, current branch, recent commits and open milestone issues.
 6. Compare the JSON execution state with GitHub issue state and latest evidence.
@@ -279,7 +280,7 @@ After an ordinary loop PASS, the thinker records:
 - immutable check-run or release links when they exist.
 
 Do not commit raw execution transcripts, conversation-derived summaries, or a growing
-per-attempt evidence tree. Beta.3 may migrate durable historical records only after it
+per-attempt evidence tree. Beta.2.x cleanup may migrate durable historical records only after it
 proves the replacement source is complete and records any required before/after blob
 identity without copying prohibited identifiers into current documentation.
 
@@ -292,13 +293,12 @@ The bootstrap prompt may explicitly authorize the thinker to create scoped branc
 local commits, pushes, PRs and issue comments/closure after gates pass. Executor roles
 never perform those actions.
 
-The active bootstrap authorizes the full prerelease release flow for `beta.1` through
-`beta.3` — `dev`→`main` integration, version tag,
-npm publication, dist-tag change,
-GitHub Release, evidence and issue updates, and execution-cursor advancement — after a
-unanimous implementer/release-verifier/thinker GO against the exact candidate SHA with
-every deterministic gate green. The internal Alpha workspace train stays strictly
-unpublished and outside this SOP: no tag, no publish, no release entry.
+ADR-0152's public train includes `beta.2.N` and `1.0.0-alpha.N`. When release
+execution is authorized, promotion, tags, npm publication, dist-tag changes and
+GitHub Releases require unanimous implementer/release-verifier/thinker GO against
+the exact candidate SHA with every required gate green. A planning update does
+not itself authorize or perform publication. Historic v0.44 internal Alpha
+workspace IDs stay unpublished and outside this public-release SOP.
 
 Exact-SHA integration topology: PR CI proves the exact PR head SHA, and that SHA is the
 candidate. `dev` advances only by fast-forward to the proved PR head (`git merge

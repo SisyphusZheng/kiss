@@ -12,3 +12,19 @@ Current product architecture is organized by responsibility:
 Active ADRs record only unresolved or still-governing hard decisions. Stable facts
 graduate into these pages. Historical ADR identity is its original path plus Git blob
 SHA, recorded by the ADR migration manifest.
+
+## Planning and public metadata map
+
+- [Beta.2.x checkpoints and acceptance](../current/VERSION_PLAN.md)
+- [Roadmap](../roadmap/ROADMAP.md)
+- [Issue ownership map](../roadmap/v0.44.0-ISSUES.md)
+- [Fork and Native/Lit decision](../adr/ADR-0152-product-router-and-alpha-convergence.md)
+
+Public docs sitemap/search are generated from eligible route/catalog metadata under
+[#1327](https://github.com/open-element/openelement/issues/1327). Do not hand-maintain
+XML or publish planned APIs as implemented documentation. SSG discovery repair is a
+Beta.2.1 prerequisite; metadata convergence remains Beta.2.2.
+
+- [Infrastructure reduction audit and WTR pilot](./infrastructure-reduction.md)
+- [Beta preparation and Alpha maturation execution map](./alpha-maturation.md):
+  concrete Oxc/TS7 experiments, WTR/platform contracts, ownership and exit rules.

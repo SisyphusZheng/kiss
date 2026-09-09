@@ -270,7 +270,10 @@ export function roadmapCurrentVersion(source: string): string | undefined {
       let entryVersion: string | undefined;
       for (const property of node.properties) {
         if (!ts.isPropertyAssignment(property)) continue;
-        const key = ts.isIdentifier(property.name) ? property.name.text : undefined;
+        // Roadmap entries quote their keys ('stamp': …); accept both forms.
+        const key = ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)
+          ? property.name.text
+          : undefined;
         if (!ts.isStringLiteralLike(property.initializer)) continue;
         if (key === 'stamp') stamp = property.initializer.text;
         if (key === 'version') entryVersion = property.initializer.text;

@@ -1,5 +1,8 @@
 # openElement AutoWorkflow
 
+Current source package line `v0.44.0-beta.2`;
+npm registry line `v0.44.0-beta.2` (prerelease, dist-tag `beta`).
+
 > Status: Mandatory project workflow. Every human maintainer and AI assistant
 > must read this document before planning, implementing, reviewing, or releasing
 > work in this repository.
@@ -11,28 +14,15 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor:
+Current execution direction is owned by
+[VERSION_PLAN.md](../current/VERSION_PLAN.md) and
+[ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md): Beta.2.x
+convergence -> public 1.0 Alpha -> evidence-gated RC/Stable. Actual version and
+publication facts remain in `docs/release/release-state.json`.
 
-- source package line `v0.44.0-beta.2`;
-- npm registry line `v0.44.0-beta.2` (prerelease, dist-tag `beta`; npm `latest`
-  remains the stable 0.43 line);
-- active target `v0.44.0-beta.1`;
-- current internal checkpoint: none — the internal Alpha checkpoint train closed
-  at Alpha.10 (Truth Closure; verifier PASS, #1150);
-- next public prerelease: `v0.44.0-beta.2`.
-
-ADR-0143 explicitly reopens the minor train after the 0.43 maintenance freeze.
-The compiled OpenElement execution order — internal Alpha workspaces (complete
-through Alpha.10) → Beta.1 framework qualification and
-governance freeze → Beta.2 productization and governance offload → Beta.3 final
-hardening, formal benchmark and real SaaS qualification → RC1 frozen candidate
-and soak → Stable/1.0 decision on Beta.3 evidence — lives in
-`docs/current/VERSION_PLAN.md` (ADR-0151); 0.43.x remains the stable
-maintenance fallback until 0.44 reaches stable.
-OpenElement is one Web Components-native,
-static-first application framework: Basic Element is an authoring mode, not a
-second product. Beta names product-qualification boundaries, not a second
-architecture or product line.
+The core products are Element and Router. UI is dogfood and a reference implementation. Supporting packages are not additional
+product lines. Cleanup is part of every replacement, beginning in Beta.2.1.
+Historic v0.44 Alpha workspace instructions do not govern public 1.0 Alpha.
 
 ## Required Reading Order
 
@@ -131,7 +121,7 @@ Use this order for a minor release:
 6. run release gates including publish dry-run;
 7. push `dev`;
 8. wait for all `dev` CI jobs;
-9. merge `dev` into `main`;
+9. promote the exact accepted SHA to `main` through the protected release workflow;
 10. wait for all `main` CI jobs;
 11. create and push the release tag;
 12. publish the GitHub release note;

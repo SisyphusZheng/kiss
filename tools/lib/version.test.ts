@@ -2,7 +2,9 @@ import { assert, assertEquals, assertThrows } from '@std/assert';
 import {
   compareVersions,
   FIRST_TAGGED_VERSION,
+  nextCheckpointVersion,
   nextPatchVersion,
+  nextProductStageVersion,
   normalizeReleaseVersion,
   parseLineVersion,
   prereleaseChannel,
@@ -72,4 +74,13 @@ Deno.test('prereleaseChannel names only publishable channels', () => {
 Deno.test('FIRST_TAGGED_VERSION is the immutable-tag policy boundary (#855)', () => {
   assertEquals(FIRST_TAGGED_VERSION, '0.41.0-alpha.14');
   assert(tryParseLineVersion(FIRST_TAGGED_VERSION) !== undefined);
+});
+
+Deno.test('Beta.2 checkpoint and product-stage succession are explicit and finite', () => {
+  assertEquals(nextCheckpointVersion('0.44.0-beta.2'), '0.44.0-beta.2.1');
+  assertEquals(nextCheckpointVersion('0.44.0-beta.2.1'), '0.44.0-beta.2.2');
+  assertEquals(nextCheckpointVersion('0.44.0-beta.2.2'), '0.44.0-beta.2.3');
+  assertThrows(() => nextCheckpointVersion('0.44.0-beta.2.3'), Error, 'No next Beta checkpoint');
+  assertEquals(nextProductStageVersion('0.44.0-beta.2.3'), '1.0.0-alpha.1');
+  assertThrows(() => nextProductStageVersion('0.44.0-beta.2'), Error, 'No admitted product-stage');
 });

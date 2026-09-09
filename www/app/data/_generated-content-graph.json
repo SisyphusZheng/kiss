@@ -2401,7 +2401,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "69408f8d3b2f6231d7ac1cf2cae72b6e9d239af6a1c8849d5ed6b209a6bc2e09",
+      "fingerprint": "79bb5438d23059ad4f97e3d5f8c6351c198c30ef6715b6c573afe625589d899e",
       "data": {}
     },
     {
@@ -2934,12 +2934,12 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "d04fd9c640690c1850f753c68c41591b2a3ee20be4158dbab6e69f53bdaeda30",
+      "fingerprint": "9e4cdf31236adc5e35c8bd1a092814e5781721f34a929ec855c972b7707ae454",
       "data": {
-        "activeTarget": "v0.44.0-beta.2",
+        "activeTarget": "v0.44.0-beta.2.1",
         "latestLandedTrain": "v0.44.0-beta.2",
         "maturity": "beta",
-        "nextPlannedTrain": "v0.44.0-beta.3",
+        "nextPlannedTrain": "v0.44.0-beta.2.1",
         "publishedVersion": "0.44.0-beta.2",
         "schemaVersion": 1,
         "sourceVersion": "0.44.0-beta.2"
@@ -4312,7 +4312,7 @@
       },
       "alternates": [],
       "references": [],
-      "fingerprint": "f7fc852f757500a45533200ab49cead269b44a98c64bb3a1855cbcae7bf2b436",
+      "fingerprint": "51ea47e0ac1297039f2cfa6ebba153d95dc29af48c992b699c85dc7c445a6e6c",
       "data": {
         "title": "v0.44.0-beta.2"
       }
@@ -4332,13 +4332,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "06b7d0f915e7f702d45744877b679ffae2daf8c32efb47033394977efc211752",
+      "fingerprint": "a2bc953542390d9255cb3561999967ca79584fc8684888606334233dc3c193a9",
       "data": {
-        "copy": "The second public prerelease of the compiled line, published under dist-tag beta while the stable 0.43 line keeps npm latest. It proves external users can really use and maintain the framework — packaged-consumer qualification, derived-truth release gates and governance offload onto the three-role release loop (ADR-0151).",
+        "copy": "The compiled prerelease baseline remains on npm beta; the stable 0.43 line retains latest. Future checkpoint plans are not publication evidence.",
         "stamp": "CURRENT",
         "state": "next",
         "status": "prerelease",
-        "theme": "productization + governance offload",
+        "theme": "Published baseline",
         "version": "v0.44.0-beta.2"
       }
     },
@@ -4357,14 +4357,14 @@
         }
       ],
       "references": [],
-      "fingerprint": "ca9405d28097662e697184d5faec58608c0c3149375ef12031be57bca520a261",
+      "fingerprint": "1339f13631421a7fea9f45a27304e9b03b5b8e1be001f65e8212effbaa064c76",
       "data": {
-        "copy": "Patch releases inside the Beta.2 stage: Router convergence (upstream URLPatternList + one RouteResolution), Document convergence (one resolved page meaning, post-build SEO rewriting removed) and repository/governance closure. Beta.3 keeps its real-workload and formal-benchmark theme.",
+        "copy": "Maintain an upstream-traceable URLPatternList fork and prepare generic contributions; unify route resolution; repair SSG and browser navigation boundaries; qualify standalone Element and prerelease tooling.",
         "stamp": "NEXT",
         "state": "next",
-        "status": "patch train",
-        "theme": "Beta.2 patch checkpoints",
-        "version": "v0.44.0-beta.2.1 → 2.3"
+        "status": "planned acceptance checkpoint",
+        "theme": "Router foundation and independent Element",
+        "version": "v0.44.0-beta.2.1"
       }
     },
     {
@@ -4382,14 +4382,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "9b1d07676bf9fb9cafa81b3f4e1d2e0a7d9055cb69ecfa5b309907d1826be497",
+      "fingerprint": "6aa0f247a7a11d8c598da3b53048165217587a721cbf7d7f478757ea57a5153f",
       "data": {
-        "copy": "Architecture constitution, governance offload, unified Content Graph and a production-shaped TSX-to-Part Program compiler spike.",
-        "stamp": "NEXT",
-        "state": "next",
-        "status": "active",
-        "theme": "compiled OpenElement foundations",
-        "version": "v0.44 alpha"
+        "copy": "Use WTR for upstream-aligned browser conformance; prove loader, SSR, client continuation, navigation and actions with Native and Lit; derive a minimal shared protocol and public Document/SEO/search/sitemap metadata; prepare bounded Oxc/TS7 migration experiments. Lit is a support target, not an already-shipped claim.",
+        "state": "planned",
+        "status": "planned",
+        "theme": "Native and Lit Framework Mode",
+        "version": "v0.44.0-beta.2.2"
       }
     },
     {
@@ -4397,7 +4396,7 @@
       "kind": "roadmap-entry",
       "locale": "en",
       "source": {
-        "line": 63,
+        "line": 62,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4407,13 +4406,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "d26f37d0e76f1b093074a91aba42291b9de31ed8a0ae1892301ed409090a68d1",
+      "fingerprint": "004ef364eac18f6185abce520fbad8b801ad1405ae5e070a10a22486f1758a5a",
       "data": {
-        "copy": "Standard decorators, the OpenElement kernel, replaceable Signals, fixed Parts, dynamic Regions, DSD serialization and existing-DOM claim converge on one program.",
+        "copy": "Qualify independent packed consumers, runtime/browser matrices, output and resource cleanup; remove qualified duplicate infrastructure, reconcile documentation and record Alpha migration decisions. No deadline waiver or automatic beta.2.4.",
         "state": "planned",
-        "status": "planned sequence",
-        "theme": "Element, Parts and claim",
-        "version": "compiler → claim"
+        "status": "evidence-gated",
+        "theme": "Dual-mode qualification",
+        "version": "v0.44.0-beta.2.3"
       }
     },
     {
@@ -4421,7 +4420,7 @@
       "kind": "roadmap-entry",
       "locale": "en",
       "source": {
-        "line": 71,
+        "line": 70,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4431,13 +4430,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "d6d51cc6809ab9c65d4d6b643b0fa9d955bdd5db63c91fad0ec219b495a13f90",
+      "fingerprint": "6a97c5b4c1acf2dc3c8bf9ed251cf42ae9c837e3f24dee21f5a4445267e21e83",
       "data": {
-        "copy": "Zero-runtime static output, generated Island delivery, App/build convergence, old-path removal, ecosystem interop and real-application qualification.",
+        "copy": "Start real application use with the public baseline: independently consumable Element and Router with Native/Lit application flows. Actively qualify Oxc/TS7 adoption and platform reductions through subsequent Alpha upgrades; APIs may evolve with migration guidance.",
         "state": "planned",
-        "status": "planned sequence",
-        "theme": "delivery, migration and qualification",
-        "version": "delivery → qualification"
+        "status": "planned",
+        "theme": "Public Alpha admission",
+        "version": "v1.0.0-alpha.1"
       }
     },
     {
@@ -4445,7 +4444,7 @@
       "kind": "roadmap-entry",
       "locale": "en",
       "source": {
-        "line": 79,
+        "line": 78,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4455,37 +4454,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "d4023cd855697b3ddd2354aec48bf8e76aab5029e3856890b30ff0f3c26189ef",
+      "fingerprint": "3a45d9d2d8bc281465af3c3a13e0f5b44e57898087cfb7a2b4726f7bde51d485",
       "data": {
-        "copy": "Entered only after the complete architecture, correctness, delivery, portability, documentation, governance and real-application gate passes. Any public or architecture change returns to alpha.",
+        "copy": "Freeze contracts and dependencies after Alpha evidence; require at least fourteen days of RC soak, install/upgrade/security qualification and human GO. Element and Router do not mandate a package count.",
         "state": "planned",
-        "status": "gated",
-        "theme": "frozen candidate",
-        "version": "v0.44 release candidate"
-      }
-    },
-    {
-      "id": "roadmap:en:6",
-      "kind": "roadmap-entry",
-      "locale": "en",
-      "source": {
-        "line": 87,
-        "path": "www/app/routes/roadmap.tsx"
-      },
-      "alternates": [
-        {
-          "locale": "zh",
-          "id": "roadmap:zh:6"
-        }
-      ],
-      "references": [],
-      "fingerprint": "7249f7f4096c341bfc9184945e5a44e880c1fb4172c93003bfe892ca6ade35df",
-      "data": {
-        "copy": "Release only after external production users prove that the Element, App and Build interfaces need no further architecture change.",
-        "state": "planned",
-        "status": "direction",
-        "theme": "stable five-package product",
-        "version": "v1.0.0"
+        "status": "unscheduled",
+        "theme": "Separately admitted releases",
+        "version": "v1.0 RC / Stable"
       }
     },
     {
@@ -4493,7 +4468,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 97,
+        "line": 88,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4503,13 +4478,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "4aa0d1aadfad3c3c1f6877f7adf042da8d392a508d93e3e2a869953466c7a045",
+      "fingerprint": "39ce5dd1aafe5c33cfa85798469b9022e9f36dc8583014b09f47260d1395905b",
       "data": {
-        "copy": "编译型线路的第二个公开预发布版本，以 dist-tag beta 发布，npm latest 仍由稳定 0.43 线保持。它验证外部用户能否真正使用并维护该框架——打包消费者资格验证、派生真相发布门禁，以及向三角色发布循环的治理减负（ADR-0151）。",
+        "copy": "编译型预发布基线保持 npm beta；稳定 0.43 线保持 latest。后续检查点规划不代表已经发布。",
         "stamp": "CURRENT",
         "state": "next",
         "status": "预发布",
-        "theme": "产品化 + 治理减负",
+        "theme": "已发布基线",
         "version": "v0.44.0-beta.2"
       }
     },
@@ -4518,7 +4493,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 106,
+        "line": 97,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4528,14 +4503,14 @@
         }
       ],
       "references": [],
-      "fingerprint": "79cd3ebd2337dbffccbc02b47e6dc3e42c757063d5ff5aafc59da3402f4f5a48",
+      "fingerprint": "6f61632b08e0615ff1019f9147cd159ed27a0b5c12275535b9c1ed15e2a3db34",
       "data": {
-        "copy": "Beta.2 阶段内的补丁发布：Router 收敛（上游 URLPatternList + 单一 RouteResolution）、Document 收敛（单一页面语义，移除构建后 SEO 改写）与仓库/治理关闭。Beta.3 保持真实负载与正式基准主题。",
+        "copy": "维护可追溯上游的 URLPatternList fork，准备通用贡献；统一路由决议；修复 SSG 和浏览器导航边界；验证独立 Element 与预发布工具链。",
         "stamp": "NEXT",
         "state": "next",
-        "status": "补丁序列",
-        "theme": "Beta.2 补丁检查点",
-        "version": "v0.44.0-beta.2.1 → 2.3"
+        "status": "计划验收检查点",
+        "theme": "Router 地基与独立 Element",
+        "version": "v0.44.0-beta.2.1"
       }
     },
     {
@@ -4543,7 +4518,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 115,
+        "line": 106,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4553,14 +4528,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "6b209d333175fa8eb3b81ebca281dd9640e1e746b497b35e96d4cf8c18a37068",
+      "fingerprint": "0b7d4ef52e6a23f008f43f46e943ff52b85d1a92e75b2f5bc154d8966417bab0",
       "data": {
-        "copy": "冻结架构宪法、治理减负、统一 Content Graph，并完成具备生产形态的 TSX 到 Part Program 编译器纵切。",
-        "stamp": "NEXT",
-        "state": "next",
-        "status": "执行中",
-        "theme": "编译型 OpenElement 地基",
-        "version": "v0.44 alpha"
+        "copy": "采用便于贡献上游的 WTR 浏览器测试，以 Native 和 Lit 跑通 loader、SSR、客户端接续、导航及 action，提炼最小共享协议和 Document/SEO/search/sitemap 元数据，并完成有界 Oxc/TS7 迁移试验。Lit 是正式支持目标，尚非已交付声明。",
+        "state": "planned",
+        "status": "规划中",
+        "theme": "Native 与 Lit Framework Mode",
+        "version": "v0.44.0-beta.2.2"
       }
     },
     {
@@ -4568,7 +4542,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 124,
+        "line": 114,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4578,13 +4552,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "7b452d7e4d878d2fb42eedfce88cf51a4b9f424fc3490c36301b135be0dab123",
+      "fingerprint": "31c38225bc327d13a117ed7f740739e737dc98a7017c945e0f7dc5862cf813e0",
       "data": {
-        "copy": "标准装饰器、OpenElement 内核、可替换 Signal、固定 Part、动态 Region、DSD 序列化与已有 DOM claim 收束到同一程序。",
+        "copy": "验证独立打包消费者、运行时与浏览器矩阵、产物和资源清理，删除已验证的重复基础设施、同步文档并明确 Alpha 迁移决定。期限不豁免验收，不自动追加 beta.2.4。",
         "state": "planned",
-        "status": "规划序列",
-        "theme": "Element、Parts 与 claim",
-        "version": "编译器 → claim"
+        "status": "按证据准入",
+        "theme": "双模式资格验证",
+        "version": "v0.44.0-beta.2.3"
       }
     },
     {
@@ -4592,7 +4566,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 132,
+        "line": 122,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4602,13 +4576,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "54d1120a71366c6538573e99dcf1ac1aa8528a060b71d01dd09c86378e1848ce",
+      "fingerprint": "69bfbdbd4df3a8964bfe12ddc215e37efbd6fac9a3ae48e52a5229d79ace0632",
       "data": {
-        "copy": "零运行时静态输出、生成式 Island 交付、App/构建收束、旧路径删除、生态互操作与真实应用验证。",
+        "copy": "从公开基线开始在真实应用中使用可独立消费的 Element 与 Router，验证 Native/Lit 应用流程；后续 Alpha 积极验证 Oxc/TS7 采用和平台替代，接口调整提供迁移说明。",
         "state": "planned",
-        "status": "规划序列",
-        "theme": "交付、迁移与验证",
-        "version": "交付 → 资格验证"
+        "status": "规划中",
+        "theme": "公开 Alpha 准入",
+        "version": "v1.0.0-alpha.1"
       }
     },
     {
@@ -4616,7 +4590,7 @@
       "kind": "roadmap-entry",
       "locale": "zh",
       "source": {
-        "line": 140,
+        "line": 130,
         "path": "www/app/routes/roadmap.tsx"
       },
       "alternates": [
@@ -4626,37 +4600,13 @@
         }
       ],
       "references": [],
-      "fingerprint": "bfefe74aa5516a701b1a4a37f7db5bfdb3f380d67a1c426caadb0b917090805f",
+      "fingerprint": "ad74d21ca5deab9014fc735de2e817e06260b2aa4c8a6c3631c7cf6f26a3e52c",
       "data": {
-        "copy": "只有架构、正确性、交付、可移植性、文档、治理与真实应用门禁全部通过才可进入；任何公开面或架构变化都会退回 alpha。",
+        "copy": "Alpha 证据充分后冻结接口与依赖，完成至少十四天 RC 持续运行及安装、升级、安全验证后取得人工 GO。两个产品不强制两个发布包。",
         "state": "planned",
-        "status": "受门禁约束",
-        "theme": "冻结候选",
-        "version": "v0.44 发布候选"
-      }
-    },
-    {
-      "id": "roadmap:zh:6",
-      "kind": "roadmap-entry",
-      "locale": "zh",
-      "source": {
-        "line": 148,
-        "path": "www/app/routes/roadmap.tsx"
-      },
-      "alternates": [
-        {
-          "locale": "en",
-          "id": "roadmap:en:6"
-        }
-      ],
-      "references": [],
-      "fingerprint": "bb0baf487e2421d8e541a0beb9d99bdb4e28a49692a432982f41d66229d673f3",
-      "data": {
-        "copy": "只有当外部生产用户证明 Element、App 与 Build 接口不再需要架构变更时，才发布。",
-        "state": "planned",
-        "status": "方向",
-        "theme": "稳定的五包产品",
-        "version": "v1.0.0"
+        "status": "未定日期",
+        "theme": "分别准入",
+        "version": "v1.0 RC / Stable"
       }
     }
   ]

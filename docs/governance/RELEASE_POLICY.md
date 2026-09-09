@@ -17,13 +17,18 @@ and GitHub Rulesets hold merge authority. Tags, Releases, assets, attestations, 
 provenance are durable published-version proof; temporary Actions artifacts are not
 the sole future proof.
 
-All Alpha identifiers are internal and unpublished: they receive no tag, npm
-publication, GitHub Release, dist-tag or `main` promotion. ADR-0149 makes Beta.1 the
-first public v0.44 framework qualification and assigns Beta.2 the final Trusted
-Publishing, provenance and release-protection foundation.
+Historic v0.44 alpha.0-alpha.10 identifiers were internal/unpublished and retain
+that status. Under [ADR-0152](../adr/ADR-0152-product-router-and-alpha-convergence.md),
+Beta.2.1/2.2/2.3 convergence is followed by public `1.0.0-alpha.1`, using npm
+`alpha`. The `latest` dist-tag remains on the last admitted stable release.
+Release automation must implement this distinction before publication (#1323/#1334).
 
-Beta.5 is the immutable RC candidate. Independent SaaS qualification binds to its
-exact commit SHA, package bytes, integrity records and provenance. RC may admit only
-those identical artifacts after explicit human GO. Any code, dependency, lockfile or
-artifact change creates a new Beta.5 candidate and invalidates the previous SaaS
-qualification for promotion.
+The three-working-day implementation target is not a release waiver. A blocked
+candidate stays unpublished with explicit remaining issues. Public Beta checkpoints
+and public 1.0 Alpha retain the existing exact-SHA and release GO requirements.
+
+RC admission follows sufficient 1.0 Alpha evidence (#1243), with no fixed date.
+Independent application qualification binds to the candidate's exact SHA, package
+bytes, integrity records and provenance. Any candidate-byte change invalidates its
+qualification for promotion and requires a new qualified candidate. Stable admission
+requires the separate human GO and final gate #37; Alpha is not a stability claim.

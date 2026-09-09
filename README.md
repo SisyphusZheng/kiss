@@ -10,7 +10,8 @@ and interactive regions activate selectively.
 The published stable line remains the 0.43 series on npm `latest`.
 `v0.44.0-beta.2` is the current public v0.44 prerelease — Beta.2,
 Productization + Governance Offload (ADR-0151) — published under dist-tag
-`beta`. The next stage is Beta.3 (`v0.44.0-beta.3`).
+`beta`. The accepted next work is Beta.2.1–Beta.2.3 convergence, followed by public
+`v1.0.0-alpha.1` after admission ([roadmap](docs/roadmap/ROADMAP.md)).
 The `1.0.0` target remains unscheduled and requires separate evidence and approval.
 
 ```text
@@ -20,6 +21,12 @@ current proven scope = static-first applications with fullstack output paths
 
 Source package line: `0.44.0-beta.2` (`v0.44.0-beta.2`).
 npm registry line: `v0.44.0-beta.2` (prerelease, dist-tag `beta`); npm `latest` remains the stable `0.43.3` line.
+
+The accepted core products are **Element / Router**, with Route Mode
+and Framework Mode sharing one Router core. UI is dogfood and a reference
+implementation, not a third core product. [Product boundaries](docs/architecture/product-model.md)
+and [the active plan](docs/current/VERSION_PLAN.md) distinguish planned convergence
+from the currently shipped package surface.
 
 ## Why
 

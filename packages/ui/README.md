@@ -1,6 +1,11 @@
 # @openelement/ui
 
-First-party reference UI package for the OpenElement framework.
+First-party dogfood and reference UI package for OpenElement.
+
+Element and Router are the two core products; Router includes Framework Mode.
+UI demonstrates and tests those products rather than defining a third core product
+or a comprehensive design-system roadmap. The existing package remains available;
+this positioning does not remove components or force migration to another library.
 
 The components are first-party `open-*` Web Components. They are designed to
 prove the OpenElement authoring model with shadow/DSD output, explicit light DOM
