@@ -1,4 +1,8 @@
-/** Bounded diagnostic, not a ranking: deno run -A this-file. */
+/**
+ * Bounded diagnostic, not a ranking: deno run -A this-file. The qualified
+ * construction/hit/miss/memory evidence for #1324 lives in the maintained
+ * fork: open-element/url-pattern-list BENCHMARKS.md (Node, GC-controlled).
+ */
 import { RouteTable, URLPatternPolyfillConstructor } from '../src/internal/router/route-table.ts';
 import { URLPatternList } from '../src/internal/router/url-pattern-list/index.ts';
 

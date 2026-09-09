@@ -24,3 +24,10 @@ the supplied native/polyfill constructor. No URLPatternInit match-input API is c
 Tests: packages/app/**tests**/url-pattern-list.test.ts compares full results and value
 identity with each constructor's linear oracle. This is bounded corpus evidence,
 not a claim of complete URLPattern standard or runtime qualification.
+
+Maintenance home: [open-element/url-pattern-list](https://github.com/open-element/url-pattern-list)
+(public fork, own Node tests, differential oracle coverage and the
+construction/hit/miss/memory benchmarks in its BENCHMARKS.md). This embedded
+copy retires when OE consumes the published fork package with a lockfile;
+the npm publish that unblocks the switch is a separately authorized step
+(#1324), so this copy remains the production matcher until then.
