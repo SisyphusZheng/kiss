@@ -135,3 +135,19 @@ export function nextPatchVersion(version: string): string {
 export function normalizeReleaseVersion(version: string): string {
   return version.replace(/-(alpha|beta|rc)(\d+)$/u, '-$1.$2');
 }
+
+/** Engineering checkpoints are deliberately finite, distinct from SemVer order. */
+export function nextCheckpointVersion(version: string): string {
+  const checkpoints = ['0.44.0-beta.2', '0.44.0-beta.2.1', '0.44.0-beta.2.2', '0.44.0-beta.2.3'];
+  const index = checkpoints.indexOf(version);
+  if (index < 0 || index === checkpoints.length - 1) {
+    throw new Error(`No next Beta checkpoint for ${version}; product-stage admission is required`);
+  }
+  return checkpoints[index + 1];
+}
+
+/** Approved product-stage transition; this function grants no release authority. */
+export function nextProductStageVersion(version: string): string {
+  if (version === '0.44.0-beta.2.3') return '1.0.0-alpha.1';
+  throw new Error(`No admitted product-stage successor for ${version}`);
+}
