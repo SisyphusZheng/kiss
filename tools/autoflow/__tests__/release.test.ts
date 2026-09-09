@@ -27,6 +27,7 @@ import {
   renderReleaseNote,
   resolvePatchTargetVersion,
   resumeEvidenceFromPrior,
+  starterLockfileRegenCommand,
   verifyMainCiSuccessForHead,
   verifyPrepareRecord,
   writeReleaseEvidence,
@@ -1543,6 +1544,24 @@ Deno.test('foldStarterLockfileIntoBumpCommit: a clean lockfile is a no-op (#1083
       assertEquals(await git('.', ['rev-parse', 'HEAD']), head);
     },
   );
+});
+
+Deno.test('starterLockfileRegenCommand loads the full starter graph with the age guard off (#1343)', async () => {
+  assertEquals(
+    starterLockfileRegenCommand('deno check app/routes/index.tsx lib/auth.ts'),
+    ['deno', 'check', '--minimum-dependency-age', '0', 'app/routes/index.tsx', 'lib/auth.ts'],
+  );
+  assertThrows(
+    () => starterLockfileRegenCommand('deno eval "console.log(1)"'),
+    Error,
+    "'deno check <files…>' command",
+  );
+  // The live starter task must keep the shape the fold derives from.
+  const config = JSON.parse(
+    await Deno.readTextFile('examples/supabase-cloudflare-starter/deno.json'),
+  ) as { tasks: Record<string, string> };
+  const command = starterLockfileRegenCommand(config.tasks.check);
+  assert(command.length > 10, 'the starter check task must enumerate its entry surface');
 });
 
 Deno.test('Beta checkpoint prepare, public-stage planning and retry preserve the source/published window', () => {
