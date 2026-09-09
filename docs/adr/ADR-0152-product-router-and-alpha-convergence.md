@@ -155,8 +155,9 @@ framework is required. Product independence is proven through dependency graphs.
 Native navigation owns only admitted application navigation: unowned POST forms,
 fragments in history mode and reload remain browser-owned. SSG discovers canonical
 records, not Hono's incidental route list. Every mounted lifecycle gets a fresh
-controller. Final review must actually execute; the #1343 insufficient-balance
-comment is missing review evidence even if its workflow wrapper is green.
+controller. The #1343 insufficient-balance comment supplies no independent review
+evidence even if its workflow wrapper is green; supplemental AI review is non-blocking
+under the 2026-09-09 policy below.
 
 ## Acceptance and consequences
 
@@ -209,4 +210,35 @@ unnecessary divergence. Record generic reproduction/patch boundaries and OE-only
 semantics, with no PR quota, invented bug or dependency on upstream response. Local
 truth consolidation may have no upstream patch. Beta.2.2 Oxc/TS7 work is feasibility;
 full backend migration remains a separately qualified Alpha change. Existing #1343
-correctness/review blockers and release gates are unchanged.
+correctness and release gates remain; supplemental AI review follows the policy below.
+
+## Executable maturation refinement (2026-09-09)
+
+The maintainer approves the reviewed [execution map](../architecture/alpha-maturation.md).
+Beta.2.1 scope stays fixed; Beta.2.2 produces real WTR platform-contract cases and
+bounded executable Oxc/TS7 preparation; Beta.2.3 deletes qualified replacements and
+records explicit handoff decisions. Experimental success and production compiler
+replacement do not become new alpha.1 prerequisites. Existing defects retain their
+severity-based gates, including required CI, fresh verifier and human review of #1343.
+
+Public Alpha is a real, independently consumable Element/Router product, with Native/Lit
+application validation from its baseline. Actively pursue Oxc frontend and TS7 type/
+declaration adoption, but qualify independently and permit evidenced deferral. Do not
+invent a generic AST compatibility framework, expand authoring grammar in the parser
+migration, or retain two production frontends indefinitely. Platform substitutions
+must identify actual displaced ownership, preserve SSR/security/accessibility and
+respect the supported matrix. Bounded extra glue is acceptable for useful upstream
+contributions; correctness and sustainable maintenance remain hard constraints.
+
+#1156 owns tooling experiments and Alpha follow-through, #1333 browser consolidation,
+#1339 platform application contracts; #1179/#1234/#1240/#1241/#1242 qualify real artifacts
+and #1243 closes adopted migration risks before RC. No forced release numbering or
+claim that this is necessarily the last large architecture change.
+
+## Supplemental review policy (2026-09-09)
+
+The maintainer confirms third-party AI review is supplemental and non-blocking. Provider
+errors must be visibly reported and contribute zero independent review evidence; a
+successful wrapper is never a successful review. Required CI, fresh verifier and human
+review remain merge gates. This supersedes the earlier requirement that AI provider
+availability itself block #1343. No provider/model switch or billing action is authorized.

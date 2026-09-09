@@ -65,3 +65,17 @@ serialization and client lifecycle. Extract only interfaces proven by both flows
 The generic matching layer is maintained in the public URLPatternList fork, consumed
 as a pinned qualified package. Upstream contributions are independent of OE delivery;
 a return to upstream is optional. HTTP and framework semantics stay outside the fork.
+
+## Public 1.0 Alpha product posture
+
+OpenElement is a Web Platform-first framework combining compiled Web Components with
+a shared Native/Lit routing and application protocol for real applications. Alpha
+ships independently consumable artifacts, permits evidence-driven API changes with
+migration guidance, and continuously validates one real product plus equivalent
+critical journeys in the other mode. It is not merely a compiler demonstration.
+
+Oxc syntax infrastructure and TS7 type/declaration tooling are active maturation
+directions, qualified separately. OE retains authoring admission/provenance, PartProgram,
+update/continuation and application transaction semantics. The platform owns standard
+primitive behavior; applications own business and trust policy. See the
+[maturation execution map](./alpha-maturation.md). No tool choice alone establishes RC readiness.

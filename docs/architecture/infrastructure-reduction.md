@@ -91,7 +91,7 @@ force every deletion to produce a public PR.
 
 ## Priorities
 
-- Beta.2.1: keep #1343 correctness/review blockers first. Inventory overlapping generic
+- Beta.2.1: keep #1343 correctness gates first; supplemental AI review is non-blocking. Inventory overlapping generic
   checks under #1156; do not make a compiler/test-stack rewrite a prerequisite for
   repairing SSG or native navigation.
 - Beta.2.2: run the WTR pilot alongside Native/Lit integration; start moving proven
@@ -109,7 +109,7 @@ Part Program semantics/validation, compiler diagnostics, Router winner/method/ac
 policy, lifecycle cancellation and qualified Native/Lit integration are product work.
 Tests of these remain OE-owned. Small test doubles, fixture data and direct command
 invocations can be justified; a custom platform, generic parser, runner or workflow
-framework needs stronger evidence. Exact-artifact and actual-review requirements
+framework needs stronger evidence. Exact-artifact and human-review requirements
 survive removal of their obsolete implementations.
 
 For each migration record: replaced responsibility, production/test/config deletions,
@@ -127,3 +127,22 @@ callers. Use existing issues/PRs, not another permanent checker or evidence data
 - [publint](https://publint.dev/docs/)
 - [Are the Types Wrong](https://github.com/arethetypeswrong/arethetypeswrong.github.io)
 - [dependency-cruiser](https://github.com/sverweij/dependency-cruiser)
+
+## Executable preparation refinement (2026-09-09)
+
+The [maturation execution map](./alpha-maturation.md) supersedes vague feasibility
+wording: Beta.2.2 delivers a runnable Oxc comparison slice, TS7 CLI and declaration/
+pack-resolution results, and real form/focus/lifecycle browser cases. It does not
+switch the production compiler. WTR receives official compiled ESM; existing provenance
+and standard source-map consumer tests are reused. Public Alpha actively pursues
+Oxc/TS7 adoption, with real application upgrades from its baseline and explicit stops.
+
+Audit CEM extraction separately from OE hydration/layer policy. Do not merely translate
+a bespoke TypeScript metadata scanner into a bespoke Oxc scanner. Upstream CEM capability
+must be demonstrated before local extraction is removed. Audit deno pack staging and
+its generated-code strictness exceptions before claiming TS7 owns final declarations.
+
+Already-native popover/dialog/anchors/@scope/adoptedStyleSheets are not new adoption
+wins. Delete only demonstrated duplicate responsibilities; retain necessary SSR, focus,
+security and product semantics. Portable upstream work may justify bounded extra glue;
+raw deletion totals and upstream merge counts are not success conditions.
