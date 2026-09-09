@@ -1,6 +1,17 @@
 import { assertEquals, assertThrows } from '@std/assert';
 import { type RouteRecord, RouteTable } from '../src/internal/router/route-table.ts';
 
+Deno.test('duplicate route identities are rejected, explicit and positional alike', () => {
+  assertThrows(
+    () => new RouteTable([{ path: '/a', id: 'dup' }, { path: '/b', id: 'dup' }]),
+    TypeError,
+    'Duplicate route identity',
+  );
+  // Positional identity cannot collide: distinct records get distinct defaults.
+  const table = new RouteTable([{ path: '/a' }, { path: '/a' }]);
+  assertEquals(table.match('/a')?.id, '0');
+});
+
 Deno.test('URL winner precedes method dispatch, including overlapping explicit records', () => {
   const routes = [
     { path: '/products/new', methods: ['GET'] },
