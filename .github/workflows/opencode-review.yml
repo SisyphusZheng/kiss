@@ -5,10 +5,11 @@ on:
 
 jobs:
   review:
-    # Third-party AI review is supplemental; Dependabot updates need no review.
-    # The review must actually execute: the action posts provider errors as PR
-    # comments while exiting 0, so the verify step below fails the job closed
-    # when no genuine review exists for this run (#1332, #1343 prerequisite).
+    # Third-party AI review is supplemental and NOT a CI blocker (maintainer
+    # decision, 2026-09-09). Dependabot updates need no review. The action
+    # posts provider errors as PR comments while exiting 0, so the outcome
+    # step below still detects and reports a non-executed review — as a
+    # warning annotation, never a silent pass — without failing the job.
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
@@ -26,8 +27,8 @@ jobs:
       # SHA: 2c14fc5586fe0b88e5c04732d2e846769cc35671
       - uses: anomalyco/opencode/github@2c14fc5586fe0b88e5c04732d2e846769cc35671
         id: opencode
-        # Keeps running so the outcome gate below always evaluates and reports;
-        # it — not this step — decides the job result.
+        # Keeps running on error so the outcome step below always evaluates
+        # and reports what actually happened.
         continue-on-error: true
         env:
           # DeepSeek API key. Get one at https://platform.deepseek.com/api_keys
@@ -51,7 +52,7 @@ jobs:
         with:
           deno-version-file: .dvmrc
 
-      - name: Fail closed when the review did not execute
+      - name: Report review outcome (non-blocking)
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,4 +60,9 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           RUN_ID: ${{ github.run_id }}
           REVIEW_STEP_OUTCOME: ${{ steps.opencode.outcome }}
-        run: deno run --allow-env --allow-net=api.github.com tools/check-review-outcome.ts
+        # The gate's verdict is downgraded to a warning annotation: a missing
+        # or errored review stays visible in the run log and annotations, but
+        # does not turn this supplemental job red.
+        run: |
+          deno run --allow-env --allow-net=api.github.com tools/check-review-outcome.ts || \
+            echo "::warning::AI review did not execute for this run (see log above); reported, not counted as evidence."
